@@ -230,10 +230,24 @@ def u3_related(gate):
     raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
-def extra_qid(cmd):
+def extra_qid(cmd, qregs, cregs):
     """Get qubit id."""
-    matches = re.findall(r'\[(\d+)\]', cmd)
-    return [int(i) for i in matches]
+    regs = re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*\[\d+\]', cmd)
+    if regs:
+        out = []
+        for i in regs:
+            reg_name = re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', i)[0]
+            reg_id = int(re.findall(r'\d+', i)[0])
+            if reg_name in qregs:
+                out.append(qregs[reg_name][reg_id])
+            elif reg_name in cregs:
+                out.append(cregs[reg_name][reg_id])
+            else:
+                raise ValueError(f"Registor {reg_name} not allocated.")
+        return (out,)
+    possible_name = [i for i in re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', cmd) if i in qregs or i in cregs]
+    out = np.array([qregs[i] if i in qregs else cregs[i] for i in possible_name]).T
+    return tuple([int(j) for j in i] for i in out)
 
 
 def extra_params(cmd, dtype=float):
@@ -247,11 +261,11 @@ def extra_params(cmd, dtype=float):
                 out.append(pr)
             else:
                 if '*' in pr:
-                    pr = pr.replace('pi', str(np.pi))
+                    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
                     pr = [float(i.strip()) for i in pr.split('*')]
                     out.append(pr[0] * pr[1])
                 elif '/' in pr:
-                    pr = pr.replace('pi', str(np.pi))
+                    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
                     pr = [float(i.strip()) for i in pr.split('/')]
                     out.append(pr[0] / pr[1])
                 else:
@@ -271,12 +285,12 @@ def extra_gate_name(cmd: str):
     return sub_cmd.strip()
 
 
-def parse_gate_cmd(cmd):
+def parse_gate_cmd(cmd, qregs, cregs):
     """Parse a gate command."""
     try:
         cmd = cmd.strip()
         gate_name = extra_gate_name(cmd)
-        qid = extra_qid(cmd)
+        qid = extra_qid(cmd, qregs, cregs)
         if gate_name == 'pauli':
             params = extra_params(cmd, dtype=str)
         else:
@@ -284,6 +298,27 @@ def parse_gate_cmd(cmd):
         return gate_name, params, qid
     except:  # pylint: disable=raise-missing-from # noqa: E722
         raise ValueError(f"Cannot parse command: {cmd}")
+
+
+def gene_reg(cmds):
+    """Parse quantum and classical registor."""
+    qregs = {}
+    cregs = {}
+    total_q, total_c = 0, 0
+    for i in cmds:
+        if i.startswith('creg'):
+            creg_name = re.findall(r'\s(.*)?\[', i)[0]
+            n_c_this = int(re.findall(r'\[(.*)?\]', i)[0])
+            cregs[creg_name] = list(range(total_c, total_c + n_c_this))
+            total_c += n_c_this
+            continue
+        if i.startswith('qreg'):
+            qreg_name = re.findall(r'\s(.*)?\[', i)[0]
+            n_q_this = int(re.findall(r'\[(.*)?\]', i)[0])
+            qregs[qreg_name] = list(range(total_q, total_q + n_q_this))
+            total_q += n_q_this
+            continue
+    return qregs, total_q, cregs, total_c
 
 
 def extra_func_body(cmd):
@@ -335,7 +370,7 @@ def eval_(node):
 
 def eval_pr(pr, prs, gate_params):
     """Calculate the parameters."""
-    pr = pr.replace('pi', str(np.pi))
+    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
     for idx, p in enumerate(gate_params):
         pr = pr.replace(p, str(prs[idx]))
     return eval_expr(pr)
@@ -413,6 +448,7 @@ def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
 
 def prepare_qasm(qasm: str):
     """Remove new line between bracket."""
+    qasm = re.sub(r'//.*?\n', '\n', qasm.lower())
     new_qasm = ''
     start_body = False
     for i in qasm:
@@ -427,6 +463,7 @@ def prepare_qasm(qasm: str):
     return [i.strip() for i in new_qasm.strip().split('\n')]
 
 
+# pylint: disable=too-many-locals,too-many-branches
 def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
     """Convert openqasm to mindquantum circuit."""
     from mindquantum.core.circuit import Circuit
@@ -435,9 +472,9 @@ def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
     circ = Circuit()
     custom_gate = {}
     measures = {}
-
+    qregs, _, cregs, _ = gene_reg(cmds)
     for i in cmds:
-        if i.startswith('OPENQASM'):
+        if i.startswith('openqasm'):
             if not i.endswith('2.0;'):
                 raise ValueError(f"OpenQASM version not supported: {i}")
             continue
@@ -451,17 +488,21 @@ def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
             generate_custom_gate(i, custom_gate, gate_map_openqasm_mq)
         else:
             cmd = i.strip()
-            gate_name, params, qids = parse_gate_cmd(cmd)
-            if gate_name in gate_map_openqasm_mq:
-                mq_gate = gate_map_openqasm_mq[gate_name](params, qids)
-                if gate_name == 'measure':
-                    mq_gate.key = f"q{qids[0]}_{measures.get(qids[0], 0)}"
-                    measures[qids[0]] = measures.get(qids[0], 0) + 1
-                circ += mq_gate
-            elif gate_name in custom_gate:
-                circ += custom_gate[gate_name](params, qids)
-            else:
-                raise ValueError(f"{cmd} not implement.")
+            gate_name, params, qids = parse_gate_cmd(cmd, qregs, cregs)
+            if gate_name == 'barrier':
+                circ += gate_map_openqasm_mq['barrier'](params, [q[0] for q in qids])
+                continue
+            for qid in qids:
+                if gate_name in custom_gate:
+                    circ += custom_gate[gate_name](params, qid)
+                elif gate_name in gate_map_openqasm_mq:
+                    mq_gate = gate_map_openqasm_mq[gate_name](params, qid)
+                    if gate_name == 'measure':
+                        mq_gate.key = f"q{qid[0]}_{measures.get(qid[0], 0)}"
+                        measures[qid[0]] = measures.get(qid[0], 0) + 1
+                    circ += mq_gate
+                else:
+                    raise ValueError(f"{cmd} not implement.")
     return circ
 
 
@@ -491,7 +532,7 @@ class OpenQASM:
         from mindquantum.core.circuit import Circuit
 
         self.gate_map_openqasm_mq = {
-            'barrier': lambda prs, qids: Circuit([G.BarrierGate().on(i) for i in qids]),
+            'barrier': lambda prs, qids: Circuit([G.BarrierGate().on(qids)]),
             'ccx': lambda prs, qids: G.X.on(qids[-1], qids[:-1]),
             'ch': lambda prs, qids: G.H.on(qids[-1], qids[:-1]),
             'cp': lambda prs, qids: G.PhaseShift(prs[0]).on(qids[-1], qids[:-1]),
