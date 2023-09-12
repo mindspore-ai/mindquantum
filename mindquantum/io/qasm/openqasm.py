@@ -438,7 +438,7 @@ def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
     measures = {}
 
     for i in cmds:
-        if i.startswith('OPENQASM'):
+        if i.startswith('openqasm'):
             if not i.endswith('2.0;'):
                 raise ValueError(f"OpenQASM version not supported: {i}")
             continue
