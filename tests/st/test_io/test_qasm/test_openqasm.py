@@ -14,10 +14,12 @@
 # ============================================================================
 """Test openqasm."""
 
-from mindquantum.core import Circuit
-from mindquantum.io import OpenQASM
-
 import numpy as np
+
+from mindquantum.core import UN, Circuit, X
+from mindquantum.io import OpenQASM
+from mindquantum.simulator import Simulator
+from mindquantum.utils import random_circuit
 
 
 def test_openqasm():
@@ -36,3 +38,91 @@ def test_openqasm():
     test_openqasms = 'OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[2];\ncrz(0.1) q[1],q[0];'
     test_cir = OpenQASM().from_string(test_openqasms)
     assert np.allclose(test_cir.matrix(), cir.matrix())
+
+
+def test_openqasm_custom_gate():
+    """
+    test custom gate in openqasm
+    Description: test openqasm custom gate
+    Expectation: success
+    """
+    qasm = """
+// quantum ripple-carry adder from Cuccaro et al, quant-ph/0410184
+OPENQASM 2.0;
+include "qelib1.inc";
+gate majority a,b,c
+{
+  cx c,b;
+  cx c,a;
+  ccx a,b,c;
+}
+gate unmaj a,b,c
+{
+  ccx a,b,c;
+  cx c,a;
+  cx a,b;
+}
+qreg cin[1];
+qreg a[4];
+qreg b[4];
+qreg cout[1];
+creg ans[5];
+// set input states
+x a[0]; // a = 0001
+x b;    // b = 1111
+// add a to b, storing result in b
+majority cin[0],b[0],a[0];
+majority a[0],b[1],a[1];
+majority a[1],b[2],a[2];
+majority a[2],b[3],a[3];
+cx a[3],cout[0];
+unmaj a[2],b[3],a[3];
+unmaj a[1],b[2],a[2];
+unmaj a[0],b[1],a[1];
+unmaj cin[0],b[0],a[0];
+measure b[0] -> ans[0];
+measure b[1] -> ans[1];
+measure b[2] -> ans[2];
+measure b[3] -> ans[3];
+measure cout[0] -> ans[4];
+    """
+    circ = OpenQASM().from_string(qasm)
+
+    def majority(a, b, c):
+        return Circuit().x(b, c).x(a, c).x(c, [a, b])
+
+    def unmaj(a, b, c):
+        return Circuit().x(c, [a, b]).x(a, c).x(b, a)
+
+    cin = [0]
+    a = [1, 2, 3, 4]
+    b = [5, 6, 7, 8]
+    cout = [9]
+    exp_circ = sum(
+        [
+            Circuit().x(a[0]),
+            UN(X, b),
+            majority(cin[0], b[0], a[0]),
+            majority(a[0], b[1], a[1]),
+            majority(a[1], b[2], a[2]),
+            majority(a[2], b[3], a[3]),
+            Circuit().x(
+                cout[0],
+                a[3],
+            ),
+            unmaj(a[2], b[3], a[3]),
+            unmaj(a[1], b[2], a[2]),
+            unmaj(a[0], b[1], a[1]),
+            unmaj(cin[0], b[0], a[0]),
+        ]
+    )
+    exp_circ.measure(b[0])
+    exp_circ.measure(b[1])
+    exp_circ.measure(b[2])
+    exp_circ.measure(b[3])
+    exp_circ.measure(cout[0])
+    init = random_circuit(circ.n_qubits, 30, seed=42)
+    sim = Simulator('mqvector', circ.n_qubits)
+    s_1 = sim.sampling(init + circ, shots=50, seed=42)
+    s_2 = sim.sampling(init + exp_circ, shots=50, seed=42)
+    assert np.all(s_1.samples == s_2.samples)
