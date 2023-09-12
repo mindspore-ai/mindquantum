@@ -247,11 +247,11 @@ def extra_params(cmd, dtype=float):
                 out.append(pr)
             else:
                 if '*' in pr:
-                    pr = pr.replace('pi', str(np.pi))
+                    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
                     pr = [float(i.strip()) for i in pr.split('*')]
                     out.append(pr[0] * pr[1])
                 elif '/' in pr:
-                    pr = pr.replace('pi', str(np.pi))
+                    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
                     pr = [float(i.strip()) for i in pr.split('/')]
                     out.append(pr[0] / pr[1])
                 else:
@@ -335,7 +335,7 @@ def eval_(node):
 
 def eval_pr(pr, prs, gate_params):
     """Calculate the parameters."""
-    pr = pr.replace('pi', str(np.pi))
+    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
     for idx, p in enumerate(gate_params):
         pr = pr.replace(p, str(prs[idx]))
     return eval_expr(pr)
@@ -413,6 +413,7 @@ def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
 
 def prepare_qasm(qasm: str):
     """Remove new line between bracket."""
+    qasm = qasm.lower()
     new_qasm = ''
     start_body = False
     for i in qasm:
