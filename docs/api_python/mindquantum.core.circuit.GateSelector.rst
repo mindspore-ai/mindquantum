@@ -7,3 +7,7 @@ mindquantum.core.circuit.GateSelector
 
     参数：
         - **gate** (str) - 想要添加信道的量子门。当前可以是 'H'，'X'，'Y', 'Z'，'RX'，'RY'，'RZ'，'CX'，'CZ'，'SWAP'。
+
+    .. py:method:: supported_gate()
+
+        获取门选择器支持的门。

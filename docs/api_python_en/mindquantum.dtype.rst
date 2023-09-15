@@ -58,7 +58,7 @@ Function
 ---------------
 
 .. autosummary::
-    :toctree: dtype
+    :toctree:
     :nosignatures:
     :template: classtemplate.rst
 
