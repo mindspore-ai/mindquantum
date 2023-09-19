@@ -137,7 +137,7 @@ hermitian_conjugated(fer_op)
     \end{lstlisting}
 \end{itemize}
 
-\paragraph{Transformation}
+\subsubsection{Transformation}
 Quantum simulation of fermionic systems presents a specific challenge. To effectively reduce the resources used to simulate fermion Hamiltonian on quantum hardware, we can simulating fermions with qubits, which involves the conversion between the fermionic Hamiltonian and the qubit Hamiltonian. Mindquantum supplies the module $mindquantum.algorithm.nisq.Transform$ for transformation between fermions ($FermionOperator$) and bosons ($QubitOperator$). The following functions are provided: 
 \begin{itemize}
     \item $jordan\_wigner()$: Apply the Jordan-Wigner transformation, which maps fermionic annihilation operators (fermions) to qubits (bosons) via: 
