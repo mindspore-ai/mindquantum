@@ -1,7 +1,7 @@
 mindquantum.simulator.fidelity
 ====================================
 
-.. py:function:: mindquantum.simulator.fidelity(rho: numpy.ndarray, sigma: numpy.ndarray)
+.. py:function:: mindquantum.simulator.fidelity(rho: np.ndarray, sigma: np.ndarray)
 
     计算两个量子态的保真度。
 
@@ -21,8 +21,8 @@ mindquantum.simulator.fidelity
     此外，该接口还支持状态向量和密度矩阵混合输入。
 
     参数：
-        - **rho** (numpy.ndarray) - 其中一个量子态。支持态矢量或密度矩阵。
-        - **sigma** (numpy.ndarray) - 另一个量子态。支持态矢量或密度矩阵。
+        - **rho** (np.ndarray) - 其中一个量子态。支持态矢量或密度矩阵。
+        - **sigma** (np.ndarray) - 另一个量子态。支持态矢量或密度矩阵。
 
     返回：
         numbers.Number，两个量子态的保真度。
