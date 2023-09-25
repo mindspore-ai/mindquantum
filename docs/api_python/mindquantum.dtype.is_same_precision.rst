@@ -7,4 +7,4 @@ mindquantum.dtype.is_same_precision
 
     参数：
         - **dtype1** (mindquantum.dtype) - MindQuantum 支持的类型。
-        - **dtype1** (mindquantum.dtype) - MindQuantum 支持的类型。
+        - **dtype2** (mindquantum.dtype) - MindQuantum 支持的类型。

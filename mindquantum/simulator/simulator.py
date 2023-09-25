@@ -649,8 +649,8 @@ def fidelity(rho: np.ndarray, sigma: np.ndarray):
     Besides, mixing state vector with density matrix as input is also supported.
 
     Args:
-        rho (numpy.ndarray): One of the quantum state. Support both state vector and density matrix.
-        sigma (numpy.ndarray): Another quantum state. Support both state vector and density matrix.
+        rho (np.ndarray): One of the quantum state. Support both state vector and density matrix.
+        sigma (np.ndarray): Another quantum state. Support both state vector and density matrix.
 
     Returns:
         numbers.Number, the fidelity of two quantum states.
