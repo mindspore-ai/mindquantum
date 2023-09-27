@@ -7,7 +7,7 @@ mindquantum.core.gates.Rzz
 
     .. math::
 
-        {\rm Rzz_\theta}=\exp{-i\frac{\theta}{2} Z\otimes Z} =\begin{pmatrix}
+        {\rm Rzz_\theta}=\exp{\left(-i\frac{\theta}{2} Z\otimes Z\right)} =\begin{pmatrix}
             e^{-i\frac{\theta}{2}} & 0 & 0 & 0\\
             0 & e^{i\frac{\theta}{2}} & 0 & 0\\
             0 & 0 & e^{i\frac{\theta}{2}} & 0\\

@@ -983,7 +983,7 @@ class Rzz(RotSelfHermMat):
 
     .. math::
 
-        Rzz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes Z} =
+        Rzz(\theta) = \exp{\left(-i\frac{\theta}{2} Z\otimes Z\right)} =
         \begin{pmatrix}
             e^{-i\frac{\theta}{2}} & 0 & 0 & 0\\
             0 & e^{i\frac{\theta}{2}} & 0 & 0\\
@@ -1058,7 +1058,7 @@ class Rxx(RotSelfHermMat):
 
     .. math::
 
-        Rxx(\theta) = \exp{-i\frac{\theta}{2} X\otimes X} =
+        Rxx(\theta) = \exp{\left(-i\frac{\theta}{2} X\otimes X\right)} =
         \begin{pmatrix}
             \cos{\frac{\theta}{2}} & 0 & 0 & -i\sin{\frac{\theta}{2}}\\
             0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
@@ -1141,7 +1141,7 @@ class Ryy(RotSelfHermMat):
 
     .. math::
 
-        Ryy(\theta) = \exp{-i\frac{\theta}{2} Y\otimes Y} =
+        Ryy(\theta) = \exp{\left(-i\frac{\theta}{2} Y\otimes Y\right)} =
         \begin{pmatrix}
             \cos{\frac{\theta}{2}} & 0 & 0 & i\sin{\frac{\theta}{2}}\\
             0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
@@ -1224,7 +1224,7 @@ class Rxy(RotSelfHermMat):
 
     .. math::
 
-        Rxy(\theta) = \exp{-i\frac{\theta}{2} Y\otimes X} =
+        Rxy(\theta) = \exp{\left(-i\frac{\theta}{2} Y\otimes X\right)} =
         \begin{pmatrix}
             \cos{\frac{\theta}{2}} & 0 & 0 & -\sin{\frac{\theta}{2}}\\
             0 & \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} & 0\\
@@ -1299,7 +1299,7 @@ class Rxz(RotSelfHermMat):
 
     .. math::
 
-        Rxz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes X} =
+        Rxz(\theta) = \exp{\left(-i\frac{\theta}{2} Z\otimes X\right)} =
         \begin{pmatrix}
             \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0 & 0\\
             -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0 & 0\\
@@ -1372,7 +1372,7 @@ class Ryz(RotSelfHermMat):
 
     .. math::
 
-        Ryz(\theta) = \exp{-i\frac{\theta}{2} Z\otimes Y} =
+        Ryz(\theta) = \exp{\left(-i\frac{\theta}{2} Z\otimes Y\right)} =
         \begin{pmatrix}
             \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} & 0 & 0\\
             \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0 & 0\\

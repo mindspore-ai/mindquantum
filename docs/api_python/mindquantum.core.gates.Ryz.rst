@@ -7,7 +7,7 @@ mindquantum.core.gates.Ryz
 
     .. math::
 
-        {\rm Ryz_\theta}=\exp{-i\frac{\theta}{2} Z\otimes Y} =\begin{pmatrix}
+        {\rm Ryz_\theta}=\exp{\left(-i\frac{\theta}{2} Z\otimes Y\right)} =\begin{pmatrix}
             \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} & 0 & 0\\
             \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0 & 0\\
             0 & 0 & \cos{\frac{\theta}{2}} & \sin{\frac{\theta}{2}}\\

@@ -7,7 +7,7 @@ mindquantum.core.gates.Rxy
 
     .. math::
 
-        {\rm Rxy_\theta}=\exp{-i\frac{\theta}{2} Y\otimes X} =\begin{pmatrix}
+        {\rm Rxy_\theta}=\exp{\left(-i\frac{\theta}{2} Y\otimes X\right)} =\begin{pmatrix}
             \cos{\frac{\theta}{2}} & 0 & 0 & -\sin{\frac{\theta}{2}}\\
             0 & \cos{\frac{\theta}{2}} & -\sin{\frac{\theta}{2}} & 0\\
             0 & \sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\

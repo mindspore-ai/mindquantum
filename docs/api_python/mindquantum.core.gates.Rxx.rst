@@ -7,7 +7,7 @@ mindquantum.core.gates.Rxx
 
     .. math::
 
-        {\rm Rxx_\theta}=\exp{-i\frac{\theta}{2} X\otimes X} =\begin{pmatrix}
+        {\rm Rxx_\theta}=\exp{\left(-i\frac{\theta}{2} X\otimes X\right)} =\begin{pmatrix}
             \cos{\frac{\theta}{2}} & 0 & 0 & -i\sin{\frac{\theta}{2}}\\
             0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
             0 & -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
