@@ -1,0 +1,64 @@
+diff -Npur lru_cache-orig/lru_cache/lru_cache.h lru_cache-src/lru_cache/lru_cache.h
+--- lru_cache-orig/lru_cache/lru_cache.h	2022-07-20 09:57:58.871197742 +0200
++++ lru_cache-src/lru_cache/lru_cache.h	2022-07-20 10:13:57.519184636 +0200
+@@ -2,10 +2,52 @@
+ #define LRU_CACHE_LRU_CACHE_H_
+ 
+ #include "dynamic_lru_cache.h"
+-#include "node_lru_cache.h"
++namespace lru_cache::dynamic
++{
++
++// Create simple cache
++template <typename Key, typename Value>
++DynamicLruCache<Key, Value>
++make_cache(std::size_t max_size) {
++  return {max_size};
++}
++
++// Memoize a single-argument function.
++template <std::size_t max_size, typename ValueProvider>
++DynamicLruCache<internal::single_arg_t<ValueProvider>,
++                internal::return_t<ValueProvider>,
++                ValueProvider>
++memoize_function(ValueProvider provider) {
++  return {max_size, provider};
++}
++}
++
+ #include "static_lru_cache.h"
++namespace lru_cache::staticc
++{
++
++// Create simple cache
++template <std::size_t max_size, typename Key, typename Value>
++StaticLruCache<Key, Value, max_size>
++make_cache() {
++  return {};
++}
+ 
+-namespace lru_cache
++// Memoize a single-argument function.
++template <std::size_t max_size, typename ValueProvider>
++StaticLruCache<internal::single_arg_t<ValueProvider>,
++               internal::return_t<ValueProvider>,
++               max_size,
++               ValueProvider>
++memoize_function(ValueProvider provider) {
++  return {provider};
++}
++}
++
++#ifdef LRU_CACHE_HAS_ABSEIL_CPP
++
++#include "node_lru_cache.h"
++namespace lru_cache::node
+ {
+ 
+ // Create simple cache
+@@ -26,4 +68,5 @@ memoize_function(
+ }
+ }
+ 
++#endif // LRU_CACHE_HAS_ABSEIL_CPP
+ #endif  // LRU_CACHE_LRU_CACHE_H_

@@ -1,0 +1,4 @@
+CompileFlags:
+    Remove: [--generate-code*, -forward-unknown-to-host-compiler, --extended-lambda]
+Diagnostics:
+    Suppress: pp_including_mainfile_in_preamble
