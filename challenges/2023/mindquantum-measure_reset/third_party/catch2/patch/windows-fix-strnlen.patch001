@@ -1,0 +1,29 @@
+diff -Npur -x _build_debug catch2-orig/src/catch2/catch_tostring.hpp catch2-src/src/catch2/catch_tostring.hpp
+--- catch2-orig/src/catch2/catch_tostring.hpp	2022-07-17 20:18:44.000000000 +0200
++++ catch2-src/src/catch2/catch_tostring.hpp	2022-10-07 11:20:11.038655000 +0200
+@@ -15,6 +15,25 @@
+ #include <string>
+ #include <string.h>
+ 
++#ifndef __CYGWIN__
++#    define CATCH2_PLATFORM_HAS_STRNLEN
++#endif // !__CYGWIN__
++
++namespace details {
++    inline std::size_t string_length( const char* str, std::size_t n ) {
++#ifdef CATCH2_PLATFORM_HAS_STRNLEN
++        return strnlen( str, n );
++#else
++        if ( str == nullptr || n == 0 ) {
++            return 0;
++        }
++        const char* end = str;
++        for ( ; *end != '\0'; ++end ) {}
++        return end - str;
++#endif
++    }
++} // namespace details
++
+ #include <catch2/internal/catch_compiler_capabilities.hpp>
+ #include <catch2/internal/catch_config_wchar.hpp>
+ #include <catch2/internal/catch_reusable_string_stream.hpp>

@@ -1,0 +1,64 @@
+# ==============================================================================
+#
+# Copyright 2021 <Huawei Technologies Co., Ltd>
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+#
+# ==============================================================================
+
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+set(CMAKE_MODULE_PATH @CMAKE_MODULE_PATH@)
+
+@CMAKE_EXTRA_CONTENT@
+
+if(@LANG@ STREQUAL "NVCXX" AND NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES 60) # Minimum required for NVHPC if -stdpar or -cuda
+endif()
+
+project(CMAKE_TRY_COMPILE @LANG@)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
+set(CMAKE_@LANG@_FLAGS "@CMAKE_LANG_FLAGS@")
+set(CMAKE_@LANG@_FLAGS "${CMAKE_@LANG@_FLAGS} ${COMPILE_DEFINITIONS}")
+set(CMAKE_@LANG@_FLAGS_DEBUG "-g")
+
+set(CMAKE_EXE_LINKER_FLAGS "@CMAKE_EXE_LINKER_FLAGS@")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXE_LINKER_FLAGS}")
+
+set(CMAKE_REQUIRED_LINK_OPTIONS @CMAKE_REQUIRED_LINK_OPTIONS@)
+set(CMAKE_REQUIRED_LIBRARIES @CMAKE_REQUIRED_LIBRARIES@)
+
+# ==============================================================================
+
+include_directories(${INCLUDE_DIRECTORIES})
+set(CMAKE_SUPPRESS_REGENERATION 1)
+add_definitions(@CMAKE_REQUIRED_DEFINITIONS@)
+
+add_executable(@CMAKE_EXEC_NAME@ @CMAKE_SOURCE_FILE@)
+set_source_files_properties(@CMAKE_SOURCE_FILE@ PROPERTIES LANGUAGE @LANG@)
+set_property(TARGET @CMAKE_EXEC_NAME@ PROPERTY "@LANG@_STANDARD" "@CMAKE_LANG_STANDARD@")
+set_property(TARGET @CMAKE_EXEC_NAME@ PROPERTY "@LANG@_STANDARD_REQUIRED" "@CMAKE_LANG_STANDARD_REQUIRED@")
+set_property(TARGET @CMAKE_EXEC_NAME@ PROPERTY "@LANG@_EXTENSIONS" "@CMAKE_LANG_EXTENSIONS@")
+
+if(@LANG@ STREQUAL "CUDA" OR @LANG@ STREQUAL "NVCXX")
+  include(target_cuda_architectures)
+  target_cuda_architectures(@CMAKE_EXEC_NAME@ PUBLIC LANG @LANG@ ${CMAKE_CUDA_ARCHITECTURES})
+endif()
+
+if(CMAKE_REQUIRED_LINK_OPTIONS)
+  target_link_options(@CMAKE_EXEC_NAME@ PRIVATE ${CMAKE_REQUIRED_LINK_OPTIONS})
+endif()
+
+if(CMAKE_REQUIRED_LIBRARIES)
+  target_link_libraries(@CMAKE_EXEC_NAME@ PRIVATE ${CMAKE_REQUIRED_LIBRARIES})
+endif()

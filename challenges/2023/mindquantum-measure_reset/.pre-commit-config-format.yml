@@ -1,0 +1,128 @@
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See https://github.com/pre-commit/pre-commit
+
+---
+
+repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: check-toml
+      - id: debug-statements
+      - id: end-of-file-fixer
+        exclude: ^(.*patch[0-9]*)$
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        exclude: ^(.*patch[0-9]*)$
+
+  # Changes tabs to spaces
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.3.1
+    hooks:
+      - id: remove-tabs
+        exclude: ^(.*Makefile|.*patch[0-9]*)$
+
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        exclude: (test_.*\.py)$
+        additional_dependencies: [toml]
+
+  - repo: https://github.com/PyCQA/doc8/
+    rev: v1.0.0
+    hooks:
+      - id: doc8
+        alias: doc8-lint
+        require_serial: false
+        additional_dependencies: [tomli]
+        args: [--ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001,
+               --ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.quccsd_generator.rst;D001,
+               --ignore-path-errors,
+               docs/api_python/mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes.rst;D001]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.8.0.4
+    hooks:
+      - id: shellcheck
+        require_serial: false
+        args: [-x]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.2
+    hooks:
+      - id: codespell
+        require_serial: false
+        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        args: [-S, '.git,third_party', -I, .codespell.allow]
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.28.0
+    hooks:
+      - id: yamllint
+        require_serial: false
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+        require_serial: false
+        additional_dependencies: [pyyaml]
+      - id: cmake-lint
+        require_serial: false
+        exclude: ^(cmake/Modules/.*)$
+        additional_dependencies: [pyyaml]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+      - id: blacken-docs
+        args: [-S, -l, '120']
+        additional_dependencies: [black==22.3.0]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.2.2
+    hooks:
+      - id: pyupgrade
+        args: [--py37-plus, --keep-mock]
+
+  - repo: https://github.com/Takishima/cmake-pre-commit-hooks/
+    rev: 'v1.5.3'
+    hooks:
+      - id: clang-format
+        require_serial: false
+        args: [-i]
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        additional_dependencies: ['clang-format==14.*']
