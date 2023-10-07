@@ -65,7 +65,7 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
         throw std::invalid_argument(fmt::format("Data type mismatch for sparsing operator."));
     }
     using calc_type = tn::to_device_t<dtype>;
-    mq::VT<calc_type> polar = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+    mq::VT<calc_type> polar = {{1, 0}, {0, -1}, {-1, 0}, {0, 1}};
 
     auto n_local_qubits = ops.count_qubits();
     if (n_qubits < 0) {
@@ -84,7 +84,7 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
     auto dim = 1UL << n_qubits;
     mq::VT<ele_set<calc_type>> all_value(dim);
     mq::index_t nnz = 0;
-
+#pragma omp parallel for schedule(static) reduction(+ : nnz)
     for (mq::index_t i = 0; i < dim; i++) {
         mq::index_t term_idx = 0;
         ele_set<calc_type> vals;
@@ -96,10 +96,16 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
             auto axis3power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_y));  // -1j
             auto val = polar[(mask.num_y + 2 * axis3power + 2 * axis2power) & 3] * consts[term_idx];
             term_idx += 1;
-            if (std::abs(val) < PRECISION) {
+            typename EleComp<calc_type>::ele_t ele_new = {j, val};
+            auto prev = vals.find(ele_new);
+            if (prev != vals.end()) {
+                ele_new.second += (*prev).second;
+                vals.erase(prev);
+            }
+            if (std::abs(ele_new.second) < PRECISION) {
                 continue;
             }
-            vals.insert(std::make_pair(j, val));
+            vals.insert(ele_new);
         }
         nnz += vals.size();
         all_value[i] = vals;
@@ -112,6 +118,7 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
         auto& vals = all_value[i];
         indptr[i + 1] = indptr[i] + vals.size();
     }
+#pragma omp parallel for schedule(static)
     for (mq::index_t i = 0; i < all_value.size(); i++) {
         auto& vals = all_value[i];
         auto begin = indptr[i];
@@ -122,7 +129,7 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
         }
     }
     return tn::CsrMatrix(dim, dim, nnz, indptr, indices,
-                         tn::Tensor(dtype, tn::TDevice::CPU, reinterpret_cast<void*>(data), dim));
+                         tn::Tensor(dtype, tn::TDevice::CPU, reinterpret_cast<void*>(data), nnz));
 }
 
 tn::CsrMatrix GetMatrix(const qubit::QubitOperator& ops, int n_qubits) {

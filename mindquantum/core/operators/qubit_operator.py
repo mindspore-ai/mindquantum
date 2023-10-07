@@ -493,6 +493,22 @@ class QubitOperator(QubitOperator_):
         """
         return QubitOperator(QubitOperator_.hermitian_conjugated(self), internal=True)
 
+    def matrix2(self, n_qubits: int = None):
+        """
+        Convert this qubit operator to csr_matrix.
+
+        Args:
+            n_qubits (int): The total qubits of final matrix. If ``None``, the value will be
+                the maximum local qubit number. Default: ``None``.
+        """
+        if n_qubits is None:
+            n_qubits = -1
+        csr = QubitOperator_.sparsing(self, n_qubits)
+        data = np.array(csr.data, copy=False)
+        indptr = np.array(csr.get_indptr(), copy=False)
+        indices = np.array(csr.get_indices(), copy=False)
+        return csr_matrix((data, indices, indptr), (csr.n_row, csr.n_col))
+
     def matrix(self, n_qubits: int = None):  # pylint: disable=too-many-locals
         """
         Convert this qubit operator to csr_matrix.
