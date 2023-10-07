@@ -1,0 +1,250 @@
+[build-system]
+requires = [
+    'setuptools>=61,<=65.5.1;python_version<"3.12"',
+    'setuptools>=61;python_version>="3.12"',
+    'wheel',
+    'pybind11>=2.9.2',
+    'wheel-filename>1.2'
+]
+build-backend = 'backend'
+backend-path = [
+    '_build'
+]
+
+# ==============================================================================
+
+[project]
+name = 'mindquantum'
+authors = [
+     {name = 'The MindSpore Authors', email = 'contact@mindspore.cn'}
+]
+description = 'A hybrid quantum-classic framework for quantum computing'
+requires-python = '>= 3.7'
+license = {text= 'Apache License Version 2.0'}
+readme = 'README.md'
+classifiers = [
+    'License :: OSI Approved :: Apache Software License',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10'
+]
+dynamic = ["version"]
+
+dependencies = [
+    'scipy>=1.5.3',
+    'matplotlib>=3.4.3',
+    'rich==10.9.0',
+    'importlib-metadata>=0.9;python_version<"3.8"',
+]
+
+[project.urls]
+'Homepage' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
+'Download (Gitee)' = 'https://gitee.com/mindspore/mindquantum/tags'
+'Source (Gitee)' = 'https://gitee.com/mindspore/mindquantum'
+'Issue Tracker' = 'https://gitee.com/mindspore/mindquantum/issues'
+'Download (GitHub)' = 'https://github.com/mindspore-ai/mindquantum/tags'
+'Source (GitHub)' = 'https://github.com/mindspore-ai/mindquantum'
+'Documentation' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
+
+[project.optional-dependencies]
+
+docs = [
+    'sphinx',
+    'sphinx_rtd_theme',
+    'breathe',
+    'myst-parser'
+]
+
+test = [
+    'pytest',
+    'pytest-cov',
+    'pytest-mock',
+    'mock'
+]
+
+mindspore = [
+    'mindspore'
+]
+
+[project.scripts]
+mindquantum-config = 'mindquantum_config:main'
+
+# ------------------------------------------------------------------------------
+
+[tool.setuptools]
+
+zip-safe = false
+
+[tool.setuptools.dynamic]
+
+version = {file = "VERSION.txt"}
+
+[tool.setuptools.packages.find]
+
+include = ['mindquantum*']
+
+# ==============================================================================
+
+[tool.black]
+line-length = 120
+target-version = ['py37','py38', 'py39', 'py310']
+skip-string-normalization = true
+
+
+[tool.coverage]
+    [tool.coverage.run]
+        omit = [
+            '*_test.py',
+            '*_fixtures.py'
+        ]
+
+
+[tool.pylint]
+    [tool.pylint.master]
+    ignore-patterns = [
+        '.*_test.py',
+        '.*_fixtures.py',
+    ]
+
+    extension-pkg-whitelist = [
+      'mindquantum.mqbackend',
+      'mindquantum._mq_vector',
+      'mindquantum._mq_vector_gpu',
+      'mindquantum._mq_matrix',
+      'mindquantum._math',
+    ]
+    extension-pkg-allow-list = [
+      'mindquantum.mqbackend',
+      'mindquantum._mq_vector',
+      'mindquantum._mq_vector_gpu',
+      'mindquantum._mq_matrix',
+      'mindquantum._math',
+    ]
+
+    init-hook = '''from pylint.config import find_default_config_files;\
+    import os, sys; \
+    sys.path.append(os.path.dirname(list(find_default_config_files())[0]))'''
+
+    [tool.pylint.basic]
+    good-names = ['ax', 'fd', 'i', 'j', 'k', 'l', 'n', 'N', 'q0', 'q1', 'q2', 'u', 'u1', 'u2', 'u3', 'v',
+                  'x', 'x1', 'x2', 'y', 'y1', 'y2', 'z', 'z1', 'z2',
+                  'n_layers', 'n_qubits', 'pr', 'a', 'b', 'g', 'f1',
+                  'f2', 'c', 'r', 'd', 'm', 'tq', 'p', 'd1', 'd2', 'w', 'p1', 'p2', 'f', 't']
+
+    [tool.pylint.typecheck]
+    ignored-modules = [
+        'mindquantum.mqbackend',
+        'mindspore',
+        'openfermion',
+        'openfermionpyscf',
+        'paddle',
+        'paddle_quantum',
+        'rich',
+        'sklearn',
+        'tensorflow',
+        'tensorflow_quantum',
+    ]
+
+    [tool.pylint.format]
+    max-line-length = 120
+
+    [tool.pylint.messages_control]
+    enable = [
+    ]
+    disable = [
+         'no-name-in-module',  # due to dynamic importing of symbols
+         'duplicate-code',
+         'fixme',
+    ]
+
+
+[tool.pytest.ini_options]
+
+minversion = '6.0'
+testpaths = ['tests']
+addopts = "--ignore='tests/quick_test.py'"
+norecursedirs = ['third_party', 'mindquantum/ccsrc']
+markers = [
+    'cxx_exp_projectq: tests involving the ProjectQ simulator',
+    'env_onecard: test marker used on MindSpore CI for certain GPU runs',
+    'level0: test marker used on MindSpore CI',
+    'level1: test marker used on MindSpore CI',
+    'platform_x86_cpu: test marker used on MindSpore CI for certain CPU runs',
+    'platform_x86_gpu_training: test marker used on MindSpore CI for certain GPU runs',
+]
+filterwarnings = [
+    'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
+    'ignore:.*`np.str` is a deprecated alias for the builtin `str`.*:DeprecationWarning',
+    'ignore:.*MindSpore not installed.*:UserWarning',
+    'ignore:.*distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning',
+    'ignore:.*ParameterResolver.__float__ returned non-float.*:DeprecationWarning',
+    'ignore:.*Override n_qubits and n_electrons with manually set*',
+    'ignore:.*the matrix subclass is not the recommended way to represent.*:PendingDeprecationWarning',
+    # From external packages
+    'ignore:.*Call to deprecated create function Descriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function EnumDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function EnumValueDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*Call to deprecated create function FieldDescriptor.*:DeprecationWarning',  # from cirq_google
+    'ignore:.*astroid.node_classes.*is deprecated*'
+]
+
+
+[tool.doc8]
+
+verbose = 0
+max_line_length = 120
+ignore-path-errors = [
+    "docs/api_python/mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes.rst;D001",
+    "docs/api_python/mindquantum.algorithm.nisq.quccsd_generator.rst;D001",
+    "docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001"
+]
+
+[tool.isort]
+
+profile = "black"
+
+
+# [tool.setuptools_scm]
+# write_to = 'VERSION.txt'
+# write_to_template = '{version}'
+# parentdir_prefix_version = 'mindquantum-'
+# local_scheme = 'no-local-version'
+# fallback_version = 'v1.0.0'
+
+
+[tool.yapf]
+column_limit = 120
+
+
+[tool.cibuildwheel]
+
+archs = ['auto64']
+build-frontend = 'build'
+build-verbosity = 1
+skip = 'pp* *-musllinux*'
+environment = { MQ_CI_BUILD='1', OMP_NUM_THREADS='1' }
+
+before-test = [
+    'cd {package}',
+    'python setup.py gen_reqfile',
+    'python -m pip install -r requirements.txt --prefer-binary',
+]
+
+test-command = 'python {package}/tests/quick_test.py'
+
+# Normal options, etc.
+manylinux-x86_64-image = 'manylinux2014'
+
+[[tool.cibuildwheel.overrides]]
+select = 'cp3{6,7,8,9}-*'
+manylinux-x86_64-image = 'manylinux2010'
+
+[tool.cibuildwheel.linux]
+
+# MQ_CIBW_BUILD_ARGS is a comma-separated list of arguments to pass onto `python3 -m build` when running within
+# cibuildwheel (e.g. MQ_CIBW_BUILD_ARGS='--set,ENABLE_GITEE')
+environment-pass = ['MQ_CIBW_BUILD_ARGS']
+# repair-wheel-command = "auditwheel -v repair -w {dest_dir} {wheel}"
