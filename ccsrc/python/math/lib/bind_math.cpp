@@ -29,10 +29,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "core/mq_base_types.h"
 #include "math/operators/fermion_operator_view.h"
 #include "math/operators/qubit_operator_view.h"
+#include "math/operators/sparsing.h"
 #include "math/operators/transform.h"
 #include "math/pr/parameter_resolver.h"
+#include "math/tensor/csr_matrix.h"
 #include "math/tensor/matrix.h"
 #include "math/tensor/ops/memory_operator.h"
 #include "math/tensor/ops_cpu/memory_operator.h"
@@ -180,6 +183,38 @@ void BindPR(py::module &module) {  // NOLINT(runtime/references)
         .def("update", &pr_t::Update);
 }
 
+void BindCsrMatrix(py::module &module) {  // NOLINT(runtime/references)
+    using csr_t = tensor::CsrMatrix;
+    py::class_<csr_t, std::shared_ptr<csr_t>>(module, "csr_matrix")
+        .def(py::init<>())
+        .def("get_indptr",
+             [](csr_t &csr) -> py::buffer_info {
+                 auto format = py::format_descriptor<mindquantum::index_t>::format();
+                 // clang-format off
+            return py::buffer_info(
+                csr.indptr_,
+                sizeof(mindquantum::index_t),
+                format,
+                1,
+                {csr.n_row+1, },
+                {sizeof(mindquantum::index_t)});
+                 // clang-format on
+             })
+        .def("get_indices",
+             [](csr_t &csr) -> py::buffer_info {
+                 auto format = py::format_descriptor<mindquantum::index_t>::format();
+                 // clang-format off
+            return py::buffer_info(
+                csr.indices_,
+                sizeof(mindquantum::index_t),
+                format,
+                1,
+                {csr.nnz, },
+                {sizeof(mindquantum::index_t)});
+                 // clang-format on
+             })
+        .def_readonly("data", &csr_t::data_);
+}
 // -----------------------------------------------------------------------------
 
 void BindQubitOperator(py::module &module) {  // NOLINT(runtime/references)
@@ -251,7 +286,8 @@ void BindQubitOperator(py::module &module) {  // NOLINT(runtime/references)
         .def("singlet", &qop_t::singlet)
         .def("size", &qop_t::size)
         .def("subs", &qop_t::subs)
-        .def("__repr__", [](const qop_t &op) { return op.ToString(); });
+        .def("__repr__", [](const qop_t &op) { return op.ToString(); })
+        .def("sparsing", &operators::GetMatrix);
 
     // -----------------------------------------------------------------------------
 
@@ -334,6 +370,7 @@ PYBIND11_MODULE(_math, m) {
 
     py::module tensor_module = m.def_submodule("tensor", "MindQuantum Tensor module.");
     mindquantum::python::BindTensor(tensor_module);
+    mindquantum::python::BindCsrMatrix(tensor_module);
 
     py::module pr_module = m.def_submodule("pr", "MindQuantum ParameterResolver module.");
     mindquantum::python::BindPR(pr_module);
