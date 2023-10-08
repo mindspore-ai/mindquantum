@@ -30,24 +30,6 @@
 
 namespace operators {
 namespace mq = mindquantum;
-mq::VT<mq::PauliMask> GetPauliMask(const qubit::QubitOperator& ops) {
-    mq::VT<mq::PauliMask> res;
-    for (auto& [term, pr] : ops.get_terms()) {
-        mq::VT<mq::index_t> out = {0, 0, 0, 0, 0, 0};
-        for (auto& [idx, w] : term) {
-            for (mq::index_t i = 0; i < 3; i++) {
-                if (static_cast<mq::index_t>(w) - 1 == i) {
-                    out[i] += (1UL << idx);
-                    out[3 + i] += 1;
-                    break;
-                }
-            }
-        }
-        res.push_back(mq::PauliMask({out[0], out[1], out[2], out[3], out[4], out[5]}));
-    }
-    return res;
-}
-
 template <typename T>
 struct EleComp {
     using ele_t = std::pair<mq::index_t, T>;
@@ -75,10 +57,21 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
             fmt::format("n_qubits ({}) is less than local qubit number ({}).", n_qubits, n_local_qubits));
     }
 
-    auto pauli_mask = GetPauliMask(ops);
+    mq::VT<mq::PauliMask> pauli_mask;
     mq::VT<calc_type> consts;
     for (auto [term, pr] : ops.get_terms()) {
         consts.push_back(tn::ops::cpu::to_vector<calc_type>(pr.const_value)[0]);
+        mq::VT<mq::index_t> out = {0, 0, 0, 0, 0, 0};
+        for (auto& [idx, w] : term) {
+            for (mq::index_t i = 0; i < 3; i++) {
+                if (static_cast<mq::index_t>(w) - 1 == i) {
+                    out[i] += (1UL << idx);
+                    out[3 + i] += 1;
+                    break;
+                }
+            }
+        }
+        pauli_mask.push_back(mq::PauliMask({out[0], out[1], out[2], out[3], out[4], out[5]}));
     }
 
     auto dim = 1UL << n_qubits;
@@ -86,16 +79,14 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
     mq::index_t nnz = 0;
 #pragma omp parallel for schedule(static) reduction(+ : nnz)
     for (mq::index_t i = 0; i < dim; i++) {
-        mq::index_t term_idx = 0;
         ele_set<calc_type> vals;
-        for (auto& [term, pr] : ops.get_terms()) {
+        for (mq::index_t term_idx = 0; term_idx < ops.size(); term_idx++) {
             auto& mask = pauli_mask[term_idx];
             auto mask_f = mask.mask_x | mask.mask_y;
             auto j = (i ^ mask_f);
             auto axis2power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_z));  // -1
             auto axis3power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_y));  // -1j
             auto val = polar[(mask.num_y + 2 * axis3power + 2 * axis2power) & 3] * consts[term_idx];
-            term_idx += 1;
             typename EleComp<calc_type>::ele_t ele_new = {j, val};
             auto prev = vals.find(ele_new);
             if (prev != vals.end()) {
