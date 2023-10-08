@@ -936,6 +936,17 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(mq_gates.S.on(obj_qubits, ctrl_qubits))
         return self
 
+    def t(self, obj_qubits, ctrl_qubits=None):
+        """
+        Add a T gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `T` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `T` gate. Default: ``None``.
+        """
+        self.append(mq_gates.T.on(obj_qubits, ctrl_qubits))
+        return self
+
     def swap(self, obj_qubits, ctrl_qubits=None):
         """
         Add a SWAP gate.
@@ -945,6 +956,29 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             ctrl_qubits (Union[int, list[int]]): the control qubits of `SWAP` gate. Default: ``None``.
         """
         self.append(mq_gates.SWAP.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def iswap(self, obj_qubits, ctrl_qubits=None):
+        """
+        Add a ISWAP gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `ISWAP` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `ISWAP` gate. Default: ``None``.
+        """
+        self.append(mq_gates.ISWAP.on(obj_qubits, ctrl_qubits))
+        return self
+
+    def swap_alpha(self, para, obj_qubits, ctrl_qubits=None):
+        """
+        Add a SWAPalpha gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `SWAPalpha` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `SWAPalpha` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `SWAPalpha` gate. Default: ``None``.
+        """
+        self.append(mq_gates.SWAPalpha(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def rx(self, para, obj_qubits, ctrl_qubits=None):
@@ -993,6 +1027,32 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             ctrl_qubits (Union[int, list[int]]): the control qubits of `PhaseShift` gate. Default: ``None``.
         """
         self.append(mq_gates.PhaseShift(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def global_phase(self, para, obj_qubits, ctrl_qubits=None):
+        """
+        Add a Global Phase gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `GlobalPhase` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `GlobalPhase` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `GlobalPhase` gate. Default: ``None``.
+        """
+        self.append(mq_gates.GlobalPhase(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def u3(self, theta, phi, lamda, obj_qubits, ctrl_qubits=None):
+        """
+        Add a U3 gate.
+
+        Args:
+            theta (Union[dict, ParameterResolver]): First parameter for `U3` gate.
+            phi (Union[dict, ParameterResolver]): Second parameter for `U3` gate.
+            lamda (Union[dict, ParameterResolver]): Third parameter for `U3` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `U3` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `U3` gate. Default: ``None``.
+        """
+        self.append(mq_gates.U3(theta, phi, lamda).on(obj_qubits, ctrl_qubits))
         return self
 
     def xx(self, para, obj_qubits, ctrl_qubits=None):
@@ -1067,6 +1127,30 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(mq_gates.Rxx(para).on(obj_qubits, ctrl_qubits))
         return self
 
+    def rxy(self, para, obj_qubits, ctrl_qubits=None):
+        """
+        Add a Rxy gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `Rxy` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `Rxy` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Rxy` gate. Default: ``None``.
+        """
+        self.append(mq_gates.Rxy(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def rxz(self, para, obj_qubits, ctrl_qubits=None):
+        """
+        Add a Rxz gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `Rxz` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `Rxz` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Rxz` gate. Default: ``None``.
+        """
+        self.append(mq_gates.Rxz(para).on(obj_qubits, ctrl_qubits))
+        return self
+
     def ryy(self, para, obj_qubits, ctrl_qubits=None):
         """
         Add a Ryy gate.
@@ -1079,6 +1163,18 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(mq_gates.Ryy(para).on(obj_qubits, ctrl_qubits))
         return self
 
+    def ryz(self, para, obj_qubits, ctrl_qubits=None):
+        """
+        Add a Ryz gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `Ryz` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `Ryz` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Ryz` gate. Default: ``None``.
+        """
+        self.append(mq_gates.Ryz(para).on(obj_qubits, ctrl_qubits))
+        return self
+
     def rzz(self, para, obj_qubits, ctrl_qubits=None):
         """
         Add a Rzz gate.
@@ -1089,6 +1185,19 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             ctrl_qubits (Union[int, list[int]]): the control qubits of `Rzz` gate. Default: ``None``.
         """
         self.append(mq_gates.Rzz(para).on(obj_qubits, ctrl_qubits))
+        return self
+
+    def fsim(self, theta, phi, obj_qubits, ctrl_qubits=None):
+        """
+        Add a FSim gate.
+
+        Args:
+            theta (Union[dict, ParameterResolver]): First parameter for `FSim` gate.
+            phi (Union[dict, ParameterResolver]): Second parameter for `FSim` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `FSim` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `FSim` gate. Default: ``None``.
+        """
+        self.append(mq_gates.FSim(theta, phi).on(obj_qubits, ctrl_qubits))
         return self
 
     def measure(self, key, obj_qubit=None):

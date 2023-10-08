@@ -74,6 +74,16 @@ mindquantum.core.circuit.Circuit
         参数：
             - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。
 
+    .. py:method:: fsim(theta, phi, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `FSim` 门。
+
+        参数：
+            - **theta** (Union[dict, ParameterResolver]) - `FSim` 门的第一个参数。
+            - **phi** (Union[dict, ParameterResolver]) - `FSim` 门的第二个参数。
+            - **obj_qubits** (Union[int, list[int]]) - `FSim` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `FSim` 门的控制量子比特。默认值： ``None`` 。
+
     .. py:method:: get_cpp_obj(hermitian=False)
 
         获取线路的cpp object。
@@ -92,9 +102,18 @@ mindquantum.core.circuit.Circuit
             - **seed** (int) - 模拟器的随机种子。默认值： ``None``。
             - **dtype** (mindquantum.dtype) - 模拟器的数据类型。默认值： ``None``。
 
+    .. py:method:: global_phase(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `GlobalPhase` 门。
+
+        参数：
+            - **para** (Union[dict, ParameterResolver]) - `GlobalPhase` 门的参数。
+            - **obj_qubits** (Union[int, list[int]]) - `GlobalPhase` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `GlobalPhase` 门的控制量子比特。默认值： ``None`` 。
+
     .. py:method:: h(obj_qubits, ctrl_qubits=None)
 
-        添加一个hadamard门。
+        在电路中添加 `H` 门。
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `H` 门的目标量子比特。
@@ -135,6 +154,14 @@ mindquantum.core.circuit.Circuit
 
         返回：
             bool，线路是否有噪声信道。
+
+    .. py:method:: iswap(obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `ISWAP` 门。
+
+        参数：
+            - **obj_qubits** (Union[int, list[int]]) - `ISWAP` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `ISWAP` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: matrix(pr=None, big_end=False, backend='mqvector', seed=None, dtype=None)
 
@@ -255,6 +282,24 @@ mindquantum.core.circuit.Circuit
             - **obj_qubits** (Union[int, list[int]]) - `Rxx` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `Rxx` 门的控制量子比特。默认值： ``None``。
 
+    .. py:method:: rxy(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `Rxy` 门。
+
+        参数：
+            - **para** (Union[dict, ParameterResolver]) - `Rxy` 门的参数。
+            - **obj_qubits** (Union[int, list[int]]) - `Rxy` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Rxy` 门的控制量子比特。默认值： ``None``。
+
+    .. py:method:: rxz(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `Rxz` 门。
+
+        参数：
+            - **para** (Union[dict, ParameterResolver]) - `Rxz` 门的参数。
+            - **obj_qubits** (Union[int, list[int]]) - `Rxz` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Rxz` 门的控制量子比特。默认值： ``None``。
+
     .. py:method:: ry(para, obj_qubits, ctrl_qubits=None)
 
         在电路中添加 `RY` 门。
@@ -272,6 +317,15 @@ mindquantum.core.circuit.Circuit
             - **para** (Union[dict, ParameterResolver]) - `Ryy` 门的参数。
             - **obj_qubits** (Union[int, list[int]]) - `Ryy` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `Ryy` 门的控制量子比特。默认值： ``None``。
+
+    .. py:method:: ryz(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `Ryz` 门。
+
+        参数：
+            - **para** (Union[dict, ParameterResolver]) - `Ryz` 门的参数。
+            - **obj_qubits** (Union[int, list[int]]) - `Ryz` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Ryz` 门的控制量子比特。默认值： ``None``。
 
     .. py:method:: rz(para, obj_qubits, ctrl_qubits=None)
 
@@ -321,6 +375,34 @@ mindquantum.core.circuit.Circuit
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `SWAP` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `SWAP` 门的控制量子比特。默认值： ``None``。
+
+    .. py:method:: swap_alpha(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `SWAPalpha` 门。
+
+        参数：
+            - **para** (Union[dict, ParameterResolver]) - `SWAPalpha` 门的参数。
+            - **obj_qubits** (Union[int, list[int]]) - `SWAPalpha` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `SWAPalpha` 门的控制量子比特。默认值： ``None`` 。
+
+    .. py:method:: t(obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `T` 门。
+
+        参数：
+            - **obj_qubits** (Union[int, list[int]]) - `T` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `T` 门的控制量子比特。默认值： ``None``。
+
+    .. py:method:: u3(theta, phi, lamda, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `U3` 门。
+
+        参数：
+            - **theta** (Union[dict, ParameterResolver]) - `U3` 门的第一个参数。
+            - **phi** (Union[dict, ParameterResolver]) - `U3` 门的第二个参数。
+            - **lamda** (Union[dict, ParameterResolver]) - `U3` 门的第三个参数。
+            - **obj_qubits** (Union[int, list[int]]) - `U3` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `U3` 门的控制量子比特。默认值： ``None`` 。
 
     .. py:method:: un(gate, maps_obj, maps_ctrl=None)
 
