@@ -501,9 +501,9 @@ class QubitOperator(QubitOperator_):
             n_qubits (int): The total qubits of final matrix. If ``None``, the value will be
                 the maximum local qubit number. Default: ``None``.
         """
-        _check_int_type('n_qubits', n_qubits)
         if n_qubits is None:
             n_qubits = -1
+        _check_int_type('n_qubits', n_qubits)
         csr = QubitOperator_.sparsing(self, n_qubits)
         data = np.array(csr.data, copy=False)
         indptr = np.array(csr.get_indptr(), copy=False)
