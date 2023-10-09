@@ -1,0 +1,14 @@
+name: sqif
+channels:
+  - anaconda
+  - conda-forge
+dependencies:
+  - python=3.8
+  - numpy=1.21.5
+  - fpylll=0.5.9
+  - sage>=9.8
+  - cudnn=8.2.1
+  - cudatoolkit=11.3.1
+  - numba=0.56.4
+  - mindspore=2.1.0
+  - mindquantum=0.8.0
