@@ -1,0 +1,142 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+"""Gate module that provides different quantum gate."""
+
+from .basic import (
+    HERMITIAN_PROPERTIES,
+    BasicGate,
+    NoiseGate,
+    NoneParameterGate,
+    ParameterGate,
+    QuantumGate,
+)
+from .basicgate import (
+    BARRIER,
+    CNOT,
+    ISWAP,
+    RX,
+    RY,
+    RZ,
+    SWAP,
+    SWAPalpha,
+    U3,
+    XX,
+    YY,
+    ZZ,
+    BarrierGate,
+    CNOTGate,
+    FSim,
+    GlobalPhase,
+    H,
+    HGate,
+    I,
+    IGate,
+    ISWAPGate,
+    PhaseShift,
+    Power,
+    Rxx,
+    Rxy,
+    Rxz,
+    Ryy,
+    Ryz,
+    Rzz,
+    S,
+    SGate,
+    SWAPGate,
+    T,
+    TGate,
+    UnivMathGate,
+    X,
+    XGate,
+    Y,
+    YGate,
+    Z,
+    ZGate,
+    gene_univ_parameterized_gate,
+)
+from .channel import (
+    AmplitudeDampingChannel,
+    BitFlipChannel,
+    BitPhaseFlipChannel,
+    DepolarizingChannel,
+    KrausChannel,
+    PauliChannel,
+    PhaseDampingChannel,
+    PhaseFlipChannel,
+)
+from .measurement import Measure, MeasureResult
+
+__all__ = [
+    "BasicGate",
+    "QuantumGate",
+    "NoiseGate",
+    "NoneParameterGate",
+    "ParameterGate",
+    "HERMITIAN_PROPERTIES",
+    "BarrierGate",
+    "CNOTGate",
+    "HGate",
+    "IGate",
+    "XGate",
+    "YGate",
+    "ZGate",
+    "gene_univ_parameterized_gate",
+    "UnivMathGate",
+    "SWAPGate",
+    "ISWAPGate",
+    "SWAPalpha",
+    "RX",
+    "RY",
+    "RZ",
+    "PhaseShift",
+    "SGate",
+    "TGate",
+    "XX",
+    "YY",
+    "ZZ",
+    "Rxx",
+    "Ryy",
+    "Rzz",
+    "Rxy",
+    "Rxz",
+    "Ryz",
+    "Power",
+    "I",
+    "X",
+    "Y",
+    "Z",
+    "H",
+    "S",
+    "T",
+    "SWAP",
+    "ISWAP",
+    "CNOT",
+    "BARRIER",
+    "Measure",
+    "MeasureResult",
+    "PauliChannel",
+    "BitFlipChannel",
+    "PhaseFlipChannel",
+    "BitPhaseFlipChannel",
+    "DepolarizingChannel",
+    "GlobalPhase",
+    "AmplitudeDampingChannel",
+    "PhaseDampingChannel",
+    "KrausChannel",
+    "U3",
+    "FSim",
+]
+
+__all__.sort()

@@ -1,0 +1,16 @@
+mindquantum.algorithm
+=====================
+
+.. py:module:: mindquantum.algorithm
+
+
+量子算法。
+
+.. mscnautosummary::
+    :toctree:
+
+    mindquantum.algorithm.compiler
+    mindquantum.algorithm.library
+    mindquantum.algorithm.nisq
+    mindquantum.algorithm.error_mitigation
+    mindquantum.algorithm.mapping

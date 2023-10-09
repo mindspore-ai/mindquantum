@@ -1,0 +1,101 @@
+---
+
+BasedOnStyle: Google
+AccessModifierOffset: -3
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Right
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: true
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterExternBlock: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+BreakBeforeConceptDeclarations: true
+BreakBeforeInheritanceComma: true
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 120
+CompactNamespaces: false
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  # We define the include categories such that the header files are sorted and grouped as follows:
+  #    1. C standard headers
+  #    2. C++ standard headers
+  #    3. CUDA headers
+  #    4. Boost headers
+  #    5. Eigen headers
+  #    8. Other system headers
+  #    9. Any local config header
+  #   10. Local headers
+  #   11. Catch2 headers
+  - Regex: '[<"](catch2/([A-Za-z0-9.\/\-_])+)[>"]'  # Make sure Catch2 is included last
+    Priority: 110
+  - Regex: '[<"]tweedledum/([A-Za-z0-9.\/\-_])+[>"]'
+    Priority: 60
+  - Regex: '<boost\/'
+    Priority: 40
+  - Regex: '<(Eigen|Unsupported/Eigen)\/'
+    Priority: 50
+  - Regex: '[<"]cuda[A-Za-z0-9.\/\-_]+[>"]'
+    Priority: 30
+  - Regex: '[<"](driver_types.h)[>"]'
+    Priority: 30
+  - Regex: >-
+      '<
+      (assert|complex|ctype|errno|fenv|float|inttypes|iso646|limits|locale|math|setjmp|signal|stdalign|stdarg
+      |stdatomic|stdbool|stddef|stdint|stdio|stdlib|stdnoreturn|string|tdmath|threads|time|uchar|wchar|wctype)
+      \.h>'
+    Priority: 10
+  - Regex: '<[[:alnum:]_\.]+.h>'
+    Priority: 10
+  - Regex: '<[[:alnum:]_\.]+>'
+    Priority: 20
+  - Regex: '<[[:alnum:]_\.]+'
+    Priority: 80
+  - Regex: '"config/[[:alnum:]\/\-_\.]+\.hpp"'
+    Priority: 90
+  - Regex: '"python/[[:alnum:]\/\-_\.]+"'
+    Priority: 110
+  - Regex: '"[[:alnum:]\/\-_\.]+"'
+    Priority: 100
+IndentPPDirectives: AfterHash
+IndentRequires: true
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+NamespaceIndentation: None
+PenaltyBreakAssignment: 40
+ReflowComments: true
+SortIncludes: true
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: true
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+StatementMacros: []
+TypenameMacros: []
+Standard: Latest
+TabWidth: 4
+UseTab: Never
+WhitespaceSensitiveMacros: ['CLANG_DIAG_ON', 'CLANG_DIAG_OFF', 'GCC_DIAG_ON', 'GCC_DIAG_OFF', 'MSVC_DIAG_ON',
+                            'MSVC_DIAG_OFF', 'MQ_DO_PRAGMA']
