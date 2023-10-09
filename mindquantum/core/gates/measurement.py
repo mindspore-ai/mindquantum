@@ -137,6 +137,8 @@ class Measure(FunctionalGate):
         new = super().on(obj_qubits, ctrl_qubits)
         if len(new.obj_qubits) != 1:
             raise ValueError("Measure gate only apply on a single qubit")
+        if new.ctrl_qubits:
+            raise ValueError("Measure gate cannot have control qubits.")
         if not new.key:
             new.key = f"q{new.obj_qubits[0]}"
         return new
