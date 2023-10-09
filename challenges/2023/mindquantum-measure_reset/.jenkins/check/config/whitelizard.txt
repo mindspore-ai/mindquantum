@@ -1,0 +1,52 @@
+# Scene1:
+#    function_name1, function_name2
+# Scene2:
+#    file_path:function_name1, function_name2
+#
+_build/backend.py:build_wheel
+mindquantum/mindquantum/_build/backend.py:build_wheel
+mindquantum/mindquantum/algorithm/nisq/chem/qubit_ucc_ansatz.py:_implement
+mindquantum/mindquantum/algorithm/nisq/chem/quccsd.py:quccsd_generator
+mindquantum/mindquantum/algorithm/nisq/chem/transform.py:bravyi_kitaev_superfast
+mindquantum/mindquantum/algorithm/nisq/chem/uccsd.py:_para_uccsd_singlet_generator
+mindquantum/mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
+mindquantum/mindquantum/core/circuit/qfi.py:_qfi_matrix_base
+mindquantum/mindquantum/core/gates/basicgate.py:gene_univ_parameterized_gate
+mindquantum/mindquantum/io/display/bloch_plt_drawer.py:add_state
+mindquantum/mindquantum/io/qasm/hiqasm.py:to_string
+mindquantum/mindquantum/io/qasm/hiqasm.py:trans_v01
+mindquantum/mindquantum/io/qasm/openqasm.py:to_string
+mindquantum/mindquantum/simulator/mqsim.py:get_expectation_with_grad
+mindquantum/mindquantum/simulator/mqsim.py:grad_ops
+mindquantum/mindquantum/simulator/simulator.py:get_expectation_with_grad
+mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
+mindquantum/mindquantum/io/display/circuit_text_drawer.py:brick_model
+mindquantum/algorithm/compiler/decompose/universal_decompose/two_qubit_decompose.py:kak_decompose
+mindquantum/mindquantum/io/qasm/openqasm.py:_trans_v2
+
+mindquantum/ccsrc/include/ops/gates.h:mindquantum::GetGateByName
+mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::QubitOperator<coeff_t>::sparse_matrix
+mindquantum/ccsrc/include/ops/gates/qubit_operator.tpp:mindquantum::ops::mindquantum::ops::QubitOperator<coeff_t>::get_op_matrix.QubitOperator<coeff_t>::sparse_matrix
+mindquantum/ccsrc/mindquantum/src/binding.cc:mindquantum::PYBIND11_MODULE
+mindquantum/ccsrc/python/mqbackend/lib/binding.cc:PYBIND11_MODULE
+mindquantum/ccsrc/python/mqbackend/lib/fermion_operators.cpp:init_fermion_operators
+mindquantum/ccsrc/python/mqbackend/lib/qubit_operators.cpp:init_qubit_operators
+mindquantum/ccsrc/python/mqbackend/lib/terms_operators.cpp:init_terms_operators
+mindquantum/ccsrc/python/mqbackend/lib/binding.cc:BindOther
+mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_fermion_operators
+mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_qubit_operators
+mindquantum/ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
+mindquantum/ccsrc/include/math/tensor/ops_cpu/advance_math.h:tensor::ops::cpu::ElementFunc
+mindquantum/mindquantum/core/parameterresolver/parameterresolver.py:__init__
+mindquantum/ccsrc/python/math/lib/bind_math.cpp:mindquantum::python::BindQubitOperator
+ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix
+
+TEST_CASE
+mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
+mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti
+mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::LeftSizeGradOneMulti
+mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::ApplyGate
+mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti
+DummyOperator::TermsOperator::operator == ; } ; } using coefficient_t = DummyOperator :: coefficient_t ; using coeff_term_dict_t = DummyOperator :: coeff_term_dict_t ; TEST_CASE
+mindquantum::ops::details::mindquantum::ops::details::pauli_products.QubitOperatorTermPolicy<coefficient_t>::simplify
+mindquantum/tests/st/test_io/test_svg.py:test_measure_svg

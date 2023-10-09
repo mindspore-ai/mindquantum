@@ -1,0 +1,204 @@
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See https://github.com/pre-commit/pre-commit
+
+---
+
+ci:
+  skip: [check-manifest, pylint, cppcheck]
+
+repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: check-toml
+      - id: debug-statements
+      - id: end-of-file-fixer
+        exclude: ^(.*patch[0-9]*)$
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        exclude: ^(.*patch[0-9]*)$
+
+  # Changes tabs to spaces
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.3.1
+    hooks:
+      - id: remove-tabs
+        exclude: ^(.*Makefile|.*patch[0-9]*)$
+
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        exclude: (test_.*\.py)$
+        additional_dependencies: [toml]
+
+  - repo: https://github.com/PyCQA/doc8/
+    rev: v1.0.0
+    hooks:
+      - id: doc8
+        alias: doc8-lint
+        require_serial: false
+        additional_dependencies: [tomli]
+        args: [--ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001,
+               --ignore-path-errors, docs/api_python/mindquantum.algorithm.nisq.quccsd_generator.rst;D001,
+               --ignore-path-errors,
+               docs/api_python/mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes.rst;D001]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.8.0.4
+    hooks:
+      - id: shellcheck
+        require_serial: false
+        args: [-x, --severity=warning]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.2
+    hooks:
+      - id: codespell
+        require_serial: false
+        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        args: [-S, '.git,third_party', -I, .codespell.allow]
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.28.0
+    hooks:
+      - id: yamllint
+        require_serial: false
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+        require_serial: false
+        additional_dependencies: [pyyaml]
+      - id: cmake-lint
+        require_serial: false
+        exclude: ^(cmake/Modules/.*)$
+        additional_dependencies: [pyyaml]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+      - id: blacken-docs
+        args: [-S, -l, '120']
+        additional_dependencies: [black==22.10.0]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.2.2
+    hooks:
+      - id: pyupgrade
+        args: [--py37-plus, --keep-mock]
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 5.0.4
+    hooks:
+      - id: flake8
+        args: [--docstring-convention, google]
+        name: flake8-strict
+        exclude: (test_.*\.py)$
+        additional_dependencies: [flake8-breakpoint, flake8-builtins, flake8-comprehensions, flake8-continuation,
+                                  flake8-docstrings, flake8-eradicate, flake8-mutable, flake8-return, pep8-naming,
+                                  flake8-secure-coding-standard]
+      - id: flake8
+        name: flake8-test-files
+        files: (test_.*\.py)$
+        additional_dependencies: [flake8-breakpoint, flake8-builtins, flake8-comprehensions, flake8-continuation,
+                                  flake8-eradicate, flake8-mutable, flake8-return]
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.15.5
+    hooks:
+      - id: pylint
+        name: pylint-strict
+        exclude: (test_.*\.py)$
+        args: [--score=n, --load-plugins=pylint_secure_coding_standard]
+        additional_dependencies: [pybind11>=2.9.2, wheel_filename, numpy, scipy, projectq, openfermion, sympy,
+                                  matplotlib, rich, pylint-secure-coding-standard]
+      - id: pylint
+        name: pylint-test-files
+        files: (test_.*\.py)$
+        args: [--score=n, --load-plugins=pylint_pytest]
+        additional_dependencies: [numpy, scipy, projectq, openfermion, sympy, matplotlib, rich, pytest,
+                                  pylint-pytest]
+
+  - repo: https://github.com/mgedmin/check-manifest
+    rev: '0.48'
+    hooks:
+      - id: check-manifest
+        stages: [manual]
+        additional_dependencies: ['pybind11>=2.9.2']
+
+  - repo: https://github.com/Takishima/cmake-pre-commit-hooks/
+    rev: 'v1.5.3'
+    hooks:
+      - id: clang-format
+        require_serial: false
+        args: [-i]
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        additional_dependencies: ['clang-format==14.*']
+      - id: cpplint
+        require_serial: false
+        args: [--quiet]
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        additional_dependencies: ['cpplint']
+      - id: lizard
+        require_serial: false
+        files: .*\.(h|hpp|tpp|cpp|cc|py)$
+        args: [-l, cpp, -l, python, -l, java, -C, '19', -L, '100',
+               -x, '*/tests/*', -x, '*/test/*', -x, '*/third_party/*',
+               -W.whitelizard.txt, -w]
+        additional_dependencies: ['lizard']
+  #     - id: clang-tidy
+  #       stages: [manual]
+  #       args: [-Bbuild, -B.pre-commit-build]
+  #       exclude: >-
+  #         (?x)^(
+  #           .*/kernel[0-9]+\.hpp|
+  #           .*third_party/.*|
+  #           .*\.cu
+  #         )$
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: cppcheck
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        args: [--force,
+               --enable=all,
+               --error-exitcode=1,
+               --inline-suppr,
+               --std=c++20,
+               --language=c++,
+               --suppressions-list=.cppcheck.suppressions]

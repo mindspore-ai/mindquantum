@@ -1,0 +1,202 @@
+---
+
+markup:
+  first_comment_is_literal: true
+format:
+  disable: false
+  line_width: 120
+  tab_size: 2
+  use_tabchars: false
+  max_subgroups_hwrap: 2
+  max_pargs_hwrap: 6
+  max_rows_cmdline: 2
+  separate_ctrl_name_with_space: false
+  separate_fn_name_with_space: false
+  dangle_parens: false
+  dangle_align: prefix
+  min_prefix_chars: 4
+  max_prefix_chars: 10
+  max_lines_hwrap: 2
+  line_ending: unix
+  command_case: canonical
+  keyword_case: unchanged
+  enable_sort: true
+  autosort: false
+  require_valid_layout: false
+parse:
+  additional_commands:
+    _apply_patch_file:
+      kwargs:
+        PATCH_ARGS: +
+        ERROR_VARIABLE: 1
+        INPUT_FILE: 1
+        OUTPUT_VARIABLE: 1
+        RESULTS_VARIABLE: 1
+        RESULT_VARIABLE: 1
+        WORKING_DIRECTORY: 1
+    __exec_cmd:
+      kwargs:
+        COMMAND: +
+        WORKING_DIRECTORY: 1
+    __find_package:
+      pargs:
+        nargs: 1+
+      kwargs:
+        SEARCH_NAME: 1
+    apply_patches:
+      pargs:
+        nargs: +
+        flags:
+          - TRY_GIT_RESET
+      kwargs:
+        WORKING_DIRECTORY: 1
+    define_compiler_linker_flags:
+      pargs:
+        nargs: 2
+      kwargs:
+        COMPILER_FLAGS: 1
+        LINKER_FLAGS: 1
+    file:
+      pargs:
+        flags:
+          - CONFIGURE
+          - '@ONLY'
+      kwargs:
+        OUTPUT: 1
+        CONTENT: 1
+        NEWLINE_STYLE: 1
+    check_compiler_flags:
+      pargs:
+        nargs: 2+
+        flags:
+          - FLAGCHECK
+      kwargs:
+        LINKER_FLAGS: 1
+    check_link_flags:
+      pargs:
+        nargs: 2+
+        flags:
+          - VERBATIM
+    execute_process:
+      pargs:
+        flags:
+          - ECHO_ERROR_VARIABLE
+          - ECHO_OUTPUT_VARIABLE
+          - ERROR_QUIET
+          - ERROR_STRIP_TRAILING_WHITESPACE
+          - OUTPUT_QUIET
+          - OUTPUT_STRIP_TRAILING_WHITESPACE
+      kwargs:
+        COMMAND: 1+
+        COMMAND_ECHO: 1
+        COMMAND_ERROR_IS_FATAL: 1
+        ENCODING: 1
+        ERROR_FILE: 1
+        ERROR_VARIABLE: 1
+        INPUT_FILE: 1
+        OUTPUT_FILE: 1
+        OUTPUT_VARIABLE: 1
+        RESULTS_VARIABLE: 1
+        RESULT_VARIABLE: 1
+        TIMEOUT: 1
+        WORKING_DIRECTORY: 1
+    mindquantum_add_pkg:
+      pargs:
+        nargs: 1
+        flags:
+          - BUILD_USING_CMAKE
+          - CMAKE_PKG_NO_COMPONENTS
+          - FORCE_CONFIG_SEARCH
+          - FORCE_EXACT_VERSION
+          - FORCE_LOCAL_PKG
+          - GEN_CMAKE_CONFIG
+          - ONLY_MAKE
+          - SKIP_BUILD_STEP
+          - SKIP_INSTALL_STEP
+          - SKIP_IN_INSTALL_CONFIG
+          - USE_STATIC_LIBS
+      kwargs:
+        CMAKE_PATH: 1
+        EXE: 1
+        GIT_REPOSITORY: 1
+        GIT_TAG: 1
+        MD5: 1
+        URL: 1
+        VER: 1
+        BUILD_COMMAND: +
+        BUILD_DEPENDENCIES: +
+        BUILD_OPTION: +
+        CMAKE_OPTION: +
+        CONFIGURE_COMMAND: +
+        INSTALL_COMMAND: +
+        INSTALL_INCS: +
+        INSTALL_LIBS: +
+        LANGS: +
+        LIBS: +
+        LOCAL_EXTRA_DEFINES: +
+        ONLY_COPY_DIRS: +
+        ONLY_MAKE_INCS: +
+        ONLY_MAKE_LIBS: +
+        PATCHES: +
+        PRE_CONFIGURE_COMMAND: +
+        SYSTEM_EXTRA_DEFINES: +
+        TARGET_ALIAS: +
+    mq_add_compile_definitions:
+      pargs:
+        nargs: +
+        flags:
+          - TRYCOMPILE
+          - TRYCOMPILE_FLAGCHECK
+    mq_link_libraries:
+      pargs:
+        nargs: +
+        flags:
+          - TRYCOMPILE
+          - TRYCOMPILE_FLAGCHECK
+    pybind11_add_module:
+      pargs:
+        nargs: 1+
+        flags:
+          - MODULE
+      kwargs:
+        OUTPUT_HINT: 1
+    test_compile_option:
+      pargs:
+        nargs: 1+
+        flags:
+          - FLAGCHECK
+          - NO_MQ_TARGET
+          - NO_TRYCOMPILE_FLAGCHECK_TARGET
+          - NO_TRYCOMPILE_TARGET
+      kwargs:
+        CMAKE_OPTION: 1
+        FLAGS: +
+        GENEX: 1
+        LANGS: +
+        LINKER_FLAGS: 1
+    test_linker_option:
+      pargs:
+        nargs: 1+
+        flags:
+          - NO_MQ_TARGET
+          - VERBATIM
+      kwargs:
+        LANGS: +
+        FLAGS: +
+        CMAKE_OPTION: 1
+        GENEX: 1
+    try_compile_cxx_no_link:
+      pargs:
+        nargs: 2
+        flags:
+          - QUIET
+      kwargs:
+        OUTPUT: 1
+        INCLUDE_DIRECTORIES: +
+        LINK_LIBRARIES: +
+lint:
+  argument_var_pattern: _?[a-z][a-z0-9_]+
+  local_var_pattern: _?([a-z][a-z0-9_]+|[A-Z][A-Z0-9_]+)
+  global_var_pattern: _?([a-z][a-z0-9_]+|[A-Z][A-Z0-9_]+)
+  internal_var_pattern: _?([a-z][a-z0-9_]+|[A-Z][A-Z0-9_]+)
+  macro_pattern: '[0-9a-z_]+'

@@ -1,0 +1,80 @@
+# ==============================================================================
+#
+# Copyright 2022 <Huawei Technologies Co., Ltd>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ==============================================================================
+
+@PACKAGE_INIT@
+
+if(TARGET mindquantum::mqbackend)
+  # Protect against double definitions due to previous call or add_subdirectory()
+  return()
+endif()
+
+# ==============================================================================
+
+if(@MQ_INSTALL_IN_BUILD_DIR@) # if(MQ_INSTALL_IN_BUILD_DIR)
+  list(PREPEND CMAKE_MODULE_PATH "@PROJECT_SOURCE_DIR@/cmake/commands" "@PROJECT_SOURCE_DIR@/cmake/Modules"
+       "@PROJECT_SOURCE_DIR@/cmake" "${CMAKE_CURRENT_LIST_DIR}")
+else()
+  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/commands" "${CMAKE_CURRENT_LIST_DIR}/Modules"
+       "${CMAKE_CURRENT_LIST_DIR}")
+endif()
+
+include(to_cmake_path)
+include(find_python_module)
+include(mq_config_macros)
+
+# ---------------------------------------
+
+mq_set(MQ_PACKAGE_PREFIX_DIR "${PACKAGE_PREFIX_DIR}")
+
+mq_set(USE_OPENMP "@USE_OPENMP@")
+mq_set(USE_PARALLEL_STL "@USE_PARALLEL_STL@")
+mq_set(PYTHON_EXECUTABLE "@PYTHON_EXECUTABLE@")
+
+# ---------------------------------------
+
+if(ENABLE_CUDA)
+  enable_language(CUDA)
+endif()
+
+include(packages)
+
+# ==============================================================================
+
+include(mindquantumTargetsExternal)
+
+include(mindquantumTargets)
+if(EXISTS mindquantumPythonTargets)
+  include(mindquantumPythonTargets)
+endif()
+
+# ------------------------------------------------------------------------------
+
+check_required_components(mindquantum)
+
+# ==============================================================================
+
+mq_unset_auto()
+
+list(POP_FRONT CMAKE_MODULE_PATH)
+list(POP_FRONT CMAKE_MODULE_PATH)
+list(POP_FRONT CMAKE_MODULE_PATH)
+if(@MQ_INSTALL_IN_BUILD_DIR@) # if(MQ_INSTALL_IN_BUILD_DIR)
+  list(POP_FRONT CMAKE_MODULE_PATH)
+endif()
+
+# ==============================================================================
