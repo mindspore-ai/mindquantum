@@ -20,7 +20,7 @@ $BASEPATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 
 . (Join-Path $BASEPATH 'default_values.ps1')
 . (Join-Path $BASEPATH 'common_functions.ps1')
-. (Join-Path $BASEPATH '..' 'parse_toml.ps1')
+. (Join-Path -Path $BASEPATH -ChildPath '..' | Join-Path -ChildPath 'parse_toml.ps1')
 
 # ==============================================================================
 
