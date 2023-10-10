@@ -75,9 +75,9 @@ def test_normal_order():
     Description: Test normal order
     Expectation:
     """
-    origin = FermionOperator('0 1^')
+    origin = FermionOperator('12 13^')
 
-    normal_order = FermionOperator('1^ 0', -1)
+    normal_order = FermionOperator('13^ 12', -1)
 
     assert origin.normal_ordered() == normal_order
 
