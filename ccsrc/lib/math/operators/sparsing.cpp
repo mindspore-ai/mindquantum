@@ -65,7 +65,7 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
         for (auto& [idx, w] : term) {
             for (mq::index_t i = 0; i < 3; i++) {
                 if (static_cast<mq::index_t>(w) - 1 == i) {
-                    out[i] += (1UL << idx);
+                    out[i] += (static_cast<uint64_t>(1) << idx);
                     out[3 + i] += 1;
                     break;
                 }
@@ -74,7 +74,7 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
         pauli_mask.push_back(mq::PauliMask({out[0], out[1], out[2], out[3], out[4], out[5]}));
     }
 
-    auto dim = 1UL << n_qubits;
+    auto dim = static_cast<uint64_t>(1) << n_qubits;
     mq::VT<ele_set<calc_type>> all_value(dim);
     mq::index_t nnz = 0;
 #pragma omp parallel for schedule(static) reduction(+ : nnz)

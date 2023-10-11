@@ -44,7 +44,7 @@ struct CPUVectorPolicyBase {
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
     static constexpr tensor::TDtype dtype = tensor::to_dtype_v<py_qs_data_t>;
-    static constexpr index_t DimTh = 1UL << 13;
+    static constexpr index_t DimTh = static_cast<uint64_t>(1) << 13;
 
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};

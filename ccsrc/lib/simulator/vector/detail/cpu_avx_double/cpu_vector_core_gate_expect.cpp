@@ -61,7 +61,7 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
         // clang-format on
     } else {
         if (mask.ctrl_qubits.size() == 1) {
-            index_t ctrl_low = 0UL;
+            index_t ctrl_low = static_cast<uint64_t>(0);
             for (qbit_t i = 0; i < mask.ctrl_qubits[0]; i++) {
                 ctrl_low = (ctrl_low << 1) + 1;
             }

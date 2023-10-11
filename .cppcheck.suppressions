@@ -57,6 +57,7 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_x_like
 unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_matrix_gate.cpp
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
 unknownMacro:ccsrc/include/simulator/vector/detail/cpu_vector_policy.h
+unknownMacro:ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.h
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.h
 useStlAlgorithm:ccsrc/include/ops/gates/terms_coeff_dict.h

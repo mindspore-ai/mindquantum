@@ -64,7 +64,7 @@ struct JWCache {
 };
 
 qubit_op_t jordan_wigner(const fermion_op_t& ops) {
-    static constexpr auto cache_size_ = 1000UL;
+    static constexpr uint64_t cache_size_ = 1000;
     auto cache_ = JWCache(cache_size_);
     auto transf_op = qubit_op_t();
     for (const auto& [terms, coeff] : ops.get_terms()) {
@@ -75,7 +75,7 @@ qubit_op_t jordan_wigner(const fermion_op_t& ops) {
             } else {
                 const auto& [idx, value] = term;
                 std::vector<size_t> z(idx);
-                std::iota(begin(z), end(z), 0UL);
+                std::iota(begin(z), end(z), static_cast<uint64_t>(0));
                 transformed_term *= *cache_.cache_and_return(
                     term, transform_ladder_operator(value, {idx}, {}, z, {}, {idx}, z));
             }

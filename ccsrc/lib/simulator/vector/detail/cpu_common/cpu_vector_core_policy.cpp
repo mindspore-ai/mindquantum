@@ -34,7 +34,7 @@
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::InitState(index_t dim, bool zero_state) -> qs_data_p_t {
-    if (dim == 0 || dim > (~0UL)) {
+    if (dim == 0 || dim > (~static_cast<uint64_t>(0))) {
         throw std::runtime_error("Dimension too large.");
     }
     auto qs = reinterpret_cast<qs_data_p_t>(calloc(dim, sizeof(qs_data_t)));
@@ -69,11 +69,11 @@ void CPUVectorPolicyBase<derived_, calc_type_>::Display(const qs_data_p_t& qs, q
     std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
     if (qs == nullptr) {
         std::cout << "(" << 1 << ", " << 0 << ")" << std::endl;
-        for (index_t i = 0; i < (1UL << n_qubits) - 1; i++) {
+        for (index_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits) - 1; i++) {
             std::cout << "(" << 0 << ", " << 0 << ")" << std::endl;
         }
     } else {
-        for (index_t i = 0; i < (1UL << n_qubits); i++) {
+        for (index_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits); i++) {
             std::cout << "(" << qs[i].real() << ", " << qs[i].imag() << ")" << std::endl;
         }
     }
@@ -216,10 +216,10 @@ template <typename derived_, typename calc_type>
 auto CPUVectorPolicyBase<derived_, calc_type>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,
                                                                 qbit_t n_qubits) -> calc_type {
     calc_type result = std::numeric_limits<calc_type>::max();
-    auto dim = 1UL << n_qubits;
+    auto dim = static_cast<uint64_t>(1) << n_qubits;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(min:result) schedule(static)), dim, DimTh,
-                     for (omp::idx_t i = 0; i < (1UL << n_qubits); i++) {
+                     for (omp::idx_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits); i++) {
                          calc_type ith_energy = 0;
                          for (auto& [mask, coeff] : masks_value) {
                              if (CountOne(i & mask) & 1) {

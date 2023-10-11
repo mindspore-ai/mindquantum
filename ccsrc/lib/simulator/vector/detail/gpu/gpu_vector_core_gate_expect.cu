@@ -44,10 +44,10 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs
         will_free_ket = true;
     }
     size_t n_qubit = objs.size();
-    size_t m_dim = (1UL << n_qubit);
+    size_t m_dim = (static_cast<uint64_t>(1) << n_qubit);
     size_t ctrl_mask = 0;
     for (auto& i : ctrls) {
-        ctrl_mask |= 1UL << i;
+        ctrl_mask |= static_cast<uint64_t>(1) << i;
     }
     std::vector<size_t> obj_masks{};
     for (size_t i = 0; i < m_dim; i++) {
@@ -55,7 +55,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs
         size_t mask_j = 0;
         for (size_t j = i; j != 0; j >>= 1) {
             if (j & 1) {
-                mask_j += 1UL << objs[n];
+                mask_j += static_cast<uint64_t>(1) << objs[n];
             }
             n += 1;
         }
@@ -235,7 +235,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(cons
             },
             qs_data_t(0, 0), thrust::plus<qs_data_t>());
     } else if (mask.ctrl_qubits.size() == 1) {
-        index_t ctrl_low = 0UL;
+        index_t ctrl_low = static_cast<uint64_t>(0);
         for (qbit_t i = 0; i < mask.ctrl_qubits[0]; i++) {
             ctrl_low = (ctrl_low << 1) + 1;
         }
@@ -857,7 +857,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
             },
             qs_data_t(0, 0), thrust::plus<qs_data_t>());
     } else if (mask.ctrl_qubits.size() == 1) {
-        index_t ctrl_low = 0UL;
+        index_t ctrl_low = static_cast<uint64_t>(0);
         for (qbit_t i = 0; i < mask.ctrl_qubits[0]; i++) {
             ctrl_low = (ctrl_low << 1) + 1;
         }

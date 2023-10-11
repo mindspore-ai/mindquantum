@@ -47,13 +47,13 @@ struct PauliMat {
     PauliMat() : coeff_(nullptr), col_(nullptr), n_qubits_(0), dim_(0) {
     }
     PauliMat(const PauliTerm<T> pt, Index n_qubits) : n_qubits_(n_qubits), p_(pt.second) {
-        dim_ = (1UL << n_qubits_);
+        dim_ = (static_cast<uint64_t>(1) << n_qubits_);
         coeff_ = reinterpret_cast<char *>(malloc(sizeof(char) * dim_));
         col_ = reinterpret_cast<Index *>(malloc(sizeof(Index) * dim_));
         auto mask = GetPauliMask(pt.first);
         auto mask_f = mask.mask_x | mask.mask_y;
         THRESHOLD_OMP_FOR(
-            dim_, 1UL << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim_); i++) {
+            dim_, static_cast<uint64_t>(1) << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim_); i++) {
                 auto j = (i ^ mask_f);
                 col_[i] = j;
                 auto axis2power = CountOne(static_cast<uint64_t>(i & mask.mask_z));  // -1

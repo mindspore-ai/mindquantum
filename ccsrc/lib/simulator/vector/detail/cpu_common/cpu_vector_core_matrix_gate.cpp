@@ -43,10 +43,10 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
         src = src_out;
     }
     size_t n_qubit = objs.size();
-    size_t m_dim = (1UL << n_qubit);
+    size_t m_dim = (static_cast<uint64_t>(1) << n_qubit);
     size_t ctrl_mask = 0;
     for (auto& i : ctrls) {
-        ctrl_mask |= 1UL << i;
+        ctrl_mask |= static_cast<uint64_t>(1) << i;
     }
     std::vector<size_t> obj_masks{};
     for (size_t i = 0; i < m_dim; i++) {
@@ -54,7 +54,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
         size_t mask_j = 0;
         for (size_t j = i; j != 0; j >>= 1) {
             if (j & 1) {
-                mask_j += 1UL << objs[n];
+                mask_j += static_cast<uint64_t>(1) << objs[n];
             }
             n += 1;
         }
@@ -100,8 +100,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_da
         src = src_out;
     }
     DoubleQubitGateMask mask(objs, ctrls);
-    size_t mask1 = (1UL << objs[0]);
-    size_t mask2 = (1UL << objs[1]);
+    size_t mask1 = (static_cast<uint64_t>(1) << objs[0]);
+    size_t mask2 = (static_cast<uint64_t>(1) << objs[1]);
     if (!mask.ctrl_mask) {
         // clang-format off
         THRESHOLD_OMP_FOR(dim, DimTh,

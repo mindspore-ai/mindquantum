@@ -96,7 +96,7 @@ void SinglePauliStr::InplaceMulCompressTerm(const term_t& term, compress_term_t&
     }
     size_t group_id = idx >> 5;
     size_t local_id = ((idx & 31) << 1);
-    size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1));
+    size_t local_mask = (static_cast<uint64_t>(1) << local_id) | (static_cast<uint64_t>(1) << (local_id + 1));
     auto& pauli_string = pauli.first;
     if (pauli_string.size() < group_id + 1) {
         for (size_t i = pauli_string.size(); i < group_id + 1; i++) {

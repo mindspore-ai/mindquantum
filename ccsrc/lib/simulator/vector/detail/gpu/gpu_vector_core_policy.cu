@@ -67,14 +67,14 @@ void GPUVectorPolicyBase<derived_, calc_type_>::Display(const qs_data_p_t& qs, q
     std::cout << n_qubits << " qubits gpu simulator (little endian)." << std::endl;
     if (qs == nullptr) {
         std::cout << "(" << 1 << ", " << 0 << ")" << std::endl;
-        for (index_t i = 0; i < (1UL << n_qubits) - 1; i++) {
+        for (index_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits) - 1; i++) {
             std::cout << "(" << 0 << ", " << 0 << ")" << std::endl;
         }
     } else {
         std::complex<calc_type>* h_qs = reinterpret_cast<std::complex<calc_type>*>(
-            malloc((1UL << n_qubits) * sizeof(std::complex<calc_type>)));
-        cudaMemcpy(h_qs, qs, sizeof(qs_data_t) * (1UL << n_qubits), cudaMemcpyDeviceToHost);
-        for (index_t i = 0; i < (1UL << n_qubits); i++) {
+            malloc((static_cast<uint64_t>(1) << n_qubits) * sizeof(std::complex<calc_type>)));
+        cudaMemcpy(h_qs, qs, sizeof(qs_data_t) * (static_cast<uint64_t>(1) << n_qubits), cudaMemcpyDeviceToHost);
+        for (index_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits); i++) {
             std::cout << "(" << h_qs[i].real() << ", " << h_qs[i].imag() << ")" << std::endl;
         }
         free(h_qs);
@@ -190,7 +190,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
     for (const auto& [pauli_string, coeff] : ham) {
         auto mask = GenPauliMask(pauli_string);
         auto mask_f = mask.mask_x | mask.mask_y;
-        if (dim >= (1UL << 18)) {
+        if (dim >= (static_cast<uint64_t>(1) << 18)) {
             auto mask_z = mask.mask_z;
             auto mask_y = mask.mask_y;
             auto num_y = mask.num_y;
@@ -239,7 +239,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<
     thrust::counting_iterator<size_t> l(0);
 
     auto res = thrust::transform_reduce(
-        l, l + (1UL << n_qubits),
+        l, l + (static_cast<uint64_t>(1) << n_qubits),
         [=] __device__(size_t l) {
             calc_type ith_energy = 0;
             for (int i = 0; i < n_mask; i++) {
