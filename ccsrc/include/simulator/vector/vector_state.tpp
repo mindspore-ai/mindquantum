@@ -52,14 +52,14 @@ namespace mindquantum::sim::vector::detail {
 
 template <typename qs_policy_t_>
 VectorState<qs_policy_t_>::VectorState(qbit_t n_qubits, unsigned seed)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
+    : n_qubits(n_qubits), dim(static_cast<uint64_t>(1) << n_qubits), seed(seed), rnd_eng_(seed) {
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
 
 template <typename qs_policy_t_>
 VectorState<qs_policy_t_>::VectorState(qbit_t n_qubits, unsigned seed, qs_data_p_t vec)
-    : n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
+    : n_qubits(n_qubits), dim(static_cast<uint64_t>(1) << n_qubits), seed(seed), rnd_eng_(seed) {
     qs = qs_policy_t::Copy(vec, dim);
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
@@ -67,7 +67,7 @@ VectorState<qs_policy_t_>::VectorState(qbit_t n_qubits, unsigned seed, qs_data_p
 
 template <typename qs_policy_t_>
 VectorState<qs_policy_t_>::VectorState(qs_data_p_t qs, qbit_t n_qubits, unsigned seed)
-    : qs(qs), n_qubits(n_qubits), dim(1UL << n_qubits), seed(seed), rnd_eng_(seed) {
+    : qs(qs), n_qubits(n_qubits), dim(static_cast<uint64_t>(1) << n_qubits), seed(seed), rnd_eng_(seed) {
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
@@ -354,7 +354,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
-    index_t one_mask = (1UL << gate->obj_qubits_[0]);
+    index_t one_mask = (static_cast<uint64_t>(1) << gate->obj_qubits_[0]);
     auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
     qs_data_t norm_fact = (collapse_mask == 0) ? 1 / std::sqrt(1 - one_amp) : 1 / std::sqrt(one_amp);
@@ -502,8 +502,9 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
             VVT<py_qs_data_t> m({{0, 1 / reduced_factor_b}, {0, 0}});
             qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m, dim);
         } else {
-            qs_policy_t::ConditionalMul(qs, &tmp_qs, (1UL << gate->obj_qubits_[0]), (1UL << gate->obj_qubits_[0]),
-                                        1 / reduced_factor_b, 0, dim);
+            qs_policy_t::ConditionalMul(qs, &tmp_qs, (static_cast<uint64_t>(1) << gate->obj_qubits_[0]),
+                                        (static_cast<uint64_t>(1) << gate->obj_qubits_[0]), 1 / reduced_factor_b, 0,
+                                        dim);
         }
         qs = tmp_qs;
         tmp_qs = nullptr;
@@ -511,7 +512,8 @@ void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicG
     } else {
         calc_type coeff_a = 1 / std::sqrt(1 - prob);
         calc_type coeff_b = std::sqrt(1 - damping_coeff) / std::sqrt(1 - prob);
-        qs_policy_t::ConditionalMul(qs, &qs, (1UL << gate->obj_qubits_[0]), 0, coeff_a, coeff_b, dim);
+        qs_policy_t::ConditionalMul(qs, &qs, (static_cast<uint64_t>(1) << gate->obj_qubits_[0]), 0, coeff_a, coeff_b,
+                                    dim);
     }
 }
 
@@ -730,8 +732,9 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr) const
     -> VVT<py_qs_data_t> {
-    VVT<CT<calc_type>> out((1UL << n_qubits), VT<CT<calc_type>>((1UL << n_qubits), 0));
-    for (size_t i = 0; i < (1UL << n_qubits); i++) {
+    VVT<CT<calc_type>> out((static_cast<uint64_t>(1) << n_qubits),
+                           VT<CT<calc_type>>((static_cast<uint64_t>(1) << n_qubits), 0));
+    for (size_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits); i++) {
         auto sim = VectorState<qs_policy_t>(n_qubits, seed);
         for (qbit_t j = 0; j < n_qubits; ++j) {
             if ((i >> j) & 1) {

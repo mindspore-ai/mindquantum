@@ -31,5 +31,5 @@ def get_qubit_hamiltonian(mol):
     """
     m_ham = mol.get_molecular_hamiltonian()
     int_ham = InteractionOperator(*(m_ham.n_body_tensors.values()))
-    f_ham = FermionOperator(int_ham)
+    f_ham = FermionOperator(int_ham).compress()
     return Transform(f_ham).jordan_wigner()

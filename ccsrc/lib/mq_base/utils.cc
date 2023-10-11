@@ -45,7 +45,8 @@ void safe_copy(void *dest, size_t dest_size, const void *src, size_t count) {
 }
 
 Index GetControlMask(const VT<Index> &ctrls) {
-    Index ctrlmask = std::accumulate(ctrls.begin(), ctrls.end(), 0, [&](Index a, Index b) { return a | (1UL << b); });
+    Index ctrlmask = std::accumulate(ctrls.begin(), ctrls.end(), 0,
+                                     [&](Index a, Index b) { return a | (static_cast<uint64_t>(1) << b); });
     return ctrlmask;
 }
 
@@ -54,7 +55,7 @@ PauliMask GetPauliMask(const VT<PauliWord> &pws) {
     for (auto &pw : pws) {
         for (Index i = 0; i < 3; i++) {
             if (static_cast<Index>(pw.second - 'X') == i) {
-                out[i] += (1UL << pw.first);
+                out[i] += (static_cast<uint64_t>(1) << pw.first);
                 out[3 + i] += 1;
             }
         }

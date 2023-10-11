@@ -328,10 +328,10 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(
         qs = qs_out;
     }
     size_t n_qubit = objs.size();
-    size_t m_dim = (1UL << n_qubit);
+    size_t m_dim = (static_cast<uint64_t>(1) << n_qubit);
     size_t ctrl_mask = 0;
     for (auto& i : ctrls) {
-        ctrl_mask |= 1UL << i;
+        ctrl_mask |= static_cast<uint64_t>(1) << i;
     }
     std::vector<size_t> obj_masks{};
     for (size_t i = 0; i < m_dim; i++) {
@@ -339,7 +339,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(
         size_t mask_j = 0;
         for (size_t j = i; j != 0; j >>= 1) {
             if (j & 1) {
-                mask_j += 1UL << objs[n];
+                mask_j += static_cast<uint64_t>(1) << objs[n];
             }
             n += 1;
         }

@@ -172,8 +172,9 @@ bool SingleFermionStr::InplaceMulCompressTerm(const term_t& term, compress_term_
     }
     size_t group_id = idx / 21;
     size_t local_id = ((idx % 21) * 3);
-    size_t low_mask = (1UL << local_id) - 1;
-    size_t local_mask = (1UL << local_id) | (1UL << (local_id + 1)) | (1UL << (local_id + 2));
+    size_t low_mask = (static_cast<uint64_t>(1) << local_id) - 1;
+    size_t local_mask = (static_cast<uint64_t>(1) << local_id) | (static_cast<uint64_t>(1) << (local_id + 1))
+                        | (static_cast<uint64_t>(1) << (local_id + 2));
     auto one_mask_vec = NumOneMask(fermion);
     auto one_mask_of_word = mindquantum::CountOne(static_cast<uint64_t>(word));
     auto one_mask = PrevOneMask(one_mask_vec, group_id) & one_mask_of_word;

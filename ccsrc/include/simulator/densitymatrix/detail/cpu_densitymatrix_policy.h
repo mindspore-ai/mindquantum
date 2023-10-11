@@ -51,7 +51,7 @@ struct CPUDensityMatrixPolicyBase {
     using py_qs_data_t = std::complex<calc_type>;
     using py_qs_datas_t = std::vector<py_qs_data_t>;
     using matrix_t = std::vector<py_qs_datas_t>;
-    static constexpr index_t DimTh = 1UL << 8;
+    static constexpr index_t DimTh = static_cast<uint64_t>(1) << 8;
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
     static constexpr qs_data_t HALF_MI{0, -0.5};

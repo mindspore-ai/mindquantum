@@ -63,7 +63,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::Display(const qs_data_p_t
     if (n_qubits > q_limit) {
         n_qubits = q_limit;
     }
-    index_t dim = 1UL << n_qubits;
+    index_t dim = static_cast<uint64_t>(1) << n_qubits;
     std::cout << n_qubits << " qubits cpu simulator (little endian)." << std::endl;
     if (qs == nullptr) {
         std::cout << "(" << 1.0 << ", " << 0.0 << "),";

@@ -51,12 +51,12 @@ namespace mindquantum {
 extern const VT<CT<double>> POLAR;
 template <typename T, typename ST>
 CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
-    // len is (1UL>>n_qubits)*2
+    // len is (static_cast<uint64_t>(1)>>n_qubits)*2
     ST real_part = 0;
     ST imag_part = 0;
     auto size = len / 2;
     THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
+        MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, static_cast<uint64_t>(2) << nQubitTh,
                      for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                          real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
                          imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
@@ -67,12 +67,12 @@ CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
 
 template <typename T, typename ST>
 CT<T> ComplexInnerProductWithControl(const ST *v1, const ST *v2, Index len, Index ctrl_mask) {
-    // len is (1UL>>n_qubits)*2
+    // len is (static_cast<uint64_t>(1)>>n_qubits)*2
     ST real_part = 0;
     ST imag_part = 0;
     auto size = len / 2;
     THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, 2UL << nQubitTh,
+        MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, static_cast<uint64_t>(2) << nQubitTh,
                      for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                          if ((i & ctrl_mask) == ctrl_mask) {
                              real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
@@ -119,7 +119,7 @@ inline uint32_t CountOne(uint32_t n) {
 }
 
 inline uint64_t CountOne(uint64_t n) {
-    return __builtin_popcount(n);
+    return __builtin_popcount(n) + __builtin_popcount(n >> 32);
 }
 inline uint32_t CountLeadingZero(uint32_t n) {
     return __builtin_clzll(n);

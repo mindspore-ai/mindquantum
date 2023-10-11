@@ -21,7 +21,8 @@
 
 namespace mindquantum::sim {
 index_t QIndexToMask(qbits_t objs) {
-    return std::accumulate(objs.begin(), objs.end(), index_t(0), [](index_t a, qbit_t b) { return a + (1UL << b); });
+    return std::accumulate(objs.begin(), objs.end(), index_t(0),
+                           [](index_t a, qbit_t b) { return a + (static_cast<uint64_t>(1) << b); });
 }
 
 PauliMask GenPauliMask(const std::vector<PauliWord> &pws) {
@@ -29,7 +30,7 @@ PauliMask GenPauliMask(const std::vector<PauliWord> &pws) {
     for (auto &pw : pws) {
         for (Index i = 0; i < 3; i++) {
             if (static_cast<Index>(pw.second - 'X') == i) {
-                out[i] += (1UL << pw.first);
+                out[i] += (static_cast<uint64_t>(1) << pw.first);
                 out[3 + i] += 1;
             }
         }
@@ -41,7 +42,7 @@ SingleQubitGateMask::SingleQubitGateMask(const qbits_t &obj_qubits, const qbits_
     assert(obj_qubits.size() == 1);
     q0 = obj_qubits[0];
     this->ctrl_qubits = ctrl_qubits;
-    obj_mask = (1UL << q0);
+    obj_mask = (static_cast<uint64_t>(1) << q0);
     ctrl_mask = QIndexToMask(ctrl_qubits);
     for (qbit_t i = 0; i < q0; i++) {
         obj_low_mask = (obj_low_mask << 1) + 1;
@@ -58,8 +59,8 @@ DoubleQubitGateMask::DoubleQubitGateMask(const qbits_t &obj_qubits, const qbits_
         q_max = obj_qubits[0];
     }
     this->ctrl_qubits = ctrl_qubits;
-    obj_min_mask = (1UL << q_min);
-    obj_max_mask = (1UL << q_max);
+    obj_min_mask = (static_cast<uint64_t>(1) << q_min);
+    obj_max_mask = (static_cast<uint64_t>(1) << q_max);
     obj_mask = obj_min_mask + obj_max_mask;
     ctrl_mask = QIndexToMask(ctrl_qubits);
     for (qbit_t i = 0; i < q_min; i++) {

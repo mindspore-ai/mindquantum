@@ -612,7 +612,19 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         num_non_para_gate = 0
         num_para_gate = 0
+        barrier = 0
+        noise_channel = 0
+        measure_gate = 0
         for gate in self:
+            if isinstance(gate, mq_gates.BarrierGate):
+                barrier += 1
+                continue
+            if isinstance(gate, mq_gates.NoiseGate):
+                noise_channel += 1
+                continue
+            if isinstance(gate, mq_gates.Measure):
+                measure_gate += 1
+                continue
             if gate.parameterized:
                 num_para_gate += 1
             else:
@@ -621,6 +633,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             info = bprint(
                 [
                     f'Total number of gates: {num_para_gate + num_non_para_gate}.',
+                    f'Barrier: {barrier}.',
+                    f'Noise channel: {noise_channel}.',
+                    f'Measurement: {measure_gate}.',
                     f'Parameter gates: {num_para_gate}.',
                     f"with {len(self.all_paras)} parameters are: ",
                     f"{', '.join(self.all_paras.keys()[:10])}{'.' if len(self.all_paras) <= 10 else '...'}",

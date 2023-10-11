@@ -28,10 +28,10 @@ PauliMask GenPauliMask(const std::vector<PauliWord>& pws);
 struct SingleQubitGateMask {
     qbit_t q0 = 0;
     qbits_t ctrl_qubits{};
-    index_t obj_mask = 0UL;
-    index_t ctrl_mask = 0UL;
-    index_t obj_high_mask = 0UL;
-    index_t obj_low_mask = 0UL;
+    index_t obj_mask = static_cast<uint64_t>(0);
+    index_t ctrl_mask = static_cast<uint64_t>(0);
+    index_t obj_high_mask = static_cast<uint64_t>(0);
+    index_t obj_low_mask = static_cast<uint64_t>(0);
 
     SingleQubitGateMask(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
 };
@@ -39,14 +39,14 @@ struct DoubleQubitGateMask {
     qbit_t q_min = 0;
     qbit_t q_max = 0;
     qbits_t ctrl_qubits{};
-    index_t obj_min_mask = 0UL;
-    index_t obj_max_mask = 0UL;
-    index_t obj_mask = 0UL;
-    index_t ctrl_mask = 0UL;
-    index_t obj_high_mask = 0UL;
-    index_t obj_rev_high_mask = 0UL;
-    index_t obj_low_mask = 0UL;
-    index_t obj_rev_low_mask = 0UL;
+    index_t obj_min_mask = static_cast<uint64_t>(0);
+    index_t obj_max_mask = static_cast<uint64_t>(0);
+    index_t obj_mask = static_cast<uint64_t>(0);
+    index_t ctrl_mask = static_cast<uint64_t>(0);
+    index_t obj_high_mask = static_cast<uint64_t>(0);
+    index_t obj_rev_high_mask = static_cast<uint64_t>(0);
+    index_t obj_low_mask = static_cast<uint64_t>(0);
+    index_t obj_rev_low_mask = static_cast<uint64_t>(0);
 
     DoubleQubitGateMask(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
 };

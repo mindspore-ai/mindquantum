@@ -19,6 +19,8 @@ def _fill_fist_sep(string, sep, length, fill_char=' '):
     poi = string.find(sep)
     if length < poi:
         raise Exception(f"Original length is {poi}, can not fill it to length {length}.")
+    if poi < 0:
+        return string
     return string[:poi] + fill_char * (length - poi) + string[poi:]
 
 
