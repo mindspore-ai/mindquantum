@@ -244,10 +244,12 @@ class FermionOperator(FermionOperator_):
 
     def __pow__(self, frac) -> "FermionOperator":
         """Power of FermionOperator."""
-        out = self
+        if not frac:
+            return FermionOperator("").astype(self.dtype)
+        out = 1 * self
         for _ in range(frac - 1):
             out *= self
-        return self
+        return out
 
     def __getstate__(self):
         """Get state of parameter resolver."""
