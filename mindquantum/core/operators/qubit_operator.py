@@ -183,10 +183,12 @@ class QubitOperator(QubitOperator_):
 
     def __pow__(self, frac) -> "QubitOperator":
         """Power of QubitOperator."""
-        out = self
+        if not frac:
+            return QubitOperator("").astype(self.dtype)
+        out = 1 * self
         for _ in range(frac - 1):
             out *= self
-        return self
+        return out
 
     def __repr__(self) -> str:
         """Return string expression of a QubitOperator."""
