@@ -50,6 +50,8 @@ auto SinglePauliStr::ParseToken(const std::string& token) -> term_t {
         pauli = operators::qubit::TermValue::Y;
     } else if (pauli_word == "Z" || pauli_word == "z") {
         pauli = operators::qubit::TermValue::Z;
+    } else if (pauli_word == "I" || pauli_word == "i") {
+        pauli = operators::qubit::TermValue::I;
     } else {
         throw std::runtime_error("Wrong token: '" + token + "'; Can not convert '" + pauli_word
                                  + "' to pauli operator.");
