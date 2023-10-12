@@ -34,6 +34,13 @@ mindquantum.device.QubitsTopology
         返回：
             List[:class:`~.device.QubitNode`]，根据给定 id 选择出的量子比特列表。
 
+    .. py:method:: compress() -> typing.Tuple["QubitsTopology", typing.Dict[int, int]]:
+
+        对拓扑结构中的比特重新编码，以使得新的拓扑结构中的比特从0开始以1为步长递增。
+
+        返回：
+            Tuple[:class:`~.device.QubitsTopology`, Dict[int, int]]，第一个元素是压缩后的拓扑结构，第二个元素是比特映射关系字典，其中键为旧比特序号，值为新比特序号。
+
     .. py:method:: edges_with_id() -> typing.Set[typing.Tuple[int, int]]
 
         返回用 id 表示的图中的边。
