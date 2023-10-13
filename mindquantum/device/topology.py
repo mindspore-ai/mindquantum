@@ -373,6 +373,39 @@ class QubitsTopology:
         """
         return set(self.qubits.keys())
 
+    def compress(self) -> typing.Tuple["QubitsTopology", typing.Dict[int, int]]:
+        """
+        Relabeling the qubit id so that the qubit id in new topology will start from 0.
+
+        Returns:
+            Tuple[QubitsTopology, Dict[int, int]], the first element of return is the new compressed topology,
+                and the second element of return is the qubit id map with key be the qubit id in old topology and
+                value be the qubit id in new topology.
+
+        Examples:
+            >>> from mindquantum.device import LinearQubits
+            >>> topo1 = LinearQubits(5)
+            >>> topo1.remove_qubit_node(0)
+            >>> topo1.remove_qubit_node(2)
+            >>> topo2, qubit_map = topo1.compress()
+            >>> print(topo2.edges_with_id())
+            {(1, 2)}
+            >>> print(qubit_map)
+            {1: 0, 3: 1, 4: 2}
+        """
+        topo_dup = copy.deepcopy(self)
+        old_id = sorted(self.all_qubit_id())
+        nodes = topo_dup.choose(old_id)
+        old_new_id_dict = {i: j for j, i in enumerate(old_id)}
+        for qid in old_id:
+            topo_dup.isolate_with_near(qid)
+        for node in nodes:
+            node.id_ = old_new_id_dict[node.id_]
+        out = QubitsTopology(nodes)
+        for i, j in self.edges_with_id():
+            _ = out[old_new_id_dict[i]] >> out[old_new_id_dict[j]]
+        return out, old_new_id_dict
+
     def edges_with_id(self) -> typing.Set[typing.Tuple[int, int]]:
         """
         Get edges with id of two connected qubits.

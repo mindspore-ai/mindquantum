@@ -78,6 +78,11 @@ def test_topology():
     assert topology.edges_with_poi() == {((1, 1), (3.0, 4.0))}
     topology_new = topology.select([1, 2])
     assert topology_new.edges_with_id() == {(1, 2)}
+    topology = LinearQubits(4)
+    topology.remove_qubit_node(0)
+    topology, m = topology.compress()
+    assert topology.all_qubit_id() == {0, 1, 2}
+    assert m == {1: 0, 2: 1, 3: 2}
 
 
 def test_linear_qubits():

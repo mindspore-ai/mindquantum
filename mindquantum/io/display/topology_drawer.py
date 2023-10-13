@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Method to draw a qubit topology."""
+from typing import Dict, Tuple, Union
 
 from ...core.circuit import Circuit
 from ...device import QubitNode, QubitsTopology
@@ -46,7 +47,12 @@ class SVGQNode(SVGContainer):
 
 
 # pylint: disable=too-many-locals
-def draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: dict = None):
+def draw_topology(
+    topo: QubitsTopology,
+    circuit: Circuit = None,
+    style: Dict = None,
+    edge_color: Union[str, Dict[Tuple[int, int], str]] = None,
+):
     """
     Draw a qubit topology as a svg picture.
 
@@ -55,6 +61,9 @@ def draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: dict = N
         circuit (:class:`~.core.circuit.Circuit`): The given quantum circuit you want to execute on
             given qubit topology. Default: ``None``.
         style (Dict): The picture style configuration. Default: ``None``.
+        edge_color (Union[str, Dict[Tuple[int, int], str]]): The color of edge. If it is a color string,
+            every edge will display as this color. It can also be a dict with edge as key and color string as
+            value.
     """
     if style is None:
         style = _topology_default_style
@@ -71,12 +80,16 @@ def draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: dict = N
         qubits_view.add(SVGQNode(topo[q_id], style))
 
     edges_view = SVGContainer()
+    if edge_color is None:
+        edge_color = style['couple_color']
+    if isinstance(edge_color, str):
+        edge_color = {i: edge_color for i in topo.edges_with_id()}
     for id1, id2 in topo.edges_with_id():
         q1, q2 = topo[id1], topo[id2]
         x1, y1 = q1.poi_x, q1.poi_y
         x2, y2 = q2.poi_x, q2.poi_y
         line = Line(x1 * f, x2 * f, y1 * f, y2 * f)
-        color = style['couple_color']
+        color = edge_color.get((id1, id2), style['couple_color'])
         if (id1, id2) in selected or (id2, id1) in selected:
             color = style['selected_edge_c']
         line.stroke(color).stroke_width(style['couple_w'])
