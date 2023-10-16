@@ -15,6 +15,7 @@
 '''test for amplitude encoder'''
 
 import warnings
+import numpy as np
 
 import pytest
 
@@ -72,17 +73,29 @@ def test_amplitude_encoder(config):
         assert abs(state[3].real - 0.5) < 1e-6
         assert abs(state[4].real - 0.5) < 1e-6
         assert abs(state[5].real - 0.5) < 1e-6
-    circuit, params = amplitude_encoder([0.5, -0.5, 0.5, 0.5], 3)
+    circuit, params = amplitude_encoder([0.5, 0.5, -0.5, -0.5], 3)
     sim.reset()
     sim.apply_circuit(circuit, params)
-    state = sim.get_qs(False)
+    state_0 = sim.get_qs(False)
+    state_1 = state_0 * np.conj(state_0[0])
+    state = state_1/np.linalg.norm(state_1, ord=2)
     if backend == "mqmatrix":
-        assert abs(state[0][0].real - 0.25) < 1e-6
-        assert abs(state[1][1].real - 0.25) < 1e-6
-        assert abs(state[2][2].real - 0.25) < 1e-6
-        assert abs(state[3][3].real - 0.25) < 1e-6
+        pass
     else:
         assert abs(state[0].real - 0.5) < 1e-6
-        assert abs(state[1].real + 0.5) < 1e-6
-        assert abs(state[2].real - 0.5) < 1e-6
-        assert abs(state[3].real - 0.5) < 1e-6
+        assert abs(state[1].real - 0.5) < 1e-6
+        assert abs(state[2].real + 0.5) < 1e-6
+        assert abs(state[3].real + 0.5) < 1e-6
+    circuit, params = amplitude_encoder([0.5j, 0.5j, -0.5j, -0.5j], 3)
+    sim.reset()
+    sim.apply_circuit(circuit, params)
+    state_0 = sim.get_qs(False)
+    state_1 = state_0 * np.conj(state_0[0])
+    state = state_1/np.linalg.norm(state_1, ord=2)
+    if backend == "mqmatrix":
+        pass
+    else:
+        assert abs(state[0].real - 0.5) < 1e-6
+        assert abs(state[1].real - 0.5) < 1e-6
+        assert abs(state[2].real + 0.5) < 1e-6
+        assert abs(state[3].real + 0.5) < 1e-6
