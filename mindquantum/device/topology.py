@@ -379,8 +379,8 @@ class QubitsTopology:
 
         Returns:
             Tuple[QubitsTopology, Dict[int, int]], the first element of return is the new compressed topology,
-                and the second element of return is the qubit id map with key be the qubit id in old topology and
-                value be the qubit id in new topology.
+            and the second element of return is the qubit id map with key be the qubit id in old topology and
+            value be the qubit id in new topology.
 
         Examples:
             >>> from mindquantum.device import LinearQubits
