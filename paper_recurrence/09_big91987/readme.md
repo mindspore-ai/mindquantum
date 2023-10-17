@@ -18,8 +18,8 @@ Condition GAN
 
 ## 总结：
 
- 1. 可以使用量子线路实现简单的condition GAN 
- 2. 使用论文中的anstza通过训练可以使得G逼近R的CNOT线路 
+ 1. 可以使用量子线路实现简单的condition GAN
+ 2. 使用论文中的anstza通过训练可以使得G逼近R的CNOT线路
  3. 使用mindquantum框架可以避免原论文中通过搭建线路求取grad的方法，有效简化模型实现难度
 
 ## 未来研究方向：

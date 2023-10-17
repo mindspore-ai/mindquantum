@@ -1,8 +1,4 @@
 #%%
-import os
-
-os.environ['OMP_NUM_THREADS'] = '2'
-
 from mindquantum import *
 import math
 import numpy as np
@@ -18,22 +14,22 @@ alpha = 0.005
 t_max = 400  #1000
 n = 9
 #%%
-entangle_layer = UN(X,
-                    np.arange(0, (N - 1) // 2) * 2 + 1,
-                    np.arange(0, (N - 1) // 2) * 2 + 2)
-entangle_layer += UN(X, np.arange(0, N // 2) * 2, np.arange(0, N // 2) * 2 + 1)
+entangle_layer = UN(X, [int(i) for i in np.arange(0, (N - 1) // 2) * 2 + 1],
+                    [int(i) for i in np.arange(0, (N - 1) // 2) * 2 + 2])
+entangle_layer += UN(X, [int(i) for i in np.arange(0, N // 2) * 2],
+                     [int(i) for i in np.arange(0, N // 2) * 2 + 1])
 prepare_layer = UN(RY(np.pi / 4), N) + entangle_layer
 rx_layer = Circuit([RX(f'x{i}').on(i) for i in range(N)]) + entangle_layer
 ry_layer = Circuit([RY(f'y{i}').on(i) for i in range(N)]) + entangle_layer
 rz_layer = Circuit([RZ(f'z{i}').on(i) for i in range(N)]) + entangle_layer
 layers = [rx_layer, ry_layer, rz_layer]
-VariationalCircuit = sum([f'l{i//3}' + layers[i % 3] for i in range(d)],
+VariationalCircuit = sum([add_prefix(layers[i % 3], f'l{i//3}') for i in range(d)],
                          start=prepare_layer)
 
 
 #%%
 def expectation_ZZ(theta, j):
-    sim = Simulator('projectq', N)
+    sim = Simulator('mqvector', N)
     sim.reset()
     parameters = dict(zip(VariationalCircuit.params_name, theta))
     VariationalCircuit_Measure = VariationalCircuit + Measure().on(
@@ -54,7 +50,7 @@ def expectation_ZZ(theta, j):
 
 
 def expectation_X(theta, j):
-    sim = Simulator('projectq', N)
+    sim = Simulator('mqvector', N)
     sim.reset()
     parameters = dict(zip(VariationalCircuit.params_name, theta))
     VariationalCircuit_Measure = VariationalCircuit + H.on(j) + Measure().on(j)
@@ -74,7 +70,7 @@ def expectation_X(theta, j):
 
 
 def PartialDerivativeEstimator_1_infi(i, theta):
-    sim = Simulator('projectq', N)
+    sim = Simulator('mqvector', N)
     e_i = np.zeros(d * N)
     e_i[i] += 1
     sim.reset()
@@ -133,7 +129,7 @@ def main():
             # print(g_i_infi)
             theta[i] -= alpha * g_i
             # print('t=', t, 'i=', i)
-        sim = Simulator('projectq', N)
+        sim = Simulator('mqvector', N)
         sim.reset()
         print(theta)
         sim.apply_circuit(VariationalCircuit, theta)

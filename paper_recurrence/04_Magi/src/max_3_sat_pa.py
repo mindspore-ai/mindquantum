@@ -9,7 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-def random_clauses(n,m,k=3):
+
+def random_clauses(n, m, k=3):
     s = []
     for i in range(m):
         l = random.sample(range(n), k)
@@ -19,24 +20,28 @@ def random_clauses(n,m,k=3):
         s += [tuple(l)]
     return s
 
-def calc_minV(n,s):
+
+def calc_minV(n, s):
     ans = len(s)
-    for cas in range(1<<n):
+    for cas in range(1 << n):
         penalty = 0
         for l in s:
             satsfied = False
             for x in l:
-                if x < n and cas & (1<<x) != 0 :
+                if x < n and cas & (1 << x) != 0:
                     satsfied = True
-                if x >= n and cas & (1<<(x-n)) == 0 :
+                if x >= n and cas & (1 << (x - n)) == 0:
                     satsfied = True
-            if not satsfied :
+            if not satsfied:
                 penalty += 1
         ans = min(ans, penalty)
+
+
 #     print('exact_ans=', ans)
     return ans
 
-def build_Ug(n,s,d,k=3):
+
+def build_Ug(n, s, d, k=3):
     """
     Args:
         n(int): variables
@@ -52,15 +57,16 @@ def build_Ug(n,s,d,k=3):
         for x in l:
             if x < n:
                 c += X.on(x)
-        ll = [x%n for x in l]
+        ll = [x % n for x in l]
         for j in range(k):
-            c += RZ(PR({gd: 0.5**j})).on(ll[k-1-j], ll[:k-1-j])
+            c += RZ(PR({gd: 0.5**j})).on(ll[k - 1 - j], ll[:k - 1 - j])
         for x in l:
             if x < n:
                 c += X.on(x)
     return c
 
-def build_Ub(n,d):
+
+def build_Ub(n, d):
     bd = f'b{d}'
     c = Circuit()
     for i in range(n):
@@ -68,7 +74,7 @@ def build_Ub(n,d):
     return c
 
 
-def build_ansatz(n,s,p):
+def build_ansatz(n, s, p):
     """
     Args:
         n(int): variables
@@ -82,31 +88,33 @@ def build_ansatz(n,s,p):
     return c
 
 
-def build_ham(n,s):
+def build_ham(n, s):
     ham = QubitOperator()
     for l in s:
         mono = QubitOperator('')
         for x in l:
-            mono *= (QubitOperator('') + QubitOperator(f'Z{x%n}', (-1)**(x//n))) / 2
+            mono *= (QubitOperator('') + QubitOperator(f'Z{x%n}',
+                                                       (-1)**(x // n))) / 2
         ham += mono
     return ham
 
-for p in range(15,40,10):
+
+for p in range(15, 40, 10):
     random.seed(42)
     n = 6
     ave_list = []
     std_list = []
     var_list = []
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-    sim = Simulator('projectq', n)
+    sim = Simulator('mqvector', n)
 
     #for m in range(35,50,14):
-    for m in range(1,60,2):
+    for m in range(1, 60, 2):
         f = []
         print(m, "clauses:")
         for _ in range(100):
             if _ % 20 == 19:
-                print(" ", _+1, "%")
+                print(" ", _ + 1, "%")
             s = random_clauses(n, m)
             minV = calc_minV(n, s)
             ham = Hamiltonian(build_ham(n, s))
@@ -116,9 +124,9 @@ for p in range(15,40,10):
             opti = nn.Adam(net.trainable_params(), learning_rate=0.05)
             train_net = nn.TrainOneStepCell(net, opti)
             err = train_net().asnumpy()[0]
-            for __ in range(p*(20*n+m)//(40*n)):
+            for __ in range(p * (20 * n + m) // (40 * n)):
                 err = min(err, train_net().asnumpy()[0])
-                print(err-minV)
+                print(err - minV)
             err -= minV
             f.append(err)
 
@@ -126,13 +134,13 @@ for p in range(15,40,10):
         std_list.append(np.std(f))
         var_list.append(np.var(f))
         print(f)
-        print("error =", np.mean(f), ", std =", np.std(f), ", var =", np.var(f))
+        print("error =", np.mean(f), ", std =", np.std(f), ", var =",
+              np.var(f))
 
-        fp = open("statistic2_"+str(p)+".txt", "w")
+        fp = open("statistic2_" + str(p) + ".txt", "w")
         fp.write(str(ave_list))
         fp.write("\n")
         fp.write(str(std_list))
         fp.write("\n")
         fp.write(str(var_list))
         fp.close()
-        

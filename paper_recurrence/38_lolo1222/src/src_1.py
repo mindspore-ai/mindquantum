@@ -13,7 +13,6 @@ from scipy.linalg import norm
 from matplotlib import pyplot
 import tqdm
 
-os.environ['OMP_NUM_THREADS'] = '1'
 
 n_qubits = 3  # qbits number
 cir_depth = 20  # circuit depth
@@ -92,7 +91,7 @@ def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
     '''
     Generate quantum net using hams, circ_right and circ_left under given base
     '''
-    sim = Simulator('projectq', qubits_num)
+    sim = Simulator('mqvector', qubits_num)
 
     if base is None:
         pass

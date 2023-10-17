@@ -10,7 +10,7 @@ def get_random_results(N):
     reward_sum = 0
     results = []
     while random_episodes < N:
-        _, reward, done, _ = env.step(np.random.randint(0,2))
+        _, reward, done, _, _ = env.step(np.random.randint(0,2))
         reward_sum += reward
         if done:
             random_episodes += 1

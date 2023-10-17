@@ -11,24 +11,23 @@ def N(count, i):
     temp = Circuit()
     temp += RZ(np.pi / 2).on(i + 1)
     temp += X.on(i, i + 1)
-    temp += RZ({f'p{count}' : 2}).on(i)
+    temp += RZ({f'p{count}': 2}).on(i)
     temp += RZ(-np.pi / 2).on(i)
     temp += RY(np.pi / 2).on(i + 1)
-    temp += RY({f'p{count}' : -2}).on(i + 1)
+    temp += RY({f'p{count}': -2}).on(i + 1)
     temp += X.on(i + 1, i)
-    temp += RY({f'p{count}' : 2}).on(i + 1)
+    temp += RY({f'p{count}': 2}).on(i + 1)
     temp += RY(-np.pi / 2).on(i + 1)
     temp += X.on(i, i + 1)
     temp += RZ(-np.pi / 2).on(i)
     return temp
 
 
-NMtable = {4:2, 8:3, 10:3, 16:5, 20:6}
+NMtable = {4: 2, 8: 3, 10: 3, 16: 5, 20: 6}
 num = 4
 m = NMtable[num]
 assert num % 2 == 0
 #print(num, m)
-
 
 encoder = Circuit()
 for i in range(0, num, 2):
@@ -36,25 +35,22 @@ for i in range(0, num, 2):
     encoder += X.on(i + 1)
     encoder += H.on(i)
     encoder += X.on(i + 1, i)
-    
+
 #print(encoder)
 #encoder.summary()
 
-
 J = 1
-ham = QubitOperator('')
+ham = QubitOperator()
 for i in range(num - 1):
     ham += QubitOperator('X%d X%d' % (i, i + 1), J)
     ham += QubitOperator('Y%d Y%d' % (i, i + 1), J)
     ham += QubitOperator('Z%d Z%d' % (i, i + 1), J)
-ham -= QubitOperator('')
 
 #print(ham)
 
-
 ansatz = encoder
 count = 1
-sim = Simulator('projectq', num)
+sim = Simulator('mqvector', num)
 val = []
 L = num // 2 * 3 - 1
 
@@ -69,7 +65,7 @@ for j in range(m):
         count += 1
     for i in range(0, num // 2):
         ansatz += PhaseShift('p%d' % count).on(i)
-        ansatz += PhaseShift({'p%d' % count : -1}).on(num - i - 1)
+        ansatz += PhaseShift({'p%d' % count: -1}).on(num - i - 1)
         count += 1
 
     # print(ansatz)
@@ -81,7 +77,6 @@ for j in range(m):
         val = np.concatenate((val, val[-L:]))
     # print(val)
 
-    
     pqc = sim.get_expectation_with_grad(Hamiltonian(ham), ansatz)
     pqcnet = MQAnsatzOnlyLayer(pqc)
     pqcnet.weight = Parameter(ms.Tensor(val, pqcnet.weight.dtype))
@@ -89,8 +84,11 @@ for j in range(m):
     initial_energy = pqcnet()
     print("Initial energy: %20.16f" % (initial_energy.asnumpy()))
 
-
-    optimizer = ms.nn.Adam(pqcnet.trainable_params(), learning_rate = 0.01, beta1 = 0.9, beta2 = 0.999, eps = 1e-8)
+    optimizer = ms.nn.Adam(pqcnet.trainable_params(),
+                           learning_rate=0.01,
+                           beta1=0.9,
+                           beta2=0.999,
+                           eps=1e-8)
     train_pqcnet = ms.nn.TrainOneStepCell(pqcnet, optimizer)
 
     eps = 1.e-8

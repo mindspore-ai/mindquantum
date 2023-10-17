@@ -1,6 +1,3 @@
-import os
-
-os.environ['OMP_NUM_THREADS'] = '1'
 import time
 import numpy as np
 import scipy as sp
@@ -92,14 +89,14 @@ def N_block(params_str, wires, coeff=1):
 def ansatz(prefix, N, num_layer, sz):
     ansatz = Circuit()
     params_index = 0
-    
+
     for i in range(N):
         if i != N // 2:
             ansatz += X.on(i)
     for i in range(0, N, 2):
         ansatz += H.on(i)
         ansatz += CNOT.on(i + 1, i)
-        
+
     for layer_index in range(num_layer):
         for i in range(0, N, 2):
             ansatz += N_block(prefix + str(params_index), [i, i + 1])
@@ -168,7 +165,7 @@ if __name__ == '__main__':
     np.random.seed()
     init_params = (np.random.rand(len(circ.params_name)) - .5) * np.pi
 
-    sim = Simulator('projectq', N)
+    sim = Simulator('mqvector', N)
     grad_op = sim.get_expectation_with_grad(
         ham, circ)
 
