@@ -1,10 +1,9 @@
 from base64 import encode
+from abc import ABC, abstractmethod
 import os
 
-# os.environ['OMP_NUM_THREADS'] = '12'
-from abc import ABC, abstractmethod
-
 project_path = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.abspath(os.path.join(project_path, '../'))
 
 import numpy as np
 import mindspore as ms
@@ -15,7 +14,7 @@ from mindspore import Model
 from mindspore.train.callback import Callback
 from mindquantum import *
 from mindquantum.algorithm import HardwareEfficientAnsatz
-from mindquantum.core import RY, RZ, RX, XX, YY, ZZ
+from mindquantum.core import RY, RZ, RX, Rxx, Ryy, Rzz
 import matplotlib.pyplot as plt
 
 from mindspore import ops, Tensor
@@ -28,7 +27,7 @@ ms.set_seed(1)
 class QCNN(object):
     '''Quantum Convolutional Neural Network Class
 
-    
+
     '''
 
     def __init__(self,
@@ -71,8 +70,8 @@ class QCNN(object):
         xlist = []
         ylist = []
         for i in gamma_list:
-            f = 'tfi_chain/spin_systems/TFI_chain/closed/%s/%.2f/params.npy' % (
-                self.qubits, i)
+            f = '%s/tfi_chain/spin_systems/TFI_chain/closed/%s/%.2f/params.npy' % (
+                data_path, self.qubits, i)
             data = np.load(f).T
             xlist.append(data.reshape(-1))
             if i > 1:
@@ -84,7 +83,7 @@ class QCNN(object):
 
     def data_ext(self, X, Y, factor=10):
         '''Enhance the original data based on linear interpolation
-        
+
         Args:
             X: array or list, the original data X
             Y: array or list, the original label data Y
@@ -125,9 +124,9 @@ class QCNN(object):
         return train
 
     def gen_encoder(self):
-        '''Generate encoder circuit: 
-        based on the qubits of ``qcnn``, the ``layers`` is set to ``int(qubits/2)``, each layer of encoder is construct by ``ZZ`` and ``RX`` gates. 
-            
+        '''Generate encoder circuit:
+        based on the qubits of ``qcnn``, the ``layers`` is set to ``int(qubits/2)``, each layer of encoder is construct by ``Rzz`` and ``RX`` gates.
+
         Returns:
             encoder circuit
 
@@ -151,29 +150,29 @@ class QCNN(object):
         layers = int(qubits / 2)
         for l in range(layers):
             for i in range(qubits - 1):
-                encoder += ZZ(f'alpha_{l}_0').on([i, i + 1])
+                encoder += Rzz(f'alpha_{l}_0').on([i, i + 1])
                 encoder += RX(f'alpha_{l}_1').on(i)
-            encoder += ZZ(f'alpha_{l}_0').on([0, qubits - 1])
+            encoder += Rzz(f'alpha_{l}_0').on([0, qubits - 1])
             encoder += RX(f'alpha_{l}_1').on(qubits - 1)
         encoder = encoder.no_grad()
         return encoder
 
     def q_convolution(self, label, qubits):
-        '''Generate 2 qubits convolution circuit: given by two qubits index, generate the convolution block which is constructed by ``RX,RY,RZ,XX,YY,ZZ`` gates.  
-        
+        '''Generate 2 qubits convolution circuit: given by two qubits index, generate the convolution block which is constructed by ``RX, RY, RZ, Rxx, Ryy, Rzz`` gates.
+
         Args:
             label: str, name of the convolution block
             qubits: array or list, the qubits index list of the convolution block
 
         Returns:
             convolution circuit
-        
+
         Examples:
             >>> conv = qcnn.q_convolution('0',[0,1])
             >>> print(conv)
-            q0: ──RX(cov_0_0)────RY(cov_0_1)────RZ(cov_0_2)────XX(cov_0_6)────YY(cov_0_7)────ZZ(cov_0_8)────RX(cov_0_9)─────RY(cov_0_10)────RZ(cov_0_11)──
+            q0: ──RX(cov_0_0)────RY(cov_0_1)────RZ(cov_0_2)────Rxx(cov_0_6)────Ryy(cov_0_7)────Rzz(cov_0_8)────RX(cov_0_9)─────RY(cov_0_10)────RZ(cov_0_11)──
                                                                     │              │              │
-            q1: ──RX(cov_0_3)────RY(cov_0_4)────RZ(cov_0_5)────XX(cov_0_6)────YY(cov_0_7)────ZZ(cov_0_8)────RX(cov_0_11)────RY(cov_0_12)────RZ(cov_0_13)──
+            q1: ──RX(cov_0_3)────RY(cov_0_4)────RZ(cov_0_5)────Rxx(cov_0_6)────Ryy(cov_0_7)────Rzz(cov_0_8)────RX(cov_0_11)────RY(cov_0_12)────RZ(cov_0_13)──
 
         '''
         count = 0
@@ -185,11 +184,11 @@ class QCNN(object):
             count += 1
             circ += RZ(f'cov_{label}_{count}').on(qubits[i])
             count += 1
-        circ += XX(f'cov_{label}_{count}').on(qubits)
+        circ += Rxx(f'cov_{label}_{count}').on(qubits)
         count += 1
-        circ += YY(f'cov_{label}_{count}').on(qubits)
+        circ += Ryy(f'cov_{label}_{count}').on(qubits)
         count += 1
-        circ += ZZ(f'cov_{label}_{count}').on(qubits)
+        circ += Rzz(f'cov_{label}_{count}').on(qubits)
         count += 1
         for i in range(2):
             circ += RX(f'cov_{label}_{count}').on(qubits[i])
@@ -200,9 +199,9 @@ class QCNN(object):
         return circ
 
     def q_pooling(self, label, qubits, last=False):
-        '''Generate 2 qubits pooling circuit: given by two qubits index, generate the pooling block which is constructed by ``RX,RY,RZ,X`` gates. 
+        '''Generate 2 qubits pooling circuit: given by two qubits index, generate the pooling block which is constructed by ``RX,RY,RZ,X`` gates.
         When optimized settings are taken (``self.opt`` is set to ``True``), the pooling circuit is optimized.
-        
+
         Args:
             label: str, name of the pooling block
             qubits: array or list, the qubits index list of the pooling block
@@ -242,13 +241,13 @@ class QCNN(object):
 
     def split_qlist(self, qlist):
         '''Generate the index list of convolution and pooling block: given by the qubits index list, generate the fisrt and the second qubit index for convolution and pooling block.
-        
+
         Args:
             qlist: array or list, the qubits index list
 
         Returns:
-            flist: the list of the fisrt qubit index 
-            slist: the list of the second qubit index 
+            flist: the list of the fisrt qubit index
+            slist: the list of the second qubit index
         '''
         n = len(qlist)
         flist = []
@@ -263,7 +262,7 @@ class QCNN(object):
 
     def gen_qcnn_ansatz(self):
         '''Generate the ansatz circuit of qcnn: based on the ``q_convolution, q_pooling`` functions, generate ansatz circuit.
-        
+
         Returns:
             circ: ansatz circuit
         '''
@@ -289,13 +288,13 @@ class QCNN(object):
 
     def build_grad_ops(self):
         '''Generate the total qcnn circuit, the Hamiltonian operator and build the grad ops wrapper.
-        
+
         Returns:
             grad_ops: the grad ops wrapper
         '''
         encoder = self.gen_encoder()
         ansatz = self.gen_qcnn_ansatz()
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz.as_ansatz()
         self.circ = total_circ
         qubits = self.qubits
         ham = [
@@ -306,8 +305,6 @@ class QCNN(object):
         grad_ops = sim.get_expectation_with_grad(
             ham,
             total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
             parallel_worker=8)
         return grad_ops
 
@@ -328,7 +325,7 @@ class QCNN(object):
 
     def train(self, num, callbacks=None):
         '''Training the model.
-        
+
         Args:
             num: int, the epoch of training
             callbacks: list, the list of callbacks
@@ -380,8 +377,8 @@ class StepAcc(Callback):  # 定义一个关于每一步准确率的回调函数
         if self.acc[-1] > 0.98:
             print('save model, %s' % self.acc[-1])
             ms.save_checkpoint(
-                self.qnet, "res/model_%.2f_%s_%s.ckpt" %
-                (self.acc[-1], self.qubits, self.opt))
+                self.qnet, "%s/res/model_%.2f_%s_%s.ckpt" %
+                (data_path, self.acc[-1], self.qubits, self.opt))
 
 
 class LossMonitor(Callback):

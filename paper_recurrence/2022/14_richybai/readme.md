@@ -100,7 +100,7 @@ MitigateBarrenPlateaus
 
 - 硬件环境：Ubuntu 18.04.6 LTS (GNU/Linux 4.15.0-163-generic x86_64) cpu
 - 包版本：
-  1. mindquantum==0.7.0
+  1. mindquantum==0.9.0
   2. mindspore==1.6.1
   3. numpy==1.21.5
   4. openfermion==1.3.0

@@ -177,7 +177,7 @@ if __name__ == "__main__":
     ansatz.summary()
     # print(ansatz.params_name)
 
-    circuit = encoder + ansatz
+    circuit = encoder.as_encoder() + ansatz.as_ansatz()
 
     # 哈密顿量，如果结果为0态，得到的是1， 如果结果为1态，得到的是-1
     ham = Hamiltonian(QubitOperator("Z0"))
@@ -186,9 +186,7 @@ if __name__ == "__main__":
     # 构建算期望和有关参数梯度的算子
     grad_ops = simulator.get_expectation_with_grad(
         hams=ham,
-        circ_right=circuit,
-        encoder_params_name=encoder.params_name,
-        ansatz_params_name=ansatz.params_name)
+        circ_right=circuit)
     # grad_ops 输入encoder ansatz参数后，得到三个值，分别是，期望值f，期望关于encoder的导数g，期望关于ansatz的导数h
     # f, g, h = grad_ops(np.random.random([1, 4]), np.random.random([63]))
 
