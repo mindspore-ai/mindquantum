@@ -37,7 +37,7 @@ if __name__ == "__main__":
     for epoch in range(epochs):
         # batch_size, seq_len, input_size
         # num_directions * num_layers, batch_size, hidden_size
-        
+
         loss = train_one_step(theta, h, c)
 
         loss = forward_with_loss(theta, h, c)
@@ -47,14 +47,14 @@ if __name__ == "__main__":
             print("epoch: ", epoch+1,"metaqaoa loss: ", loss, "qnn expectation: ", expectation.squeeze())
         meta_loss.append(loss.asnumpy().squeeze())
         qnn_expectation.append(expectation.asnumpy().squeeze())
-        
+
     plt.plot(range(1, epochs+1), meta_loss)
     plt.xlabel('epoch')
     plt.ylabel('meta loss')
     plt.title('meta loss')
     plt.savefig('meta loss.png')
 
-    plt.clf()  
+    plt.clf()
     plt.plot(range(1, epochs+1), qnn_expectation)
     plt.xlabel('epoch')
     plt.ylabel('qnn expectation')
