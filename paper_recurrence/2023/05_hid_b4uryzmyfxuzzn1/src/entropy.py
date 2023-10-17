@@ -41,15 +41,17 @@ def get_rs(rho: np.array, list_qubits2keep: list) -> np.array:
 
     :return: reduced density matrix
     """
-    list_qubits2traceout = list(set(range(int(np.log2(len(rho))))) - set(list_qubits2keep))
+    list_qubits2traceout = list(
+        set(range(int(np.log2(len(rho))))) - set(list_qubits2keep))
     counter_qubits = int(np.log2(len(rho)))
     rho_tensor = rho.reshape((2, 2) * counter_qubits)
     for i in list_qubits2traceout:
         index2trace = i - list_qubits2traceout.index(i)
-        rho_tensor = np.trace(rho_tensor, axis1=counter_qubits - 1 - index2trace,
+        rho_tensor = np.trace(rho_tensor,
+                              axis1=counter_qubits - 1 - index2trace,
                               axis2=2 * counter_qubits - 1 - index2trace)
         counter_qubits += -1
-    rho_rs = rho_tensor.reshape(2 ** counter_qubits, 2 ** counter_qubits)
+    rho_rs = rho_tensor.reshape(2**counter_qubits, 2**counter_qubits)
     return rho_rs
 
 
@@ -69,12 +71,12 @@ def s_page(n_subsys, n_sys) -> float:
     """
     k = n_subsys
     N = n_sys
-    return k * np.log(2) - 1 / 2 ** (N - 2 * k + 1)
+    return k * np.log(2) - 1 / 2**(N - 2 * k + 1)
 
 
 if __name__ == '__main__':
     circ = Circuit([H.on(0), CNOT.on(1, 0)])
-    sim = Simulator('projectq', 2)
+    sim = Simulator('mqvector', 2)
     sim.apply_circuit(circ)
     rs = get_rs_from_sim(sim, [0])
     print(circ)

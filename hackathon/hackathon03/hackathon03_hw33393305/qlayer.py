@@ -17,13 +17,13 @@ total_circ = encoder + ansatz
 ham = Hamiltonian(QubitOperator(''))
 batch = 10
 
+
 def Merge(dict1, dict2):
     res = {**dict1, **dict2}
     return res
 
 
 class MyOps(nn.Cell):
-
     def __init__(self, expectation_with_grad):
         super(MyOps, self).__init__()
         self.expectation_with_grad = expectation_with_grad
@@ -42,7 +42,7 @@ class MyOps(nn.Cell):
         self.g_ans = np.real(g_ans)
 
         # value = list()
-        # sim = Simulator('projectq', 3)
+        # sim = Simulator('mqvector', 3)
 
         # ans_dict = dict(zip(ansatz.params_name, ans_data))
 
@@ -69,8 +69,8 @@ class MyOps(nn.Cell):
                          dtype=ms.float32), ms.Tensor(-ans_grad,
                                                       dtype=ms.float32)
 
-class QLayer(nn.Cell):
 
+class QLayer(nn.Cell):
     def __init__(self, expectation_with_grad, weight='normal'):
         super(QLayer, self).__init__()
         self.evolution = MyOps(expectation_with_grad)

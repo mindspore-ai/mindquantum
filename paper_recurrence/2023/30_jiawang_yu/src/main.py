@@ -9,23 +9,27 @@ from mindvision.engine.callback import LossMonitor
 import mindspore.dataset as ds
 from mindspore.dataset import ImageFolderDataset
 
+
 def load_dataset(ds_dir, batch_size, class_index):
     dataset = ImageFolderDataset(dataset_dir=ds_dir, \
         class_indexing=class_index)
     load_img_ops = ds.transforms.Compose([
         ds.vision.Decode(),
-        ds.vision.Rescale(1./255, 0),
+        ds.vision.Rescale(1. / 255, 0),
         ds.vision.Resize((128, 128)),
         ds.vision.HWC2CHW()
     ])
     dataset = dataset.map(load_img_ops, input_columns='image')
-    dataset = dataset.map([lambda x: [x], ds.transforms.TypeCast(np.float32)], input_columns='label')
+    dataset = dataset.map(
+        [lambda x: [x], ds.transforms.TypeCast(np.float32)],
+        input_columns='label')
     dataset = dataset.batch(batch_size)
     return dataset
-    
+
 
 # 构建网络
 from mindspore.common.initializer import XavierUniform
+
 
 class Network(nn.Cell):
     def __init__(self, is_quantum=False):
@@ -38,17 +42,23 @@ class Network(nn.Cell):
             nn.Conv2d(in_channels, hidden_dim, 3, weight_init=XavierUniform()),
             nn.BatchNorm2d(hidden_dim),
             nn.MaxPool2d(4, stride=4),
-            nn.Conv2d(hidden_dim, hidden_dim_l2, 3, weight_init=XavierUniform()),
+            nn.Conv2d(hidden_dim,
+                      hidden_dim_l2,
+                      3,
+                      weight_init=XavierUniform()),
             nn.BatchNorm2d(hidden_dim_l2),
             nn.MaxPool2d(4, stride=4),
             nn.Flatten(),
-            nn.Dense(4096, 128, activation='relu', weight_init=XavierUniform()),
+            nn.Dense(4096, 128, activation='relu',
+                     weight_init=XavierUniform()),
             nn.Dense(128, 2, activation='relu', weight_init=XavierUniform()),
         )
         if is_quantum:
             self.vqc = self.vqc_layer()
-        self.sigmoid = nn.Dense(2, 1, activation='sigmoid', weight_init=XavierUniform())
-        
+        self.sigmoid = nn.Dense(2,
+                                1,
+                                activation='sigmoid',
+                                weight_init=XavierUniform())
 
     def vqc_layer(self):
         # Embedding Layer构建
@@ -79,15 +89,13 @@ class Network(nn.Cell):
         from mindquantum.framework import MQLayer
         import mindspore as ms
 
-        circuit = encoder + ansatz
+        circuit = encoder.as_encoder() + ansatz.as_ansatz()
         ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
-        ms.set_seed(1)                                                                                 # 设置生成随机数的种子
-        sim = Simulator('projectq', circuit.n_qubits)
-        grad_ops = sim.get_expectation_with_grad(hams,
-                                                circuit)
-        vqc_layer = MQLayer(grad_ops)          # 搭建量子神经网络
+        ms.set_seed(1)  # 设置生成随机数的种子
+        sim = Simulator('mqvector', circuit.n_qubits)
+        grad_ops = sim.get_expectation_with_grad(hams, circuit)
+        vqc_layer = MQLayer(grad_ops)  # 搭建量子神经网络
         return vqc_layer
-
 
     def construct(self, x):
         logits = self.net_sequential(x)
@@ -103,7 +111,7 @@ def train_model(is_quantum):
     batch_size = 64
     train_ds_dir = r'./archive/train'
     val_ds_dir = r'./archive/val'
-    
+
     train_ds = load_dataset(train_ds_dir, batch_size, class_index)
     val_ds = load_dataset(val_ds_dir, batch_size, class_index)
 
@@ -112,21 +120,27 @@ def train_model(is_quantum):
     net = Network(is_quantum)
     crit = nn.BCELoss(reduction='mean')
     opt = nn.SGD(net.trainable_params(), learning_rate=learning_rate)
-    model = ms.Model(network=net, loss_fn=crit, optimizer=opt, metrics={'Loss': nn.Loss()})
-
+    model = ms.Model(network=net,
+                     loss_fn=crit,
+                     optimizer=opt,
+                     metrics={'Loss': nn.Loss()})
 
     history_cb = ms.History()
     val_loss = []
     epoch_num = 10
     # 经典模型训练
     for epoch in range(epoch_num):
-        model.train(epoch+1, train_ds, callbacks=[LossMonitor(learning_rate), history_cb], initial_epoch=epoch)
-        eval_result = model.eval(val_ds)      # 执行模型评估
+        model.train(epoch + 1,
+                    train_ds,
+                    callbacks=[LossMonitor(learning_rate), history_cb],
+                    initial_epoch=epoch)
+        eval_result = model.eval(val_ds)  # 执行模型评估
         val_loss.append(eval_result['Loss'])
         print(history_cb.epoch, history_cb.history)
         print(eval_result)
     train_loss = history_cb.history['net_output']
     return train_loss, val_loss
+
 
 import matplotlib.pyplot as plt
 
@@ -136,8 +150,16 @@ if __name__ == '__main__':
 
     epoch_num = len(qnet_train_loss[0])
     plt.subplot(121)
-    plt.plot(list(range(epoch_num)), qnet_train_loss[0], label='Quantum Net Train Loss')
-    plt.plot(list(range(epoch_num)), cnet_train_loss[0], label='Classical Net Train Loss')
+    plt.plot(list(range(epoch_num)),
+             qnet_train_loss[0],
+             label='Quantum Net Train Loss')
+    plt.plot(list(range(epoch_num)),
+             cnet_train_loss[0],
+             label='Classical Net Train Loss')
     plt.subplot(122)
-    plt.plot(list(range(epoch_num)), qnet_train_loss[1], label='Quantum Net Val Loss')
-    plt.plot(list(range(epoch_num)), cnet_train_loss[1], label='Classical Net Val Loss')
+    plt.plot(list(range(epoch_num)),
+             qnet_train_loss[1],
+             label='Quantum Net Val Loss')
+    plt.plot(list(range(epoch_num)),
+             cnet_train_loss[1],
+             label='Classical Net Val Loss')

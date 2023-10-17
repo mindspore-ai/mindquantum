@@ -17,6 +17,7 @@
 
 """QAOA ansatz."""
 
+from mindquantum import ParameterResolver
 from mindquantum.core.circuit import Circuit, CPN, UN
 from mindquantum.core.gates import RX, H
 from mindquantum.core.circuit import decompose_single_term_time_evolution
@@ -88,7 +89,8 @@ class QAOAAnsatz(Ansatz):
         circ = Circuit()
         for h in ham.terms:
             if h:
-                circ += decompose_single_term_time_evolution(h, {'beta':ham.terms[h]})
+                circ += decompose_single_term_time_evolution(
+                    h, ham.terms[h] * ParameterResolver('beta'))
         return circ
 
     def _build_hb(self, circ):

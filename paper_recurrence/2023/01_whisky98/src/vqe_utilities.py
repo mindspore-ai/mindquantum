@@ -25,11 +25,11 @@ def build_ansatz(num_qubits,para):
     for i in range(num_qubits):
         circ = circ+RY(para+f'{i}').on(i)
     circ.barrier()
-    
+
     circ = circ+X.on(0,num_qubits-1)
     for i in range(1,num_qubits):
         circ= circ+X.on(i,i-1)
-    circ.barrier()  
+    circ.barrier()
 
     for i in range(num_qubits):
         circ = circ+RY(para+f'{i+12}').on(i)

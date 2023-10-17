@@ -12,6 +12,7 @@ import os
 import sys
 import time
 
+
 class Timer:
     def __init__(self, t0=0.0):
         self.start_time = time.time()
@@ -19,6 +20,7 @@ class Timer:
 
     def runtime(self):
         return time.time() - self.start_time + self.t0
+
 
 def format_time(t):
     hh = t // 3600
@@ -35,6 +37,7 @@ def func(x, grad_ops, file, show_iter_val=False):
         sys.stdout.flush()
     return np.real(np.squeeze(f)), np.squeeze(g)
 
+
 def param2dict(keys, values):
     param_dict = {}
     for (key, value) in zip(keys, values):
@@ -49,12 +52,14 @@ def param2dict(keys, values):
     对于LiH分子: 从44个优化参数减到只需要优化7个参数
     对于CH4分子: 从230个优化参数减到只需要优化68个参数
 """
+
+
 class VQEoptimizer:
     def __init__(self, molecule=None, amp_th=-1, seed=1202, file=None):
         self.timer = Timer()
         self.molecule = molecule
         self.amp_th = amp_th
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
         self.init_amp = []
@@ -65,7 +70,7 @@ class VQEoptimizer:
     def generate_circuit(self, prefix, blen, molecule=None, seed=1202):
         if molecule == None:
             molecule = self.molecule
-        
+
         self.blen = blen
         self.prefix = prefix
         self.circuit = Circuit([X.on(i) for i in range(molecule.n_electrons)])
@@ -79,10 +84,16 @@ class VQEoptimizer:
         self.n_qubits, \
         self.n_electrons = OEU.generate_uccsd(molecule, self.amp_th, prefix, blen)
 
-        self.circuit += ansatz_circuit 
+        self.circuit += ansatz_circuit
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
 
-    def optimize(self, operator=None, circuit=None, init_amp=[], method='SLSQP', maxstep=200, iter_info=False):
+    def optimize(self,
+                 operator=None,
+                 circuit=None,
+                 init_amp=[],
+                 method='SLSQP',
+                 maxstep=200,
+                 iter_info=False):
         if operator == None:
             operator = self.hamiltonian
         if circuit == None:
@@ -90,37 +101,38 @@ class VQEoptimizer:
         if np.array(init_amp).size == 0:
             init_amp = self.init_amp
 
-
-        grad_ops = self.simulator.get_expectation_with_grad(Hamiltonian(operator), circuit)
+        grad_ops = self.simulator.get_expectation_with_grad(
+            Hamiltonian(operator), circuit)
 
         # 因为比赛比的是达到化学精度的前提下，用尽可能短的时间，所以在优化LiH和CH4的时候，我们调节优化器的终止的精度范围。
         if self.prefix == 'LiH':
-            self.res = minimize(func, init_amp,
+            self.res = minimize(func,
+                                init_amp,
                                 args=(grad_ops, self.file, iter_info),
                                 method=method,
                                 jac=True,
                                 tol=0.0001)
         else:
-            self.res = minimize(func, init_amp,
-                    args=(grad_ops, self.file, iter_info),
-                    method=method,
-                    jac=True,
-                    tol = 0.00016)
-
+            self.res = minimize(func,
+                                init_amp,
+                                args=(grad_ops, self.file, iter_info),
+                                method=method,
+                                jac=True,
+                                tol=0.00016)
 
 
 class Main:
     def __init__(self):
         super().__init__()
         #self.work_dir = './src/'
-        self.work_dir = os.path.dirname(os.path.abspath(__file__))+'/'
+        self.work_dir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
     def run(self, prefix, molecular_file, geom_list):
         prefix = prefix
-        molecule = MolecularData(filename=self.work_dir+molecular_file)
+        molecule = MolecularData(filename=self.work_dir + molecular_file)
         molecule.load()
 
-        with open(self.work_dir+prefix+'.o', 'a') as f:
+        with open(self.work_dir + prefix + '.o', 'a') as f:
 
             print('Start case: ', prefix)
             print('OMP_NUM_THREAD: ', os.environ['OMP_NUM_THREADS'])
@@ -129,30 +141,34 @@ class Main:
 
             for i in range(len(geom_list)):
                 mol0 = MolecularData(geometry=geom_list[i],
-                                    basis=molecule.basis,
-                                    charge=molecule.charge,
-                                    multiplicity=molecule.multiplicity)
+                                     basis=molecule.basis,
+                                     charge=molecule.charge,
+                                     multiplicity=molecule.multiplicity)
                 mol = run_pyscf(mol0, run_scf=1, run_ccsd=1, run_fci=1)
                 blen = i
-                vqe.generate_circuit(prefix,blen, mol)
+                vqe.generate_circuit(prefix, blen, mol)
                 vqe.optimize()
                 param_dict = param2dict(vqe.circuit.params_name, vqe.res.x)
 
                 vqe.simulator.apply_circuit(vqe.circuit, param_dict)
                 t = vqe.timer.runtime()
-                en = vqe.simulator.get_expectation(Hamiltonian(vqe.hamiltonian)).real
-                print('Time: %i hrs %i mints %.2f sec.' % format_time(t), 'Energy: ', en)
-                print("The error is: ", (mol0.fci_energy-en))
+                en = vqe.simulator.get_expectation(Hamiltonian(
+                    vqe.hamiltonian)).real
+                print('Time: %i hrs %i mints %.2f sec.' % format_time(t),
+                      'Energy: ', en)
+                print("The error is: ", (mol0.fci_energy - en))
                 sys.stdout.flush()
                 en_list.append(en)
                 time_list.append(t)
 
-            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()))
+            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' %
+                  format_time(vqe.timer.runtime()))
 
         if len(en_list) == len(geom_list) and len(time_list) == len(geom_list):
-            return en_list, time_list#, nparam_list
+            return en_list, time_list  #, nparam_list
         else:
             raise ValueError('data lengths are not correct!')
+
 
 class Plot:
     def plot(self, prefix, blen_range, energy, time):
@@ -175,4 +191,3 @@ class Plot:
         figtime.savefig('figure_time.png')
 
         plt.close()
-

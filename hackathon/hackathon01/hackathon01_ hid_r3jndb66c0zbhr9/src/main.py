@@ -1,6 +1,3 @@
-import os
-
-os.environ['OMP_NUM_THREADS'] = '2'
 from hybrid import HybridModel
 from hybrid import project_path
 import numpy as np
@@ -31,16 +28,16 @@ class Main(HybridModel):
         return train
 
     def build_grad_ops(self,k):
-        encoder = Circuit()   
+        encoder = Circuit()
         encoder += UN(H, 8)
-        for i in range(8):                      
-            encoder += RZ(f'alpha_a{i}').on(i)    
-        for j in range(8): 
+        for i in range(8):
+            encoder += RZ(f'alpha_a{i}').on(i)
+        for j in range(8):
             index_j = (j+1)%8
-            encoder += X.on(index_j, j)             
+            encoder += X.on(index_j, j)
             encoder += RZ(f'alpha_b{j+8}').on(index_j)
-            encoder += X.on(index_j, j)             
-        encoder = encoder.no_grad()                
+            encoder += X.on(index_j, j)
+        encoder = encoder.no_grad()
 
         ctrl_seed = [1]
         ansatz = Circuit()
@@ -54,13 +51,11 @@ class Main(HybridModel):
                 ansatz += RX('{}beta_b_1{}{}'.format(k,j,i)).on(index,i)
                 ansatz += RZ('{}beta_b_2{}{}'.format(k,j,i)).on(index,i)
                 ansatz += RX('{}beta_b_3{}{}'.format(k,j,i)).on(index,i)
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
         # Hamiltonian
         ham = [Hamiltonian(QubitOperator(f'Z{i}')+QubitOperator(f'Y{i}')+QubitOperator(f'X{i}')) for i in [3,4]]
-        sim = Simulator('projectq', total_circ.n_qubits)
+        sim = Simulator('mqvector', total_circ.n_qubits)
         grad_ops = sim.get_expectation_with_grad(ham,total_circ,
-                                                    encoder_params_name=encoder.params_name,
-                                                    ansatz_params_name=ansatz.params_name,
                                                     parallel_worker=5)
         return grad_ops
 

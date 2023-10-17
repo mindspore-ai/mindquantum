@@ -1,5 +1,6 @@
 import os, sys
 import time
+
 os.environ['OMP_NUM_THREADS'] = '8'
 
 from openfermion.chem import MolecularData
@@ -12,6 +13,7 @@ import mindspore as ms
 import mindspore.context as context
 from mindspore import Parameter
 from mindquantum.framework import MQAnsatzOnlyLayer
+
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 import numpy as np
@@ -25,6 +27,7 @@ class Timer:
 
     def runtime(self):
         return time.time() - self.start_time + self.t0
+
 
 def format_time(t):
     hh = t // 3600
@@ -41,18 +44,20 @@ def func(x, grad_ops, file, show_iter_val=False):
         sys.stdout.flush()
     return np.real(np.squeeze(f)), np.squeeze(g)
 
+
 def param2dict(keys, values):
     param_dict = {}
     for (key, value) in zip(keys, values):
         param_dict[key] = value
     return param_dict
 
+
 class VQEoptimizer:
     def __init__(self, molecule=None, amp_th=1e-4, seed=1202, file=None):
         self.timer = Timer()
         self.molecule = molecule
         self.amp_th = amp_th
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
         self.init_amp = []
@@ -61,7 +66,8 @@ class VQEoptimizer:
         if molecule != None:
             self.generate_circuit(molecule)
 
-        print("Initialize finished! Time: %.2f s" % self.timer.runtime(), file=self.file)
+        print("Initialize finished! Time: %.2f s" % self.timer.runtime(),
+              file=self.file)
         sys.stdout.flush()
 
     def generate_circuit(self, molecule=None, seed=1202):
@@ -76,10 +82,15 @@ class VQEoptimizer:
         self.hamiltonian, \
         self.n_qubits, \
         self.n_electrons = generate_uccsd(molecule, th=self.amp_th)
-        self.circuit += ansatz_circuit 
+        self.circuit += ansatz_circuit
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
 
-    def optimize(self, operator=None, circuit=None, init_amp=[], maxstep=500, iter_info=False):
+    def optimize(self,
+                 operator=None,
+                 circuit=None,
+                 init_amp=[],
+                 maxstep=500,
+                 iter_info=False):
         if operator == None:
             operator = self.hamiltonian
         if circuit == None:
@@ -89,36 +100,39 @@ class VQEoptimizer:
 
         print(circuit.summary(), file=self.file)
 
-        grad_ops = self.simulator.get_expectation_with_grad(Hamiltonian(operator), circuit, parallel_worker=8)
+        grad_ops = self.simulator.get_expectation_with_grad(
+            Hamiltonian(operator), circuit, parallel_worker=8)
         net = MQAnsatzOnlyLayer(grad_ops, weight='Zeros')
-        
+
         learning_rate = 2.0 / self.n_electrons * 2e-2
         # print("learning rate = ", learning_rate)
-        optimizer = ms.nn.Adam(net.trainable_params(), learning_rate=learning_rate)
+        optimizer = ms.nn.Adam(net.trainable_params(),
+                               learning_rate=learning_rate)
         train_net = ms.nn.TrainOneStepCell(net, optimizer)
-        
+
         energy_fci = self.molecule.fci_energy
         energy_ccsd = self.molecule.ccsd_energy
         print("ccsd energy: ", energy_ccsd)
         # print("fci energy:", energy_fci, file=self.file)
-        eps = 0.0016 # 精度
+        eps = 0.0016  # 精度
         energy_diff = eps * 10.0
         energy_best = 0.0  # 最低能量
-        amps_best = None   # 最佳幅值
+        amps_best = None  # 最佳幅值
 
-        iter_idx = 0 # 迭代次数
-        start_time = time.time() # 起始时间
+        iter_idx = 0  # 迭代次数
+        start_time = time.time()  # 起始时间
         while abs(energy_diff) > eps and iter_idx < maxstep:
             energy_i = train_net().asnumpy()[0]
             energy_diff = energy_fci - energy_i
 
-            if energy_i < energy_best: # 记录最小值
+            if energy_i < energy_best:  # 记录最小值
                 energy_best = energy_i
-                amps_best = net.weight.asnumpy() # 记录最佳幅度
+                amps_best = net.weight.asnumpy()  # 记录最佳幅度
             iter_idx += 1
-            
+
             if iter_info:
-                print("iter %d spend %6.3f minutes. energy: %10.4f" % (iter_idx, (time.time() - start_time)/60,  energy_i))
+                print("iter %d spend %6.3f minutes. energy: %10.4f" %
+                      (iter_idx, (time.time() - start_time) / 60, energy_i))
             start_time = time.time()
         net.weight = Parameter(ms.Tensor(amps_best, net.weight.dtype))
         self.weight = amps_best
@@ -131,10 +145,10 @@ class Main:
 
     def run(self, prefix, molecular_file, geom_list):
         prefix = prefix
-        molecule = MolecularData(filename=self.work_dir+molecular_file)
+        molecule = MolecularData(filename=self.work_dir + molecular_file)
         molecule.load()
 
-        with open(self.work_dir+prefix+'.o', 'a') as f:
+        with open(self.work_dir + prefix + '.o', 'a') as f:
             print(f)
             print('Start case: ', prefix, file=f)
             print('OMP_NUM_THREAD: ', os.environ['OMP_NUM_THREADS'], file=f)
@@ -144,9 +158,9 @@ class Main:
 
             for i in range(len(geom_list)):
                 mol0 = MolecularData(geometry=geom_list[i],
-                                    basis=molecule.basis,
-                                    charge=molecule.charge,
-                                    multiplicity=molecule.multiplicity)
+                                     basis=molecule.basis,
+                                     charge=molecule.charge,
+                                     multiplicity=molecule.multiplicity)
                 mol0.filename = self.work_dir + prefix + "_molecule.tmp"
                 mol = run_pyscf(mol0, run_scf=0, run_ccsd=1, run_fci=1)
                 vqe.molecule = mol
@@ -156,16 +170,22 @@ class Main:
 
                 vqe.simulator.apply_circuit(vqe.circuit, param_dict)
                 t = vqe.timer.runtime()
-                en = vqe.simulator.get_expectation(Hamiltonian(vqe.hamiltonian)).real
-                print('Time: %i hrs %i mints %.2f sec.' % format_time(t), 'Energy: ', en, file=f)
+                en = vqe.simulator.get_expectation(Hamiltonian(
+                    vqe.hamiltonian)).real
+                print('Time: %i hrs %i mints %.2f sec.' % format_time(t),
+                      'Energy: ',
+                      en,
+                      file=f)
                 sys.stdout.flush()
                 en_list.append(en)
                 time_list.append(t)
 
-            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()), file=f)
+            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' %
+                  format_time(vqe.timer.runtime()),
+                  file=f)
 
         if len(en_list) == len(geom_list) and len(time_list) == len(geom_list):
-            return en_list, time_list#, nparam_list
+            return en_list, time_list  #, nparam_list
         else:
             raise ValueError('data lengths are not correct!')
 
@@ -201,17 +221,16 @@ def geometry_lih(blens):
 
     return geom
 
+
 def geometry_ch4(blens):
     geom = []
     for blen in blens:
-        geom.append([('C', [0.0, 0.0, 0.0]),
-                         ('H', [blen, blen, blen]),
-                         ('H', [blen, -blen, -blen]),
-                         ('H', [-blen, blen, -blen]),
-                         ('H', [-blen, -blen, blen])
-                         ])
+        geom.append([('C', [0.0, 0.0, 0.0]), ('H', [blen, blen, blen]),
+                     ('H', [blen, -blen, -blen]), ('H', [-blen, blen, -blen]),
+                     ('H', [-blen, -blen, blen])])
 
     return geom
+
 
 if __name__ == '__main__':
     main = Main()

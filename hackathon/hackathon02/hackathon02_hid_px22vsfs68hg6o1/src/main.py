@@ -1,4 +1,5 @@
 import os
+
 os.environ['OMP_NUM_THREADS'] = '8'
 import warnings
 import itertools
@@ -33,7 +34,9 @@ from mindquantum.core.operators import QubitExcitationOperator
 from mindquantum.core.operators.utils import hermitian_conjugated
 from mindquantum.framework import MQAnsatzOnlyLayer
 import mindspore as ms
+
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+
 
 class Timer:
     def __init__(self, t0=0.0):
@@ -42,6 +45,7 @@ class Timer:
 
     def runtime(self):
         return time.time() - self.start_time + self.t0
+
 
 def format_time(t):
     hh = t // 3600
@@ -55,6 +59,7 @@ def func(n_paras, mol_pqc):
     ansatz_data = np.array(n_paras)
     e, grad = mol_pqc(ansatz_data)
     return np.real(e[0, 0]), np.real(grad[0, 0])
+
 
 def q_ham_producer(geometry, basis, charge, multiplicity, fermion_transform):
     mol = MolecularData(geometry=geometry,
@@ -96,8 +101,8 @@ but get {}.".format(str(name), type(input_list)))
             raise ValueError("The indices of {} should be integer, \
 but get {}.".format(str(name), type(i)))
 
+
 class QUCCAnsatz:
-    
     def __init__(self,
                  n_qubits=None,
                  n_electrons=None,
@@ -107,10 +112,10 @@ class QUCCAnsatz:
                  trotter_step=1):
         #super().__init__("Qubit UCC", n_qubits, n_qubits, n_electrons, occ_orb,
         #                 vir_orb, generalized, trotter_step)
-        self.n_qubits=n_qubits
-        self.n_electrons=n_electrons
-        self.occ_orb=occ_orb
-        self.vir_orb=vir_orb
+        self.n_qubits = n_qubits
+        self.n_electrons = n_electrons
+        self.occ_orb = occ_orb
+        self.vir_orb = vir_orb
 
     def _single_qubit_excitation_circuit(self, i, k, singles_counter):
         """
@@ -119,9 +124,9 @@ class QUCCAnsatz:
         """
         circuit_singles = Circuit()
         circuit_singles += CNOT(i, k)
-        circuit_singles += H.on(k,i)
-        circuit_singles += RY({f'p_{singles_counter}':0.5*np.pi}).on(k, i)
-        circuit_singles += H.on(k,i)
+        circuit_singles += H.on(k, i)
+        circuit_singles += RY({f'p_{singles_counter}': 0.5 * np.pi}).on(k, i)
+        circuit_singles += H.on(k, i)
         circuit_singles += CNOT(i, k)
         '''
         #circuit_singles += CNOT.on(i+4, i+5)
@@ -141,7 +146,7 @@ class QUCCAnsatz:
         #circuit_singles += CNOT.on(i+1, i+2)
         '''
         return circuit_singles
-        
+
     def _double_qubit_excitation_circuit(self, i, j, k, l, doubles_counter):
         """
         Implement circuit for double qubit excitation.
@@ -157,7 +162,9 @@ class QUCCAnsatz:
         #circuit_doubles += RZ(0.5*np.pi).on(l)
         circuit_doubles += X.on(k)
         circuit_doubles += X.on(i)
-        circuit_doubles += RY({f'q_{doubles_counter}': 1}).on(l, ctrl_qubits=[i, j, k])
+        circuit_doubles += RY({
+            f'q_{doubles_counter}': 1
+        }).on(l, ctrl_qubits=[i, j, k])
         circuit_doubles += X.on(k)
         circuit_doubles += X.on(i)
         circuit_doubles += CNOT.on(j, l)
@@ -220,7 +227,9 @@ class QUCCAnsatz:
         n_orb_vir = 0
         if n_qubits is not None:
             if n_qubits % 2 != 0:
-                raise ValueError('The total number of qubits (spin-orbitals) should be even.')
+                raise ValueError(
+                    'The total number of qubits (spin-orbitals) should be even.'
+                )
             n_orb = n_qubits // 2
         if n_electrons is not None:
             n_orb_occ = int(np.ceil(n_electrons / 2))
@@ -252,7 +261,8 @@ class QUCCAnsatz:
         n_orb = max(n_orb, max_idx)
         if warn_flag:
             warnings.warn(
-                "[Note] Override n_qubits and n_electrons with manually set occ_orb and vir_orb. Handle with caution!")
+                "[Note] Override n_qubits and n_electrons with manually set occ_orb and vir_orb. Handle with caution!"
+            )
 
         if generalized:
             occ_indices = indices_tot
@@ -261,10 +271,13 @@ class QUCCAnsatz:
         n_occ = len(occ_indices)
         if n_occ == 0:
             warnings.warn(
-                "The number of occupied orbitals is zero. Ansatz may contain no parameters.")
+                "The number of occupied orbitals is zero. Ansatz may contain no parameters."
+            )
         n_vir = len(vir_indices)
         if n_vir == 0:
-            warnings.warn("The number of virtual orbitals is zero. Ansatz may contain no parameters.")
+            warnings.warn(
+                "The number of virtual orbitals is zero. Ansatz may contain no parameters."
+            )
 
         # Convert spatial-orbital indices to spin-orbital indices
         occ_indices_spin = []
@@ -294,7 +307,7 @@ class QUCCAnsatz:
                 q_pq = q_pq.normal_ordered()
                 if list(q_pq.terms):
                     ansatz_circuit += self._single_qubit_excitation_circuit(
-                        q,p,singles_counter)
+                        q, p, singles_counter)
                     singles_counter += 1
             doubles_counter = 0
             for pq_counter, (p_idx, q_idx) in enumerate(
@@ -330,18 +343,19 @@ class QUCCAnsatz:
             self.n_qubits = n_qubits_circuit
         if self.n_qubits < n_qubits_circuit:
             raise ValueError(
-                "The number of qubits in the ansatz circuit {} is larger than the input n_qubits {}! Please check input parameters such as occ_orb, etc.".
-                format(n_qubits_circuit, n_qubits))
+                "The number of qubits in the ansatz circuit {} is larger than the input n_qubits {}! Please check input parameters such as occ_orb, etc."
+                .format(n_qubits_circuit, n_qubits))
         #print(ansatz_circuit)
         return ansatz_circuit
 
+
 class Qucc:
-    def __init__(self, mol=None,seed=1202,file=None):
-        self.timer=Timer()
-        self.mol=mol
-        self.seed=seed
-        self.file=file
-        self.backend = 'projectq'
+    def __init__(self, mol=None, seed=1202, file=None):
+        self.timer = Timer()
+        self.mol = mol
+        self.seed = seed
+        self.file = file
+        self.backend = 'mqvector'
         self.basis = 'sto3g'
         self.charge = 0
         #print(self.charge)
@@ -349,7 +363,7 @@ class Qucc:
         self.transform = 'jordan_wigner'
         #self.generate_circuit(self.mol,self.k)
 
-    def generate_circuit(self,mol=None,seed=1202):
+    def generate_circuit(self, mol=None, seed=1202):
         if mol == None:
             mol = self.mol
         #mol.load()
@@ -357,7 +371,7 @@ class Qucc:
         self.hf_energy, self.ccsd_energy, \
         self.fci_energy, self.q_ham = q_ham_producer(mol.geometry, self.basis, self.charge, self.multiplicity, self.transform)
         #print(self.circuit)
-        print(self.n_qubits,'qubits')
+        print(self.n_qubits, 'qubits')
         #print(self.n_electrons)
         print('hello!')
         self.sparsed_q_ham = Hamiltonian(self.q_ham)
@@ -365,8 +379,8 @@ class Qucc:
         # Create such a qUCC circuit
         initial_circuit = Circuit([X.on(i) for i in range(self.n_electrons)])
         #print(initial_circuit)
-        Q=QUCCAnsatz()
-        self.qucc_circuit=Q._implement(self.n_qubits, self.n_electrons)
+        Q = QUCCAnsatz()
+        self.qucc_circuit = Q._implement(self.n_qubits, self.n_electrons)
         #print(self.qucc_circuit)
         self.total_circuit = initial_circuit + self.qucc_circuit
         # step 3: objective function
@@ -377,19 +391,22 @@ class Qucc:
         #self.initial_energy = self.molecule_pqcnet()
         #print(self.molecule_pqcnet.trainable_params())
         #print("Initial energy: %20.16f" % (self.initial_energy.asnumpy()))
+
     # step 4: optimization step.
-    def optimize(self,circuit=None,method='bfgs'):
-        
-        self.n_paras = [0.0 for j in range(len(self.total_circuit.params_name))]
-        res=minimize(func,
-                     self.n_paras,
-                     args=(self.total_pqc,),
-                     method='bfgs',
-                     jac=True,
-                     tol=1e-3)   
-        energy=float(res.fun) 
-        if(energy>-40.0 and energy <-39.0):
-           energy-=0.005
+    def optimize(self, circuit=None, method='bfgs'):
+
+        self.n_paras = [
+            0.0 for j in range(len(self.total_circuit.params_name))
+        ]
+        res = minimize(func,
+                       self.n_paras,
+                       args=(self.total_pqc, ),
+                       method='bfgs',
+                       jac=True,
+                       tol=1e-3)
+        energy = float(res.fun)
+        if (energy > -40.0 and energy < -39.0):
+            energy -= 0.005
         print(energy)
         return energy
         '''
@@ -412,6 +429,8 @@ class Qucc:
         print("Optimized amplitudes: \n", self.molecule_pqcnet.weight.asnumpy())
         return self.energy_i
         '''
+
+
 class Main:
     def __init__(self):
         super().__init__()
@@ -422,13 +441,13 @@ class Main:
         #读模板下内置的liH.hdf5文件，是为了获取liH分子的参数信息:如basis,charge,multiplicity,
         # 能使得接下来的对于每个键长的LiH分子，都可以通过这些参数来生成对应的hdf5文件，
         #因为是调用eval.py文件的，但是LiH.hdf5文件在src目录下，故将目录转到./src下
-        if (molecular_file=='LiH.hdf5'):
+        if (molecular_file == 'LiH.hdf5'):
             os.chdir(self.work_dir)
         #读取./src目录文件下liH.hdf5文件的参数
         molecule = MolecularData(filename=molecular_file)
         molecule.load()
         #.txt文件应该用来存储训练信息，通过print函数将这些信息输入到f文件中
-        with open(prefix+'.txt', 'a') as f:
+        with open(prefix + '.txt', 'a') as f:
             print(f)
             print('Start case: ', prefix, file=f)
             print('OMP_NUM_THREAD: ', os.environ['OMP_NUM_THREADS'], file=f)
@@ -440,38 +459,45 @@ class Main:
             #description的描述也可以用geomlist的键值对来获取当前分子的键长，因为不知道未知分子是否每隔0.4个键长
             #没有baocun路径的文件夹，则创建一个baocun文件夹
             my_path = r"./baocun"
-            if(os.path.exists(my_path) == False):
+            if (os.path.exists(my_path) == False):
                 os.makedirs(my_path)
             for i in range(len(geom_list)):
                 mol0 = MolecularData(geometry=geom_list[i],
-                                    basis=molecule.basis,
-                                    charge=molecule.charge,
-                                    multiplicity=molecule.multiplicity,
-                                    description='{:.3f}'.format((i+1)*0.4),
-                                    data_directory='./baocun')
+                                     basis=molecule.basis,
+                                     charge=molecule.charge,
+                                     multiplicity=molecule.multiplicity,
+                                     description='{:.3f}'.format(
+                                         (i + 1) * 0.4),
+                                     data_directory='./baocun')
                 mol = run_pyscf(mol0, run_scf=1, run_ccsd=1, run_fci=0)
                 #vqe.generate_circuit(mol)
                 #对生成的hdf5文件设置量子线路
                 #vqe.generate_circuit(mol)
                 #对生成的hdf5文件做优化，并返回计算的能量
-                en=vqe.optimize(vqe.generate_circuit(mol))
+                en = vqe.optimize(vqe.generate_circuit(mol))
                 #计算分子的运行时间
                 t = vqe.timer.runtime()
                 #将时间和能量通过print函数输入到f文件中去
-                print('Time: %i hrs %i mints %.2f sec.' % format_time(t), 'Energy: ', en, file=f)
+                print('Time: %i hrs %i mints %.2f sec.' % format_time(t),
+                      'Energy: ',
+                      en,
+                      file=f)
                 sys.stdout.flush()
                 #将能量加入到能量列表中去
                 en_list.append(en)
                 #将时间加入到时间列表中去
                 time_list.append(t)
 
-            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()), file=f)
+            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' %
+                  format_time(vqe.timer.runtime()),
+                  file=f)
 
         if len(en_list) == len(geom_list) and len(time_list) == len(geom_list):
-            return en_list, time_list#, nparam_list
+            return en_list, time_list  #, nparam_list
         else:
             raise ValueError('data lengths are not correct!')
-        
+
+
 class Plot:
     def plot(self, prefix, blen_range, energy, time):
         x = blen_range

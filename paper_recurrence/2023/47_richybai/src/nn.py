@@ -7,7 +7,7 @@ from mindspore.nn.loss.loss import LossBase
 class HingeLoss(LossBase):
     def __init__(self, reduction='mean'):
         super(HingeLoss, self).__init__(reduction)
-        
+
     def construct(self, logits, labels):
         x = 1 - logits * labels
         x[x < 0] = 0

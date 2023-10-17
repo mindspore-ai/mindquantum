@@ -10,11 +10,13 @@ from tqdm import trange
 
 
 def train(heisenberg_model: HeisenbergModel,
-          pqc: Circuit, steps: int, eta: float,
+          pqc: Circuit,
+          steps: int,
+          eta: float,
           list_qubits2keep: list,
           eps_theta: float = 0.05) -> tuple((list, list, list)):
     ham = heisenberg_model.ham()
-    sim = Simulator('projectq', heisenberg_model.n_qubits)
+    sim = Simulator('mqvector', heisenberg_model.n_qubits)
     exp_with_grad = sim.get_expectation_with_grad(ham, pqc)
 
     def func(args):
@@ -25,7 +27,8 @@ def train(heisenberg_model: HeisenbergModel,
         f, g = exp_with_grad(args)
         return g[0, 0].real
 
-    args_init = (np.random.rand(len(pqc.params_name)) * 2 * np.pi - np.pi) * eps_theta
+    args_init = (np.random.rand(len(pqc.params_name)) * 2 * np.pi -
+                 np.pi) * eps_theta
 
     opt = GDOpt(func, grad, args_init, eta)
 
@@ -34,7 +37,7 @@ def train(heisenberg_model: HeisenbergModel,
     for _ in trange(steps):
         opt.one_step_opt()
         grad_norm_list.append(np.linalg.norm(opt.grad(opt.args)))
-        sim_temp = Simulator('projectq', heisenberg_model.n_qubits)
+        sim_temp = Simulator('mqvector', heisenberg_model.n_qubits)
         sim_temp.apply_circuit(pqc, opt.args)
         rs = get_rs_from_sim(sim_temp, list_qubits2keep)
         s2_list.append(s2(rs))
@@ -59,13 +62,12 @@ if __name__ == '__main__':
             eta=eta_,
             list_qubits2keep=[0, 1],
         )
-        axs[0].plot(np.array(s2list) / (s_page(2, 6)), label=(r'$\eta=$' + f'{eta_}'))
+        axs[0].plot(np.array(s2list) / (s_page(2, 6)),
+                    label=(r'$\eta=$' + f'{eta_}'))
         axs[1].plot(costlist)
         axs[2].plot(gradlist)
-    axs[0].set(ylabel=r'$S_2 / S_{page}$',
-               ylim=(0, 1))
+    axs[0].set(ylabel=r'$S_2 / S_{page}$', ylim=(0, 1))
     axs[1].set(ylabel=r'Energy $E$')
-    axs[2].set(ylabel=r'$\Vert \nabla_\theta E \Vert$',
-               xlabel='Iterations')
+    axs[2].set(ylabel=r'$\Vert \nabla_\theta E \Vert$', xlabel='Iterations')
     axs[0].legend(loc='upper right')
     plt.savefig(f"images/n{n_qubits}-p{p_layers}.svg")

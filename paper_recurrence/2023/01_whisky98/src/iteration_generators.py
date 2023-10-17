@@ -22,7 +22,7 @@ def Generate_iterations(one_step_iteration_generator,several_steps_iteration_gen
 def ising_vqe_its_generator(x_init,num_iters,optimizer_fn,lr,simulator,ham,ansatz):
   x_init = x_init.real.astype(np.float32)
   grad_ops = simulator.get_expectation_with_grad(ham,ansatz)
-  net = MQAnsatzOnlyLayer(grad_ops,Tensor(x_init))  
+  net = MQAnsatzOnlyLayer(grad_ops,Tensor(x_init))
   opti = optimizer_fn(net.trainable_params(),learning_rate=lr)
   train_net = nn.TrainOneStepCell(net,opti)
 

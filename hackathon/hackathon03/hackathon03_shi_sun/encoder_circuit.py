@@ -10,15 +10,16 @@ Created on Mon May 23 15:49:14 2022
 @author: Waikikilick
 """
 
-import numpy as np   
-import mindspore as ms                         
+import numpy as np
+import mindspore as ms
 from mindquantum import *
 from mindspore import nn
-from mindspore.nn import Adam, TrainOneStepCell                                 
+from mindspore.nn import Adam, TrainOneStepCell
 from mindspore.common.parameter import Parameter
-from mindspore.common.initializer import initializer                                   
+from mindspore.common.initializer import initializer
+
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-ms.set_seed(1) 
+ms.set_seed(1)
 
 train_x = np.load('./new_train_x.npy', allow_pickle=True)
 train_y = np.load('./new_train_y.npy', allow_pickle=True)
@@ -26,20 +27,23 @@ eval_x = np.load('./new_eval_x.npy', allow_pickle=True)
 eval_y = np.load('./new_eval_y.npy', allow_pickle=True)
 test_x = np.load('./test_x.npy', allow_pickle=True)
 
+
 # 自定义网络层
 # 本来是不支持传入 target_state 的
 class My_QLayer(nn.Cell):
     def __init__(self, expectation_with_grad, weight='normal'):
         super(My_QLayer, self).__init__()
         self.evolution = MQN2Ops(expectation_with_grad)
-        weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        weight_size = len(
+            self.evolution.expectation_with_grad.ansatz_params_name)
         self.weight = Parameter(initializer(weight,
                                             weight_size,
                                             dtype=ms.float32),
-                                            name='ansatz_weight')
+                                name='ansatz_weight')
 
     def construct(self, x, target_state):
         return self.evolution(x, self.weight, target_state)
+
 
 # encoder
 def generate_encoder():
@@ -53,8 +57,10 @@ def generate_encoder():
         encoder += coupling_layer
     return encoder, encoder.params_name
 
-encoder, encoder_names = generate_encoder()   
-encoder.no_grad() 
+
+encoder, encoder_names = generate_encoder()
+encoder.no_grad()
+
 
 # ansatz
 # 卷积神经网络，卷积核为 9b
@@ -63,6 +69,7 @@ def Ansatz(layer_num=10):
     for i in range(layer_num):
         ansatz += ansatz_layer(prefix=f'layer{i}')
     return ansatz
+
 
 def ansatz_layer(prefix='0'):
     _circ = Circuit()
@@ -76,78 +83,81 @@ def ansatz_layer(prefix='0'):
     _circ = add_prefix(_circ, prefix)
     return _circ
 
+
 def conv_circ(prefix='0', bit_up=0, bit_down=1):
     _circ = Circuit()
-    _circ += U3('theta00','phi00','lam00',bit_up)
-    _circ += U3('theta01','phi01','lam01',bit_down)
-    _circ += X.on(bit_down,bit_up)
+    _circ += U3('theta00', 'phi00', 'lam00', bit_up)
+    _circ += U3('theta01', 'phi01', 'lam01', bit_down)
+    _circ += X.on(bit_down, bit_up)
     _circ += RY('theta10').on(bit_up)
     _circ += RZ('theta11').on(bit_down)
-    _circ += X.on(bit_up,bit_down)
+    _circ += X.on(bit_up, bit_down)
     _circ += RY('theta20').on(bit_up)
-    _circ += X.on(bit_down,bit_up)
-    _circ += U3('theta30','phi30','lam30',bit_up)
-    _circ += U3('theta31','phi31','lam31',bit_down)
+    _circ += X.on(bit_down, bit_up)
+    _circ += U3('theta30', 'phi30', 'lam30', bit_up)
+    _circ += U3('theta31', 'phi31', 'lam31', bit_down)
     _circ = add_prefix(_circ, prefix)
     return _circ
 
-ansatz = Circuit()                           
-ansatz = Ansatz(layer_num=1)  
-ansatz_names = ansatz.params_name  
-circuit = encoder + ansatz
+
+ansatz = Circuit()
+ansatz = Ansatz(layer_num=1)
+ansatz_names = ansatz.params_name
+circuit = encoder.as_encoder() + ansatz
 paras_name = circuit.params_name
 
-ham = Hamiltonian(QubitOperator(''))  
-sim = Simulator('projectq', 3)
-sim_left = Simulator('projectq', 3)
+ham = Hamiltonian(QubitOperator(''))
+sim = Simulator('mqvector', 3)
+sim_left = Simulator('mqvector', 3)
 
 grad_ops = sim.get_expectation_with_grad(ham,
                                          circuit,
                                          circ_left=Circuit(),
-                                         simulator_left=sim_left,
-                                         encoder_params_name=encoder_names,
-                                         ansatz_params_name=ansatz_names)
+                                         simulator_left=sim_left)
 QuantumNet = My_QLayer(grad_ops)
-opti = Adam(QuantumNet.trainable_params(), learning_rate=0.01)     # 需要优化的是Quantumnet中可训练的参数，学习率设为0.5
+opti = Adam(QuantumNet.trainable_params(),
+            learning_rate=0.01)  # 需要优化的是Quantumnet中可训练的参数，学习率设为0.5
 net = TrainOneStepCell(QuantumNet, opti)
 
 for epoch in range(2):
     print('\nepoch is:', epoch)
-    
+
     for i in range(len(train_x)):
-        encoder_data = train_x[i].reshape((1,18)).astype(np.float32)
+        encoder_data = train_x[i].reshape((1, 18)).astype(np.float32)
         target_psi = train_y[i]
-        res = net(ms.Tensor(encoder_data),ms.Tensor(target_psi))
-        
-        if i%100 == 0: # 每 100 步，用整个验证集验证一下
+        res = net(ms.Tensor(encoder_data), ms.Tensor(target_psi))
+
+        if i % 100 == 0:  # 每 100 步，用整个验证集验证一下
             print('step:', i, '训练保真度：', res)
-            
+
 # fid_list = []
 # for x, y in zip(eval_x,eval_y):
-#     paras = list(np.squeeze(x)) + list(QuantumNet.weight.asnumpy()) 
+#     paras = list(np.squeeze(x)) + list(QuantumNet.weight.asnumpy())
 #     pr = dict(zip(paras_name, paras))
 #     state = circuit.get_qs(pr=pr)
-#     fid = np.abs(np.vdot(state, y))**2  
+#     fid = np.abs(np.vdot(state, y))**2
 #     fid_list.append(fid)
 # print('验证集平均保真度：',np.mean(fid_list))
-            
+
 state_list = []
 for x in eval_x:
-    paras = list(np.squeeze(x)) + list(QuantumNet.weight.asnumpy()) 
+    paras = list(np.squeeze(x)) + list(QuantumNet.weight.asnumpy())
     pr = dict(zip(paras_name, paras))
     state = circuit.get_qs(pr=pr)
     state_list.append(state)
-np.save('./lala.npy',np.array(state_list))
+np.save('./lala.npy', np.array(state_list))
 print('导出完成啦！')
 
 state_array = np.load('./lala.npy', allow_pickle=True)
 
-acc = np.real(np.mean([np.abs(np.vdot(bra, ket)) for bra, ket in zip(state_array, eval_y)]))
+acc = np.real(
+    np.mean(
+        [np.abs(np.vdot(bra, ket)) for bra, ket in zip(state_array, eval_y)]))
 print('最终准确率：', np.mean(acc))
 
 # state_list = []
 # for x in test_x:
-#     paras = list(np.squeeze(x)) + list(QuantumNet.weight.asnumpy()) 
+#     paras = list(np.squeeze(x)) + list(QuantumNet.weight.asnumpy())
 #     pr = dict(zip(paras_name, paras))
 #     state = circuit.get_qs(pr=pr)
 #     state_list.append(state)
@@ -158,7 +168,7 @@ print('最终准确率：', np.mean(acc))
 
 # # 1. 在 operations.py 中
 # class MQN2Ops(nn.Cell):
-    
+
 #     def __init__(self, expectation_with_grad):
 #         super(MQN2Ops, self).__init__()
 #         _mode_check(self)
@@ -199,7 +209,7 @@ print('最终准确率：', np.mean(acc))
 #                                   encoder_params_name=None,
 #                                   ansatz_params_name=None,
 #                                   parallel_worker=None):
-        
+
 #         if isinstance(hams, Hamiltonian):
 #             hams = [hams]
 #         elif not isinstance(hams, list):
@@ -316,6 +326,3 @@ print('最终准确率：', np.mean(acc))
 #         s += f' {self.backend} VQA Operator'
 #         grad_wrapper.set_str(s)
 #         return grad_wrapper
-
-
-

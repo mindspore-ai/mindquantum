@@ -17,6 +17,7 @@ import mole
 from ldca import generate_ldca
 from numpy.random import rand
 
+
 def energy_obj(n_paras, mol_pqc):
 
     ansatz_data = np.array(n_paras)
@@ -24,6 +25,7 @@ def energy_obj(n_paras, mol_pqc):
     # print(f"e = {e}, grad = {grad}")
     # print(f"e={e}")
     return np.real(e[0, 0]), np.real(grad[0, 0])
+
 
 L = 2
 method = f"LDCA"
@@ -34,8 +36,12 @@ charge = 0
 multiplicity = 1
 transform = 'jordan_wigner'
 
-bond_lengths = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0]  # LiH
+bond_lengths = [
+    0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2,
+    2.4, 2.6, 2.8, 3.0
+]  # LiH
 # bond_lengths = [1.1]
+
 
 def process(bond_len):
     geometry = getattr(mole, 'get_{}_geo'.format(mole_name))(bond_len)
@@ -57,7 +63,7 @@ def process(bond_len):
     hamiltonian_QubitOp = hamiltonian_QubitOp.real
     sparsed_ham = Hamiltonian(hamiltonian_QubitOp)
     sparsed_ham.sparse(n_qubits)
-    
+
     total_circuit = hartreefock_wfn_circuit + ansatz_circuit
     # total_circuit = Circuit(
     #     [X.on(i) for i in range(n_qubits)]
@@ -67,7 +73,7 @@ def process(bond_len):
 
     # total_circuit.summary()
 
-    total_pqc = Simulator('projectq', n_qubits).get_expectation_with_grad(
+    total_pqc = Simulator('mqvector', n_qubits).get_expectation_with_grad(
         sparsed_ham, total_circuit)
 
     #para_only_energy_obj = partial(energy_obj, hea_circuit, q_ham)
@@ -75,17 +81,17 @@ def process(bond_len):
     n_paras = len(total_circuit.params_name)
 
     roll_times = 5  # random times for parameter
-    paras_list = rand(roll_times * n_paras) * np.pi # [0,pi]
+    paras_list = rand(roll_times * n_paras) * np.pi  # [0,pi]
     energys = []
     for epoch in range(roll_times):
-        paras = paras_list[epoch * n_paras : (epoch+1) * n_paras]
+        paras = paras_list[epoch * n_paras:(epoch + 1) * n_paras]
         res = minimize(energy_obj,
-                    paras,
-                    args=(total_pqc, ),
-                    method='bfgs',
-                    jac=True,
-                    tol=1e-6)
-        
+                       paras,
+                       args=(total_pqc, ),
+                       method='bfgs',
+                       jac=True,
+                       tol=1e-6)
+
         energys.append(float(res.fun))
 
     print(f"bond = {bond_len}\nenergys = {energys}")
