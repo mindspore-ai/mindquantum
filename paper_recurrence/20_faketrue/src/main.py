@@ -10,7 +10,7 @@ import seaborn as sns
 import pandas as pd
 
 # 初始化一个3*3的零矩阵
-k = np.zeros((3,3), dtype = np.int)
+k = np.zeros((3, 3), dtype=int)
 # 在关联矩阵中添加覆盖
 k[0][0] = 1
 k[0][2] = 1
@@ -20,12 +20,14 @@ k[2][1] = 1
 k[2][2] = 1
 print(k)
 
+
 #根据关联矩阵k，计算系数Jij
 def get_Jij(i, j, k):
     Jij = 0
     for l in range(k.shape[0]):
         Jij += k[l][i] * k[l][j] * 0.5
     return Jij
+
 
 #计算第l行的klj之和
 def get_klj(l, k):
@@ -34,12 +36,14 @@ def get_klj(l, k):
         klj += k[l][j]
     return klj
 
+
 #根据关联矩阵k，计算系数hi
 def get_hi(i, k):
     hi = 0
     for l in range(k.shape[0]):
         hi += k[l][i] * (-1 + 0.5 * get_klj(l, k))
     return hi
+
 
 # 搭建UC(gamma)对应的量子线路
 def build_UC(k, g, para):
@@ -50,10 +54,10 @@ def build_UC(k, g, para):
             Jij = get_Jij(i, j, k)
             # UCij = Phase(i, 2 * gamma * Jij) + Phase(j, 2 * gamma * Jij) + Phase(i, j, 4 * gamma * Jij)
             # i < j
-            if(g==''):
-                UC += PhaseShift({para: 2*Jij }).on(i)
-                UC += PhaseShift({para: 2*Jij }).on(j)
-                UC += PhaseShift({para: -4 * Jij }).on(j, i)
+            if (g == ''):
+                UC += PhaseShift({para: 2 * Jij}).on(i)
+                UC += PhaseShift({para: 2 * Jij}).on(j)
+                UC += PhaseShift({para: -4 * Jij}).on(j, i)
             else:
                 UC += PhaseShift(2 * Jij * g).on(i)
                 UC += PhaseShift(2 * Jij * g).on(j)
@@ -62,19 +66,21 @@ def build_UC(k, g, para):
     UC.barrier()
     return UC
 
+
 # 搭建UB(β)对应的量子线路：
 def build_UB(k, b, para):
     # 创建量子线路
     UB = Circuit()
     for i in range(k.shape[1]):
-        if(b==''):
+        if (b == ''):
             # 对每个节点作用RX门
-            UB += RX({para:2}).on(i)
+            UB += RX({para: 2}).on(i)
         else:
             UB += RX(2 * b).on(i)
     # 添加Barrier以方便展示线路
     UB.barrier()
     return UB
+
 
 # 构建哈密顿量HC
 def build_HC(k):
@@ -87,6 +93,7 @@ def build_HC(k):
     for i in range(k.shape[1]):
         HC += get_hi(i, k) * QubitOperator(f'Z{i}')
     return HC
+
 
 # 搭建多层的训练网络
 # p是ansatz线路的层数
@@ -101,6 +108,7 @@ def build_ansatz(k, p, g, b):
 
     return circ
 
+
 # pylint: disable=W0104
 # QAOA量子线路的层数p
 p = 1
@@ -113,8 +121,8 @@ ansatz = build_ansatz(k, p, '', '')
 # 组合成完整线路
 circ = init_state_circ + ansatz
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-# 生成一个基于projectq后端的模拟器，并设置模拟器的比特数为量子线路的比特数
-sim = Simulator('projectq', circ.n_qubits)
+# 生成一个基于mqvector后端的模拟器，并设置模拟器的比特数为量子线路的比特数
+sim = Simulator('mqvector', circ.n_qubits)
 # 获取模拟器基于当前量子态的量子线路演化以及期望、梯度求解算子
 grad_ops = sim.get_expectation_with_grad(ham, circ)
 
@@ -122,7 +130,7 @@ plt.figure(figsize=(15, 10))
 
 # 第一张图
 step = 60
-beta_max = np.pi/2
+beta_max = np.pi / 2
 beta_step = beta_max / step
 gamma_max = np.pi
 gamma_step = gamma_max / step
@@ -134,22 +142,25 @@ for i in range(beta.size):
     for j in range(gamma.size):
         bg = np.array([gamma[j], beta[i]])
         cost, grad = grad_ops(bg)
-        costs[i][j] = cost[0][0]
+        costs[i][j] = cost[0][0].real
 
 plt.subplot(231)
-plt.title("variational",fontsize = 20)
-plt.xlim((0, np.pi/2))
+plt.title("variational", fontsize=20)
+plt.xlim((0, np.pi / 2))
 plt.ylim((0, np.pi))
-sns.heatmap(data=costs, vmin=-1, vmax=1, xticklabels=15, yticklabels=15).invert_yaxis()
+sns.heatmap(data=costs, vmin=-1, vmax=1, xticklabels=15,
+            yticklabels=15).invert_yaxis()
 
 # 第五张图
 plt.subplot(235)
-plt.title("fe_gamma",fontsize = 20)
+plt.title("fe_gamma", fontsize=20)
 plt.ylim((0, 100))
 plt.xlim((0, np.pi))
-plt.xticks([0, np.pi/4, np.pi/2, np.pi*3/4],['0', 'pi/4','pi/2','pi*3/4'], fontsize=15)
+plt.xticks([0, np.pi / 4, np.pi / 2, np.pi * 3 / 4],
+           ['0', 'pi/4', 'pi/2', 'pi*3/4'],
+           fontsize=15)
 
-data = np.zeros((200,10,4), dtype = np.float64)
+data = np.zeros((200, 10, 4), dtype=np.float64)
 for j in range(10):
     grad_ops = sim.get_expectation_with_grad(ham, circ)
     net = MQAnsatzOnlyLayer(grad_ops)
@@ -163,80 +174,83 @@ for j in range(10):
         data[i][j][3] = loss
 
 for i in range(10):
-    fe = data[ : , i]
-    fe = pd.DataFrame(fe, columns=['fe','gamma','beta', 'cost'])
-    plt.plot(fe['gamma'],fe['fe'])
+    fe = data[:, i]
+    fe = pd.DataFrame(fe, columns=['fe', 'gamma', 'beta', 'cost'])
+    plt.plot(fe['gamma'], fe['fe'])
 
 # 第四张图
 plt.subplot(234)
-plt.title("gamma_cost, pi/8(blue), pi*3/8(orange)",fontsize = 20)
+plt.title("gamma_cost, pi/8(blue), pi*3/8(orange)", fontsize=20)
 plt.xlabel('gamma')
 plt.ylabel('Cost')
 plt.ylim((-1.2, 1.2))
-plt.xticks([0, np.pi/4, np.pi/2, np.pi*3/4],['0', 'pi/4','pi/2','pi*3/4'], fontsize=15)
+plt.xticks([0, np.pi / 4, np.pi / 2, np.pi * 3 / 4],
+           ['0', 'pi/4', 'pi/2', 'pi*3/4'],
+           fontsize=15)
 
-costs = np.zeros((gamma.size,2), dtype=np.float64)
+costs = np.zeros((gamma.size, 2), dtype=np.float64)
 for i in range(gamma.size):
-    ansatz = build_ansatz(k, p, '', np.pi/8)
+    ansatz = build_ansatz(k, p, '', np.pi / 8)
     circ = init_state_circ + ansatz
-    sim = Simulator('projectq', circ.n_qubits)
+    sim = Simulator('mqvector', circ.n_qubits)
     grad_ops = sim.get_expectation_with_grad(ham, circ)
     g = np.array([gamma[i]])
     cost, grad = grad_ops(g)
     costs[i][0] = gamma[i]
-    costs[i][1] = cost[0][0]
+    costs[i][1] = cost[0][0].real
 
-costs = pd.DataFrame(costs, columns=['gamma','cost'])
+costs = pd.DataFrame(costs, columns=['gamma', 'cost'])
 plt.plot(costs['gamma'], costs['cost'])
 
-costs = np.zeros((gamma.size,2), dtype=np.float64)
+costs = np.zeros((gamma.size, 2), dtype=np.float64)
 for i in range(gamma.size):
-    ansatz = build_ansatz(k, p, '', np.pi*3/8)
+    ansatz = build_ansatz(k, p, '', np.pi * 3 / 8)
     circ = init_state_circ + ansatz
-    sim = Simulator('projectq', circ.n_qubits)
+    sim = Simulator('mqvector', circ.n_qubits)
     grad_ops = sim.get_expectation_with_grad(ham, circ)
     g = np.array([gamma[i]])
     cost, grad = grad_ops(g)
     costs[i][0] = gamma[i]
-    costs[i][1] = cost[0][0]
+    costs[i][1] = cost[0][0].real
 
-costs = pd.DataFrame(costs, columns=['gamma','cost'])
+costs = pd.DataFrame(costs, columns=['gamma', 'cost'])
 plt.plot(costs['gamma'], costs['cost'])
-
 
 # 第六张图
 plt.subplot(236)
-plt.title("fe_cost",fontsize = 20)
+plt.title("fe_cost", fontsize=20)
 plt.xlim((0, 50))
 plt.ylim((-1.2, 1.2))
 
-costs = np.zeros((200,1), dtype=np.float64)
+costs = np.zeros((200, 1), dtype=np.float64)
 costs = pd.DataFrame(costs, columns=['cost'])
 for i in range(10):
-    fe = data[ : , i]
-    fe = pd.DataFrame(fe, columns=['fe','gamma','beta', 'cost'])
+    fe = data[:, i]
+    fe = pd.DataFrame(fe, columns=['fe', 'gamma', 'beta', 'cost'])
     costs['cost'] += fe['cost']
     plt.plot(fe['fe'], fe['cost'])
 
 costs['cost'] /= 10
-plt.plot(fe['fe'], costs['cost'], color = 'k')
+plt.plot(fe['fe'], costs['cost'], color='k')
 
 # 第三张图
 plt.subplot(233)
-plt.title("fe_beta",fontsize = 20)
+plt.title("fe_beta", fontsize=20)
 plt.xlim((0, 100))
-plt.ylim((0, np.pi/2))
-plt.yticks([0, np.pi/8, np.pi/4, np.pi*3/8],['0', 'pi/8','pi/4','pi*3/8'], fontsize=15)
+plt.ylim((0, np.pi / 2))
+plt.yticks([0, np.pi / 8, np.pi / 4, np.pi * 3 / 8],
+           ['0', 'pi/8', 'pi/4', 'pi*3/8'],
+           fontsize=15)
 
 for i in range(10):
-    fe = data[ : , i]
-    fe = pd.DataFrame(fe, columns=['fe','gamma','beta', 'cost'])
+    fe = data[:, i]
+    fe = pd.DataFrame(fe, columns=['fe', 'gamma', 'beta', 'cost'])
     plt.plot(fe['fe'], fe['beta'])
 
 #第二张图
 plt.subplot(232)
-plt.title("noise-free",fontsize = 20)
-plt.xlim((0, np.pi/2))
+plt.title("noise-free", fontsize=20)
+plt.xlim((0, np.pi / 2))
 plt.ylim((0, np.pi))
 
 costs = np.zeros((beta.size, gamma.size), dtype=np.float64)
@@ -244,13 +258,14 @@ for i in range(beta.size):
     for j in range(gamma.size):
         ansatz = build_ansatz(k, p, gamma[j], beta[i])
         circ = init_state_circ + ansatz
-        sim = Simulator('projectq', circ.n_qubits)
+        sim = Simulator('mqvector', circ.n_qubits)
         grad_ops = sim.get_expectation_with_grad(ham, circ)
         gb = np.array([])
         cost, grad = grad_ops(gb)
-        costs[i][j] = cost[0][0]
+        costs[i][j] = cost[0][0].real
 
-sns.heatmap(data=costs, vmin=-1, vmax=1, xticklabels=15, yticklabels=15).invert_yaxis()
+sns.heatmap(data=costs, vmin=-1, vmax=1, xticklabels=15,
+            yticklabels=15).invert_yaxis()
 
 # pylint: disable=W0104
 # QAOA量子线路的层数p
@@ -265,8 +280,8 @@ ansatz = build_ansatz(k, p, '', '')
 circ = init_state_circ + ansatz
 
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-# 生成一个基于projectq后端的模拟器，并设置模拟器的比特数为量子线路的比特数
-sim = Simulator('projectq', circ.n_qubits)
+# 生成一个基于mqvector后端的模拟器，并设置模拟器的比特数为量子线路的比特数
+sim = Simulator('mqvector', circ.n_qubits)
 # 获取模拟器基于当前量子态的量子线路演化以及期望、梯度求解算子
 grad_ops = sim.get_expectation_with_grad(ham, circ)
 # 生成待训练的神经网络

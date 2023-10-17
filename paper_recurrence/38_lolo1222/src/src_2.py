@@ -13,10 +13,9 @@ from matplotlib import pyplot
 import tqdm
 from PIL import Image
 
-os.environ['OMP_NUM_THREADS'] = '1'
 
 # Open figure MNIST_32.jpg and get matrix form
-img = Image.open(r'.\\figure\\MNIST_32.png')
+img = Image.open(r'../figure/MNIST_32.png')
 imgmat = np.array(list(img.getdata(band=0)), float)
 imgmat.shape = (img.size[1], img.size[0])
 imgmat = np.matrix(imgmat) / 255
@@ -88,7 +87,7 @@ def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
     '''
     Generate quantum net using hams, circ_right and circ_left under given base
     '''
-    sim = Simulator('projectq', qubits_num)
+    sim = Simulator('mqvector', qubits_num)
 
     if base is None:
         pass

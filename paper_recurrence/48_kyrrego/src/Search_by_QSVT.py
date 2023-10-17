@@ -1,6 +1,4 @@
 # Importing the necessary libraries
-import os
-os.environ['OMP_NUM_THREADS']='1'
 import numpy as np
 from numpy import pi
 import matplotlib.pyplot as plt
@@ -102,8 +100,8 @@ circuit_test = qsvt_search('10')
 circuit_test
 
 # pylint: disable=W0104
-sim_test = Simulator('projectq',
-                     circuit_test.n_qubits)  # 使用projectq模拟器，命名为sim_test
+sim_test = Simulator('mqvector',
+                     circuit_test.n_qubits)  # 使用mqvector模拟器，命名为sim_test
 #sim_test.apply_circuit(circuit_test)                      # 通过模拟器sim_test运行搭建好的量子线路circuit_test
 
 sim_test.reset()  # 重置模拟器sim_test维护好的量子态，使得初始化的量子态为|00>

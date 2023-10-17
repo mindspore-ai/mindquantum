@@ -7,10 +7,10 @@ Created on Mon Jan 31 16:58:09 2022
 @author: Waikikilick  1250125907@qq.com
 """
 
-import copy 
+import copy
 import random
 from time import *
-import numpy as np 
+import numpy as np
 from mindquantum import *
 from collections import deque
 from scipy.linalg import expm
@@ -30,7 +30,7 @@ class LinearNet(nn.Cell):
         self.fc2 = nn.Dense(256, 256, Normal(0.02), Normal(0.02), True, "relu")
         self.fc3 = nn.Dense(256, 128, Normal(0.02), Normal(0.02), True, "relu") 
         self.fc4 = nn.Dense(128, 25, Normal(0.02), Normal(0.02), True, "relu") 
-        
+
     def construct(self, x):
         x = self.fc1(x)
         x = self.fc2(x)

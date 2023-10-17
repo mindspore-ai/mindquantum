@@ -1,6 +1,3 @@
-import os
-
-os.environ['OMP_NUM_THREADS'] = '1'
 import time
 import numpy as np
 import scipy as sp
@@ -123,7 +120,7 @@ def ansatz(prefix, N, num_layer, init_str):
         for i in range(1, N - 1, 2):
             ansatz += N_block(prefix + str(params_index), [i, i + 1])
             params_index += 1
-            
+
         for i in range(N):
             ansatz += PhaseShift(params_index).on(i)
             params_index += 1
@@ -136,7 +133,7 @@ def train_func(N,
                run,
                ops,
                init_strs,
-               beta, 
+               beta,
                weights=[2, 1],
                gs=None,
                rev_mat=None,
@@ -184,7 +181,7 @@ def train_func(N,
         return final_cost, final_cost_gn
 
     np.random.seed()
-    sim = Simulator('projectq', N)
+    sim = Simulator('mqvector', N)
 
     for layer in range(1, num_layer + 1):
         loss_hist = []
@@ -261,7 +258,7 @@ if __name__ == '__main__':
     stot = s_tot_op(N)
     pen_1 = stot
     pen_1.compress()
-    
+
     pen_1 = Hamiltonian(pen_1).sparse(N)
     pen_1.get_cpp_obj()
 

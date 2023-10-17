@@ -4,11 +4,9 @@ from collections import OrderedDict as ordict
 import itertools
 import numpy as np
 from openfermion.chem import MolecularData
-from openfermionpyscf import run_pyscf
 from mindquantum.core.operators import FermionOperator
-from mindquantum.core.operators.utils import down_index, up_index, get_fermion_operator
+from mindquantum.core.operators.utils import down_index, up_index
 from mindquantum.algorithm.nisq.chem.transform import Transform
-from mindquantum.third_party.interaction_operator import InteractionOperator
 from mindquantum.core.circuit.utils import decompose_single_term_time_evolution
 from mindquantum.core.circuit import Circuit
 
@@ -168,10 +166,10 @@ def generate_uccsd_pool(molecular, th=0):
     else:
         mol = molecular
     fermion_ansatz, parameters = _para_uccsd_singlet_generator(mol, th)
-    
+
     operator_pools = []
     circuit_pools = []
-    
+
     for i,item in enumerate(fermion_ansatz):
         pauli_ansatz = _transform2pauli([item])
         circuit = Circuit()
@@ -180,7 +178,7 @@ def generate_uccsd_pool(molecular, th=0):
         if len(circuit) > 0:
             operator_pools.append(Transform(item[0]).jordan_wigner())
             circuit_pools.append(circuit)
-    
+
     return operator_pools, circuit_pools
 
 def generate_qccsd_pool(molecular, th=0):
@@ -190,7 +188,7 @@ def generate_qccsd_pool(molecular, th=0):
     else:
         mol = molecular
     fermion_ansatz, parameters = _para_uccsd_singlet_generator(mol, th)
-    
+
     operator_pools = []
     circuit_pools = []
 
