@@ -26,14 +26,12 @@ class QCNNet:
         """Build grad_ops."""
         ansatz, qo = generate_qcnn(self.n_q)
         encoder = encoder.no_grad()
-        circuit = encoder + ansatz
+        circuit = encoder.as_encoder() + ansatz.as_ansatz()
         ham = Hamiltonian(QubitOperator(f'Z{qo}'))
         sim = Simulator('mqvector', circuit.n_qubits)
         grad_ops = sim.get_expectation_with_grad(
             ham,
             circuit,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
             parallel_worker=5)
         return grad_ops
 

@@ -8,9 +8,6 @@ from scipy.optimize import minimize
 from mindspore import Tensor, nn
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-
-os.environ["OMP_NUM_THREADS"] = "4"
 
 import mindspore as ms
 
