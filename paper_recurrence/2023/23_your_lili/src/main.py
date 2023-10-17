@@ -62,17 +62,15 @@ def get_overlap(fx: List, ref: List, n=3) -> float:
 def get_recognized_entangled_states():
     """Get recognized entangled states.
     """
-    n = 3                                     # number of qubits
-    ref = [0, 0, 0, 0, 0, 1, 1, 0]            # reference states
+    n = 3  # number of qubits
+    ref = [0, 0, 0, 0, 0, 1, 1, 0]  # reference states
     fxs = list(it.product([0, 1], repeat=8))  # all states
     rec_ent_states = []
     for fx in fxs:
         v = get_overlap(fx, ref, n)
         if v > 0.5:
             rec_ent_states.append(
-                (np.array(fx) * np.array([128, 64, 32, 16, 8, 4, 2, 1]))
-                .sum()
-            )
+                (np.array(fx) * np.array([128, 64, 32, 16, 8, 4, 2, 1])).sum())
     return rec_ent_states
 
 
@@ -85,8 +83,7 @@ def prepare_training_data():
     rec_ent_states = get_recognized_entangled_states()
     # unrecognized entangled states
     unrec_ent_states = list(
-        set(range(256)) - set(sep_states) - set(rec_ent_states)
-    )
+        set(range(256)) - set(sep_states) - set(rec_ent_states))
     # split the train data according to the proportion in paper.
     half_fun = lambda x: x <= 127
     x0 = list(filter(half_fun, sep_states))
@@ -98,6 +95,7 @@ def prepare_training_data():
     x = x0 + x1
     y = y0 + y1
     return (x, y)
+
 
 def int2signs(i: int) -> List:
     """Convert a integral to a 8-bits sign array, such as 11=|0000 0111>,
@@ -132,13 +130,13 @@ def get_operation(signs: List) -> List:
         signs = -signs
     if signs[1] == -1:
         signs[[1, 3, 5, 7]] *= -1
-        ops.append((0,))
+        ops.append((0, ))
     if signs[2] == -1:
         signs[[2, 3, 6, 7]] *= -1
-        ops.append((1,))
+        ops.append((1, ))
     if signs[4] == -1:
         signs[[4, 5, 6, 7]] *= -1
-        ops.append((2,))
+        ops.append((2, ))
     if signs[3] == -1:
         signs[[3, 7]] *= -1
         ops.append((0, 1))
@@ -221,13 +219,13 @@ def get_full_circuit(i: int) -> Circuit:
 
 def train_gd():
     """Train with gradient descent method."""
-    n_qubits = 4     # number of qubits
+    n_qubits = 4  # number of qubits
     batch_size = 16  # batch size
-    lr = 0.02        # learning rate
-    decay = 0.99     # learning rate decay
-    n_iter = 300     # number of iteration
+    lr = 0.02  # learning rate
+    decay = 0.99  # learning rate decay
+    n_iter = 300  # number of iteration
 
-    sim = Simulator('projectq', n_qubits)
+    sim = Simulator('mqvector', n_qubits)
     ham = Hamiltonian(QubitOperator('Z3'))
     weight = np.array([0] * 9, dtype=np.float32)
     x, y = prepare_training_data()
@@ -305,7 +303,7 @@ def run():
     best_pr = train_gd()
     validate_and_visualize(best_pr)
     t2 = time.time()
-    print("It spends {:.2f} minutes.\nEND".format((t2 - t1)/60))
+    print("It spends {:.2f} minutes.\nEND".format((t2 - t1) / 60))
 
 
 if __name__ == "__main__":

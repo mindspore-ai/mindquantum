@@ -14,25 +14,26 @@ from mindquantum.framework.operations import MQOps
 from mindspore.common.initializer import Tensor
 from scipy.sparse import csr_matrix
 
-
 ms.set_seed(41)
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
-INIT=[-1.1725, -0.16865, -0.28183,0.21415,0.43777,-1.3743,0.051727,-1.5713,
-   1.4696,-0.78479,0.010443,-1.5812,1.5703,1.4696,1.672,1.5703,
-   -1.5604, 3.1311,1.4696,0.56259,-1.6342,1.2287,-0.18123,0.36337,
-   2.7782, 1.2287, -2.7715,-1.5643, 1.8428, 0.047711,1.0912,
-   -1.6168,1.5771,1.8428, -1.5627, 1.5441, -0.59312,1.2988,
-   1.5771,-1.5248, 3.0939, 1.8428, 1.2827, -2.5485,1.5441,
-   2.4645, -1.2474, 1.9535, 1.3997, -0.62123,-1.5718,1.7482,
-   -0.011642,1.7419,1.9535,-2.1676,-3.13,1.7482,0.79609,0.25703,
-   1.136,-2.1287,-1.5037,1.4002,-0.74857,2.6407,-0.4208, -2.393,
-   1.4002,-1.6049, 0.49578, -1.3704,1.3704,-1.5689,1.5965,0.14746,
-   1.3704,-2.7801,-1.7182,1.5727,1.5965,1.6818,1.5613,-1.4009,
-   1.28439129684566,9.76103617672784,2.9707,1.4598,-2.177,-1.5768,
-   1.4639,-3.0577,0.11268,-1.6828,1.5648,1.4639,1.2267,1.3053,
-   -2.8813,-1.7373,1.9023,-2.9443]
+INIT = [
+    -1.1725, -0.16865, -0.28183, 0.21415, 0.43777, -1.3743, 0.051727, -1.5713,
+    1.4696, -0.78479, 0.010443, -1.5812, 1.5703, 1.4696, 1.672, 1.5703,
+    -1.5604, 3.1311, 1.4696, 0.56259, -1.6342, 1.2287, -0.18123, 0.36337,
+    2.7782, 1.2287, -2.7715, -1.5643, 1.8428, 0.047711, 1.0912, -1.6168,
+    1.5771, 1.8428, -1.5627, 1.5441, -0.59312, 1.2988, 1.5771, -1.5248, 3.0939,
+    1.8428, 1.2827, -2.5485, 1.5441, 2.4645, -1.2474, 1.9535, 1.3997, -0.62123,
+    -1.5718, 1.7482, -0.011642, 1.7419, 1.9535, -2.1676, -3.13, 1.7482,
+    0.79609, 0.25703, 1.136, -2.1287, -1.5037, 1.4002, -0.74857, 2.6407,
+    -0.4208, -2.393, 1.4002, -1.6049, 0.49578, -1.3704, 1.3704, -1.5689,
+    1.5965, 0.14746, 1.3704, -2.7801, -1.7182, 1.5727, 1.5965, 1.6818, 1.5613,
+    -1.4009, 1.28439129684566, 9.76103617672784, 2.9707, 1.4598, -2.177,
+    -1.5768, 1.4639, -3.0577, 0.11268, -1.6828, 1.5648, 1.4639, 1.2267, 1.3053,
+    -2.8813, -1.7373, 1.9023, -2.9443
+]
 
-P=INIT
+P = INIT
+
 
 class Main():
     def __init__(self):
@@ -42,7 +43,6 @@ class Main():
         self.qnet = MyHybridCell()  # MQLayer(self.build_grad_ops())
         self.model = self.build_model()
         self.checkpoint_name = "./model.ckpt"
-
 
     def build_dataset(self, batch=None):
         x = np.load('train_x.npy', allow_pickle=True)
@@ -62,13 +62,15 @@ class Main():
 
     def build_model(self):
         self.loss = myLoss()
-        self.opti = ms.nn.Adam(self.qnet.trainable_params(), learning_rate=0.01)
+        self.opti = ms.nn.Adam(self.qnet.trainable_params(),
+                               learning_rate=0.01)
         self.model = Model(self.qnet, self.loss, self.opti)
         return self.model
 
     def train(self):
         for i in range(10):
-            self.model.train(40, self.dataset, callbacks=LossMonitor(1))  # put into self.qnet.weight.asnumpy()
+            self.model.train(40, self.dataset, callbacks=LossMonitor(
+                1))  # put into self.qnet.weight.asnumpy()
 
     def export_trained_parameters(self):
         qnet_weight = self.qnet.weight.asnumpy()
@@ -84,7 +86,7 @@ class Main():
         predict = self.model.predict(ms.Tensor(test_x))
         pr = predict.asnumpy()
         pr = pr.astype(np.complex64)
-        pr = pr[:,:8]+pr[:,8:]*1j
+        pr = pr[:, :8] + pr[:, 8:] * 1j
         np.save('test_y.npy', pr)
         return pr
 
@@ -94,11 +96,13 @@ class MyHybridCell(ms.nn.Cell):
         self.N = 4
         super(MyHybridCell, self).__init__()
         self.evolution = MQOps1(self.qcnn_ops())
-        self.weight_size = len(self.evolution.expectation_with_grad.ansatz_params_name)
+        self.weight_size = len(
+            self.evolution.expectation_with_grad.ansatz_params_name)
         np.random.seed(200)
         init = Tensor(np.array(INIT), dtype=ms.float32)
-        self.weight = Parameter(init,
-                                name='ansatz_weight')  # initializer('normal', self.weight_size1, dtype=ms.float32)
+        self.weight = Parameter(
+            init, name='ansatz_weight'
+        )  # initializer('normal', self.weight_size1, dtype=ms.float32)
         self.ite = 0
 
     def construct(self, x):
@@ -115,8 +119,9 @@ class MyHybridCell(ms.nn.Cell):
         enc_layer = sum(
             [U3(f'a{i}', f'b{i}', f'c{i}', i) for i in range(n_qubits)])
         coupling_layer = UN(X, [1, 2, 0], [0, 1, 2])
-        encoder = sum(
-            [add_prefix(enc_layer, f'l{i}') + coupling_layer for i in range(2)])
+        encoder = sum([
+            add_prefix(enc_layer, f'l{i}') + coupling_layer for i in range(2)
+        ])
 
         ansatz_layer = Circuit()+RZ('P0').on(0)+CNOT(0,1)+RZ('P1').on(0)+CNOT(0,2)+RZ('P2').on(0)+CNOT(0,1)+BARRIER\
         +RZ('P3').on(0)+RZ('P4').on(1)+CNOT(0,2)+RZ(-np.pi/2).on(0)+CNOT(1,2)+RY(np.pi/2).on(0)+RZ('P5').on(1)+CNOT(1,2)+CNOT(0,1)+RZ('P6').on(2)+BARRIER\
@@ -153,9 +158,10 @@ class MyHybridCell(ms.nn.Cell):
         for i in range(8):
             a = csr_matrix(([1], ([i], [i])), (8, 8)) * np.sqrt(8)
             ham.append(Hamiltonian(a))
-        circ_right, encoder_params_name, ansatz_params_name = self.generate_encoder()
-        simulator_right = Simulator('projectq', 3)
-        simulator_left = Simulator('projectq', 3)
+        circ_right, encoder_params_name, ansatz_params_name = self.generate_encoder(
+        )
+        simulator_right = Simulator('mqvector', 3)
+        simulator_left = Simulator('mqvector', 3)
         circ_left = Circuit().h(0).h(1).h(2)
         grad_ops = simulator_right.get_expectation_with_grad(
             ham,
@@ -177,7 +183,8 @@ class MQOps1(MQOps):
         ans_data = ans_data.asnumpy()
         f, g_enc, g_ans = self.expectation_with_grad(enc_data, ans_data)
         f = f
-        f = ms.Tensor(np.concatenate((np.real(f), np.imag(f)), 1), dtype=ms.float32)
+        f = ms.Tensor(np.concatenate((np.real(f), np.imag(f)), 1),
+                      dtype=ms.float32)
         self.g_enc = np.concatenate((np.real(g_enc), np.imag(g_enc)), 1)
         self.g_ans = np.concatenate((np.real(g_ans), np.imag(g_ans)), 1)
         return f
@@ -186,7 +193,9 @@ class MQOps1(MQOps):
         dout = dout.asnumpy()
         enc_grad = np.einsum('smp,sm->sp', self.g_enc, dout)
         ans_grad = np.einsum('smp,sm->p', self.g_ans, dout)
-        return ms.Tensor(enc_grad, dtype=ms.float32), ms.Tensor(ans_grad, dtype=ms.float32)
+        return ms.Tensor(enc_grad,
+                         dtype=ms.float32), ms.Tensor(ans_grad,
+                                                      dtype=ms.float32)
 
 
 class myLoss(ms.nn.LossBase):
@@ -195,18 +204,15 @@ class myLoss(ms.nn.LossBase):
         super(myLoss, self).__init__(reduction)
 
     def construct(self, logits, label):
-        a = logits[:,:8]
-        b = logits[:,8:]
-        c = label[:,:8]
-        d = label[:,8:]
-        real = mnp.sum(a*c,1)+mnp.sum(b*d,1)
-        imag = mnp.sum(a*d,1)-mnp.sum(b*c,1)
-        e = mnp.power(real,2)+mnp.power(imag,2)
-        loss = self.get_loss(1-e)
+        a = logits[:, :8]
+        b = logits[:, 8:]
+        c = label[:, :8]
+        d = label[:, 8:]
+        real = mnp.sum(a * c, 1) + mnp.sum(b * d, 1)
+        imag = mnp.sum(a * d, 1) - mnp.sum(b * c, 1)
+        e = mnp.power(real, 2) + mnp.power(imag, 2)
+        loss = self.get_loss(1 - e)
         return loss
-
-
-
 
 
 if __name__ == '__main__':
@@ -218,8 +224,6 @@ if __name__ == '__main__':
     # acc = np.real(
     #     np.mean([np.vdot(bra, ket) for bra, ket in zip(y, yy)]))
     # print(f"Acc: {acc}")
-
-
 
     # a.load_trained_parameters()
     # x = np.load('test_x.npy', allow_pickle=True)

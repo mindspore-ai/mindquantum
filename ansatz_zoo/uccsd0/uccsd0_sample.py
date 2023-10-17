@@ -51,7 +51,7 @@ def process(bond_len):
     total_circuit = initial_circuit + uccsd0_circuit
 
     # generate a circuit that have right number of qubits
-    total_pqc = Simulator('projectq', n_qubits).get_expectation_with_grad(
+    total_pqc = Simulator('mqvector', n_qubits).get_expectation_with_grad(
         sparsed_q_ham, total_circuit)
 
     # optimization step.

@@ -17,12 +17,21 @@ ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 ms.set_seed(1)
 
 
-def str2gate(circ, gate_name, param_name, obj_qubits, gate_type, ctrl_qubits=None, ctrl=False):
+def str2gate(circ,
+             gate_name,
+             param_name,
+             obj_qubits,
+             gate_type,
+             ctrl_qubits=None,
+             ctrl=False):
     if not (gate_type in {"single_qubit", "two_qubit"}):
-        raise ValueError("The gate_type should be string \"single_qubit\" or \"two_qubit\" ")
+        raise ValueError(
+            "The gate_type should be string \"single_qubit\" or \"two_qubit\" "
+        )
     if ctrl and (ctrl_qubits is None):
         raise ValueError("We need ctrl qubit")
-    if not (gate_name in ["CRX", "CRY", "CRZ", "XX", "YY", "ZZ", "RX", "RY", "RZ"]):
+    if not (gate_name
+            in ["CRX", "CRY", "CRZ", "XX", "YY", "ZZ", "RX", "RY", "RZ"]):
         raise ValueError("gate_name must be one of CRX, CRY, ...")
 
     if gate_type == "two_qubit":
@@ -59,7 +68,8 @@ def column_rebuild(gatelist, column_index):
     bit = len(gatelist)
     start_index = (column_index - 1) * 2 * bit
     for i in range(bit):
-        column = str2gate(column, gatelist[i], f"theta{start_index + i}", i, "single_qubit")
+        column = str2gate(column, gatelist[i], f"theta{start_index + i}", i,
+                          "single_qubit")
 
     return column
 
@@ -72,10 +82,11 @@ def block_rebuild(gatelist, block_index):
 
         if gatelist[i] in ["CRX", "CRY", "CRZ"]:
             ctrl = True
-            block = str2gate(block, gatelist[i], f"theta{start_index + i}", i, "two_qubit", (i + block_index) % bit,
-                             ctrl)
+            block = str2gate(block, gatelist[i], f"theta{start_index + i}", i,
+                             "two_qubit", (i + block_index) % bit, ctrl)
         else:
-            block = str2gate(block, gatelist[i], f"theta{start_index + i}", [i, (i + block_index) % bit], "two_qubit")
+            block = str2gate(block, gatelist[i], f"theta{start_index + i}",
+                             [i, (i + block_index) % bit], "two_qubit")
 
     return block
 
@@ -119,7 +130,7 @@ def amplitude_encode_preprocessing(x):
                 if x[i, j] == 0:
                     new_origin_x[i, int(j / 2)] = (3 / 2) * np.pi
                 else:
-                    new_origin_x[i, int(j / 2)] = - np.pi / 2
+                    new_origin_x[i, int(j / 2)] = -np.pi / 2
 
     return new_origin_x
 
@@ -163,12 +174,9 @@ class Main(HybridModel):
         return train
 
     def build_ansatz(self):
-        gatelist = [['RZ', 'RX', 'RZ', 'RY'],
-                    ['XX', 'CRZ', 'XX', 'CRZ'],
-                    ['RX', 'RZ', 'RZ', 'RZ'],
-                    ['YY', 'CRZ', 'XX', 'YY'],
-                    ['RX', 'RX', 'RZ', 'RX'],
-                    ['YY', 'YY', 'CRY', 'CRX'],
+        gatelist = [['RZ', 'RX', 'RZ', 'RY'], ['XX', 'CRZ', 'XX', 'CRZ'],
+                    ['RX', 'RZ', 'RZ', 'RZ'], ['YY', 'CRZ', 'XX', 'YY'],
+                    ['RX', 'RX', 'RZ', 'RX'], ['YY', 'YY', 'CRY', 'CRX'],
                     ['RZ', 'RY', 'RX', 'RZ']]
         ansatz = rebuild_circuit(gatelist)
         return ansatz
@@ -209,31 +217,40 @@ class Main(HybridModel):
     def build_grad_ops(self):
         ansatz = self.build_ansatz()
         encoder = self.build_encoder()
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
         hamslist = [['X0', 'X1', 'X2', 'Y3'], ['X0', 'Y1', 'X2', 'Y3']]
-        coeff = np.array([[0.3276474403203895, 0.10726372340486279, 0.06452448848520097, 0.5005643477895467],
-                          [0.19388376821752198, 0.27979629199475337, 0.264718577267549, 0.2616013625201757]])
+        coeff = np.array([[
+            0.3276474403203895, 0.10726372340486279, 0.06452448848520097,
+            0.5005643477895467
+        ],
+                          [
+                              0.19388376821752198, 0.27979629199475337,
+                              0.264718577267549, 0.2616013625201757
+                          ]])
         ham = rebuild_hams(hamslist, coeff)
 
-        sim = Simulator('projectq', total_circ.n_qubits)
-        grad_ops = sim.get_expectation_with_grad(
-            ham,
-            total_circ,
-            None, None,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
-            parallel_worker=5)
+        sim = Simulator('mqvector', total_circ.n_qubits)
+        grad_ops = sim.get_expectation_with_grad(ham,
+                                                 total_circ,
+                                                 None,
+                                                 None,
+                                                 parallel_worker=5)
         return grad_ops
 
     def build_model(self):
-        self.loss = ms.nn.SoftmaxCrossEntropyWithLogits(sparse=True, reduction="mean")
-        self.opti = ms.nn.Adam(self.qnet.trainable_params(), learning_rate=0.05)
+        self.loss = ms.nn.SoftmaxCrossEntropyWithLogits(sparse=True,
+                                                        reduction="mean")
+        self.opti = ms.nn.Adam(self.qnet.trainable_params(),
+                               learning_rate=0.05)
         self.monitor = LossMonitor(self.dataset.get_dataset_size())
         self.model = Model(self.qnet, self.loss, self.opti)
         return self.model
 
     def train(self, epoch):
-        self.model.train(epoch, self.dataset, callbacks=self.monitor, dataset_sink_mode=False)
+        self.model.train(epoch,
+                         self.dataset,
+                         callbacks=self.monitor,
+                         dataset_sink_mode=False)
 
     def export_trained_parameters(self):
         qnet_weight = self.qnet.weight.asnumpy()

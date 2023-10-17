@@ -17,10 +17,10 @@ def U3(ansatz, No, index_theta):
 ## 制造U2量子门
 def U2(ansatz, No):
     pi = math.pi
-    ansatz += RZ(f'alpha{0}').on(No)
+    ansatz += Circuit([RZ(f'alpha{0}').on(No)]).as_encoder()
     ansatz += RZ(pi / 2).on(No)
     ansatz += RX(pi / 2).on(No)
-    ansatz += RZ(f'alpha{1}').on(No)
+    ansatz += Circuit([RZ(f'alpha{1}').on(No)]).as_encoder()
     ansatz += RZ(-pi / 2).on(No)
 
 
@@ -157,18 +157,15 @@ if __name__ == '__main__':
         ]  #量子线路系数列表
         ansatz_names = total_names[2:]  #可变参数列表
         encoder_names = total_names[0:2]  #不可变参数列表
-        total_params = [0, pi, 0, 0, 0, 0]  #参数初始化
+        total_params = [0, np.pi, 0, 0, 0, 0]  #参数初始化
         theta0, theta1, theta2, theta3 = total_params[2:]  #可变参数赋值
         alpha0, alpha1 = total_params[0:2]  #不可变参数赋值
         ansatz = Iniansatz()  #初始化量子线路
 
         nqubits = 2  #设置量子线路量子比特数
         sim = Simulator('mqvector', nqubits)  #初始化模拟器
-        grad_ops = sim.get_expectation_with_grad(
-            Hamiltonian(newops),
-            ansatz,
-            encoder_params_name=encoder_names,
-            ansatz_params_name=ansatz_names)  #获得测量值和参数梯度
+        grad_ops = sim.get_expectation_with_grad(Hamiltonian(newops),
+                                                 ansatz)  #获得测量值和参数梯度
 
         mymin = minimize(measure_result, total_params,
                          method='COBYLA')  #用COBYLA进行优化

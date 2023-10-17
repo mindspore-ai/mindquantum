@@ -65,7 +65,7 @@ class AdaptVqe(MolInfoProduce):
     def generate_gradient_pqc(self, ferop):
         gradients_circuit = self.adapt_circuit + \
                                 TimeEvolution(Transform(ferop).jordan_wigner().imag, 1).circuit
-        sim = Simulator('projectq', self.n_qubits)
+        sim = Simulator('mqvector', self.n_qubits)
         self.gradients_pqc = sim.get_expectation_with_grad(
             self.sparsed_qubit_hamiltonian, gradients_circuit)
 
@@ -106,7 +106,7 @@ class AdaptVqe(MolInfoProduce):
             # grow ansatz by one operator with the largest gradient
             self.adapt_circuit += TimeEvolution(
                 Transform(self.ferop_seq[-1]).jordan_wigner().imag, 1).circuit
-            sim = Simulator('projectq', self.n_qubits)
+            sim = Simulator('mqvector', self.n_qubits)
             self.pqc = sim.get_expectation_with_grad(
                 self.sparsed_qubit_hamiltonian, self.adapt_circuit)
 

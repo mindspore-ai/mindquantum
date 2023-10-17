@@ -56,7 +56,7 @@ def process(bond_len):
         energy = 0
         for i in range(10):
             hea_circuit = hea.circuit
-            sim = Simulator('projectq', n_qubits)
+            sim = Simulator('mqvector', n_qubits)
             mol_pqc = sim.get_expectation_with_grad(sparsed_q_ham, hea_circuit)
 
             n_paras = len(hea_circuit.params_name)

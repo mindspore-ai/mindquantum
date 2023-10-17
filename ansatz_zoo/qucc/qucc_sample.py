@@ -23,6 +23,7 @@ def energy_obj(n_paras, mol_pqc):
     e, grad = mol_pqc(ansatz_data)
     return np.real(e[0, 0]), np.real(grad[0, 0])
 
+
 mole_name = 'H2'
 basis = 'sto3g'
 charge = 0
@@ -62,7 +63,7 @@ def process(bond_len):
 
     # step 3: objective function
     # generate a circuit that have right number of qubits
-    total_pqc = Simulator('projectq', n_qubits).get_expectation_with_grad(
+    total_pqc = Simulator('mqvector', n_qubits).get_expectation_with_grad(
         sparsed_q_ham, total_circuit)
 
     # step 4: optimization step.

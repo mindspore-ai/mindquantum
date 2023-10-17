@@ -1,4 +1,5 @@
 import os
+
 os.environ['OMP_NUM_THREADS'] = '4'
 import sys
 from openfermionpyscf import run_pyscf
@@ -15,6 +16,7 @@ from mindquantum.algorithm.nisq.chem.transform import Transform
 from mindquantum.third_party.interaction_operator import InteractionOperator
 #from mindquantum.core.circuit import Circuit
 
+
 class Timer:
     def __init__(self, t0=0.0):
         self.start_time = time.time()
@@ -22,6 +24,7 @@ class Timer:
 
     def runtime(self):
         return time.time() - self.start_time + self.t0
+
 
 def format_time(t):
     hh = t // 3600
@@ -38,98 +41,100 @@ def func(x, grad_ops, file, show_iter_val=False):
         sys.stdout.flush()
     return np.real(np.squeeze(f)), np.squeeze(g)
 
+
 def param2dict(keys, values):
     param_dict = {}
     for (key, value) in zip(keys, values):
         param_dict[key] = value
     return param_dict
 
+
 def processing_fermion_ansatz(fermion_ansatz, parameters_name):
-    fadict={}
+    fadict = {}
     for i in fermion_ansatz:
-        b=1
+        b = 1
         if not i[1] in parameters_name:
             continue
         fermion_operator = i[0]
         ol = list(fermion_operator.terms.keys())[0]
         ol = [j[0] for j in ol]
-        if len(ol)>2:
-            if ol[1]>ol[3]:
-                b*=1
-            elif ol[1]<ol[3]:
-                b*=-1
+        if len(ol) > 2:
+            if ol[1] > ol[3]:
+                b *= 1
+            elif ol[1] < ol[3]:
+                b *= -1
             else:
-                b*=0
-            if ol[0]>ol[2]:
-                b*=1
-            elif ol[0]<ol[2]:
-                b*=-1
+                b *= 0
+            if ol[0] > ol[2]:
+                b *= 1
+            elif ol[0] < ol[2]:
+                b *= -1
             else:
-                b*=0
-        if b==0:
+                b *= 0
+        if b == 0:
             continue
         ol = tuple(sorted(ol))
-        if not (ol,i[1]) in fadict:
-            fadict[(ol,i[1])]=b
+        if not (ol, i[1]) in fadict:
+            fadict[(ol, i[1])] = b
         else:
             fadict[(ol, i[1])] += b
     return fadict
 
 
-
-
 def efficientCircuit2(fermion_ansatz, parameters_name):
     fadict = processing_fermion_ansatz(fermion_ansatz, parameters_name)
     circ = Circuit()
-    x=0
+    x = 0
     for i in fadict:
         ilist = i[0]
         p = i[1]
         l = len(ilist)
         ccc = Circuit()
-        if l==2:
-            for m in range(ilist[1]-2,ilist[0],-1):
-                ccc += CNOTGate().on(m,m+1)
-            ccc += CNOTGate().on(ilist[0],ilist[1])
-            if ilist[0]+1 != ilist[1]:
-                ccc += Z(ilist[1], ilist[0]+1)
-            ccc += RY({p:2*fadict[i]}).on(ilist[1], ilist[0])
-            if ilist[0] + 1 != ilist[1]:
-             ccc += Z(ilist[1], ilist[0] + 1)
+        if l == 2:
+            for m in range(ilist[1] - 2, ilist[0], -1):
+                ccc += CNOTGate().on(m, m + 1)
             ccc += CNOTGate().on(ilist[0], ilist[1])
-            for m in range(ilist[0]+1,ilist[1]-1):
-                ccc += CNOTGate().on(m,m+1)
+            if ilist[0] + 1 != ilist[1]:
+                ccc += Z(ilist[1], ilist[0] + 1)
+            ccc += RY({p: 2 * fadict[i]}).on(ilist[1], ilist[0])
+            if ilist[0] + 1 != ilist[1]:
+                ccc += Z(ilist[1], ilist[0] + 1)
+            ccc += CNOTGate().on(ilist[0], ilist[1])
+            for m in range(ilist[0] + 1, ilist[1] - 1):
+                ccc += CNOTGate().on(m, m + 1)
 
         else:
-            lll = set(range(ilist[0]+1,ilist[1]))| set(range(ilist[2]+1,ilist[3]))
+            lll = set(range(ilist[0] + 1, ilist[1])) | set(
+                range(ilist[2] + 1, ilist[3]))
             lll = sorted(list(lll))[::-1]
 
             for m in lll[1:]:
-                if m==ilist[1]-1:
-                    ccc += CNOTGate().on(m, ilist[2]+1)
+                if m == ilist[1] - 1:
+                    ccc += CNOTGate().on(m, ilist[2] + 1)
                 else:
-                    ccc += CNOTGate().on(m, m+1)
+                    ccc += CNOTGate().on(m, m + 1)
             ccc += CNOTGate().on(ilist[0], ilist[1])
             ccc += CNOTGate().on(ilist[2], ilist[3])
-            ccc+=CNOTGate().on(ilist[1], ilist[3])
+            ccc += CNOTGate().on(ilist[1], ilist[3])
             if lll != []:
                 ccc += Z(ilist[3], lll[-1])
             ccc = ccc + X(ilist[0]) + X(ilist[2])
-            ccc += RY({p:-2*fadict[i]}).on(ilist[3], ilist[:3])
+            ccc += RY({p: -2 * fadict[i]}).on(ilist[3], ilist[:3])
             ccc = ccc + X(ilist[0]) + X(ilist[2])
             if lll != []:
                 ccc += Z(ilist[3], lll[-1])
-            ccc+=CNOTGate().on(ilist[1], ilist[3])
+            ccc += CNOTGate().on(ilist[1], ilist[3])
             ccc += CNOTGate().on(ilist[2], ilist[3])
             ccc += CNOTGate().on(ilist[0], ilist[1])
             for m in lll[1:][::-1]:
-                if m==ilist[1]-1:
-                    ccc += CNOTGate().on(m, ilist[2]+1)
+                if m == ilist[1] - 1:
+                    ccc += CNOTGate().on(m, ilist[2] + 1)
                 else:
-                    ccc += CNOTGate().on(m, m+1)
+                    ccc += CNOTGate().on(m, m + 1)
         ccc += BarrierGate()
-        circ +=ccc
+        circ += ccc
     return circ
+
 
 # def score(pauli_ansatz, qubit_hamiltonian):
 #     '''给每个参数的重要性打分'''
@@ -149,13 +154,6 @@ def efficientCircuit2(fermion_ansatz, parameters_name):
 #                         break
 #             scores[parameter] += 2 ** d * np.abs(qh[hamilt_pauli_string])
 #     return scores
-
-
-
-
-
-
-
 
 
 def generate_efficient_uccsd(molecular, th=0.001):
@@ -205,11 +203,12 @@ def generate_efficient_uccsd(molecular, th=0.001):
         mol.n_qubits, \
         mol.n_electrons
 
+
 class VQEoptimizer:
     def __init__(self, molecule=None, seed=1202, file=None):
         self.timer = Timer()
         self.molecule = molecule
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
         self.init_amp = []
@@ -235,20 +234,29 @@ class VQEoptimizer:
         self.circuit += ansatz_circuit
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
 
-    def optimize(self, operator=None, circuit=None, init_amp=[], method='bfgs', maxstep=200, iter_info=False):
+    def optimize(self,
+                 operator=None,
+                 circuit=None,
+                 init_amp=[],
+                 method='bfgs',
+                 maxstep=200,
+                 iter_info=False):
         if operator == None:
             operator = self.hamiltonian
         if circuit == None:
             circuit = self.circuit
         if np.array(init_amp).size == 0:
             init_amp = self.init_amp
-        grad_ops = self.simulator.get_expectation_with_grad(Hamiltonian(operator), circuit)
-        self.res = minimize(func, init_amp,
+        grad_ops = self.simulator.get_expectation_with_grad(
+            Hamiltonian(operator), circuit)
+        self.res = minimize(func,
+                            init_amp,
                             args=(grad_ops, self.file, iter_info),
                             method=method,
-                            jac=True, options={'disp':True}
-                            )
+                            jac=True,
+                            options={'disp': True})
         #print(self.res)
+
 
 class Main:
     def __init__(self):
@@ -256,16 +264,19 @@ class Main:
         self.work_dir = './src/'
 
     def run(self, prefix, molecular_file, geom_list):
-        if prefix=='LiH':
-            th=[0.008, 0.02, 0.015, 0.011, 0.011, 0.055, 0.012, 0.06, 0.06, 0.055]
-        elif prefix=='CH4':
-            th=[0.001, 0.001]
+        if prefix == 'LiH':
+            th = [
+                0.008, 0.02, 0.015, 0.011, 0.011, 0.055, 0.012, 0.06, 0.06,
+                0.055
+            ]
+        elif prefix == 'CH4':
+            th = [0.001, 0.001]
         else:
-            th=[0.001]*len(geom_list)
+            th = [0.001] * len(geom_list)
         prefix = prefix
         molecule = MolecularData(filename=self.work_dir + molecular_file)
         molecule.load()
-        x=[]
+        x = []
         with open(self.work_dir + prefix + '.o', 'a') as f:
             print(f)
             print('Start case: ', prefix, file=f)
@@ -277,7 +288,8 @@ class Main:
                 mol0 = MolecularData(geometry=geom_list[i],
                                      basis=molecule.basis,
                                      charge=molecule.charge,
-                                     multiplicity=molecule.multiplicity, data_directory='./')
+                                     multiplicity=molecule.multiplicity,
+                                     data_directory='./')
                 mol = run_pyscf(mol0, run_scf=0, run_ccsd=1, run_fci=1)
                 #vqe.generate_circuit(mol, th=th[i])
                 # fcienergy.append(mol.fci_energy)
@@ -289,18 +301,18 @@ class Main:
                 # en = vqe.simulator.get_expectation(Hamiltonian(vqe.hamiltonian)).real
                 #print('en:', en)
                 print('fci_energy', mol.fci_energy)
-                print('Time: %i hrs %i mints %.2f sec.' % format_time(t), 'Energy: ', en, file=f)
+                print('Time: %i hrs %i mints %.2f sec.' % format_time(t),
+                      'Energy: ',
+                      en,
+                      file=f)
                 sys.stdout.flush()
                 en_list.append(en)
                 time_list.append(t)
 
-
         print('fcienergy', fcienergy)
 
-            #print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()),file=f)
+        #print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()),file=f)
         return en_list, time_list  # , nparam_list
-
-
 
 
 class Plot:

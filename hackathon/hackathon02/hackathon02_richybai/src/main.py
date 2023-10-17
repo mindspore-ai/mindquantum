@@ -1,6 +1,7 @@
 import os
 from pickletools import optimize
 from tabnanny import verbose
+
 os.environ['OMP_NUM_THREADS'] = '1'
 import sys
 from hiqfermion.drivers import MolecularData
@@ -16,6 +17,7 @@ from mindquantum.core.parameterresolver import ParameterResolver as PR
 import matplotlib.pyplot as plt
 import mindspore as ms
 import itertools
+
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 
@@ -73,10 +75,10 @@ def func(x, grad_ops, file, target, show_iter_val=False):
         print(np.squeeze(f), file=file)
         sys.stdout.flush()
     if np.squeeze(f) - target < 0.0016:
-        return np.real(np.squeeze(f)), np.zeros_like(g) # 直接把梯度输出为0,结束运行
+        return np.real(np.squeeze(f)), np.zeros_like(g)  # 直接把梯度输出为0,结束运行
     else:
         return np.real(np.squeeze(f)), np.squeeze(g)
-    
+
 
 def param2dict(keys, values):
     param_dict = {}
@@ -105,19 +107,19 @@ def build_ansatz(num_bit, num_electrons):
     #     theta = PR({f'{count}': 1})
     #     count += 1
     #     ansatz += _single_qubit_excitation_circuit(i, j, theta)
-    
+
     for i in range(num_bit):
-        if i+1 < num_bit:
-            ansatz += H.on(i, i+1)
-            ansatz += RX(f"rx-{i}").on(i, i+1)
-            ansatz += H.on(i, i+1)
-            ansatz += H.on(i, i+1)
-            ansatz += RY(f"ry-{i}").on(i, i+1)
-            ansatz += H.on(i, i+1)
-            ansatz += H.on(i, i+1)
-            ansatz += RZ(f"rx-{i}").on(i, i+1)
-            ansatz += H.on(i, i+1)
-    
+        if i + 1 < num_bit:
+            ansatz += H.on(i, i + 1)
+            ansatz += RX(f"rx-{i}").on(i, i + 1)
+            ansatz += H.on(i, i + 1)
+            ansatz += H.on(i, i + 1)
+            ansatz += RY(f"ry-{i}").on(i, i + 1)
+            ansatz += H.on(i, i + 1)
+            ansatz += H.on(i, i + 1)
+            ansatz += RZ(f"rx-{i}").on(i, i + 1)
+            ansatz += H.on(i, i + 1)
+
     # for i, j in itertools.product(range(num_electrons), range(num_electrons)):
     #     if i >= j:
     #         continue
@@ -127,50 +129,46 @@ def build_ansatz(num_bit, num_electrons):
     #         theta = PR({f'{count}': 1})
     #         count += 1
     #         ansatz += _double_qubit_excitation_circuit(i, j, k, l, theta)
-    
+
     # print(num_bit, num_electrons)
     # ansatz.summary()
     return ansatz
 
 
 class VQEoptimizer:
-
-
     def __init__(self, seed=1202, file=None):
         self.timer = Timer()
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
-        print("Initialize finished! Time: %.2f s" % self.timer.runtime(), file=self.file)
+        print("Initialize finished! Time: %.2f s" % self.timer.runtime(),
+              file=self.file)
         sys.stdout.flush()
-
 
     def generate_circuit(self, molecule, seed=1202):
         self.n_qubits = molecule.n_qubits
         self.n_electrons = molecule.n_electrons
-        self.encoder = build_encoder(num_bit=self.n_qubits, num_electrons=self.n_electrons)
-        
-        self.ansatz = build_ansatz(num_bit=self.n_qubits, num_electrons=self.n_electrons)
+        self.encoder = build_encoder(num_bit=self.n_qubits,
+                                     num_electrons=self.n_electrons)
+
+        self.ansatz = build_ansatz(num_bit=self.n_qubits,
+                                   num_electrons=self.n_electrons)
         self.hamiltonian = Hamiltonian(get_qubit_hamiltonian(molecule))
         self.circuit = self.encoder + self.ansatz
-
 
     def optimize_using_scipy(self, target):
         self.simulator = Simulator(self.backend, self.n_qubits, seed=1202)
         grad_ops = self.simulator.get_expectation_with_grad(
-            self.hamiltonian,
-            self.circuit)
+            self.hamiltonian, self.circuit)
         init_gauss = np.zeros(len(self.ansatz.params_name))
 
-
-        self.res = minimize(func, init_gauss,
+        self.res = minimize(func,
+                            init_gauss,
                             args=(grad_ops, self.file, target, False),
                             method='BFGS',
-                            jac=True,   
-                            tol=1e-6
-                            )
+                            jac=True,
+                            tol=1e-6)
 
-        
     def get_energy(self):
         param_dict = param2dict(self.circuit.params_name, self.res.x)
         self.simulator.reset()
@@ -185,14 +183,15 @@ class Main:
 
     def run(self, prefix, molecular_file, geom_list):
         prefix = prefix
-        molecule = MolecularData(filename=self.work_dir+molecular_file, data_directory='./')
+        molecule = MolecularData(filename=self.work_dir + molecular_file,
+                                 data_directory='./')
         molecule.load()
-        with open(self.work_dir+prefix+'.o', 'a') as f: 
+        with open(self.work_dir + prefix + '.o', 'a') as f:
             print('Start case: ', prefix, file=f)
             print('OMP_NUM_THREAD: ', os.environ['OMP_NUM_THREADS'], file=f)
             vqe = VQEoptimizer(file=f)
             en_list, time_list = [], []
-        
+
             for i in range(len(geom_list)):
                 # if prefix == "CH4":
                 #     if geom_list[i][1][1][1] == 0.8:
@@ -204,31 +203,37 @@ class Main:
                 #         time_list.append(t)
                 #         continue
                 mol = MolecularData(geometry=geom_list[i],
-                                        basis=molecule.basis,
-                                        charge=molecule.charge,
-                                        multiplicity=molecule.multiplicity,
-                                        filename=self.work_dir+molecular_file, 
-                                        data_directory='./')
-                mol = run_pyscf(mol, run_scf=False, run_ccsd=False, run_fci=True, verbose=False)
+                                    basis=molecule.basis,
+                                    charge=molecule.charge,
+                                    multiplicity=molecule.multiplicity,
+                                    filename=self.work_dir + molecular_file,
+                                    data_directory='./')
+                mol = run_pyscf(mol,
+                                run_scf=False,
+                                run_ccsd=False,
+                                run_fci=True,
+                                verbose=False)
                 print(f"{geom_list[i]}, FCI baseline:{mol.fci_energy}")
                 vqe.generate_circuit(mol)
                 vqe.optimize_using_scipy(mol.fci_energy)
                 t = vqe.timer.runtime()
                 en = vqe.get_energy()
-                print('Time: %i hrs %i mints %.2f sec.' % format_time(t), 'Energy: ', en, file=f)
+                print('Time: %i hrs %i mints %.2f sec.' % format_time(t),
+                      'Energy: ',
+                      en,
+                      file=f)
                 sys.stdout.flush()
                 en_list.append(en)
                 time_list.append(t)
-            
-            
-            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()), file=f)
+
+            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' %
+                  format_time(vqe.timer.runtime()),
+                  file=f)
 
         if len(en_list) == len(geom_list) and len(time_list) == len(geom_list):
-            return en_list, time_list#, nparam_list
+            return en_list, time_list  #, nparam_list
         else:
             raise ValueError('data lengths are not correct!')
-
-        
 
 
 class Plot:
