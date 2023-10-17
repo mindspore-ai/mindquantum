@@ -4,6 +4,7 @@ from mindquantum import Circuit, H, ZZ, RX, BarrierGate
 from mindquantum import Hamiltonian, QubitOperator, Simulator, MQEncoderOnlyOps
 from mindspore import nn, ops, Tensor
 import mindspore as ms
+
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 
@@ -55,7 +56,7 @@ def gene_random_instance(num_nodes):
     p = k / num_nodes
     g = nx.Graph()
     for i in range(num_nodes):
-        for j in range(i+1, num_nodes):
+        for j in range(i + 1, num_nodes):
             if np.random.random() < p:
                 nx.add_path(g, [i, j])
     return g
@@ -117,7 +118,7 @@ def gene_qaoa_layers(G, P):
     ansatz.as_encoder()
 
     ham = gene_ham(G)
-    sim = Simulator('projectq', ansatz.n_qubits)
+    sim = Simulator('mqvector', ansatz.n_qubits)
     grad_ops = sim.get_expectation_with_grad(ham, ansatz)
     net = MQEncoderOnlyOps(grad_ops)
     return net
@@ -132,17 +133,23 @@ class MetaQAOA(nn.Cell):
 
     QNN需要外部输入
     """
+
     def __init__(self, T, QNN, lstm_layers):
         """
         T times of quantum classical interaction 
         """
         super(MetaQAOA, self).__init__()
         # 初始化LSTM三个参数为input_size, hidden_size (int), num_layers (int)
-        self.lstm = nn.LSTM(2, 2, lstm_layers, has_bias=True, batch_first=True, bidirectional=False)
+        self.lstm = nn.LSTM(2,
+                            2,
+                            lstm_layers,
+                            has_bias=True,
+                            batch_first=True,
+                            bidirectional=False)
         self.T = T
         self.qnn = QNN
 
-    def construct(self, theta, h, c): # 
+    def construct(self, theta, h, c):  #
         """
         output:
         1. theta, h  是最后一步的
@@ -156,12 +163,12 @@ class MetaQAOA(nn.Cell):
             y = y.reshape(1, 1, 1)
             theta, (h, c) = self.lstm(theta, (h, c))
             # theta_list.append(theta)
-            
+
         return theta, h, c, y_list
 
 
-
 class MetaQAOALoss(nn.LossBase):
+
     def __init__(self):
         super(MetaQAOALoss, self).__init__()
         self.addn = ops.AddN()
@@ -180,7 +187,7 @@ class MetaQAOALoss(nn.LossBase):
             if y_list[i] < min_temp:
                 min_temp = y_list[i]
         loss = self.addn(loss_list)
-        
+
         # loss = self.addn(y_list)
         return self.get_loss(loss)
 

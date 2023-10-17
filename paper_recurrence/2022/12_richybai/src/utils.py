@@ -14,7 +14,7 @@ class ForwardWithLoss(nn.Cell):
         """连接前向网络和损失函数"""
         if len(inputs) == 2:
             data, label = inputs
-            out = self.backbone(data)                   
+            out = self.backbone(data)
             return self.loss_fn(out, label)
         if len(inputs) == 1:
             label = inputs[0]
