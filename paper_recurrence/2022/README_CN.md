@@ -1,5 +1,7 @@
 # 2022昇腾AI创新大赛量子计算赛题
 
+所有列表请查看: [paper list](https://gitee.com/mindspore/mindquantum/blob/research/README.md)
+
 <table>
 	<tr>
 	    <th>序号</th>
