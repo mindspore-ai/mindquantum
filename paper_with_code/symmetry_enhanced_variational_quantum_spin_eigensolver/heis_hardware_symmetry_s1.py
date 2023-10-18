@@ -1,6 +1,3 @@
-import os
-
-os.environ['OMP_NUM_THREADS'] = '4'
 import time
 import numpy as np
 import scipy as sp
@@ -100,7 +97,7 @@ def ansatz(prefix, N, num_layer):
         ansatz += CNOT.on(i + 1, i)
 
     # ansatz += H.on(0)
-    
+
     # for i in range(N - 1):
     #     ansatz += CNOT.on(i + 1, i)
 
@@ -185,7 +182,7 @@ if __name__ == '__main__':
     np.random.seed()
     init_params = (np.random.rand(len(circ.params_name)) - .5) * np.pi
 
-    sim = Simulator('projectq', N)
+    sim = Simulator('mqvector', N)
     grad_op = sim.get_expectation_with_grad(
         ham, circ)
 

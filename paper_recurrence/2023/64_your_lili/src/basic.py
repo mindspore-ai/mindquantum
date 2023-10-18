@@ -6,6 +6,17 @@ from mindquantum.core.gates import Measure
 from mindquantum.core.circuit import Circuit
 
 
+def create_EPR_state(p: int, q: int) -> Circuit:
+    """制备EPR Pair
+    Args:
+        p: 贝尔态作用第1个位置
+        q: 贝尔态作用第2个位置
+    Return:
+        制备贝尔态线路
+    """
+    return Circuit([H(p), X(q, p)])
+
+
 def create_epr_state(p: int, q: int) -> Circuit:
     """制备EPR Pair
     Args:

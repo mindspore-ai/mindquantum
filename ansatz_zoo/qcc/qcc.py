@@ -80,9 +80,10 @@ class IterQCC(MolInfoProduce):
 
         # print(gradients_circuit.params_name)
         # print(gradients_circuit)
-        gradients_pqc = Simulator(
-            'projectq', self.n_qubits).get_expectation_with_grad(
-                self.sparsed_qubit_hamiltonian, gradients_circuit)
+        gradients_pqc = Simulator('mqvector',
+                                  self.n_qubits).get_expectation_with_grad(
+                                      self.sparsed_qubit_hamiltonian,
+                                      gradients_circuit)
         plus = deepcopy(self.paras)
         minus = deepcopy(self.paras)
         plus.append(np.pi / 4)
@@ -156,7 +157,7 @@ class IterQCC(MolInfoProduce):
         circ = Circuit()
         for qubit in range(self.n_qubits):
             circ += RY(f'{qubit}').on(qubit)
-        self.pqc = Simulator('projectq',
+        self.pqc = Simulator('mqvector',
                              self.n_qubits).get_expectation_with_grad(
                                  self.sparsed_qubit_hamiltonian, circ)
         paras = [math.pi / 4 for terms in circ.params_name]
@@ -180,9 +181,10 @@ class IterQCC(MolInfoProduce):
             self.iteration = iteration
             self.select_pauli_string()
             self.circuit += TimeEvolution(self.pauli_strings_seq[-1]).circuit
-            self.pqc = Simulator(
-                'projectq', self.n_qubits).get_expectation_with_grad(
-                    self.sparsed_qubit_hamiltonian, self.circuit)
+            self.pqc = Simulator('mqvector',
+                                 self.n_qubits).get_expectation_with_grad(
+                                     self.sparsed_qubit_hamiltonian,
+                                     self.circuit)
             self.paras_optimize()
             if abs(self.step_energies[-1] - self.fci_energy) < 0.0016:
                 print('Reach chamical accuracy')

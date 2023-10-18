@@ -7,6 +7,7 @@ from mindquantum.core.gates import UnivMathGate
 
 # np.set_printoptions(precision=3)
 
+
 def param2dict(keys, values):
     param_dict = {}
     for (key, value) in zip(keys, values):
@@ -15,19 +16,20 @@ def param2dict(keys, values):
 
 
 def get_vector(simulator, circuit, params):
-        param_dict = param2dict(circuit.params_name, params)
-        simulator.reset()
-        simulator.apply_circuit(circuit, param_dict)
-        return simulator.get_qs()
+    param_dict = param2dict(circuit.params_name, params)
+    simulator.reset()
+    simulator.apply_circuit(circuit, param_dict)
+    return simulator.get_qs()
 
 
-def is_unitary(matrix): 
+def is_unitary(matrix):
 
     unitary = True
     n = matrix.shape[0]
-    error = np.linalg.norm(np.eye(n) - matrix.dot( matrix.transpose().conjugate()))
+    error = np.linalg.norm(
+        np.eye(n) - matrix.dot(matrix.transpose().conjugate()))
 
-    if not(error < np.finfo(matrix.dtype).eps * 10.0 *n):
+    if not (error < np.finfo(matrix.dtype).eps * 10.0 * n):
         unitary = False
 
     return unitary
@@ -35,18 +37,16 @@ def is_unitary(matrix):
 
 if __name__ == "__main__":
 
-    # simulator = Simulator('projectq', 3)
-    
+    # simulator = Simulator('mqvector', 3)
+
     # encoder, _ = generate_encoder()
     # encoder.summary()
-    # print(encoder)    
+    # print(encoder)
     # train_x = np.load("train_x.npy", allow_pickle=True)
 
     # train_y = np.load("train_y.npy", allow_pickle=True)
 
     # test_x = np.load("test_x.npy", allow_pickle=True)
-
-    
 
     # train_x_mat = []
     # for i in range(len(train_x)):
@@ -73,13 +73,10 @@ if __name__ == "__main__":
     # np.save("train_x.npy", x["train_x"], allow_pickle=True)
     # np.save("test_x.npy", x["test_x"], allow_pickle=True)
 
-
-
     # x = scipy.io.loadmat("res.mat")
     # print(x.keys())
     # print(x["B_iter"].shape)
     # np.save("test_y.npy", x["B_iter"], allow_pickle=True)
-
 
     # test_y = np.load("test_y.npy", allow_pickle=True)
 
@@ -88,7 +85,7 @@ if __name__ == "__main__":
     unit = scipy.io.loadmat("Q.mat")
     print(unit.keys())
     unit = unit["Q"]
-    print(unit.shape)    
+    print(unit.shape)
     print(is_unitary(unit))
 
     # u = train_x[0: 8]

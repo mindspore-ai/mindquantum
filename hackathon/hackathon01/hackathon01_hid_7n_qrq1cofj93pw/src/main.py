@@ -17,6 +17,7 @@ ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 np.random.seed(233)
 ms.set_seed(22)
 
+
 class SaveModel(Callback):
     def __init__(self, model, qnet, small_test_loader, test_loader):
         self.model = model
@@ -25,21 +26,19 @@ class SaveModel(Callback):
         self.test_loader = test_loader
         self.bestacc = 0
         self.th1 = 0.89
-    
+
     def step_end(self, run_context):
-        acc = self.model.eval(
-            self.small_test_loader, dataset_sink_mode=False)['Acc']
+        acc = self.model.eval(self.small_test_loader,
+                              dataset_sink_mode=False)['Acc']
         print('th1', self.th1, 'small current best acc:', acc)
-        if acc <= self.th1: # too low accurancy
+        if acc <= self.th1:  # too low accurancy
             return
         self.th1 += 0.001
-        acc = self.model.eval(
-            self.test_loader, dataset_sink_mode=False)['Acc']
+        acc = self.model.eval(self.test_loader, dataset_sink_mode=False)['Acc']
         print('big current best acc:', acc)
         if acc > 0.89 and acc > self.bestacc:
             self.bestacc = acc
             self.save_parameters()
-        
 
     def save_parameters(self):
         qnet_weight = self.qnet.weight.asnumpy()
@@ -47,16 +46,17 @@ class SaveModel(Callback):
         ms.save_checkpoint(self.qnet, name)
 
 
-
 class Main(HybridModel):
     def __init__(self):
         super().__init__()
         self.dataset = self.build_dataset(self.origin_x, self.origin_y, 16)
-        self.small_dataset = self.build_small_dataset(self.origin_x, self.origin_y, 16)
+        self.small_dataset = self.build_small_dataset(self.origin_x,
+                                                      self.origin_y, 16)
         self.qnet = MQLayer(self.build_grad_ops())
         self.model = self.build_model()
         self.checkpoint_name = os.path.join(project_path, "model.ckpt")
-        self.model_saver = SaveModel(self.model, self.qnet, self.small_dataset, self.dataset)
+        self.model_saver = SaveModel(self.model, self.qnet, self.small_dataset,
+                                     self.dataset)
 
     def build_small_dataset(self, x, y, batch=16):
         x = x[-200:]
@@ -90,34 +90,40 @@ class Main(HybridModel):
             circ += RY(f'p{i}').on(i)
 
         encoder = add_prefix(circ, 'e1') + add_prefix(circ, 'e2')
-        ansatz = add_prefix(circ, 'a1') + add_prefix(circ, 'a2') #+ add_prefix(circ, 'a3') 
-        total_circ = add_prefix(circ, 'e1') + add_prefix(circ, 'a1')
+        ansatz = add_prefix(circ, 'a1') + add_prefix(
+            circ, 'a2')  #+ add_prefix(circ, 'a3')
+        total_circ = add_prefix(circ, 'e1').as_encoder() + add_prefix(
+            circ, 'a1')
         for i in range(6):
             total_circ += X.on(6, i)
             total_circ += X.on(7, i)
-        total_circ += add_prefix(circ, 'e2') + add_prefix(circ, 'a2')
+        total_circ += add_prefix(circ, 'e2').as_encoder() + add_prefix(
+            circ, 'a2')
         for i in range(6):
             total_circ += X.on(6, i)
             total_circ += X.on(7, i)
 
-        ham = [Hamiltonian(QubitOperator(f'Z{i}')) for i in [6,7]]
-        sim = Simulator('projectq', total_circ.n_qubits)
+        ham = [Hamiltonian(QubitOperator(f'Z{i}')) for i in [6, 7]]
+        sim = Simulator('mqvector', total_circ.n_qubits)
         grad_ops = sim.get_expectation_with_grad(
             ham,
             total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
             parallel_worker=5)
         return grad_ops
 
     def build_model(self):
         self.loss = ms.nn.SoftmaxCrossEntropyWithLogits(sparse=True)
         self.opti = ms.nn.Adam(self.qnet.trainable_params(), learning_rate=0.1)
-        self.model = Model(self.qnet, self.loss, self.opti, metrics={'Acc': nn.Accuracy()})
+        self.model = Model(self.qnet,
+                           self.loss,
+                           self.opti,
+                           metrics={'Acc': nn.Accuracy()})
         return self.model
 
     def train(self):
-        self.model.train(2, self.dataset, callbacks=[LossMonitor(), self.model_saver])
+        self.model.train(2,
+                         self.dataset,
+                         callbacks=[LossMonitor(), self.model_saver])
 
     def export_parameters(self, n):
         qnet_weight = self.qnet.weight.asnumpy()
@@ -133,10 +139,11 @@ class Main(HybridModel):
 
     def predict(self, origin_test_x) -> float:
         test_x = origin_test_x.reshape((origin_test_x.shape[0], -1))
-        predict = np.argmax(ms.ops.Softmax()(self.model.predict(Tensor(test_x))), axis=1)
+        predict = np.argmax(ms.ops.Softmax()(self.model.predict(
+            Tensor(test_x))),
+                            axis=1)
         predict = predict.flatten() > 0
         return predict
-
 
     def get_all_accurancy(self) -> float:
         x = self.origin_x
@@ -154,7 +161,6 @@ class Main(HybridModel):
         print(np.array(test_y)[0:5])
         acc = np.sum(y == test_y) / len(x)
         print('Accurancy on train data:', acc)
-
 
 
 if __name__ == '__main__':

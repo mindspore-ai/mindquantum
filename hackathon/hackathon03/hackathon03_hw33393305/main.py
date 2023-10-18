@@ -51,8 +51,7 @@ class Main(HybridModel):
             {
                 "image": x.reshape((x.shape[0], -1)),
                 "label": y
-            },
-            shuffle=False)
+            }, shuffle=False)
         if batch is not None:
             train = train.batch(batch)
         return train
@@ -64,23 +63,21 @@ class Main(HybridModel):
         return ansatz
 
     def build_grad_ops(self):
-        sim = Simulator('projectq', 3)
+        sim = Simulator('mqvector', 3)
 
         circ_left = generate_circuit()
         encoder_y = dagger(circ_left)
         encoder_y.no_grad()
         y_params_name = encoder_y.params_name
 
-        circ_right = self.encoder + self.ansatz + encoder_y
+        circ_right = self.encoder.as_encoder(
+        ) + self.ansatz + encoder_y.as_encoder()
 
-        grad_ops = sim.get_expectation_with_grad(
-            hams=self.ham,
-            circ_right=circ_right,
-            circ_left=Circuit(),
-            simulator_left=None,
-            encoder_params_name=self.encoder.params_name + y_params_name,
-            ansatz_params_name=self.ansatz.params_name,
-            parallel_worker=None)
+        grad_ops = sim.get_expectation_with_grad(hams=self.ham,
+                                                 circ_right=circ_right,
+                                                 circ_left=Circuit(),
+                                                 simulator_left=None,
+                                                 parallel_worker=None)
 
         return grad_ops
 
@@ -114,7 +111,7 @@ class Main(HybridModel):
         ans_dict = dict(zip(test_ansatz.params_name, ans_data))
 
         value = list()
-        sim = Simulator('projectq', 3)
+        sim = Simulator('mqvector', 3)
         total_circ = self.encoder + test_ansatz
 
         for i in range(500):

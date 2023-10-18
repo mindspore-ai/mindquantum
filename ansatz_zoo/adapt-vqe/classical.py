@@ -64,14 +64,14 @@ for i in range(len(results)):
     #times["bond_lengths"].append(results[i][0])
     #parameters["bond_lengths"].append(results[i][0])
 
-with open(os.path.join(os.getcwd(), r'data/mindquantum_energies_{}.json'.format(mole_name)), 'w+', newline='') as f:    
+with open(os.path.join(os.getcwd(), r'data/mindquantum_energies_{}.json'.format(mole_name)), 'w+', newline='') as f:
     b = json.dumps(energies)
     f.write(b)
 
-with open(os.path.join(os.getcwd(), r'data/mindquantum_times_{}.json'.format(mole_name)), 'w+', newline='') as f:    
+with open(os.path.join(os.getcwd(), r'data/mindquantum_times_{}.json'.format(mole_name)), 'w+', newline='') as f:
     b = json.dumps(times)
     f.write(b)
 
-with open(os.path.join(os.getcwd(), r'data/mindquantum_parameters_{}.json'.format(mole_name)), 'w+', newline='') as f:    
+with open(os.path.join(os.getcwd(), r'data/mindquantum_parameters_{}.json'.format(mole_name)), 'w+', newline='') as f:
     b = json.dumps(parameters)
     f.write(b)

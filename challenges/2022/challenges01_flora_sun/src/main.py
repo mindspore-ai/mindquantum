@@ -1,4 +1,5 @@
 import os
+
 os.environ['OMP_NUM_THREADS'] = '4'
 import sys
 #from hiqfermion.drivers import MolecularData
@@ -12,6 +13,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from uccsd_generator import Uccsd_Generator
 
+
 class Timer:
     def __init__(self, t0=0.0):
         self.start_time = time.time()
@@ -22,6 +24,7 @@ class Timer:
 
     def resetime(self):
         self.start_time = time.time()
+
 
 def format_time(t):
     hh = t // 3600
@@ -36,28 +39,32 @@ def func(x, grad_ops, show_iter_val=False):
         print(np.real(np.squeeze(f)))
     return np.real(np.squeeze(f)), np.squeeze(g)
 
+
 def param2dict(keys, values):
     param_dict = {}
     for (key, value) in zip(keys, values):
         param_dict[key] = value
     return param_dict
 
+
 def load_molecular_file(molecular_file):
-    molecule = MolecularData(filename=molecular_file, data_directory='./src/hdf5files/')
-    molecule = MolecularData(geometry=molecule.geometry, 
-                            basis=molecule.basis, 
-                            multiplicity=molecule.multiplicity,  
-                            charge=molecule.charge, 
-                            filename=molecular_file,
-                            data_directory='./src/hdf5files/')
+    molecule = MolecularData(filename=molecular_file,
+                             data_directory='./src/hdf5files/')
+    molecule = MolecularData(geometry=molecule.geometry,
+                             basis=molecule.basis,
+                             multiplicity=molecule.multiplicity,
+                             charge=molecule.charge,
+                             filename=molecular_file,
+                             data_directory='./src/hdf5files/')
     return molecule
+
 
 class VQEoptimizer:
     def __init__(self, molecule=None, amp_th=0, seed=1202, file=None):
         #self.timer = Timer()
         self.molecule = molecule
         self.amp_th = amp_th
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
         self.init_amp = []
@@ -77,11 +84,17 @@ class VQEoptimizer:
         self.n_qubits, \
         self.n_electrons = Uccsd_Generator(molecule, self.amp_th, 'JW').generate_uccsd
 
-        self.circuit += ansatz_circuit 
+        self.circuit += ansatz_circuit
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
 
-    def optimize(self, operator=None, circuit=None, init_amp=[],
-                 method='bfgs', maxstep=200, iter_info=False, tol=0.032):
+    def optimize(self,
+                 operator=None,
+                 circuit=None,
+                 init_amp=[],
+                 method='bfgs',
+                 maxstep=200,
+                 iter_info=False,
+                 tol=0.032):
         if operator == None:
             operator = self.hamiltonian
         if circuit == None:
@@ -89,13 +102,15 @@ class VQEoptimizer:
         if np.array(init_amp).size == 0:
             init_amp = self.init_amp
 
-        grad_ops = self.simulator.get_expectation_with_grad(Hamiltonian(operator), circuit)
-        self.res = minimize(func, init_amp,
+        grad_ops = self.simulator.get_expectation_with_grad(
+            Hamiltonian(operator), circuit)
+        self.res = minimize(func,
+                            init_amp,
                             args=(grad_ops, iter_info),
                             method=method,
-                            jac=True, 
-                            options={'gtol': tol}
-                            )
+                            jac=True,
+                            options={'gtol': tol})
+
 
 class Main:
     def __init__(self):
@@ -110,6 +125,7 @@ class Main:
             print(f'{prefix} throw an error: ', e)
             return 0
     '''
+
     def run(self, prefix, molecular_file):
         ath = 0.005
         #if 'lih' in prefix.lower() or 'lih' in molecular_file.lower():

@@ -280,8 +280,8 @@ _lambda=0.0;
 Fst_energy=np.array([]);
 list_of_lambda=np.array([]);
 while _lambda<1:
-    bra_simulator = Simulator('projectq', 4);
-    ket_simulator = Simulator('projectq', 4);
+    bra_simulator = Simulator('mqvector', 4);
+    ket_simulator = Simulator('mqvector', 4);
     bra_simulator.apply_circuit(Udis);
     ket_simulator.apply_circuit(Udis+V.apply_value({'lambdam': -_lambda,'lambdam2': -2*_lambda,'lambda': _lambda}));
     Fst_energy=np.append(Fst_energy,inner_product(bra_simulator, ket_simulator).imag);
@@ -291,7 +291,7 @@ plt.scatter(list_of_lambda,Fst_energy,c='m',marker='D');
 
 Vpert=QubitOperator('Z0 Z1')+QubitOperator('Z0 Z3')+QubitOperator('Z1 Z2')+QubitOperator('Z1 Z3');
 Vpert=Hamiltonian(Vpert);
-pur_simulator = Simulator('projectq', 4);
+pur_simulator = Simulator('mqvector', 4);
 pur_simulator.apply_circuit(Udis);
 _y=(pur_simulator.get_expectation(Vpert)).real*list_of_lambda;
 plt.plot(list_of_lambda,_y,'--',color='r')
@@ -302,7 +302,7 @@ Fst_eig_real=np.array([]);
 Fst_eig_imag=np.array([]);
 list_of_lambda=np.array([]);
 while _lambda<0.8:
-    sim1=Simulator('projectq', 5);
+    sim1=Simulator('mqvector', 5);
     sim1.apply_circuit(Udis+V.apply_value({'lambdam': -_lambda,'lambdam2': -2*_lambda,'lambda': _lambda})+Udis_dag+Ue);
     state1=sim1.get_qs();
     prj1=0.5*QubitOperator('Z4')+0.5*QubitOperator('');
@@ -312,7 +312,7 @@ while _lambda<0.8:
     cir_meas1=Circuit();
     cir_meas1+=Measure().on(4);
     while True :
-        sim1=Simulator('projectq', 5);
+        sim1=Simulator('mqvector', 5);
         sim1.set_qs(state1);
         sim1.apply_circuit(cir_meas1);
         res=sim1.get_expectation(prj1)
@@ -326,10 +326,10 @@ while _lambda<0.8:
 plt.scatter(list_of_lambda,Fst_eig_real,c='',marker='o',edgecolors='r');
 plt.scatter(list_of_lambda,Fst_eig_imag,c='b',marker='^');
 
-pert_sim=Simulator('projectq', 4);
+pert_sim=Simulator('mqvector', 4);
 pert_sim.apply_circuit(Udis);
 phi_gs=pert_sim.get_qs();
-pert_sim=Simulator('projectq', 4);
+pert_sim=Simulator('mqvector', 4);
 pert_sim.apply_gate(X(0));
 pert_sim.apply_gate(X(1));
 pert_sim.apply_gate(X(2));
@@ -356,7 +356,7 @@ prj2=0.5*QubitOperator('Z5')+0.5*QubitOperator('');
 prj2=Hamiltonian(prj2);
 
 while _lambda<0.8:
-    sim2=Simulator('projectq', 6);
+    sim2=Simulator('mqvector', 6);
     sim2.apply_circuit(Udis+Vpr.apply_value({'lambdam': -_lambda,'lambdam2': -2*_lambda,'lambda': _lambda})+Udis_dag);
     state2=sim2.get_qs();
     prob2=1-sim2.get_expectation(prj2);
@@ -365,7 +365,7 @@ while _lambda<0.8:
     cir_meas1=Circuit();
     cir_meas1+=Measure().on(5);
     while True :
-        sim3=Simulator('projectq', 6);
+        sim3=Simulator('mqvector', 6);
         sim3.set_qs(state2);
         sim3.apply_circuit(cir_meas1);
         res=sim3.get_expectation(prj2);    
@@ -379,7 +379,7 @@ while _lambda<0.8:
     cir_meas2=Circuit();
     cir_meas2+=Measure().on(4);
     while True :
-        sim4=Simulator('projectq', 6);
+        sim4=Simulator('mqvector', 6);
         sim4.set_qs(state4);
         sim4.apply_circuit(cir_meas2);
         res=sim4.get_expectation(prj1);    
@@ -390,8 +390,8 @@ while _lambda<0.8:
     Fst_eig_real2=np.append(Fst_eig_real2,phi[63].real);
     Fst_eig_imag2=np.append(Fst_eig_imag2,phi[63].imag);
     
-    bra_simulator = Simulator('projectq', 6);
-    ket_simulator = Simulator('projectq', 6);
+    bra_simulator = Simulator('mqvector', 6);
+    ket_simulator = Simulator('mqvector', 6);
     bra_simulator.set_qs(state3);
     ket_simulator.set_qs(state5);
     bra_simulator.apply_gate(X(4));

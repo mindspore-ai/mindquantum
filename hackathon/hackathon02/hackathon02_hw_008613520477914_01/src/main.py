@@ -1,4 +1,5 @@
 import os
+
 os.environ['OMP_NUM_THREADS'] = '6'
 import sys
 #from hiqfermion.drivers import MolecularData
@@ -21,8 +22,8 @@ from mindspore import Parameter
 
 ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
-
 import matplotlib.pyplot as plt
+
 
 class Timer:
     def __init__(self, t0=0.0):
@@ -31,6 +32,7 @@ class Timer:
 
     def runtime(self):
         return time.time() - self.start_time + self.t0
+
 
 def format_time(t):
     hh = t // 3600
@@ -47,6 +49,7 @@ def func(x, grad_ops, file, show_iter_val=False):
         sys.stdout.flush()
     return np.real(np.squeeze(f)), np.squeeze(g)
 
+
 def param2dict(keys, values):
     param_dict = {}
     for (key, value) in zip(keys, values):
@@ -54,16 +57,18 @@ def param2dict(keys, values):
     return param_dict
 
 
-def optimize_mindspore(molecule_pqc,ini_amp,total_iter=100):
-    
-    if len(ini_amp)==0:
+def optimize_mindspore(molecule_pqc, ini_amp, total_iter=100):
+
+    if len(ini_amp) == 0:
         molecule_pqcnet = MQAnsatzOnlyLayer(molecule_pqc, 'Zeros')
     else:
         molecule_pqcnet = MQAnsatzOnlyLayer(molecule_pqc)
-        molecule_pqcnet.weight = Parameter(ms.Tensor(ini_amp, molecule_pqcnet.weight.dtype))
-    
+        molecule_pqcnet.weight = Parameter(
+            ms.Tensor(ini_amp, molecule_pqcnet.weight.dtype))
+
     initial_energy = molecule_pqcnet()
-    optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=0.075)
+    optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(),
+                              learning_rate=0.075)
     train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
 
     eps = 1e-5
@@ -82,26 +87,34 @@ def optimize_mindspore(molecule_pqc,ini_amp,total_iter=100):
 
 def get_ccsd_ini_amp(molecule):
     hamiltonian = get_qubit_hamiltonian(molecule)
-    ucc_fermion_ops = uccsd_singlet_generator(
-        molecule.n_qubits, molecule.n_electrons, anti_hermitian=True)
+    ucc_fermion_ops = uccsd_singlet_generator(molecule.n_qubits,
+                                              molecule.n_electrons,
+                                              anti_hermitian=True)
     ucc_qubit_ops = Transform(ucc_fermion_ops).jordan_wigner()
     ansatz_circuit = TimeEvolution(ucc_qubit_ops.imag, 1.0).circuit
     ansatz_parameter_names = ansatz_circuit.params_name
 
     init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(
-        molecule.ccsd_single_amps, molecule.ccsd_double_amps, molecule.n_qubits, molecule.n_electrons)
-    init_amplitudes_ccsd = [init_amplitudes_ccsd[param_i] for param_i in ansatz_parameter_names]
-    
+        molecule.ccsd_single_amps, molecule.ccsd_double_amps,
+        molecule.n_qubits, molecule.n_electrons)
+    init_amplitudes_ccsd = [
+        init_amplitudes_ccsd[param_i] for param_i in ansatz_parameter_names
+    ]
+
     return init_amplitudes_ccsd, ansatz_circuit, hamiltonian
 
 
-
 class VQEoptimizer:
-    def __init__(self, molecule=None, amp_th=0, use_ccsd_ini=True , seed=1202, file=None):
+    def __init__(self,
+                 molecule=None,
+                 amp_th=0,
+                 use_ccsd_ini=True,
+                 seed=1202,
+                 file=None):
         self.timer = Timer()
         self.molecule = molecule
         self.amp_th = amp_th
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
         self.init_amp = []
@@ -110,10 +123,11 @@ class VQEoptimizer:
         if molecule != None:
             self.generate_circuit(molecule)
 
-        print("Initialize finished! Time: %.2f s" % self.timer.runtime(), file=self.file)
+        print("Initialize finished! Time: %.2f s" % self.timer.runtime(),
+              file=self.file)
         sys.stdout.flush()
 
-    def generate_circuit(self, molecule=None,seed=1202):
+    def generate_circuit(self, molecule=None, seed=1202):
         if molecule == None:
             molecule = self.molecule
         self.circuit = Circuit([X.on(i) for i in range(molecule.n_electrons)])
@@ -126,37 +140,45 @@ class VQEoptimizer:
             self.n_qubits, \
             self.n_electrons = generate_uccsd(molecule, self.amp_th)
         else:
-            init_amplitudes_ccsd, ansatz_circuit, hamiltonian = get_ccsd_ini_amp(molecule)
+            init_amplitudes_ccsd, ansatz_circuit, hamiltonian = get_ccsd_ini_amp(
+                molecule)
             self.init_amp = init_amplitudes_ccsd
             self.hamiltonian = hamiltonian
             self.n_qubits = molecule.n_qubits
             self.n_electrons = molecule.n_electrons
-            
-        self.circuit += ansatz_circuit 
+
+        self.circuit += ansatz_circuit
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
 
-    def optimize(self, operator=None, circuit=None, init_amp=[], method='mindspore_layer', maxstep=200, iter_info=False):
+    def optimize(self,
+                 operator=None,
+                 circuit=None,
+                 init_amp=[],
+                 method='mindspore_layer',
+                 maxstep=200,
+                 iter_info=False):
         if operator == None:
             operator = self.hamiltonian.real
         if circuit == None:
             circuit = self.circuit
-            
+
         if np.array(init_amp).size == 0:
             init_amp = self.init_amp
-            
-        molecule_pqc = self.simulator.get_expectation_with_grad(Hamiltonian(operator), circuit)
-        
-        if method =='bfgs':
-            res = minimize(func, init_amp,
-                            args=(molecule_pqc, self.file, iter_info),
-                            method=method,
-                            jac=True)
-            return res.x
-        
-        if method == 'mindspore_layer':
-            res = optimize_mindspore(molecule_pqc,self.init_amp,maxstep)
-            return res
 
+        molecule_pqc = self.simulator.get_expectation_with_grad(
+            Hamiltonian(operator), circuit)
+
+        if method == 'bfgs':
+            res = minimize(func,
+                           init_amp,
+                           args=(molecule_pqc, self.file, iter_info),
+                           method=method,
+                           jac=True)
+            return res.x
+
+        if method == 'mindspore_layer':
+            res = optimize_mindspore(molecule_pqc, self.init_amp, maxstep)
+            return res
 
 
 class Main:
@@ -165,16 +187,16 @@ class Main:
         self.work_dir = './src/'
 
     def run(self, prefix, molecular_file, geom_list):
-        molecule = MolecularData(filename=self.work_dir+molecular_file)
+        molecule = MolecularData(filename=self.work_dir + molecular_file)
         molecule.load()
         maxstep = 40
         if prefix == 'LiH':
             maxstep = 100
-        
+
         if prefix == 'CH4':
             maxstep = 1
 
-        with open(self.work_dir+prefix+'.o', 'a') as f:
+        with open(self.work_dir + prefix + '.o', 'a') as f:
             print(f)
             print('Start case: ', prefix, file=f)
             print('OMP_NUM_THREAD: ', os.environ['OMP_NUM_THREADS'], file=f)
@@ -183,31 +205,36 @@ class Main:
 
             for i in range(len(geom_list)):
                 mol0 = MolecularData(geometry=geom_list[i],
-                                    basis=molecule.basis,
-                                    charge=molecule.charge,
-                                    multiplicity=molecule.multiplicity)
+                                     basis=molecule.basis,
+                                     charge=molecule.charge,
+                                     multiplicity=molecule.multiplicity)
                 mol = run_pyscf(mol0, run_scf=1, run_ccsd=1, run_fci=0)
                 vqe.generate_circuit(mol)
-                res = vqe.optimize(method='mindspore_layer',maxstep=maxstep)
-             
+                res = vqe.optimize(method='mindspore_layer', maxstep=maxstep)
+
                 param_dict = param2dict(vqe.circuit.params_name, res)
 
                 vqe.simulator.apply_circuit(vqe.circuit, param_dict)
                 t = vqe.timer.runtime()
-                en = vqe.simulator.get_expectation(Hamiltonian(vqe.hamiltonian)).real
-                print('Time: %i hrs %i mints %.2f sec.' % format_time(t), 'Energy: ', en, file=f)
+                en = vqe.simulator.get_expectation(Hamiltonian(
+                    vqe.hamiltonian)).real
+                print('Time: %i hrs %i mints %.2f sec.' % format_time(t),
+                      'Energy: ',
+                      en,
+                      file=f)
                 sys.stdout.flush()
                 en_list.append(en)
                 time_list.append(t)
 
-            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' % format_time(vqe.timer.runtime()), file=f)
+            print('Optimization completed. Time: %i hrs %i mints %.2f sec.' %
+                  format_time(vqe.timer.runtime()),
+                  file=f)
 
         if len(en_list) == len(geom_list) and len(time_list) == len(geom_list):
-            return en_list, time_list#, nparam_list
+            return en_list, time_list  #, nparam_list
         else:
             raise ValueError('data lengths are not correct!')
 
-            
 
 class Plot:
     def plot(self, prefix, blen_range, energy, time):

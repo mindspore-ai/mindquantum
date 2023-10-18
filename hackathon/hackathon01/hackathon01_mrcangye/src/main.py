@@ -1,6 +1,6 @@
 import os
 
-os.environ['OMP_NUM_THREADS'] = '8'# 通过os.environ将量子线路模拟器的线程数设置为8
+os.environ['OMP_NUM_THREADS'] = '8'  # 通过os.environ将量子线路模拟器的线程数设置为8
 from hybrid import HybridModel
 from hybrid import project_path
 import numpy as np
@@ -34,7 +34,7 @@ class Main(HybridModel):
         return train
 
     def build_grad_ops(self):
-        circ = Circuit()#初始化量子线路
+        circ = Circuit()  #初始化量子线路
         for i in range(8):
             circ += RY(f'p{i}').on(i)
         circ += UN(X, [1, 3, 5, 7], [0, 2, 4, 6])
@@ -43,19 +43,17 @@ class Main(HybridModel):
         circ += UN(X, [2, 4, 6], [1, 3, 5])
         encoder = add_prefix(circ, 'e1') + add_prefix(circ, 'e2')
         ansatz = add_prefix(circ, 'a1')
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
         ham = Hamiltonian(QubitOperator('Z0'))
-        sim = Simulator('projectq', total_circ.n_qubits)
-        grad_ops = sim.get_expectation_with_grad(
-            ham,
-            total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
-            parallel_worker=5)
+        sim = Simulator('mqvector', total_circ.n_qubits)
+        grad_ops = sim.get_expectation_with_grad(ham,
+                                                 total_circ,
+                                                 parallel_worker=5)
         return grad_ops
 
     def build_model(self):
-        self.loss = ms.nn.SoftmaxCrossEntropyWithLogits(sparse=True,reduction='mean')
+        self.loss = ms.nn.SoftmaxCrossEntropyWithLogits(sparse=True,
+                                                        reduction='mean')
         self.opti = ms.nn.Adam(self.qnet.trainable_params())
         self.model = Model(self.qnet, self.loss, self.opti)
         return self.model

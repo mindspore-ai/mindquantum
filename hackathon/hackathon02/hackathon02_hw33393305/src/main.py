@@ -46,7 +46,7 @@ class VQEoptimizer:
         self.timer = Timer()
         self.molecule = molecule
         self.amp_th = amp_th
-        self.backend = 'projectq'
+        self.backend = 'mqvector'
         self.seed = seed
         self.file = file
         self.init_amp = []
@@ -70,13 +70,13 @@ class VQEoptimizer:
                 ansatz_circuit += X.on(j, i)
                 ansatz_circuit += RY(f'p{i}_{j}').on(i, j)
                 ansatz_circuit += X.on(j, i)
-        
+
         # qucc二阶，消除了空轨道上的对易门
-        for ry_ in range(molecule.n_electrons, molecule.n_qubits-1):
+        for ry_ in range(molecule.n_electrons, molecule.n_qubits - 1):
             for i in range(ry_ + 1, molecule.n_qubits):
                 for j in range(molecule.n_electrons):
                     for k in range(j + 1, molecule.n_electrons):
-                        if (j==0 and k==1):
+                        if (j == 0 and k == 1):
                             ansatz_circuit += X.on(k, j)
                             ansatz_circuit += X.on(k)
                             ansatz_circuit += X.on(i, ry_)
@@ -87,11 +87,12 @@ class VQEoptimizer:
                             ansatz_circuit += X.on(j, ry_)
                             ansatz_circuit += X.on(k)
                             ansatz_circuit += X.on(k, j)
-                        elif (j==molecule.n_electrons-2 and k==j+1):
+                        elif (j == molecule.n_electrons - 2 and k == j + 1):
                             ansatz_circuit += X.on(k, j)
                             ansatz_circuit += X.on(k)
                             ansatz_circuit += X.on(j, ry_)
-                            ansatz_circuit += RY(f'p{ry_}_{i}_{j}_{k}').on(ry_, ctrl_qubits=[i, j, k])
+                            ansatz_circuit += RY(f'p{ry_}_{i}_{j}_{k}').on(
+                                ry_, ctrl_qubits=[i, j, k])
                             ansatz_circuit += X.on(j, ry_)
                             ansatz_circuit += X.on(i)
                             ansatz_circuit += X.on(i, ry_)
@@ -101,18 +102,17 @@ class VQEoptimizer:
                             ansatz_circuit += X.on(k, j)
                             ansatz_circuit += X.on(k)
                             ansatz_circuit += X.on(j, ry_)
-                            ansatz_circuit += RY(f'p{ry_}_{i}_{j}_{k}').on(ry_, ctrl_qubits=[i, j, k])
+                            ansatz_circuit += RY(f'p{ry_}_{i}_{j}_{k}').on(
+                                ry_, ctrl_qubits=[i, j, k])
                             ansatz_circuit += X.on(j, ry_)
                             ansatz_circuit += X.on(k)
                             ansatz_circuit += X.on(k, j)
-        
 
         self.circuit += ansatz_circuit
         self.n_qubits = molecule.n_qubits
         self.params_name = ansatz_circuit.params_name
         self.simulator = Simulator(self.backend, self.n_qubits, seed)
         self.hamiltonian = get_qubit_hamiltonian(molecule)
-
 
     def optimize(self,
                  mol,
@@ -136,12 +136,12 @@ class VQEoptimizer:
             Hamiltonian(operator), circuit)
 
         # minimize优化器
-        self.res = minimize(func, init_amp,
+        self.res = minimize(func,
+                            init_amp,
                             args=(grad_ops, self.file, iter_info),
                             method='bfgs',
                             jac=True,
-                            tol=1e-3
-                            ).x
+                            tol=1e-3).x
 
 
 class Main:
