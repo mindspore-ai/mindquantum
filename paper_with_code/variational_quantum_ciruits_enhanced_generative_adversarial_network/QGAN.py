@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import mindspore as ms
-import os
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix
 from mindquantum.core.gates import RX, RY, RZ
@@ -14,7 +13,6 @@ import mindspore.dataset.vision as vision
 from mindspore.dataset.transforms import Compose
 from mindspore import nn, ops
 
-os.environ['OMP_NUM_THREADS'] = '2'
 seed = 99
 np.random.seed(seed)
 ds.config.set_seed(seed)
@@ -43,7 +41,7 @@ def generage_base_i_hamiltonian(i, n_qubit):
     """
     row = np.array([0])
     col = np.array([i])
-    data = np.array([1])
+    data = np.array([1.0])
     coo = coo_matrix((data, (row, col)), shape=(2**n_qubit, 2**n_qubit))
     return Hamiltonian(coo.tocsr())
 
@@ -86,8 +84,8 @@ def quantum_layer(qubits):
     circuit = quantum_circuit()
     circ_l = Circuit()
     hams = quantum_measure(qubits)
-    sim = Simulator('projectq', circuit.n_qubits)
-    sim_l = Simulator('projectq', qubits)
+    sim = Simulator('mqvector', circuit.n_qubits)
+    sim_l = Simulator('mqvector', qubits)
     grad_ops = sim.get_expectation_with_grad(hams, circuit, circ_l, sim_l, parallel_worker=4)
 
     QuantumNet = MQLayer(grad_ops,
@@ -106,7 +104,6 @@ class QuantumGenerator(nn.Cell):
 
     def construct(self, x):
         x = self.quantumlayer(x)
-        print(x)
         x = x/(abs(x).max())
         x = self.linear(x)
         out = self.sigmoid(x)

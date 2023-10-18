@@ -45,7 +45,7 @@ class QubitAdaptive(MolInfoProduce):
         # print(gradients_circuit.params_name)
         # print(gradients_circuit)
         self.gradients_pqc = Simulator(
-            'projectq', self.n_qubits).get_expectation_with_grad(
+            'mqvector', self.n_qubits).get_expectation_with_grad(
                 self.sparsed_qubit_hamiltonian, gradients_circuit)
         plus = deepcopy(self.paras)
         minus = deepcopy(self.paras)
@@ -121,7 +121,7 @@ class QubitAdaptive(MolInfoProduce):
             self.iteration = iteration
             self.select_pauli_string()
             self.circuit += TimeEvolution(self.pauli_strings_seq[-1]).circuit
-            self.pqc = Simulator('projectq',
+            self.pqc = Simulator('mqvector',
                                  self.n_qubits).get_expectation_with_grad(
                                      self.sparsed_qubit_hamiltonian,
                                      self.circuit)

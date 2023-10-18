@@ -77,7 +77,7 @@ class TrainModel:
                         params_rand = np.random.rand(
                             len(params) - len(params_his[-1])) * 4 * np.pi
                         params_value = np.append(params_his[-1], params_rand)
-                    sim = Simulator('projectq', self.n_qubits)
+                    sim = Simulator('mqvector', self.n_qubits)
                     grad_ops = sim.get_expectation_with_grad([ham, self.z_op],
                                                              circ,
                                                              parallel_worker=2)

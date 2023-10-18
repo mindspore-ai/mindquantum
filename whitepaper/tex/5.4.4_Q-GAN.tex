@@ -52,8 +52,8 @@ def quantum_layer(qubits):
     circuit = quantum_circuit()
     circ_l = Circuit()
     hams = quantum_measure(qubits)
-    sim = Simulator('projectq', circuit.n_qubits)
-    sim_l = Simulator('projectq', qubits)
+    sim = Simulator('mqvector', circuit.n_qubits)
+    sim_l = Simulator('mqvector', qubits)
     grad_ops = sim.get_expectation_with_grad(hams, circuit, circ_l, sim_l, parallel_worker=4)
 
     QuantumNet = MQLayer(grad_ops,

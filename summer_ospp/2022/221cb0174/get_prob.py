@@ -20,7 +20,7 @@ def get_prob(circ: Circuit, qubit):
       >>> res = get_prob(circ)
       >>> print("exact probability is:", res)
       >>> circ += Measure('q0_0').on(0)
-      >>> sim = Simulator('projectq', circ.n_qubits)
+      >>> sim = Simulator('mqvector', circ.n_qubits)
       >>> res = sim.sampling(circ, shots=1000, seed=42)
       >>> print(res)
       "exact probability is:" {'0': 0.7267980607127886, '1': 0.27320193928721137}
@@ -39,8 +39,7 @@ def get_prob(circ: Circuit, qubit):
         res = np.einsum("ab, ab -> b", np.conj(vec), vec).real
         return {"0": res[0], "1": res[1]}
     else:
-        tensor_shape = [2**(circ.n_qubits-qubit-1), 2, 2**qubit]
+        tensor_shape = [2**(circ.n_qubits - qubit - 1), 2, 2**qubit]
         vec = state_vector.reshape(tensor_shape)
         res = np.einsum("abc, abc->b", np.conj(vec), vec).real
         return {"0": res[0], "1": res[1]}
-

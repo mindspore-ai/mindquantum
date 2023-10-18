@@ -44,30 +44,27 @@ class Main(HybridModel):
         for i in range(16):
             ansatz += RY(f'y1-{i}').on(i)
         for i in range(15):
-            ansatz += X.on(i+1,i)
+            ansatz += X.on(i + 1, i)
         for i in range(16):
             ansatz += RY(f'yy1-{i}').on(i)
-        
+
         for i in range(15):
-            ansatz += X.on(i+1,i)
+            ansatz += X.on(i + 1, i)
         for i in range(16):
             ansatz += RY(f'yy2-{i}').on(i)
 
         for i in range(15):
-            ansatz += X.on(i+1,i)
+            ansatz += X.on(i + 1, i)
         for i in range(16):
             ansatz += RY(f'yy3-{i}').on(i)
 
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
         # ham = Hamiltonian(QubitOperator('Z0'))
         ham = [Hamiltonian(QubitOperator(f'Z{i}')) for i in [14, 15]]
-        sim = Simulator('projectq', total_circ.n_qubits)
-        grad_ops = sim.get_expectation_with_grad(
-            ham,
-            total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
-            parallel_worker=5)
+        sim = Simulator('mqvector', total_circ.n_qubits)
+        grad_ops = sim.get_expectation_with_grad(ham,
+                                                 total_circ,
+                                                 parallel_worker=5)
         return grad_ops
 
     def build_model(self):
@@ -93,6 +90,7 @@ class Main(HybridModel):
         predict = predict.argmax(1).asnumpy().flatten() > 0
         # predict = predict.asnumpy().flatten() > 0
         return predict
+
 
 # MyModel = Main()
 # MyModel.train()

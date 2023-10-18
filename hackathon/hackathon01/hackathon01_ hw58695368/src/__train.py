@@ -46,14 +46,12 @@ class Train(Main):
     def build_grad_ops(self):
         encoder, ansatz, ham = QCircuitLib_ex().qc_test10
         encoder = encoder.no_grad()
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
 
-        sim = Simulator('projectq', total_circ.n_qubits)
+        sim = Simulator('mqvector', total_circ.n_qubits)
         grad_ops = sim.get_expectation_with_grad(
             ham,
             total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
             parallel_worker=5)
         return grad_ops
     def build_model(self):

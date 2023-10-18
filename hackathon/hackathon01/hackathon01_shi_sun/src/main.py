@@ -41,15 +41,12 @@ class Main(HybridModel):
         circ += UN(X, [2, 4, 6], [1, 3, 5])
         encoder = add_prefix(circ, 'e1') + add_prefix(circ, 'e2')
         ansatz = add_prefix(circ, 'a1')
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
         ham = Hamiltonian(QubitOperator('Z0'))
-        sim = Simulator('projectq', total_circ.n_qubits)
-        grad_ops = sim.get_expectation_with_grad(
-            ham,
-            total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
-            parallel_worker=5)
+        sim = Simulator('mqvector', total_circ.n_qubits)
+        grad_ops = sim.get_expectation_with_grad(ham,
+                                                 total_circ,
+                                                 parallel_worker=5)
         return grad_ops
 
     def build_model(self):

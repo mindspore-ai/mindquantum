@@ -52,7 +52,7 @@ def process(bond_len):
     sparsed_ham = Hamiltonian(hamiltonian_QubitOp)
     sparsed_ham.sparse(n_qubits)
     total_circuit = hartreefock_wfn_circuit + ansatz_circuit
-    total_pqc = Simulator('projectq', n_qubits).get_expectation_with_grad(
+    total_pqc = Simulator('mqvector', n_qubits).get_expectation_with_grad(
         sparsed_ham, total_circuit)
 
     #para_only_energy_obj = partial(energy_obj, hea_circuit, q_ham)

@@ -15,7 +15,6 @@ ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 
 
 class Main(HybridModel):
-
     def __init__(self):
         super().__init__()
         self.dataset = self.build_dataset(self.origin_x, self.origin_y, 10)
@@ -60,21 +59,18 @@ class Main(HybridModel):
             ansatz += RX(f'theta{i}_2').on(i)
 
         # Combine encoder and ansatz
-        total_circ = encoder + ansatz
+        total_circ = encoder.as_encoder() + ansatz
 
         # Define hamitonian
         ham = [Hamiltonian(QubitOperator(f'Z{i}')) for i in [2, 3]]
 
         # Define simulator
-        sim = Simulator('projectq', total_circ.n_qubits)
+        sim = Simulator('mqvector', total_circ.n_qubits)
 
         # Calculate gradient
-        grad_ops = sim.get_expectation_with_grad(
-            ham,
-            total_circ,
-            encoder_params_name=encoder.params_name,
-            ansatz_params_name=ansatz.params_name,
-            parallel_worker=5)
+        grad_ops = sim.get_expectation_with_grad(ham,
+                                                 total_circ,
+                                                 parallel_worker=5)
         return grad_ops
 
     def build_model(self):

@@ -13,7 +13,6 @@ from data import initdata, savedata, rounddata
 import mole
 import brc
 
-
 os.environ['OMP_NUM_THREADS'] = '4'
 
 method = "BRC"
@@ -33,8 +32,11 @@ transform = 'jordan_wigner'
 
 
 def bond_lengths(mole):
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           r'../data/mindquantum_energies_{}.json'.format(mole)), 'r+', newline='') as f:
+    with open(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            r'../data/mindquantum_energies_{}.json'.format(mole)),
+              'r+',
+              newline='') as f:
         data = f.read()
         energies = json.loads(data)
     return energies["bond_lengths"]
@@ -66,7 +68,7 @@ def process(bond_len):
     # brc_ansatz_circuit.summary()
 
     # step 3: objective function
-    total_pqc = Simulator('projectq', n_qubits).get_expectation_with_grad(
+    total_pqc = Simulator('mqvector', n_qubits).get_expectation_with_grad(
         sparsed_q_ham, brc_ansatz_circuit)
 
     # step 4: optimization step.
@@ -77,7 +79,7 @@ def process(bond_len):
         params = [np.random.uniform(-np.pi, np.pi) for i in range(n_params)]
         res = minimize(energy_obj,
                        params,
-                       args=(total_pqc,),
+                       args=(total_pqc, ),
                        method='bfgs',
                        jac=True,
                        tol=1e-6)
@@ -103,7 +105,6 @@ pool = ThreadPool()
 results = pool.map(process, bond_lengths(mole_name))
 pool.close()
 pool.join()
-
 ''' Save the data to json file'''
 savedata(mole_name, results, method, init=True)
 

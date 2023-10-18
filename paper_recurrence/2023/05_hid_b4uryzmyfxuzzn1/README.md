@@ -112,7 +112,7 @@ q1: ───────X──
 ```
 然后我们引入模拟器求出态矢量并做外积得到整个系统的密度矩阵
 ```python
->>> sim = Simulator('projectq', 2)
+>>> sim = Simulator('mqvector', 2)
 >>> sim.apply_circuit(circ)
 >>> psi = sim.get_qs()
 >>> import numpy as np

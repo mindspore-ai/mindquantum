@@ -25,17 +25,8 @@ geometry = [
 basis = "sto3g"
 spin = 0
 
-molecule_of = MolecularData(
-    geometry,
-    basis,
-    multiplicity=2 * spin + 1
-)
-molecule_of = run_pyscf(
-    molecule_of,
-    run_scf=1,
-    run_ccsd=1,
-    run_fci=1
-)
+molecule_of = MolecularData(geometry, basis, multiplicity=2 * spin + 1)
+molecule_of = run_pyscf(molecule_of, run_scf=1, run_ccsd=1, run_fci=1)
 print("Hartree-Fock energy: %20.16f Ha" % (molecule_of.hf_energy))
 print("CCSD energy: %20.16f Ha" % (molecule_of.ccsd_energy))
 print("FCI energy: %20.16f Ha" % (molecule_of.fci_energy))
@@ -43,7 +34,8 @@ print("FCI energy: %20.16f Ha" % (molecule_of.fci_energy))
 molecule_of.save()
 molecule_file = molecule_of.filename
 
-hartreefock_wfn_circuit = Circuit([X.on(i) for i in range(molecule_of.n_electrons)])
+hartreefock_wfn_circuit = Circuit(
+    [X.on(i) for i in range(molecule_of.n_electrons)])
 print(hartreefock_wfn_circuit)
 
 ansatz_circuit, \
@@ -55,12 +47,14 @@ n_qubits, n_electrons = generate_uccsd(molecule_file)
 total_circuit = hartreefock_wfn_circuit + ansatz_circuit
 total_circuit.summary()
 
-sim = Simulator('projectq', total_circuit.n_qubits)
-molecule_pqc = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_QubitOp), total_circuit)
+sim = Simulator('mqvector', total_circuit.n_qubits)
+molecule_pqc = sim.get_expectation_with_grad(Hamiltonian(hamiltonian_QubitOp),
+                                             total_circuit)
 molecule_pqcnet = MQAnsatzOnlyLayer(molecule_pqc, 'Zeros')
 initial_energy = molecule_pqcnet()
 
-optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(), learning_rate=4e-2)
+optimizer = ms.nn.Adagrad(molecule_pqcnet.trainable_params(),
+                          learning_rate=4e-2)
 train_pqcnet = ms.nn.TrainOneStepCell(molecule_pqcnet, optimizer)
 
 eps = 1.e-8
@@ -79,7 +73,8 @@ print("Optimization completed at step %3d" % (iter_idx - 1))
 print("Optimized energy: %20.16f" % (energy_i))
 print("Optimized amplitudes: \n", molecule_pqcnet.weight.asnumpy())
 
-U = ansatz_circuit.apply_value(dict(zip(ansatz_parameter_names, list(molecule_pqcnet.weight.asnumpy()))))
+U = ansatz_circuit.apply_value(
+    dict(zip(ansatz_parameter_names, list(molecule_pqcnet.weight.asnumpy()))))
 Udag = dagger(U)
 
 p = list(hamiltonian_QubitOp.split())
@@ -95,16 +90,16 @@ for i in range(1, n_pau):
     a = pauli_word_to_circuits(p[i][1])
     circ = emptycirc + a
     hamatrix += p[i][0].const * circ.matrix()
-hamatrix = np.dot(np.dot(Udag.matrix(), hamatrix),U.matrix())
+hamatrix = np.dot(np.dot(Udag.matrix(), hamatrix), U.matrix())
 hamatrix = hamatrix.real
 
 # with open('H.npy', 'wb') as f:
-    # np.save(f, hamatrix)
+# np.save(f, hamatrix)
 # with open('h4.npy', 'rb') as f:
-    # hamatrix = np.load(f)
+# hamatrix = np.load(f)
 
-hf = 2 ** molecule_of.n_electrons - 1
-    
+hf = 2**molecule_of.n_electrons - 1
+
 T = 700
 dt = 0.01
 zeta = 1.0
@@ -112,7 +107,7 @@ A = 10
 maxpop = 10000
 
 D = set([hf])
-Nmax = 2 ** n_qubits
+Nmax = 2**n_qubits
 pospop = [0 for i in range(Nmax)]
 pospop[hf] = 1
 negpop = [0 for i in range(Nmax)]
@@ -130,7 +125,7 @@ for n in range(T):
             isign = -1
         for w in range(Nmax):
             if w == i:
-                hii = hamatrix[i,i]
+                hii = hamatrix[i, i]
                 p_i = dt * (hii - S)
                 ran = np.random.uniform(0, 1, max(pospop[i], negpop[i]))
                 n_new = np.sum(ran < np.abs(p_i))
@@ -149,7 +144,7 @@ for n in range(T):
                         N -= n_new
                 continue
             Hjisign = 1
-            Hji = hamatrix[w,i]
+            Hji = hamatrix[w, i]
             if Hji < 0:
                 Hjisign = -1
             if np.abs(Hji) > 1e-8:
@@ -172,13 +167,13 @@ for n in range(T):
             negpop[i] -= pospop[i]
             N -= 2 * pospop[i]
             pospop[i] = 0
-            
+
     if n % A == A - 1:
         if N > maxpop:
             S = Slast - zeta / A / dt * np.log(N / Nlast)
             Slast = S
         Nlast = N
-    
+
     for i in toadd:
         D.add(i)
 
@@ -188,20 +183,21 @@ for n in range(T):
         for i in range(Nmax):
             if i != 15:
                 if pospop[i] > 0:
-                    mixed_energy += hamatrix[i,hf] * pospop[i] / pospop[hf]
+                    mixed_energy += hamatrix[i, hf] * pospop[i] / pospop[hf]
                 else:
-                    mixed_energy -= hamatrix[i,hf] * negpop[i] / pospop[hf]
-        print('step %d: mixed energy = %.10f, total pupulation = %d' % (n + 1, mixed_energy, temp))
-        
+                    mixed_energy -= hamatrix[i, hf] * negpop[i] / pospop[hf]
+        print('step %d: mixed energy = %.10f, total pupulation = %d' %
+              (n + 1, mixed_energy, temp))
+
 mixed_energy = energy_i[0]
 
 for i in range(Nmax):
     if i != 15:
         if pospop[i] > 0:
-            mixed_energy += hamatrix[i,hf] * pospop[i] / pospop[hf]
+            mixed_energy += hamatrix[i, hf] * pospop[i] / pospop[hf]
         else:
-            mixed_energy -= hamatrix[i,hf] * negpop[i] / pospop[hf]
-    
+            mixed_energy -= hamatrix[i, hf] * negpop[i] / pospop[hf]
+
 print('VQE: %.10f' % energy_i[0])
 print('QQMC: %.10f' % mixed_energy)
 print('FCI: %.10f' % molecule_of.fci_energy)
