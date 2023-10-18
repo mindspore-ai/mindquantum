@@ -1,5 +1,7 @@
 # 论文复现大赛
 
+所有列表请查看: [论文列表](https://gitee.com/mindspore/mindquantum/blob/research/README.md)
+
 - [论文复现大赛](#论文复现大赛)
   - [已完成复现论文](#已完成复现论文)
   - [量子计算论文复现大赛开发指南](#量子计算论文复现大赛开发指南)
