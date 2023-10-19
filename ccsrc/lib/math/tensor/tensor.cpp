@@ -50,6 +50,11 @@
         return ops::add(lhs, rhs);                                                                                     \
     }
 
+#define TENSOR_ADD_REV(dtype)                                                                                          \
+    Tensor operator+(dtype lhs, const Tensor& rhs) {                                                                   \
+        return ops::add(lhs, rhs);                                                                                     \
+    }
+
 #define TENSOR_SUB(dtype)                                                                                              \
     Tensor operator-(const Tensor& lhs, dtype rhs) {                                                                   \
         return ops::sub(lhs, rhs);                                                                                     \
@@ -62,6 +67,11 @@
 
 #define TENSOR_MUL(dtype)                                                                                              \
     Tensor operator*(const Tensor& lhs, dtype rhs) {                                                                   \
+        return ops::mul(lhs, rhs);                                                                                     \
+    }
+
+#define TENSOR_MUL_REV(dtype)                                                                                          \
+    Tensor operator*(dtype lhs, const Tensor& rhs) {                                                                   \
         return ops::mul(lhs, rhs);                                                                                     \
     }
 
@@ -113,6 +123,10 @@ TENSOR_ADD(double)
 TENSOR_ADD(const std::complex<float>&)
 TENSOR_ADD(const std::complex<double>&)
 TENSOR_ADD(const Tensor&)
+TENSOR_ADD_REV(float)
+TENSOR_ADD_REV(double)
+TENSOR_ADD_REV(const std::complex<float>&)
+TENSOR_ADD_REV(const std::complex<double>&)
 
 // -----------------------------------------------------------------------------
 
@@ -132,6 +146,10 @@ TENSOR_MUL(float)
 TENSOR_MUL(double)
 TENSOR_MUL(const std::complex<float>&)
 TENSOR_MUL(const std::complex<double>&)
+TENSOR_MUL_REV(float)
+TENSOR_MUL_REV(double)
+TENSOR_MUL_REV(const std::complex<float>&)
+TENSOR_MUL_REV(const std::complex<double>&)
 TENSOR_MUL(const Tensor&)
 
 // -----------------------------------------------------------------------------
@@ -147,6 +165,11 @@ TENSOR_DIV_REV(const std::complex<double>&)
 TENSOR_DIV(const Tensor&)
 
 // -----------------------------------------------------------------------------
+
+Tensor Tensor::operator-() {
+    float zero = 0.0;
+    return zero - *this;
+}
 
 Tensor Tensor::operator[](size_t idx) const {
     return tensor::ops::get(*this, idx);
