@@ -1,7 +1,7 @@
 mindquantum.io.draw_topology
 ============================
 
-.. py:function:: mindquantum.io.draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: dict = None, edge_color: Union[str, Dict[Tuple[int, int], str]] = None)
+.. py:function:: mindquantum.io.draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: Dict = None, edge_color: Union[str, Dict[Tuple[int, int], str]] = None)
 
     以svg图的形式打印量子拓扑结构。
 
