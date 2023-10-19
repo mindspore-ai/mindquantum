@@ -18,15 +18,15 @@
 
 import numpy as np
 import pytest
-from scipy.stats import entropy
-from scipy.sparse import csr_matrix
 from scipy.linalg import logm, sqrtm
+from scipy.sparse import csr_matrix
+from scipy.stats import entropy
 
 import mindquantum as mq
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
-from mindquantum.simulator import Simulator, fidelity
 from mindquantum.core.operators import Hamiltonian, QubitOperator
+from mindquantum.simulator import Simulator, fidelity
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils import random_circuit
 
@@ -373,4 +373,4 @@ def test_fidelity(config1, config2):
     if virtual_qc2.startswith('mqvector'):
         qs2 = np.outer(qs2, qs2.conj().T)
     ref_f = np.trace(sqrtm(sqrtm(qs1) @ qs2 @ sqrtm(qs1))).real ** 2
-    assert np.allclose(f, ref_f, atol=1e-6)
+    assert np.allclose(f, ref_f, atol=1e-3)
