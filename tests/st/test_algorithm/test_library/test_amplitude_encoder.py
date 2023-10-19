@@ -15,8 +15,8 @@
 '''test for amplitude encoder'''
 
 import warnings
-import numpy as np
 
+import numpy as np
 import pytest
 
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
@@ -44,6 +44,7 @@ def test_amplitude_encoder(config):
     Description: test amplitude encoder.
     Expectation: success.
     '''
+    # pylint: disable=too-many-statements
     backend, dtype = config
     sim = Simulator(backend, 3, dtype=dtype)
     circuit, params = amplitude_encoder([0.5, 0.5, 0.5, 0.5], 3)
@@ -76,12 +77,15 @@ def test_amplitude_encoder(config):
     circuit, params = amplitude_encoder([0.5, 0.5, -0.5, -0.5], 3)
     sim.reset()
     sim.apply_circuit(circuit, params)
-    state_0 = sim.get_qs(False)
-    state_1 = state_0 * np.conj(state_0[0])
-    state = state_1/np.linalg.norm(state_1, ord=2)
+    state = sim.get_qs(False)
     if backend == "mqmatrix":
-        pass
+        assert abs(state[0][0].real - 0.25) < 1e-6
+        assert abs(state[1][1].real - 0.25) < 1e-6
+        assert abs(state[2][2].real - 0.25) < 1e-6
+        assert abs(state[3][3].real - 0.25) < 1e-6
     else:
+        state_1 = state * np.conj(state[0])
+        state = state_1 / np.linalg.norm(state_1, ord=2)
         assert abs(state[0].real - 0.5) < 1e-6
         assert abs(state[1].real - 0.5) < 1e-6
         assert abs(state[2].real + 0.5) < 1e-6
@@ -89,12 +93,15 @@ def test_amplitude_encoder(config):
     circuit, params = amplitude_encoder([0.5j, 0.5j, -0.5j, -0.5j], 3)
     sim.reset()
     sim.apply_circuit(circuit, params)
-    state_0 = sim.get_qs(False)
-    state_1 = state_0 * np.conj(state_0[0])
-    state = state_1/np.linalg.norm(state_1, ord=2)
+    state = sim.get_qs(False)
     if backend == "mqmatrix":
-        pass
+        assert abs(state[0][0].real - 0.25) < 1e-6
+        assert abs(state[1][1].real - 0.25) < 1e-6
+        assert abs(state[2][2].real - 0.25) < 1e-6
+        assert abs(state[3][3].real - 0.25) < 1e-6
     else:
+        state_1 = state * np.conj(state[0])
+        state = state_1 / np.linalg.norm(state_1, ord=2)
         assert abs(state[0].real - 0.5) < 1e-6
         assert abs(state[1].real - 0.5) < 1e-6
         assert abs(state[2].real + 0.5) < 1e-6

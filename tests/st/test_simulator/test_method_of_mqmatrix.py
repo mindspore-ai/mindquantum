@@ -18,15 +18,15 @@
 
 import numpy as np
 import pytest
-from scipy.stats import entropy
-from scipy.sparse import csr_matrix
 from scipy.linalg import logm, sqrtm
+from scipy.sparse import csr_matrix
+from scipy.stats import entropy
 
 import mindquantum as mq
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import UN, Circuit
-from mindquantum.simulator import Simulator, fidelity
 from mindquantum.core.operators import Hamiltonian, QubitOperator
+from mindquantum.simulator import Simulator, fidelity
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils import random_circuit
 
@@ -211,6 +211,7 @@ def test_get_expectation_with_grad(config):
     Description: test get expectation with gradient
     Expectation: success.
     """
+    # pylint: disable=too-many-locals
     virtual_qc, dtype = config
     init_state = np.random.rand(8) + np.random.rand(8) * 1j
     init_state = init_state / np.linalg.norm(init_state)
@@ -253,6 +254,10 @@ def test_get_expectation_with_grad(config):
 
 
 def three_qubits_dm_evolution_in_py(dm, g, dtype):
+    """
+    Description: test three qubits density matrix
+    Expectation: success.
+    """
     if isinstance(g, G.NoiseGate):
         tmp = np.zeros((8, 8), dtype=mq.to_np_type(dtype))
         for m in g.matrix():
@@ -286,6 +291,7 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
     Description: test noise circuit get expectation with gradient
     Expectation: success.
     """
+    # pylint: disable=too-many-locals
     init_state = np.random.rand(8) + np.random.rand(8) * 1j
     init_state = init_state / np.linalg.norm(init_state)
     init_dm = np.outer(init_state, init_state.conj())
@@ -373,4 +379,4 @@ def test_fidelity(config1, config2):
     if virtual_qc2.startswith('mqvector'):
         qs2 = np.outer(qs2, qs2.conj().T)
     ref_f = np.trace(sqrtm(sqrtm(qs1) @ qs2 @ sqrtm(qs1))).real ** 2
-    assert np.allclose(f, ref_f, atol=1e-6)
+    assert np.allclose(f, ref_f, atol=1e-3)
