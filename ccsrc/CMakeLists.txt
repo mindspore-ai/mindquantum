@@ -27,7 +27,6 @@ target_link_libraries(
          cxx20_compat
          cmake_config
          mq_math
-         mindquantum::eigen
          mindquantum::fmt
          mindquantum::json
          mindquantum_setup
