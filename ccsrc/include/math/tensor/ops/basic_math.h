@@ -34,6 +34,10 @@ Tensor add(const Tensor& t, float a);
 Tensor add(const Tensor& t, double a);
 Tensor add(const Tensor& t, const std::complex<float>& a);
 Tensor add(const Tensor& t, const std::complex<double>& a);
+Tensor add(float a, const Tensor& t);
+Tensor add(double a, const Tensor& t);
+Tensor add(const std::complex<float>& a, const Tensor& t);
+Tensor add(const std::complex<double>& a, const Tensor& t);
 Tensor add(const Tensor& t, const Tensor& other);
 
 // -----------------------------------------------------------------------------
@@ -69,6 +73,10 @@ Tensor mul(const Tensor& t, float a);
 Tensor mul(const Tensor& t, double a);
 Tensor mul(const Tensor& t, const std::complex<float>& a);
 Tensor mul(const Tensor& t, const std::complex<double>& a);
+Tensor mul(float a, const Tensor& t);
+Tensor mul(double a, const Tensor& t);
+Tensor mul(const std::complex<float>& a, const Tensor& t);
+Tensor mul(const std::complex<double>& a, const Tensor& t);
 Tensor mul(const Tensor& t, const Tensor& other);
 
 // -----------------------------------------------------------------------------

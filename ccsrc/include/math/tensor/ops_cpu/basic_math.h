@@ -449,6 +449,29 @@ Tensor generate_binary_array(void* data, TDtype src, size_t len, const Tensor& a
                 return generate_binary_array<calc_t, binary_ops>(data, src, len, a.data);
             }
         }
+    } else if (len == 1) {
+        switch (src) {
+            case TDtype::Float32: {
+                using calc_t = to_device_t<TDtype::Float32>;
+                auto b = reinterpret_cast<calc_t*>(data)[0];
+                return ops::cpu::generate_binary_rev<calc_t, binary_ops>(a.data, a.dtype, a.dim, b);
+            }
+            case TDtype::Float64: {
+                using calc_t = to_device_t<TDtype::Float64>;
+                auto b = reinterpret_cast<calc_t*>(data)[0];
+                return ops::cpu::generate_binary_rev<calc_t, binary_ops>(a.data, a.dtype, a.dim, b);
+            }
+            case TDtype::Complex64: {
+                using calc_t = to_device_t<TDtype::Complex64>;
+                auto b = reinterpret_cast<calc_t*>(data)[0];
+                return ops::cpu::generate_binary_rev<calc_t, binary_ops>(a.data, a.dtype, a.dim, b);
+            }
+            case TDtype::Complex128: {
+                using calc_t = to_device_t<TDtype::Complex128>;
+                auto b = reinterpret_cast<calc_t*>(data)[0];
+                return ops::cpu::generate_binary_rev<calc_t, binary_ops>(a.data, a.dtype, a.dim, b);
+            }
+        }
     } else {
         throw std::runtime_error("Dimension miss match.");
     }

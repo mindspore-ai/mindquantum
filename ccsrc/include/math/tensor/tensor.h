@@ -71,6 +71,7 @@ struct Tensor {
     Tensor& operator-=(const std::complex<float>& other);
     Tensor& operator-=(const Tensor& other);
 
+    Tensor operator-();
     // -----------------------------------------------------------------------------
 
     Tensor& operator*=(float other);
@@ -104,6 +105,10 @@ Tensor operator+(const Tensor& lhs, float rhs);
 Tensor operator+(const Tensor& lhs, double rhs);
 Tensor operator+(const Tensor& lhs, const std::complex<double>& rhs);
 Tensor operator+(const Tensor& lhs, const std::complex<float>& rhs);
+Tensor operator+(float rhs, const Tensor& lhs);
+Tensor operator+(double rhs, const Tensor& lhs);
+Tensor operator+(const std::complex<double>& rhs, const Tensor& lhs);
+Tensor operator+(const std::complex<float>& rhs, const Tensor& lhs);
 Tensor operator+(const Tensor& lhs, const Tensor& rhs);
 
 // -----------------------------------------------------------------------------
@@ -124,6 +129,10 @@ Tensor operator*(const Tensor& lhs, float rhs);
 Tensor operator*(const Tensor& lhs, double rhs);
 Tensor operator*(const Tensor& lhs, const std::complex<double>& rhs);
 Tensor operator*(const Tensor& lhs, const std::complex<float>& rhs);
+Tensor operator*(float rhs, const Tensor& lhs);
+Tensor operator*(double rhs, const Tensor& lhs);
+Tensor operator*(const std::complex<double>& rhs, const Tensor& lhs);
+Tensor operator*(const std::complex<float>& rhs, const Tensor& lhs);
 Tensor operator*(const Tensor& lhs, const Tensor& rhs);
 
 // -----------------------------------------------------------------------------
