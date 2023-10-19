@@ -26,6 +26,7 @@ from inspect import signature
 from typing import List, Tuple
 
 import numpy as np
+import scipy
 from scipy.linalg import fractional_matrix_power
 
 from mindquantum import _math
@@ -1945,6 +1946,136 @@ class MultiParamsGate(ParameterGate):
         for pr in self.prs:
             pr.no_grad_part(names)
         return self
+
+
+class Rn(MultiParamsGate):
+    r"""
+    Pauli rotate about a arbitrary axis in bloch sphere.
+
+    The matrix expression is:
+
+    .. math::
+
+        \begin{aligned}
+            {\rm Rn}(\alpha, \beta, \gamma)
+                &= e^{-i(\alpha \sigma_x + \beta \sigma_y + \gamma \sigma_z)/2}\\
+                &= \cos(f/2)I-i\sin(f/2)(\alpha \sigma_x + \beta \sigma_y + \gamma \sigma_z)/f\\
+                &\text{where } f=\sqrt{\alpha^2 + \beta^2 + \gamma^2}
+        \end{aligned}
+
+    Args:
+        alpha (Union[numbers.Number, dict, ParameterResolver]): First parameter for Rn gate.
+        beta (Union[numbers.Number, dict, ParameterResolver]): Second parameter for Rn gate.
+        gamma (Union[numbers.Number, dict, ParameterResolver]): Third parameter for Rn gate.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.core.parameterresolver import ParameterResolver
+        >>> from mindquantum.core.gates import Rn
+        >>> theta = ParameterResolver('theta')/np.sqrt(3)
+        >>> Rn(theta, theta, theta).on(0, 1)
+        Rn(𝛼=0.5774*theta, 𝛽=0.5774*theta, 𝛾=0.5774*theta|0 <-: 1)
+    """
+
+    def __init__(self, alpha: ParameterResolver, beta: ParameterResolver, gamma: ParameterResolver):
+        """Initialize an pauli rotate gate about an arbitrary axis."""
+        prs = [ParameterResolver(alpha), ParameterResolver(beta), ParameterResolver(gamma)]
+        super().__init__(name="Rn", n_qubits=1, prs=prs)
+
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
+        return f"𝛼={self.alpha.expression()}, 𝛽={self.beta.expression()}, 𝛾={self.gamma.expression()}"
+
+    def __call__(self, alpha: ParameterResolver, beta: ParameterResolver, gamma: ParameterResolver) -> "Rn":
+        """Call the Pauli gate with new parameters."""
+        alpha = ParameterResolver(alpha)
+        beta = ParameterResolver(beta)
+        gamma = ParameterResolver(gamma)
+        prs = [alpha, beta, gamma]
+        return super().__call__(prs)
+
+    @property
+    def alpha(self) -> ParameterResolver:
+        """
+        Get alpha parameter of Rn gate.
+
+        Returns:
+            ParameterResolver, the alpha.
+        """
+        return self.prs[0]
+
+    @property
+    def beta(self) -> ParameterResolver:
+        """
+        Get beta parameter of Rn gate.
+
+        Returns:
+            ParameterResolver, the beta.
+        """
+        return self.prs[1]
+
+    @property
+    def gamma(self) -> ParameterResolver:
+        """
+        Get gamma parameter of Rn gate.
+
+        Returns:
+            ParameterResolver, the gamma.
+        """
+        return self.prs[2]
+
+    def hermitian(self) -> "Rn":
+        """
+        Get hermitian form of Rn gate.
+
+        Examples:
+            >>> from mindquantum.core.gates import Rn
+            >>> rn = Rn('a', 'b', 0.5).on(0)
+            >>> rn.hermitian()
+            Rn(𝛼=-a, 𝛽=-b, 𝛾=-1/2|0)
+        """
+        out = Rn(-self.alpha, -self.beta, -self.gamma)
+        out.obj_qubits = self.obj_qubits
+        out.ctrl_qubits = self.ctrl_qubits
+        return out
+
+    # pylint: disable=arguments-differ
+    def matrix(self, pr: ParameterResolver = None) -> np.ndarray:
+        """
+        Get the matrix of Rn gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter for Rn gate.
+        """
+        alpha = self.alpha
+        beta = self.beta
+        gamma = self.gamma
+        if self.parameterized:
+            if pr is None:
+                raise ValueError("Parameterized gate need a parameter resolver to get matrix.")
+            alpha = alpha.combination(pr)
+            beta = beta.combination(pr)
+            gamma = gamma.combination(pr)
+            if not alpha.is_const():
+                raise ValueError("Alpha not set completed.")
+            if not beta.is_const():
+                raise ValueError("Beta not set completed.")
+            if not gamma.is_const():
+                raise ValueError("Gamma not set completed.")
+        alpha = alpha.const * X.matrix()
+        beta = beta.const * Y.matrix()
+        gamma = gamma.const * Z.matrix()
+        return scipy.linalg.expm(-1j / 2.0 * (alpha + beta + gamma))
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.rn(
+            self.alpha,
+            self.beta,
+            self.gamma,
+            self.obj_qubits,
+            self.ctrl_qubits,
+        )
 
 
 class U3(MultiParamsGate):

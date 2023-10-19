@@ -52,6 +52,8 @@ tensor::Matrix U3Matrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor
 
 tensor::Matrix FSimMatrix(tensor::Tensor theta, tensor::Tensor phi);
 
+tensor::Matrix RnMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tensor gamma);
+
 tensor::Matrix U3DiffThetaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
 
 tensor::Matrix FSimDiffThetaMatrix(tensor::Tensor theta);
@@ -61,6 +63,12 @@ tensor::Matrix U3DiffPhiMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor:
 tensor::Matrix FSimDiffPhiMatrix(tensor::Tensor phi);
 
 tensor::Matrix U3DiffLambdaMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda);
+
+tensor::Matrix RnDiffAlphaMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tensor gamma);
+
+tensor::Matrix RnDiffBetaMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tensor gamma);
+
+tensor::Matrix RnDiffGammaMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tensor gamma);
 
 struct U3 : public Parameterizable {
     parameter::ParameterResolver theta;
@@ -77,6 +85,15 @@ struct FSim : public Parameterizable {
     tensor::Matrix base_matrix_;
     FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi, const qbits_t& obj_qubits,
          const qbits_t& ctrl_qubits);
+};
+
+struct Rn : public Parameterizable {
+    parameter::ParameterResolver alpha;
+    parameter::ParameterResolver beta;
+    parameter::ParameterResolver gamma;
+    tensor::Matrix base_matrix_;
+    Rn(const parameter::ParameterResolver& alpha, const parameter::ParameterResolver& beta,
+       const parameter::ParameterResolver& gamma, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
 };
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_GATES_HPP_

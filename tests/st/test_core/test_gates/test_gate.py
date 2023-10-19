@@ -357,6 +357,18 @@ def test_fsim():
     assert np.allclose(fsim.matrix({'a': 1.0}), m_exp)
 
 
+def test_rn():
+    """
+    Description: Test Rn gate
+    Expectation: success
+    """
+    rn = G.Rn('a', 0.5, 'c').on(0)
+    assert str(rn) == "Rn(𝛼=a, 𝛽=1/2, 𝛾=c|0)"
+    assert str(rn.hermitian()) == "Rn(𝛼=-a, 𝛽=-1/2, 𝛾=-c|0)"
+    m_exp = expm(-1j / 2 * (G.X.matrix() + 0.5 * G.Y.matrix() + 2.0 * G.Z.matrix()))
+    assert np.allclose(rn.matrix({'a': 1.0, 'c': 2.0}), m_exp)
+
+
 def test_hermitian():
     """
     Description: Test hermitian method of all gates
@@ -393,6 +405,10 @@ def test_hermitian():
 
     theta, phi = np.random.rand(2) * 2 * np.pi
     g = G.FSim(theta, phi)
+    assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
+
+    alpha, beta, gamma = np.random.rand(3) * 2 * np.pi
+    g = G.Rn(alpha, beta, gamma)
     assert np.allclose(g.matrix(), np.conj(np.transpose(g.hermitian().matrix())))
 
     g = G.CNOT
