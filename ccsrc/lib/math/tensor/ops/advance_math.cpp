@@ -16,6 +16,8 @@
 
 #include "math/tensor/ops/advance_math.h"
 
+#include <cmath>
+
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -46,6 +48,15 @@ Tensor cos(const Tensor& t) {
 Tensor exp(const Tensor& t) {
     if (t.device == TDevice::CPU) {
         return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::exp(i); });
+    } else {
+        throw std::runtime_error("No support GPU now.");
+    }
+    return Tensor();
+}
+
+Tensor sqrt(const Tensor& t) {
+    if (t.device == TDevice::CPU) {
+        return ops::cpu::ElementFunc(t, t.dtype, [](auto i) { return std::sqrt(i); });
     } else {
         throw std::runtime_error("No support GPU now.");
     }

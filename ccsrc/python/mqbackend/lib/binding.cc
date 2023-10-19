@@ -155,6 +155,10 @@ void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
         .def(py::init<const ParameterResolver &, const ParameterResolver &, const ParameterResolver &, const qbits_t &,
                       const qbits_t &>(),
              "theta"_a, "phi"_a, "lambda"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::Rn, mindquantum::BasicGate, std::shared_ptr<mindquantum::Rn>>(module, "rn")
+        .def(py::init<const ParameterResolver &, const ParameterResolver &, const ParameterResolver &, const qbits_t &,
+                      const qbits_t &>(),
+             "alpha"_a, "beta"_a, "gamma"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::FSim, mindquantum::BasicGate, std::shared_ptr<mindquantum::FSim>>(module, "fsim")
         .def(py::init<const ParameterResolver &, const ParameterResolver &, const qbits_t &, const qbits_t &>(),
              "theta"_a, "phi"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
@@ -244,6 +248,7 @@ PYBIND11_MODULE(mqbackend, m) {
                        .value("Rxx", mindquantum::GateID::Rxx)
                        .value("Ryy", mindquantum::GateID::Ryy)
                        .value("Rzz", mindquantum::GateID::Rzz)
+                       .value("Rn", mindquantum::GateID::Rn)
                        .value("H", mindquantum::GateID::H)
                        .value("SWAP", mindquantum::GateID::SWAP)
                        .value("ISWAP", mindquantum::GateID::ISWAP)

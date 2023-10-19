@@ -298,6 +298,23 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             qs_policy_t::ApplySingleQubitMatrix(qs, &qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
                                                 tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
+        case GateID::Rn: {
+            if (diff) {
+                std::runtime_error("Can not apply differential format of Rn gate on quantum states currently.");
+            }
+            auto rn = static_cast<Rn*>(gate.get());
+            tensor::Matrix m;
+            if (!rn->Parameterized()) {
+                m = rn->base_matrix_;
+            } else {
+                auto alpha = rn->alpha.Combination(pr).const_value;
+                auto beta = rn->beta.Combination(pr).const_value;
+                auto gamma = rn->gamma.Combination(pr).const_value;
+                m = RnMatrix(alpha, beta, gamma);
+            }
+            qs_policy_t::ApplySingleQubitMatrix(qs, &qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
+                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        } break;
         case GateID::FSim: {
             if (diff) {
                 std::runtime_error("Can not apply differential format of FSim gate on quantum states currently.");
@@ -638,6 +655,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
         }
         case GateID::U3:
             return ExpectDiffU3(bra, ket, gate, pr, dim);
+        case GateID::Rn:
+            return ExpectDiffRn(bra, ket, gate, pr, dim);
         case GateID::FSim:
             return ExpectDiffFSim(bra, ket, gate, pr, dim);
         default:
@@ -670,6 +689,37 @@ auto VectorState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& bra, const qs_da
         if (u3->lambda.data_.size() != u3->lambda.no_grad_parameters_.size()) {
             m = U3DiffLambdaMatrix(theta, phi, lambda);
             grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(bra, ket, u3->obj_qubits_, u3->ctrl_qubits_,
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        }
+    }
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                             const std::shared_ptr<BasicGate>& gate,
+                                             const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
+    VT<py_qs_data_t> grad = {0, 0, 0};
+    auto rn = static_cast<Rn*>(gate.get());
+    if (rn->parameterized_) {
+        tensor::Matrix m;
+        auto alpha = rn->alpha.Combination(pr).const_value;
+        auto beta = rn->beta.Combination(pr).const_value;
+        auto gamma = rn->gamma.Combination(pr).const_value;
+        if (rn->alpha.data_.size() != rn->alpha.no_grad_parameters_.size()) {
+            m = RnDiffAlphaMatrix(alpha, beta, gamma);
+            grad[0] = qs_policy_t::ExpectDiffSingleQubitMatrix(bra, ket, rn->obj_qubits_, rn->ctrl_qubits_,
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        }
+        if (rn->beta.data_.size() != rn->beta.no_grad_parameters_.size()) {
+            m = RnDiffBetaMatrix(alpha, beta, gamma);
+            grad[1] = qs_policy_t::ExpectDiffSingleQubitMatrix(bra, ket, rn->obj_qubits_, rn->ctrl_qubits_,
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        }
+        if (rn->gamma.data_.size() != rn->gamma.no_grad_parameters_.size()) {
+            m = RnDiffGammaMatrix(alpha, beta, gamma);
+            grad[2] = qs_policy_t::ExpectDiffSingleQubitMatrix(bra, ket, rn->obj_qubits_, rn->ctrl_qubits_,
                                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         }
     }

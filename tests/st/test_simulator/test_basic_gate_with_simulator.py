@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
 """Test basic gate with simulator."""
 from inspect import signature
 
@@ -59,6 +58,7 @@ single_parameter_gate = [
 multi_parameter_gate = [
     G.U3,
     G.FSim,
+    G.Rn,
 ]
 
 
@@ -106,7 +106,7 @@ def test_none_parameter_gate(config, gate):
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 @pytest.mark.parametrize("gate", single_parameter_gate + multi_parameter_gate)
-def test_parameter_gate(config, gate):
+def test_parameter_gate(config, gate):  # pylint: disable=too-many-locals
     """
     Description: test all parameter gates
     Expectation: success.
@@ -216,7 +216,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
-def test_custom_gate(config):
+def test_custom_gate(config):  # pylint: disable=too-many-locals
     """
     Description: test custom gate
     Expectation: success.
@@ -269,7 +269,7 @@ except ImportError:
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
-def test_custom_gate_expectation_with_grad(config):
+def test_custom_gate_expectation_with_grad(config):  # pylint: disable=too-many-locals
     """
     Description: test custom gate expectation with grad
     Expectation: success.
@@ -472,7 +472,7 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
     dim = 2**g.n_qubits
 
     def theta_diff_matrix(theta):
-        m = np.array(
+        return np.array(
             [
                 [0, 0, 0, 0],
                 [0, -np.sin(theta), -1j * np.cos(theta), 0],
@@ -480,10 +480,9 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
                 [0, 0, 0, 0],
             ]
         )
-        return m
 
     def phi_diff_matrix(phi):
-        m = np.array(
+        return np.array(
             [
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
@@ -491,7 +490,6 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
                 [0, 0, 0, 1j * np.exp(1j * phi)],
             ]
         )
-        return m
 
     g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
@@ -558,3 +556,40 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
     c_ref_grad = np.array([c_ref_grad_theta, c_ref_grad_phi])
     assert np.allclose(c_f, c_ref_f, atol=1e-6)
     assert np.allclose(c_grad, c_ref_grad, atol=1e-6)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_rn_expectation_with_grad(config):  # pylint: disable=R0914
+    """
+    Description: test expectation and gradient of FSim gate
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    rn = G.Rn('a', 'b', 'c').on(0)
+    init = mq.random_circuit(1, 10)
+    circ = Circuit([rn])
+    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Y0') + QubitOperator('Z0')).astype(dtype)
+    m_ham = ham.hamiltonian.matrix().toarray()
+    sim = Simulator(virtual_qc, 1, dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(ham, init + circ)
+    p0 = np.random.uniform(-3, 3, 3)
+    f, g = grad_ops(p0)
+    f = f[0, 0]
+    g = g[0, 0]
+    m_rn = rn.matrix(pr=dict(zip(circ.params_name, p0)))
+    psi_0 = init.get_qs()[:, None]
+    f_exp = np.vdot(m_rn @ psi_0, m_ham @ m_rn @ psi_0)
+    assert np.allclose(f, f_exp)
+    delta = 0.0001
+    f1, _ = grad_ops(p0 + np.array([delta, 0, 0]))
+    f1 = f1[0, 0]
+    f2, _ = grad_ops(p0 + np.array([0, delta, 0]))
+    f2 = f2[0, 0]
+    f3, _ = grad_ops(p0 + np.array([0, 0, delta]))
+    f3 = f3[0, 0]
+    g_exp = (np.array([f1, f2, f3]) - f) / delta
+    assert np.allclose(g, g_exp, atol=0.01)

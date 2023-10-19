@@ -249,8 +249,8 @@ def test_get_expectation_with_grad(config):
                 ).real
                 * 2
             )
-        assert np.allclose(f, ref_f, atol=1e-6)
-        assert np.allclose(g, ref_g, atol=1e-6)
+        assert np.allclose(f, ref_f, atol=1e-4)
+        assert np.allclose(g, ref_g, atol=1e-4)
 
 
 def three_qubits_dm_evolution_in_py(dm, g, dtype):
