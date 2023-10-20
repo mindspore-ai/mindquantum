@@ -55,7 +55,7 @@
 
 - [STABLE] [`OpenQASM`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.OpenQASM.html): OpenQASM has added the [`from_string`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM.from_string) interface, which supports converting OpenQASM from string format to quantum circuits in MindQuantum.
 
-#### Bug fix
+### Bug fix
 
 - [`PR1757`](https://gitee.com/mindspore/mindquantum/pulls/1757): Fixed the bug of [`StronglyEntangling`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.nisq.StronglyEntangling.html) when the depth is greater than 2.
 - [`PR1700`](https://gitee.com/mindspore/mindquantum/pulls/1700): Fixed matrix expression of [`CNOT`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.CNOTGate.html) gates and logic errors of [`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.AmplitudeDampingChannel.html).
