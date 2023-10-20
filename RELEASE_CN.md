@@ -55,7 +55,7 @@
 
 - [STABLE] [`OpenQASM`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM): OpenQASM 新增 [`from_string`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM.from_string) 接口，支持将字符串格式的 OpenQASM 转化为 MindQuantum 中的量子线路。
 
-#### Bug fix
+### Bug fix
 
 - [`PR1757`](https://gitee.com/mindspore/mindquantum/pulls/1757): 修复[`StronglyEntangling`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.algorithm.nisq.StronglyEntangling.html#mindquantum.algorithm.nisq.StronglyEntangling)在深度大于2时的bug。
 - [`PR1700`](https://gitee.com/mindspore/mindquantum/pulls/1700): 修复[`CNOT`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.CNOTGate.html#mindquantum.core.gates.CNOTGate)门矩阵表达式和[`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/zh-CN/master/mindquantum.core.gates.AmplitudeDampingChannel.html#mindquantum.core.gates.AmplitudeDampingChannel)的逻辑错误。
