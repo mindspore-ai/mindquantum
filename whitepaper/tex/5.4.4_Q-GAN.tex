@@ -13,14 +13,14 @@ Differently, the generated image is obtained by quantum circuit evolution, measu
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=0.2]{qc-gan.pdf}
+  \includegraphics[scale=0.2]{5.4.4_figures/qc-gan.pdf}
   \caption{\label{qc-gan} The overall architecture and training process of QC-GAN.}
 \end{figure}
 
 The first step is loading the dataset. The experiment uses the handwritten digit set, which has a total of 70,000 handwritten digit images, including 60,000 training samples and 10,000 test samples, with an image size of 28*28 and a single channel. After loading the dataset, a series of preprocessing operations are also performed to prepare for subsequent training. The model build-up consists of two networks, the generator ${G}$ and the discriminator ${D}$. For the discriminator part, it uses a general fully connected network structure. For the generator, it is divided into two parts, the quantum part and the classical part. Quantum circuits are built by calling the parameterized rotation gates of MindQuantum. The quantum circuit is constructed as follows.The structure of the quantum circuit can be shown through ${circuit.summary}$.
 \begin{figure*}[htbp]
   \centering
-  \includegraphics[scale=0.5]{circuit}
+  \includegraphics[scale=0.5]{5.4.4_figures/circuit.pdf}
   \caption{\label{quantum-circuit} The quantum circuit.}
 \end{figure*}
 
@@ -92,6 +92,6 @@ The parameters of the quantum circuits are optimized according to the designed c
 According to the designed loss function and model, the generator and discriminator are trained and parameters are updated in turn.After training, the noise vector is used as input to the generator and the generated handwritten digits are output and the results are shown in Fig~\ref{qgan-result}. It can be seen that as the number of iterations increases, the input noise is gradually able to produce a clear digital image. Notably, the number of iterations for training needs to be carefully designed and not more is better.
 \begin{figure}[htbp]
   \centering
-  \includegraphics[scale=0.5]{qgan-result.pdf}
+  \includegraphics[scale=0.5]{5.4.4_figures/qgan-result.pdf}
   \caption{\label{qgan-result} The algorithms based on PQCs are optimized in classical and quantum systems.}
 \end{figure}
