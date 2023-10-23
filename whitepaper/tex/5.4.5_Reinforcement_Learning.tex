@@ -1,7 +1,7 @@
 \textit{Introduction} -- An overall reinforcement learning algorithm(RL) is composed of Agent, Environment, State, Action, and Reward. After the Agent executes an action, the Environment switches to a new State according to the Action and gives a Reward according to certain rules. After that, the Agent updates its decision-making process according to the obtained new State and Reward and gives a new Action, and so on, until the entire control process is completed. We denote $\pi_{\theta}$ as the policy function, $s$ as each state of the environment, $r$ as the reward in each state, and $a$ as the action of the agent. The architecture of RL is demonstrated in Figure~\ref{RL_frame}.
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=0.4]{tex/5.4.5_RL/RL.png}
+  \includegraphics[scale=0.4]{5.4.5_RL/RL.png}
   \caption{\label{RL_frame} The demonstration of RL wroking process.}
 \end{figure} 
 
@@ -35,7 +35,7 @@ In following sections, we will demonstrate how to the agent in quantum devise.
 
 \begin{figure*}[ht]
   \centering
-  \includegraphics[scale=0.5]{tex/5.4.5_RL/Circuit.png}
+  \includegraphics[scale=0.5]{5.4.5_RL/Circuit.png}
   \caption{\label{Agent_qc} The overall quantum circuit of agent in RL.}
 \end{figure*}
 
@@ -108,6 +108,6 @@ class Memory(object):
 \textit{Result of numerical simulation} -- In order to evaluate the result of the HDQN. We do some experiments to evaluate the performance. As shown in Figure ~\ref{stochastic} We compare the average results from multiple experiments with randomized strategy experiments. The results show that reinforcement learning using quantum circuits as the agent has indeed learned the strategy.
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=0.3]{tex/5.4.5_RL/result_paper.jpg}
+  \includegraphics[scale=0.3]{5.4.5_RL/result_paper.jpg}
   \caption{\label{stochastic} Comparison between RL and randomized strategy.}
 \end{figure}
