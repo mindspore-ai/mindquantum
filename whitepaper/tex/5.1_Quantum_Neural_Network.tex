@@ -10,8 +10,8 @@ First, we divide 100 samples into 80 training samples and 20 testing samples. Se
 \subsubsection{Data initialization}
 In the first place, we should import the iris dataset.
 
-\begin{lstlisting}       
-from sklearn import datasets                             
+\begin{lstlisting}
+from sklearn import datasets
 
 iris_dataset = datasets.load_iris()
 \end{lstlisting}
@@ -19,34 +19,34 @@ iris_dataset = datasets.load_iris()
 Since we just need to select the first 100 samples, then execute the following command.
 
 \begin{lstlisting}
-import numpy as np     
+import numpy as np
 
 X = iris_dataset.data[:100, :].astype(np.float32)
 X_feature_names = iris_dataset.feature_names
 y = iris_dataset.target[:100].astype(int)
-y_target_names = iris_dataset.target_names[:2] 
+y_target_names = iris_dataset.target_names[:2]
 \end{lstlisting}
 
 In order to have a more intuitive understanding of the dataset consisting of these 100 samples, we could draw a scatterplot of the composition between the different features of all the samples by executing the following command.
 
 \begin{lstlisting}
-import matplotlib.pyplot as plt                                                           
+import matplotlib.pyplot as plt
 
-feature_name = {0: 'sepal length', 1: 'sepal width', 2: 'petal length', 3: 'petal width'} 
-axes = plt.figure(figsize=(23, 23)).subplots(4, 4)                                        
+feature_name = {0: 'sepal length', 1: 'sepal width', 2: 'petal length', 3: 'petal width'}
+axes = plt.figure(figsize=(23, 23)).subplots(4, 4)
 
-colormap = {0: 'r', 1: 'g'}                                                               
-cvalue = [colormap[i] for i in y]                                                         
+colormap = {0: 'r', 1: 'g'}
+cvalue = [colormap[i] for i in y]
 
 for i in range(4):
     for j in range(4):
         if i != j:
-            ax = axes[i][j]                                                              
-            ax.scatter(X[:, i], X[:, j], c=cvalue)                                        
-            ax.set_xlabel(feature_name[i], fontsize=22)                                   
-            ax.set_ylabel(feature_name[j], fontsize=22)                                   
-            
-plt.show()   
+            ax = axes[i][j]
+            ax.scatter(X[:, i], X[:, j], c=cvalue)
+            ax.set_xlabel(feature_name[i], fontsize=22)
+            ax.set_ylabel(feature_name[j], fontsize=22)
+
+plt.show()
 \end{lstlisting}
 
 %\begin{figure*}[t]
@@ -76,9 +76,9 @@ where $i = 0, 1, 2$ and $j = 1, 2, \cdots, 100$.
 At last, we separate the current data set into a training set and a testing set by running the command below.
 
 \begin{lstlisting}
-from sklearn.model_selection import train_test_split                                                   
+from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, shuffle=True)  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, shuffle=True)
 \end{lstlisting}
 
 At this point there are 80 samples in the training set and 20 samples in the testing set, each with 7 features.
@@ -93,19 +93,19 @@ The values of the parameters $\alpha_0$, $\alpha_1$, $\cdots$,$\alpha_6$ in the 
 Now, we can build the quantum circuit of encoder in MindQuantum (see Fig.~\ref{5.1encoder-circuit}) through the following code.
 
 \begin{lstlisting}
-from mindquantum import *   
-        
-encoder = Circuit()  
+from mindquantum import *
 
-encoder += UN(H, 4)                                  
-for i in range(4):                                   
-    encoder += RZ(f'alpha{i}').on(i)                
-for j in range(3):                                   
-    encoder += X.on(j+1, j)                         
-    encoder += RZ(f'alpha{j+4}').on(j+1)             
-    encoder += X.on(j+1, j)                         
+encoder = Circuit()
 
-encoder = encoder.no_grad()                          
+encoder += UN(H, 4)
+for i in range(4):
+    encoder += RZ(f'alpha{i}').on(i)
+for j in range(3):
+    encoder += X.on(j+1, j)
+    encoder += RZ(f'alpha{j+4}').on(j+1)
+    encoder += X.on(j+1, j)
+
+encoder = encoder.no_grad()
 encoder.svg()
 \end{lstlisting}
 
@@ -127,7 +127,7 @@ Like the encoder, the building strategy used by ansatz is flexible, allowing us 
 In this case, we apply HardwareEfficientAnsatz. The encoding scheme is depicted in the following quantum circuit (see Fig.~\ref{5.1ansatz-circuit}) through the following code.
 
 \begin{lstlisting}
-ansatz = HardwareEfficientAnsatz(4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3).circuit     
+ansatz = HardwareEfficientAnsatz(4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3).circuit
 ansatz.svg()
 \end{lstlisting}
 
@@ -143,7 +143,7 @@ As can be seen from the ansatz circuit, the quantum circuit consists of 25 quant
 In such case, encoder and ansatz might create a whole quantum circuit (see Fig.~\ref{5.1total-circuit}) through the following code.
 
 \begin{lstlisting}
-circuit = encoder.as_encoder() + ansatz.as_ansatz()                  
+circuit = encoder.as_encoder() + ansatz.as_ansatz()
 circuit.svg()
 \end{lstlisting}
 
@@ -158,7 +158,7 @@ circuit.svg()
 We execute Pauli $Z$ operator measurement on the second and third qubits, respectively, to create the corresponding Hamiltonian. Execute the following code.
 
 \begin{lstlisting}
-hams = [Hamiltonian(QubitOperator(f'Z{i}')) for i in [2, 3]] 
+hams = [Hamiltonian(QubitOperator(f'Z{i}')) for i in [2, 3]]
 for h in hams:
     print(h)
 \end{lstlisting}
@@ -176,17 +176,17 @@ If the first measurement value is larger, the sample will be classified into the
 We construct a quantum neural network by the following command.
 
 \begin{lstlisting}
-import mindspore as ms                                                                         
-from mindquantum.framework import MQLayer                                                      
+import mindspore as ms
+from mindquantum.framework import MQLayer
 from mindquantum.simulator import Simulator
 
 ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
-ms.set_seed(1)                                                                                 
+ms.set_seed(1)
 sim = Simulator('mqvector', circuit.n_qubits)
 grad_ops = sim.get_expectation_with_grad(hams,
                                          circuit,
                                          parallel_worker=5)
-QuantumNet = MQLayer(grad_ops)          
+QuantumNet = MQLayer(grad_ops)
 QuantumNet
 \end{lstlisting}
 
@@ -202,20 +202,20 @@ As can be seen from the above print, we have successfully built a quantum machin
 Next, we need to define the loss function and set the parameters to be optimized. After that, we will combine the built quantum machine learning layer and MindSpore operators to form a larger machine learning network. Finally, we will train the model. %Follow the command below.
 
 \begin{lstlisting}
-from mindspore import LossMonitor, Model  
-from mindspore.nn import SoftmaxCrossEntropyWithLogits, Adam, Accuracy                                              
-from mindspore.dataset import NumpySlicesDataset                               
+from mindspore import LossMonitor, Model
+from mindspore.nn import SoftmaxCrossEntropyWithLogits, Adam, Accuracy
+from mindspore.dataset import NumpySlicesDataset
 from mindspore.train import Callback
 
-loss = SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')            
-opti = Adam(QuantumNet.trainable_params(), learning_rate=0.1) 
+loss = SoftmaxCrossEntropyWithLogits(sparse=True, reduction='mean')
+opti = Adam(QuantumNet.trainable_params(), learning_rate=0.1)
 
-model = Model(QuantumNet, loss, opti, metrics={'Acc': Accuracy()})  
+model = Model(QuantumNet, loss, opti, metrics={'Acc': Accuracy()})
 
-train_loader = NumpySlicesDataset({'features': X_train, 'labels': y_train}, shuffle=False).batch(5) 
+train_loader = NumpySlicesDataset({'features': X_train, 'labels': y_train}, shuffle=False).batch(5)
 test_loader = NumpySlicesDataset({'features': X_test, 'labels': y_test}).batch(5)
 
-class StepAcc(ms.Callback):                                                        
+class StepAcc(ms.Callback):
     def __init__(self, model, test_loader):
         self.model = model
         self.test_loader = test_loader
@@ -224,9 +224,9 @@ class StepAcc(ms.Callback):
     def step_end(self, run_context):
         self.acc.append(self.model.eval(self.test_loader, dataset_sink_mode=False)['Acc'])
 
-monitor = LossMonitor(16)              
+monitor = LossMonitor(16)
 
-acc = StepAcc(model, test_loader)                                               
+acc = StepAcc(model, test_loader)
 
 model.train(20, train_loader, callbacks=[monitor, acc], dataset_sink_mode=False)
 \end{lstlisting}
@@ -265,7 +265,7 @@ plt.title('Statistics of accuracy', fontsize=20)
 plt.xlabel('Steps', fontsize=20)
 plt.ylabel('Accuracy', fontsize=20)
 
-plt.show()   
+plt.show()
 \end{lstlisting}
 
 \begin{figure}[H]
@@ -280,15 +280,15 @@ As can be seen from the Fig.~\ref{5.1Statistics_of_accuracy}, the prediction acc
 \subsubsection{Prediction}
 Finally, we apply the trained model on the testing set.
 \begin{lstlisting}
-from mindspore import ops    
+from mindspore import ops
 
-predict = np.argmax(ops.Softmax()(model.predict(ms.Tensor(X_test))), axis=1)    
-correct = model.eval(test_loader, dataset_sink_mode=False)                   
+predict = np.argmax(ops.Softmax()(model.predict(ms.Tensor(X_test))), axis=1)
+correct = model.eval(test_loader, dataset_sink_mode=False)
 
 print("Predicted classification result:", predict)
-print("Actual classification result:", y_test)                                               
+print("Actual classification result:", y_test)
 
-print(correct)                                                               
+print(correct)
 \end{lstlisting}
 
 \begin{lstlisting}
@@ -298,5 +298,3 @@ Actual classification result: [0 1 0 1 1 1 0 1 1 1 1 1 1 0 0 0 0 0 0 0]
 \end{lstlisting}
 
 As seen in the print above, the model's prediction accuracy has reached $100\%$, meaning that the anticipated classification results are perfectly consistent with the actual classification results.
-
-
