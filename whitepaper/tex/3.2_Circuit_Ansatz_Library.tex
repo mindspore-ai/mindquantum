@@ -5,13 +5,13 @@ The $algorithm$ module in \MindQuantum contains many commonly used Ansatz, as sh
 \begin{itemize}
     \item $IQPEncoding$: The IQPEncoding ansatz provides an ansatz to encode classical data into quantum state.
 
-    \item $HardwareEfficientAnsatz$：It is a kind of ansatz that can be easily implement on quantum chip. The hardware efficient is constructed by a layer of single qubit rotation gate and a layer of two qubits entanglement gate. The single qubit rotation gate layer is constructed by one or several rotation gate that act on every qubit. The two qubits entanglement gate layer is constructed by CNOT, CZ, Rxx, Ryy, Rzz, etc. acting on entangle mapping.
+    \item $HardwareEfficientAnsatz$: It is a kind of ansatz that can be easily implement on quantum chip. The hardware efficient is constructed by a layer of single qubit rotation gate and a layer of two qubits entanglement gate. The single qubit rotation gate layer is constructed by one or several rotation gate that act on every qubit. The two qubits entanglement gate layer is constructed by CNOT, CZ, Rxx, Ryy, Rzz, etc. acting on entangle mapping.
 
     \item $StronglyEntangling$: It is usually used in quantum machine learning. Its advantage is that it can reach 'wide
-corners of the Hilbert space'\cite{Schuld_2020}, so it is considered to be very suitable as ansatz of classifier.
+          corners of the Hilbert space'\cite{Schuld_2020}, so it is considered to be very suitable as ansatz of classifier.
 
-    \item $QAOA ansatz$：
-    \item $VQE Ansatz$：
+    \item $QAOA ansatz$:
+    \item $VQE Ansatz$:
 \end{itemize}
 
 \MindQuantum also implemented 19 ansatz for quantum classical hybrid algorithms, all based on this article analyzing the expressibility and entanglement capabilities of various parameterized circuits.\cite{Sim_2019}

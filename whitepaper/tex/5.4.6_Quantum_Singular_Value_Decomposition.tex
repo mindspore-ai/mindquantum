@@ -1,36 +1,32 @@
-\subsubsection{Background}
-\paragraph{Singular Value Decomposition}
-Singular Value Decomposition (SVD) is an important matrix decomposition in linear algebra. As a generalization of feature decomposition on arbitrary dimensional matrices, SVD is widely used in the field of machine learning, including matrix compression, recommendation systems, and natural language processing. It is defined as follows:
-Given a complex matrix $M \in \mathbb{C}^{m \times n}$, define the SVD of the matrix $M$ as $M = UDV^\dagger$. Where $U$ is an $m \times m$ matrix, $V$ is an $n \times n$ matrix, and both $U$ and $V$ are unitary matrices, that is, satisfy $UU^\dagger = I$, $VV^\dagger = I$. $D$ is a diagonal matrix $m \times n$, with the elements of the main diagonal arranged from largest to smallest, and each element is called a singular value of the matrix $M$. 
+View demo code of this section: \democode{05}{5.4.6}
+\textit{Background} -- Singular Value Decomposition (SVD) is an important matrix decomposition in linear algebra. As a generalization of feature decomposition on arbitrary dimensional matrices, SVD is widely used in the field of machine learning, including matrix compression, recommendation systems, and natural language processing. It is defined as follows:
+Given a complex matrix $M \in \mathbb{C}^{m \times n}$, define the SVD of the matrix $M$ as $M = UDV^\dagger$. Where $U$ is an $m \times m$ matrix, $V$ is an $n \times n$ matrix, and both $U$ and $V$ are unitary matrices, that is, satisfy $UU^\dagger = I$, $VV^\dagger = I$. $D$ is a diagonal matrix $m \times n$, with the elements of the main diagonal arranged from largest to smallest, and each element is called a singular value of the matrix $M$.
 
-\paragraph{Variational Quantum Singular Value Decomposition}
-Quantum algorithms for SVD have been proposed in \cite{kerenidis2016quantum, rebentrost2018quantum}, which leads to applications in solving linear systems of equations \cite{wossnig2018quantum} and developing quantum recommendation systems \cite{kerenidis2016quantum}. However, these algorithms above are too costly to be convincingly validated for near-term quantum devices. The leading strategy to solve various problems using noisy intermediate-scale quantum (NISQ) devices are called variational quantum algorithms. 
 
-\cite{wang2021variational} propose a variational quantum algorithm for singular value decomposition (VQSVD), formulating the task of SVD as an optimization problem. The detailed VQSVD algorithm is as follows: 
+Quantum algorithms for SVD have been proposed in \cite{kerenidis2016quantum, rebentrost2018quantum}, which leads to applications in solving linear systems of equations \cite{wossnig2018quantum} and developing quantum recommendation systems \cite{kerenidis2016quantum}. However, these algorithms above are too costly to be convincingly validated for near-term quantum devices. The leading strategy to solve various problems using noisy intermediate-scale quantum (NISQ) devices are called variational quantum algorithms.
+
+\cite{wang2021variational} propose a variational quantum algorithm for singular value decomposition (VQSVD), formulating the task of SVD as an optimization problem. The detailed VQSVD algorithm is as follows:
 \begin{enumerate}
-    \item Prepare the input of VQSVD algorithm: 
+    \item Prepare the input of VQSVD algorithm:
         \begin{itemize}
-            \item A decomposition of the matrix $M$ into a linear combination of $K$ unitaries of the form $M = \sum_{k=1}^K c_k A_k$ with real numbers $c_k$. 
-            \item Positive weights $q_1 > \cdots > q_r > 0$. 
-            \item Computational basis {$\ket{\psi_1}, \cdots, \ket{\psi_T}$}, where $T$ is the desired rank. 
-            \item Parameterized circuits $U(\theta)$, $V(\phi)$ with initial parameters of $\theta, \phi$. 
+            \item A decomposition of the matrix $M$ into a linear combination of $K$ unitaries of the form $M = \sum_{k=1}^K c_k A_k$ with real numbers $c_k$.
+            \item Positive weights $q_1 > \cdots > q_r > 0$.
+            \item Computational basis {$\ket{\psi_1}, \cdots, \ket{\psi_T}$}, where $T$ is the desired rank.
+            \item Parameterized circuits $U(\theta)$, $V(\phi)$ with initial parameters of $\theta, \phi$.
         \end{itemize}
-    \item Enter a hybrid quantum-classical optimization loop to train the parameters $\theta$ and $\phi$ in the parameterized quantum circuits $U(\theta)$ and $V(\phi)$, compute the singular values of $M$: $m_j = \text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$. The goal is to maximum the designed loss $L(\theta, \phi)$: 
+    \item Enter a hybrid quantum-classical optimization loop to train the parameters $\theta$ and $\phi$ in the parameterized quantum circuits $U(\theta)$ and $V(\phi)$, compute the singular values of $M$: $m_j = \text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$. The goal is to maximum the designed loss $L(\theta, \phi)$:
     \begin{equation}
         L(\theta, \phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}
     \end{equation}
-    Where weights are added to make the calculated singular values descending. 
-    \item Obtain optimal parameters $\alpha^ \star$ and $\beta^\star$ and compute $U(\alpha^\star)$ and $V(\beta^\star)$. 
-    \item Obtain approximate singular values ${m_1, \cdots, m_r}$ and  singular vectors $U(\alpha^\star)$ and $V(\beta^\star)$. 
+    Where weights are added to make the calculated singular values descending.
+    \item Obtain optimal parameters $\alpha^ \star$ and $\beta^\star$ and compute $U(\alpha^\star)$ and $V(\beta^\star)$.
+    \item Obtain approximate singular values ${m_1, \cdots, m_r}$ and  singular vectors $U(\alpha^\star)$ and $V(\beta^\star)$.
 \end{enumerate}
 
-\subsubsection{Application}
-In this section, we show how to decompose a randomly generated $8 \times 8$ complex matrix using MindQuantum. 
+\textit{Application} -- In this section, we show how to decompose a randomly generated $8 \times 8$ complex matrix using MindQuantum.
 
 First we need to introduce the required packages, define the required constants and set the weights, then use the $numpy.random.randint$ function to randomly generate an $8 \times 8$ complex matrix $M$:
 \begin{lstlisting}
-import os
-os.environ['OMP_NUM_THREADS'] = '1'
 from mindquantum import Simulator, MQAnsatzOnlyLayer, add_prefix
 from mindquantum import Hamiltonian, Circuit, RY, RZ, X
 import mindspore as ms
@@ -74,7 +70,7 @@ print(M)
 # Get SVD results
 U, D, v_dagger = np.linalg.svd(M, full_matrices=True)
 \end{lstlisting}
-Next define a hardware-efficient ansatz used in the simulation for $U(\theta)$ and $V(\phi)$, the variational ansatz used in the paper \cite{wang2021variational}. Since only real matrices are involved, the combination of rotation gates and CNOT is sufficient. In the ansatz, each same block(denoted in the dashed-line box) consists of a column of single-qubit rotations about the y-axis and z-axis following by a layer of CNOT gates which only connects the adjacent qubits. 
+Next define a hardware-efficient ansatz used in the simulation for $U(\theta)$ and $V(\phi)$, the variational ansatz used in the paper \cite{wang2021variational}. Since only real matrices are involved, the combination of rotation gates and CNOT is sufficient. In the ansatz, each same block(denoted in the dashed-line box) consists of a column of single-qubit rotations about the y-axis and z-axis following by a layer of CNOT gates which only connects the adjacent qubits.
 \begin{lstlisting}
 class Ansatz:
     def __init__(self, n, depth):
@@ -91,7 +87,7 @@ class Ansatz:
                 self.circ += X.on(i + 1, i)
             self.circ += X.on(0, n - 1)
 \end{lstlisting}
-Then define a quantum network using the given hamiltonian. The $set_q$ function of the simulator is used to set the state of the simulator to the given computational basis, so that we can obtain the measurement results under the basis, that is, the corresponding singular values. The $get\_expectation\_with\_grad$ function is used to compute the gradient of the parameters in the circuit and the value of the following expression: $E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$. Then we can use $MQAnsatzOnlyLayer$ to build a quantum network layer based on a given basis, and its output is: $\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$. 
+Then define a quantum network using the given hamiltonian. The $set_q$ function of the simulator is used to set the state of the simulator to the given computational basis, so that we can obtain the measurement results under the basis, that is, the corresponding singular values. The $get\_expectation\_with\_grad$ function is used to compute the gradient of the parameters in the circuit and the value of the following expression: $E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$. Then we can use $MQAnsatzOnlyLayer$ to build a quantum network layer based on a given basis, and its output is: $\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$.
 \begin{lstlisting}
 def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
     sim = Simulator('mqvector', qubits_num)
@@ -101,11 +97,10 @@ def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
         sim.set_qs(base)
     grad_ops = sim.get_expectation_with_grad(hams, circ_right, circ_left)
 
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
     quantumnet = MQAnsatzOnlyLayer(grad_ops, 'ones')
     return quantumnet
 \end{lstlisting}
-After sparring the decomposed $8 \times 8$ matrix $M$ and generating the corresponding Hamiltonian $H$, we can then instantiate ansatz $U_ansatz$ and $V_ansatz$ and build a required quantum network layer, which can be used to compute $\{m_j\}_{j=1}^T$, the singular values of $M$. 
+After sparring the decomposed $8 \times 8$ matrix $M$ and generating the corresponding Hamiltonian $H$, we can then instantiate ansatz $U_ansatz$ and $V_ansatz$ and build a required quantum network layer, which can be used to compute $\{m_j\}_{j=1}^T$, the singular values of $M$.
 \begin{lstlisting}
 u_ansatz = add_prefix(Ansatz(n_qubits, cir_depth).circ, 'u')
 v_ansatz = add_prefix(Ansatz(n_qubits, cir_depth).circ, 'v')
@@ -117,7 +112,7 @@ for s in range(1, rank):
     quantum_models["net_" + str(s)] = quantnet(n_qubits, ham, v_ansatz, u_ansatz, i_matrix[s])
     quantum_models["net_" + str(s)].weight = quantum_models['net_0'].weight
 \end{lstlisting}
-Additionally, we can use MindSpore to build a hybrid quantum-classical network to realize weighted summation of quantum network layers and compute $L(\theta,\phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$. 
+Additionally, we can use MindSpore to build a hybrid quantum-classical network to realize weighted summation of quantum network layers and compute $L(\theta,\phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$.
 \begin{lstlisting}
 class MyNet(ms.nn.Cell):
     '''
@@ -138,7 +133,7 @@ class MyNet(ms.nn.Cell):
             k += 1
         return -x
 \end{lstlisting}
-Now we can instantiate the hybrid quantum-classical network and start training using MindSpore: 
+Now we can instantiate the hybrid quantum-classical network and start training using MindSpore:
 \begin{lstlisting}
 net = MyNet()
 # Define optimizer
@@ -165,4 +160,4 @@ Output:
 Predicted singular values from large to small: [54.83174, 19.169168, 14.88653, 11.093878, 10.533753, 7.648352, 5.5560594, -0.3320913]
 True singular values from large to small: [54.83484985 19.18141073 14.98866247 11.61419557 10.15927045  7.60223249 5.81040539  3.30116001]
 \end{lstlisting}
-Intuitively, we can see that the singular values learned by using the hybrid quantum-classical network are similar to the real singular values. 
+Intuitively, we can see that the singular values learned by using the hybrid quantum-classical network are similar to the real singular values.
