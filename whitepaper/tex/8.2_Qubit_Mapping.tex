@@ -18,18 +18,18 @@ The physical hardware has its own physical connected graph. When we map the logi
 		\includegraphics[width=0.9\textwidth]{8.2_figures/example_original}
 		\caption{Logical circuit.}
 	\end{subfigure}
-	
+
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{8.2_figures/example_updated}
 		\caption{Fixed circuit.}
 	\end{subfigure}
-	
+
 	\caption{An example of qubit mapping.}
 	\label{fig:qubit-mapping-sample}
 \end{figure}
 
-The goal of the algorithm is to reduce the number of swap gates and the circuit depth. 
+The goal of the algorithm is to reduce the number of swap gates and the circuit depth.
 
 Firstly, we can generate a directed acyclic graph (DAG) to represent the constraints between the two-qubit gates in the given quantum circuit. Single qubit gates can always be executed, therefore there is no need to consider them. We can label every two-qubit gate as $g_i(q_j, q_k)$, which means $g_i$ acts on $q_j$ and $q_k$. If $g_x(q_i, q_j)$ is followed by $g_y(q_j, q_k)$, then we add an edge $(g_x, g_y)$ to the DAG. Fig.~\ref{fig:qubit-mapping-dag} shows an example of DAG generation.
 
@@ -59,7 +59,7 @@ Eq.~\eqref{eq:qubit-mapping-h-basic}.
 
 $H_{\text{basic}}$ only considers the front layer. If we want to look ahead, we can add an extended set $E$, which contains some closet successors of the gates from $F$. The size of $E$ is flexible, depending on how much look-ahead ability we want. Also, the gates in $F$ should have a higher priority than $E$. So that a weight parameter $0 \leq W < 1$ is added.
 
-Up to now, the heuristic function tends to reduce the number of SWAP gates. We also want to reduce the depth of the circuit. There is a trade-off between them. We add a parameter $decay$ to each qubit. If a qubit already has many operations on it, it will have a bigger $decay$. Using $decay$, the algorithm will tend to choose those qubits that have fewer operations and increase the parallelism of the circuit. The fixed heuristic function is given by 
+Up to now, the heuristic function tends to reduce the number of SWAP gates. We also want to reduce the depth of the circuit. There is a trade-off between them. We add a parameter $decay$ to each qubit. If a qubit already has many operations on it, it will have a bigger $decay$. Using $decay$, the algorithm will tend to choose those qubits that have fewer operations and increase the parallelism of the circuit. The fixed heuristic function is given by
 Eq.~\eqref{eq:qubit-mapping-h}.
 \begin{equation} \label{eq:qubit-mapping-h}
 	\begin{aligned}
@@ -69,7 +69,7 @@ Eq.~\eqref{eq:qubit-mapping-h}.
 	\end{aligned}
 \end{equation} 
 
-Lastly, there is a problem about the initial mapping. It has been proved that initial mapping could have a huge impact on the final result. Here we use a method introduced in \cite{li2019tackling}. 
+Lastly, there is a problem about the initial mapping. It has been proved that initial mapping could have a huge impact on the final result. Here we use a method introduced in \cite{li2019tackling}.
 Fig.~\ref{fig:qubit-mapping-initial-mapping}
 shows the procedure of updating the initial mapping.
 
@@ -133,7 +133,7 @@ We can also modify existing graph. The following codes remove a node, isolate a 
 
 \begin{figure}[H]
 	\centering
-	
+
 	\begin{subfigure}{0.1\textwidth}
 		\includegraphics[width=0.9\textwidth]{8.2_figures/linear}
 		\caption{Linear.}
@@ -149,7 +149,7 @@ We can also modify existing graph. The following codes remove a node, isolate a 
 		\caption{Modified.}
 		\label{fig:qubit-mapping-grid2}
 	\end{subfigure}
-	
+
 	\caption{Some usefull structures and modified graph.}
 \end{figure}
 
@@ -213,11 +213,11 @@ display_svg(new_circ.svg())
 		\caption{A possible physical circuit. The initial mapping is \code{[3, 2, 0, 1]} and final mapping is \code{[1, 2, 0, 3]}.}
 		\label{fig:qubit-mapping-physical-circuit}
 	\end{subfigure}
-	
+
 	\caption{An example of SABRE algorithm.}
 \end{figure}
 
-There are also some shortcomings. Current MindQuantum only supports connected topology graphs. If physical topology is not connected, users have to allocate logical qubits to physical connected subgraphs manually. 
+There are also some shortcomings. Current MindQuantum only supports connected topology graphs. If physical topology is not connected, users have to allocate logical qubits to physical connected subgraphs manually.
 Another one is gates' type. Current version only supports single gates and CNOT gate. Any quantum circuit can be realized by single gates and CNOT, therefore it's not a big problem.
 
 % Test \code{hello world} .
