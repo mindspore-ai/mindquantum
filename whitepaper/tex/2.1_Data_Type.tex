@@ -27,12 +27,12 @@ Then the total precision of Single is 24 bits which approximates $7.22$ decimal 
 As similar, the total precision of Double is $53$ which can approximate $\log_{10}(2^{53}) \approx 15.95$ decimal digits.
 There is an interesting example showing the difference in the precision of Single and Double,
 \begin{lstlisting}
-    z_32=0.1f0+0.2f0
-    print(z_32)
-    0.30000001192092896
-    z_64=0.1+0.2
-    print(z_64)
-    0.30000000000000004
+z_32=0.1f0+0.2f0
+print(z_32)
+0.30000001192092896
+z_64=0.1+0.2
+print(z_64)
+0.30000000000000004
 \end{lstlisting}
 which shows that Single can get $7$ significant digits and Double get $16$ significant digits.
 
