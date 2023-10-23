@@ -1,3 +1,4 @@
+View demo code of this section: \democode{05}{5.4.3}
 
 \subsubsection{Data re-uploading for a universal quantum classifier}
 \textbf{Background}
@@ -40,12 +41,14 @@ In order to introduce this capacity to the single-qubit classifier, we have also
 However, the processing units are not only affected by the input data but also by the previous processing units.
 The resulting output is a quantum state that will be measured to extract the classification result.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.45\textwidth]
-{5.4.3_figures/data_reuploading_circuit.pdf}
-\caption{The single-qubit classifier with data re-uploading is comprised of layers $L(i)$, which serve as the building blocks of the quantum circuit. Each of these layers consists of a $U(\overrightarrow{x})$ gate, responsible for data uploading, and a trainable parameterized unitary $U(\overrightarrow{\phi})$. We repeat this building block $N$ times and calculate a cost function, which is related to the fidelity between the final state of the circuit and the corresponding target state of its class.}
-\label{data_reuploading_circuit}
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{5.4.3_figures/data_reuploading_circuit.pdf}
+    \end{center}
+    \captionsetup{justification=raggedright,singlelinecheck=false}
+    \caption{The single-qubit classifier with data re-uploading is comprised of layers $L(i)$, which serve as the building blocks of the quantum circuit. Each of these layers consists of a $U(x)$ gate, responsible for data uploading, and a trainable parameterized unitary $U(\phi)$. We repeat this building block $N$ times and calculate a cost function, which is related to the fidelity between the final state of the circuit and the corresponding target state of its class.}
+    \label{data_reuploading_circuit}
 \end{figure}
 
 The explicit form of this single-qubit classifier is

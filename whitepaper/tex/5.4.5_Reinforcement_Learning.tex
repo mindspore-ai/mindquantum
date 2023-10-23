@@ -1,9 +1,10 @@
+View demo code of this section: \democode{05}{5.4.5}
 \textit{Introduction} -- An overall reinforcement learning algorithm(RL) is composed of Agent, Environment, State, Action, and Reward. After the Agent executes an action, the Environment switches to a new State according to the Action and gives a Reward according to certain rules. After that, the Agent updates its decision-making process according to the obtained new State and Reward and gives a new Action, and so on, until the entire control process is completed. We denote $\pi_{\theta}$ as the policy function, $s$ as each state of the environment, $r$ as the reward in each state, and $a$ as the action of the agent. The architecture of RL is demonstrated in Figure~\ref{RL_frame}.
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=0.4]{5.4.5_RL/RL.png}
   \caption{\label{RL_frame} The demonstration of RL wroking process.}
-\end{figure} 
+\end{figure}
 
 We assumed an environment has $N$ different states. And we act action $a_{i-1}$ on state $s_{i-1}$ with the result $s_{i}$. The transition probability function from state $s_{i-1}$ to state $s_{i}$ can be $P(s_{i+1}|s_{i},a_{i})$. Meanwhile, there is a reward $r_i$ in each state calculated by reward function $R_i=R(a_i,s_i,s_{i-1})$. In the progress of environmental change, the reward expectation is only determined by the latest $state$, which is called the Markov decision process. Therefore, each $T$ step trajectory will be chosen by the agent with probability:
 
@@ -41,24 +42,24 @@ In following sections, we will demonstrate how to the agent in quantum devise.
 
 \textit{The implement in mindquantum} -- Here, we give the example of realizing HDQN by mindquantum. The first step is to construct the quantum variational circuit including the encoder and the ansatz.
 \begin{lstlisting}
-    def __get_encoder(self):
-        encoder = Circuit()                                  
-        encoder += UN(H, 4)                                  
-        for i in range(4):                                   
-            encoder += RY(f'alpha{i}').on(i)                  
-        encoder = encoder.no_grad()                           
-        quantum circuit which has no gradient: no_grad()
-        encoder.summary()                                    
-        return encoder
-    def __get_ansatz(self):
-        ansatz = HardwareEfficientAnsatz\\
-            (4, single_rot_gate_seq=[RX,RY,RZ],\\
-            entangle_gate=X, depth=3).circuit     
-        ansatz += X.on(2,0)
-        ansatz += X.on(3,1)
-        ansatz.summary()                                                                              
-        return ansatz
-    self.circuit = self.encoder + self.ansatz
+def __get_encoder(self):
+    encoder = Circuit()
+    encoder += UN(H, 4)
+    for i in range(4):
+        encoder += RY(f'alpha{i}').on(i)
+    encoder = encoder.no_grad()
+    quantum circuit which has no gradient: no_grad()
+    encoder.summary()
+    return encoder
+def __get_ansatz(self):
+    ansatz = HardwareEfficientAnsatz\\
+        (4, single_rot_gate_seq=[RX,RY,RZ],\\
+        entangle_gate=X, depth=3).circuit
+    ansatz += X.on(2,0)
+    ansatz += X.on(3,1)
+    ansatz.summary()
+    return ansatz
+self.circuit = self.encoder + self.ansatz
 \end{lstlisting}
 
 After the progress of the quantum circuit, we need to construct an observable Hamiltonian as a measurement basis. Here, we only measure the second and third qubits on $\sigma_y$ base. The Hamiltonian is as follows:
@@ -67,36 +68,36 @@ After the progress of the quantum circuit, we need to construct an observable Ha
 \end{equation}
 We can construct the hamiltonian by mindquantum as follows:
 \begin{lstlisting}
-    def __get_observable(self):
-        hams=[Hamiltonian(QubitOperator(f'Y{i}'))\\
-            for i in [2, 3]] 
-        return hams
+def __get_observable(self):
+    hams=[Hamiltonian(QubitOperator(f'Y{i}'))\\
+        for i in [2, 3]]
+    return hams
 \end{lstlisting}
 Moreover, we can easily get the expectation and calculate the gradient of expectation by function $get\_expectation\_with\_grad$, which can be used to optimize parameters.
 
 Next, we need to realize the classical part, which is a three-layers fully connected neural network with activation function Relu.
 \begin{lstlisting}
-    class Critic(nn.Cell):
-        def __init__(self):
-            super(Critic, self).__init__()
-            self.relu = nn.ReLU()
-            self.fc1 = nn.Dense(4, 64)
-            self.fc2 = nn.Dense(64, 256)
-            self.fc3 = nn.Dense(256, 1)
-    
-        def construct(self, x):
-            x = self.relu(self.fc1(x))
-            x = self.relu(self.fc2(x))
-            x = self.fc3(x)
-            return x
+class Critic(nn.Cell):
+    def __init__(self):
+        super(Critic, self).__init__()
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Dense(4, 64)
+        self.fc2 = nn.Dense(64, 256)
+        self.fc3 = nn.Dense(256, 1)
+
+    def construct(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 \end{lstlisting}
 
 \textit{environment} -- Here, we focus on the problem of the gym game "CartPole-v0". It's a game that has an unbalanced cart on a track. This game has two inputs $0$ and $1$, which correspond to two directions left and right respectively. Users should control the trace moving toward these two directions and keep the cart balanced as long as possible.
 
 The first step is to create the environment by gym.
 \begin{lstlisting}
-    import gym
-    env = gym.make('CartPole-v0')
+import gym
+env = gym.make('CartPole-v0')
 \end{lstlisting}
 \textit{Memory buffer} -- In the progress of training, the training samples are randomly selected from the previous experience $e_i$. Therefore, we need to construct a buffer to store and sample the experience $e_i$.
 \begin{lstlisting}
