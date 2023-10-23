@@ -66,7 +66,7 @@ class SSVQE:
         self.circs = [circ + pqc for circ in init_circuits]
         self.sim = Simulator('mqvector', n_qubits)
         self.grad_ops = [self.sim.get_expectation_with_grad(ops, circ) for circ in circs]
-    
+
     def __call__(self, inputs):
         cost = 0
         cost_grad = 0

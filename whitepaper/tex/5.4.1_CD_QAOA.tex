@@ -62,7 +62,7 @@ def generate_h_mixer(n_qubits:int):
     for i in range(n_qubits):
         h_mixer += QubitOperator(f'X{i}')
     return h_mixer
-    
+
 # generate H_{final} as H_{prob}
 def generate_h_prob(n_qubits:int, J:float, h:float, k:float):
     h_prob = QubitOperator()
@@ -100,7 +100,7 @@ In order to prepare the eigenstate for $H_{initial}$, we first put ${\rm prep\_c
 # generate the eigenstate for $H_{mixer}$
 prep_circ = UN(H, n_qubits)
 
-# choose two layer 
+# choose two layer
 p = 3
 ansatz_template = u_p + u_m + u_cd
 
@@ -134,6 +134,3 @@ In this tutorial, we will optimize the gradient using BFGS optimizer\cite{chanda
     \caption{Mean Energy vs. iteration time}
     \label{fig:dc}
 \end{figure}
-
-
-
