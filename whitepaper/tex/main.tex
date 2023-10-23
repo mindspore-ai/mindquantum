@@ -22,7 +22,14 @@
 \usepackage{algpseudocode}
 \usepackage{subcaption}
 \usepackage{caption}
-
+\usepackage{hyperref}
+\hypersetup{
+    bookmarksopen=true,
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=green,
+    urlcolor=blue
+}
 \newcommand{\fancylink}[2]{\[\footnotesize\Colorbox{bkgd}{\color{orange-red}\href{#1}{\linkcode{#2}}}\]}
 
 \newcommand{\spliteq}[1]{\begin{equation}
@@ -126,23 +133,23 @@ Introduction of MindSpore Quantum.
 \subsection{Gradient of Variational Quantum Algorithm}
 \input{3.1_Gradient_of_Variational_Quantum_Algorithm}
 
-% \subsection{Circuit Ansatz Library}
-% \input{3.2_Circuit_Ansatz_Library}
+\subsection{Circuit Ansatz Library}
+\input{3.2_Circuit_Ansatz_Library}
 
-% \subsection{Quantum Algorithm Subroutine}
-% \input{3.3_Quantum_Algorithm_Subroutine}
+\subsection{Quantum Algorithm Subroutine}
+\input{3.3_Quantum_Algorithm_Subroutine}
 
 
-% \section{Circuit Simulation Backend}
+\section{Circuit Simulation Backend}
 
-% \subsection{State Vector and Density Matrix Simulator}
-% \input{4.1_State_Vector_and_Density_Matrix_Simulator}
+\subsection{State Vector and Density Matrix Simulator}
+\input{4.1_State_Vector_and_Density_Matrix_Simulator}
 
-% \subsection{Tensor Network Simulator}
-% \input{4.2_Tensor_Network_Simulator}
+\subsection{Tensor Network Simulator}
+\input{4.2_Tensor_Network_Simulator}
 
-% \subsection{Channel Based Noise Simulator}
-% \input{4.3_Channel_Based_Noise_Simulator}
+\subsection{Channel Based Noise Simulator}
+\input{4.3_Channel_Based_Noise_Simulator}
 
 
 \section{Applications}
@@ -165,7 +172,7 @@ Introduction of MindSpore Quantum.
 \subsection{Variational Quantum Eigensolver}
 \input{5.3_Variational_Quantum_Eigensolver}
 
-\subsection{Advanced Quantum Aplications}
+\subsection{Advanced Quantum Applications}
 \input{5.4_Advanced_Quantum_Aplications}
 
 
@@ -205,7 +212,7 @@ Introduction of MindSpore Quantum.
 % \input{8.4_Third-party_Quantum_Chip}
 
 
-% \section{Advanced Quantum Aplications}
+% \section{Advanced Quantum Applications}
 % \input{5.4_Advanced_Quantum_Aplications}
 
 \bibliography{lib.bib}
