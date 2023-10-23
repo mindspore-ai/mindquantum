@@ -26,26 +26,26 @@ The first step is loading the dataset. The experiment uses the handwritten digit
 \end{figure*}
 
 \begin{lstlisting}
-  def quantum_circuit():
-    encoder = Circuit()
-    for i in range(qubits):
-        encoder += RY(f'noise{i}').on(i)
-    encoder = encoder.no_grad()
-    ansatz = Circuit()
-    for i in range(depth):
-        for k in range(gate):
-            for j in range(qubits):
-                if k == 0:
-                    ansatz += RX(f'weights{i}{j}{k}').on(j)
-                elif k == 1:
-                    ansatz += RZ(f'weights{i}{j}{k}').on(j)
-                elif k == 2:
-                    if j < 4:
-                        ansatz += RX(f'weights{i}{j}{k}').on(j + 1, j)
-                    else:
-                        ansatz += RX(f'weights{i}{j}{k}').on(0, j)
-    circuit = encoder.as_encoder() + ansatz.as_ansatz()
-    return circuit
+def quantum_circuit():
+  encoder = Circuit()
+  for i in range(qubits):
+      encoder += RY(f'noise{i}').on(i)
+  encoder = encoder.no_grad()
+  ansatz = Circuit()
+  for i in range(depth):
+      for k in range(gate):
+          for j in range(qubits):
+              if k == 0:
+                  ansatz += RX(f'weights{i}{j}{k}').on(j)
+              elif k == 1:
+                  ansatz += RZ(f'weights{i}{j}{k}').on(j)
+              elif k == 2:
+                  if j < 4:
+                      ansatz += RX(f'weights{i}{j}{k}').on(j + 1, j)
+                  else:
+                      ansatz += RX(f'weights{i}{j}{k}').on(0, j)
+  circuit = encoder.as_encoder() + ansatz.as_ansatz()
+  return circuit
 \end{lstlisting}
 Stacking quantum circuits in layers and measuring the outputs constitutes a quantum layer.
 \begin{lstlisting}

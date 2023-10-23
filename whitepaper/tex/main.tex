@@ -55,6 +55,8 @@
 \definecolor{anotherblue}{RGB}{37,92,243}
 \definecolor{blackblue}{RGB}{46,60,85}
 \definecolor{goldyellow}{RGB}{199,146,12}
+
+
 \lstdefinestyle{altstyle2}{
     backgroundcolor=\color{bkgd},
     basicstyle=\ttfamily\footnotesize\color{blackblue},
@@ -71,6 +73,31 @@
     showstringspaces=false,
     showtabs=false,
     stringstyle=\color{anotherblue},
+    tabsize=2,
+    numbers=left
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    language=Python,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
     tabsize=2
 }
 \lstset{style=altstyle2}
@@ -176,7 +203,7 @@ Introduction of MindSpore Quantum.
 \input{5.4_Advanced_Quantum_Aplications}
 
 
-% \section{QuPack: Acceleration Engine}
+\section{QuPack: Acceleration Engine}
 % \input{6_QuPack:_Acceleration_Engine}
 
 % \subsection{Variational Quantum Eigensolver}
@@ -188,8 +215,8 @@ Introduction of MindSpore Quantum.
 % \subsection{Tensor Network Simulator}
 % \input{6.3_Tensor_Network_Simulator}
 
-% \subsection{Pulse Engineering}
-% \input{6.4_Pulse_Engineering}
+\subsection{Pulse Engineering}
+\input{6.4_Pulse_Engineering}
 
 
 \section{Benchmarking}

@@ -37,28 +37,27 @@ In a hybrid quantum-classical algorithm, the parameters are usually optimized by
 However, we can explicitly state whether a parameter needs to be differentiated as follow,
 
 \begin{lstlisting}
-    params.no_grad_part('theta')
+params.no_grad_part('theta')
 \end{lstlisting}
 
 In a hybrid algorithm, parameterized quantum gates or circuits usually are divided into two parts, encoder, and ansatz.The encoder encodes the classical data into the quantum state. And the ansatz is an assumption about the form of an unknown function, and we expect that we can get the solution to the problem by optimizing it.By default, all parameters in \ParameterResolver are initialized as ansatz's parameters.We can convert these parameters between encoder's and ansatz's parameters in the following way
 
 \begin{lstlisting}
-    #declare all parameters as encoder's parameters
-    params.as_encoder()
+#declare all parameters as encoder's parameters
+params.as_encoder()
 
-    #declare all parameters as ansatz's parameters
-    params.as_ansatz()
+#declare all parameters as ansatz's parameters
+params.as_ansatz()
 
-    #declare a given symbol as encoder's parameter
-    params.encoder_part('theta')
+#declare a given symbol as encoder's parameter
+params.encoder_part('theta')
 
-    #declare a given symbol as ansatz's parameter
-    params.ansatz_part('theta')
-
+#declare a given symbol as ansatz's parameter
+params.ansatz_part('theta')
 \end{lstlisting}
 
 We can also change the data type of parameters in a \ParameterResolver instance in the following way
 \begin{lstlisting}
-    # reset the data type of params as mq.complex128
-    params.astype(mq.complex128)
+# reset the data type of params as mq.complex128
+params.astype(mq.complex128)
 \end{lstlisting}
