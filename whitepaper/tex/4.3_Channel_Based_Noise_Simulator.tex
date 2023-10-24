@@ -1,3 +1,4 @@
+\label{sec:noise_simulation}
 Due to quantum decoherence and coupling with the environment, current quantum computers often occur errors during the calculation process. They occur in stages such as state preparation, quantum gate operation, and measurement. This is often called quantum noise. Quantum noise can be characterized by quantum channels. In quantum information theory, quantum channels refer to completely positive trace-preserving (CPTP) maps in operator space, which can also be regarded as a quantum operation. All quantum channels can be represented by Kraus operators
 
 \begin{equation}
@@ -35,19 +36,19 @@ Amplitude damping channel applies noise as:
 \begin{gather*}
     \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
     \\
-    \text{where}\ {E_0}=\begin{bmatrix}1&0\\
-            0&\sqrt{1-\gamma}\end{bmatrix},
-        \ {E_1}=\begin{bmatrix}0&\sqrt{\gamma}\\
-            0&0\end{bmatrix}
+    \text{where}\ {E_0}=\begin{bmatrix}1 & 0               \\
+               0 & \sqrt{1-\gamma}\end{bmatrix},
+    \ {E_1}=\begin{bmatrix}0 & \sqrt{\gamma} \\
+               0 & 0\end{bmatrix}
 \end{gather*}
 Phase damping channel applies noise as:
 \begin{gather*}
     \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
     \\
-    \text{where}\ {E_0}=\begin{bmatrix}1&0\\
-            0&\sqrt{1-\gamma}\end{bmatrix},
-        \ {E_1}=\begin{bmatrix}0&0\\
-            0&\sqrt{\gamma}\end{bmatrix}
+    \text{where}\ {E_0}=\begin{bmatrix}1 & 0               \\
+               0 & \sqrt{1-\gamma}\end{bmatrix},
+    \ {E_1}=\begin{bmatrix}0 & 0             \\
+               0 & \sqrt{\gamma}\end{bmatrix}
 \end{gather*}
 $Kraus Channel$: The custom single-bit quantum channel in \MindQuantum. It can be constructed by passing in the Kraus operators.
 \begin{lstlisting}
