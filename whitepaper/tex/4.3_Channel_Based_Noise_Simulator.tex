@@ -1,4 +1,5 @@
 \label{sec:noise_simulation}
+\subsubsection{Quantum Channel}
 Due to quantum decoherence and coupling with the environment, current quantum computers often occur errors during the calculation process. They occur in stages such as state preparation, quantum gate operation, and measurement. This is often called quantum noise. Quantum noise can be characterized by quantum channels. In quantum information theory, quantum channels refer to completely positive trace-preserving (CPTP) maps in operator space, which can also be regarded as a quantum operation. All quantum channels can be represented by Kraus operators
 
 \begin{equation}
@@ -62,3 +63,5 @@ amplitude_damping = KrausChannel('damping', [kmat0, kmat1])
 circ = Circuit()
 circ += amplitude_damping.on(0)
 \end{lstlisting}
+
+\subsubsection{Channel Adder}

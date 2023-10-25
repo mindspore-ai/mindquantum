@@ -5,7 +5,7 @@
 % 1. 简单罗列数据，比mq快多少
 % 2. 强调对内存的压缩能力
 % \end{lstlisting}
-
+\subsubsection{Background}
 Simulating molecule system with high accuracy in VQE is both time and memory consuming task. The memory used to simulation hydrogen chain in different size is shown in table~\ref{tab:memory_h_chain}
 
 \begin{table}[ht]
@@ -53,7 +53,7 @@ Taking hydrogen chain $H_4$ for example, we need 12 qubits to simulate this syst
         \label{6_1_h4_b}
     \end{subfigure}
 \end{figure}
-
+\subsubsection{Electron and spin conservation}
 In \QuPack, we impose the constraint that the total number of electrons and the total spin number of electrons remain constant throughout the evolution of the ansatz. This constraint significantly reduces the dimension of the Hilbert space that we need to simulate. Suppose the qubit number is $n_q$ and the electron number is $n_e$, the dimension of full amplitude state is $2^{n_q}$, but after electron and spin conservation, the dimension will be:
 \begin{equation}
     \binom{n_q/2}{n_e/2}^2=\left(\frac{(n_q/2)!}{(n_e/2)!(n_q/2-n_e/2)!}\right)^2.
@@ -92,7 +92,7 @@ When doing variation quantum algorithm on this system, we need to calculate the 
     \frac{\partial V(\theta)}{\partial\theta}\begin{pmatrix}
         \ket{i} \\\ket{j}
     \end{pmatrix}=\begin{pmatrix}
-        -\sin\theta  & \cos\theta \\
+        -\sin\theta & \cos\theta  \\
         -\cos\theta & -\sin\theta
     \end{pmatrix}\begin{pmatrix}
         \ket{i} \\\ket{j}
