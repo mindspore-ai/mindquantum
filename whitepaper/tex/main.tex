@@ -23,6 +23,9 @@
 \usepackage{subcaption}
 \usepackage{caption}
 \usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{xcolor}
 \hypersetup{
     bookmarksopen=true,
     colorlinks=true,
@@ -129,7 +132,6 @@
 \end{abstract}
 \maketitle
 \tableofcontents
-
 \section{Introduction}
 Introduction of MindSpore Quantum.
 \input{1_Introduction}
@@ -148,24 +150,12 @@ Introduction of MindSpore Quantum.
 \subsection{Quantum Circuit}
 \input{2.4_Quantum_Circuit}
 
-\subsection{Quantum Operator}
+\subsection{Observable and Hamiltonian}
 \input{2.5_Quantum_Operator}
 
 \subsection{Basic Usage of Simulator}
 \label{sec:sim_basic_usage}
 \input{2.6_Basic_Usage_of_Simulator}
-
-
-\section{Features of MindSpore Quantum}
-
-\subsection{Gradient of Variational Quantum Algorithm}
-\input{3.1_Gradient_of_Variational_Quantum_Algorithm}
-
-\subsection{Circuit Ansatz Library}
-\input{3.2_Circuit_Ansatz_Library}
-
-\subsection{Quantum Algorithm Subroutine}
-\input{3.3_Quantum_Algorithm_Subroutine}
 
 
 \section{Circuit Simulation Backend}
@@ -178,6 +168,17 @@ Introduction of MindSpore Quantum.
 
 \subsection{Channel Based Noise Simulator}
 \input{4.3_Channel_Based_Noise_Simulator}
+
+\section{Preparation of Variational Quantum Algorithm}
+
+\subsection{Gradient of Variational Quantum Algorithm}
+\input{3.1_Gradient_of_Variational_Quantum_Algorithm}
+
+\subsection{Circuit Ansatz Library}
+\input{3.2_Circuit_Ansatz_Library}
+
+\subsection{Quantum Algorithm Subroutine}
+\input{3.3_Quantum_Algorithm_Subroutine}
 
 
 \section{Applications}
