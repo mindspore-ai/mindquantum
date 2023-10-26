@@ -7,6 +7,8 @@
 % 3. 鲲鹏
 % 4. GPU
 % \end{lstlisting}
+\subsection{State Vector Simulator}
+\label{sec_state_vec}
 \subsubsection{Policy Based Design pattern}
 In \MindQuantum, we use \Simulator to simulate quantum state. A \Simulator maintain a quantum state, as mentioned in section \ref{sec:sim_basic_usage}, methods start with `apply' will change this maintained quantum state, and methods start with `get' will not change anything but only extrude information from the quantum state.
 
@@ -82,3 +84,19 @@ When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a
     \end{pmatrix}
 \end{equation}
 In this situation, we just need to change $(a_r, a_i)$ to $(a*a_r, a*a_i)$ and $(b_r, b_i)$ to $(b*b_r, b*b_i)$ if the gate act on first qubit, or just multiply $a$ to reg a and multiply $b$ to reg b if acting on other qubit.
+
+\subsection{Density Matrix Simulator}
+Different from state vector simulator, density matrix simulator is more suitable for mix state or open quantum system simulation, but much more memory consuming. The density operator of a quantum system is described as:
+\begin{equation}
+    \rho=\sum_ip_i\ket{\psi_i}\bra{\psi_i},
+\end{equation}
+where $p_i$ is the probability of system in pure state $\ket{\psi_i}$. The evolution of a quantum gate $U$ on density operator is:
+\begin{equation}
+    \rho'=U\rho U^\dagger.
+\end{equation}
+The expectation of a observable $H$ under $\rho$ is:
+\begin{equation}
+    \left<H\right> = \sum_ip_i\bra{\psi_i}H\ket{\psi_i}=\tr(\rho H)
+\end{equation}.
+
+The usage, developing strategy and optimization process is very similar with state vector simulator, please refers to section ~\ref{sec_state_vec}.
