@@ -1,5 +1,6 @@
 View demo code of this section: \democode{02}{2.2}
 
+\subsubsection{Parameters in MindQuantum}
 The parameterized quantum gates or circuits are key ingredients for quantum computing, especially for hybrid quantum-classical algorithms.
 In \MindQuantum, we provide a Python Class \code{mindquantum.core.ParameterResolver} to efficiently manage these classical parameters.
 When we initialize a parameterized quantum gate in \MindQuantum, we usually can not determine the value of these parameters, for example, the parameters may change during a optimization process.
@@ -60,4 +61,24 @@ We can also change the data type of parameters in a \ParameterResolver instance 
 \begin{lstlisting}
 # reset the data type of params as mq.complex128
 params.astype(mq.complex128)
+\end{lstlisting}
+
+\subsubsection{Parameter Generator}
+
+Besides the method in above section, \MindQuantum also provide a power tools to generate parameters quickly, \PRGenerator.
+\begin{lstlisting}
+from mindquantum.core.parameterresolver import PRGenerator
+
+prg = PRGenerator(suffix='a')
+a = prg.new()
+b = prg.new()
+print(a)
+print(b)
+print(len(prg.all_pr))
+\end{lstlisting}
+The output is:
+\begin{lstlisting}
+p0_a
+p1_a
+2
 \end{lstlisting}

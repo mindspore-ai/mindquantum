@@ -38,7 +38,7 @@ By finding these optimal parameters, QAOA enables quantum computers to efficient
 
 
 
-\subsubsection{Implement}
+\subsubsection{Implementation}
 
 For this tutorial, we use QAOA algorithm to handle the Max-Cut problem,  which is an NP-complete problem in graph theory. As shown in figure \ref{5.1_QAOA}, it needs to divide the vertices of a graph into two parts and make the most edges be cut. But when the number of vertices in the graph increases, it is difficult for us to find an effective classical algorithm to solve the Max-Cut problem, because it is very likely that there is no polynomial time algorithm for this type of NP-complete problem.
 
@@ -65,7 +65,7 @@ For QAOA algorithm, first we need to convert the Max-Cut problem into a Hamilton
 \begin{equation}
     \hat{H} = \sum_{i,j\in C}(\hat{Z}_i\hat{Z}_j-1)/2
 \end{equation}
-where $C$ is the set of all edges. In the following function, ${ build \_ ham}$, the corresponding Hamiltonian can be constructed by inputting the graph.
+where $C$ is the set of all edges. In the following function, \code{ build\_ham}, the corresponding Hamiltonian can be constructed by inputting the graph.
 \begin{lstlisting}
 def build_ham(g):
     hc = QubitOperator()
@@ -73,7 +73,7 @@ def build_ham(g):
         hc += QubitOperator(f'Z{i[0]} Z{i[1]}')
     return hc
 \end{lstlisting}
-Next, construct the QAOA ansatz, in which function $build\_hc$ and $build\_hb$ construct the quantum circuit according to the problem Hamiltonian and the mixer Hamiltonian. The ansatz can be directly builded in function $build\_ansatz$ by inputting the graph.
+Next, construct the QAOA ansatz, in which function \code{build\_hc} and \code{build\_hb} construct the quantum circuit according to the problem Hamiltonian and the mixer Hamiltonian. The ansatz can be directly builded in function \code{build\_ansatz} by inputting the graph.
 
 \begin{lstlisting}
 def build_hc(g,para):
@@ -94,7 +94,7 @@ def build_ansatz(g, p):
     return c
 \end{lstlisting}
 
-In this example, p = 4 is selected, indicating that the four-layer QAOA quantum circuit is used.  And ${\rm init\_state\_circ}$ is a quantum circuit for preparing a initial state on a uniformly superposed state.
+In this example, p = 4 is selected, indicating that the four-layer QAOA quantum circuit is used.  And \code{init\_state\_circ} is a quantum circuit for preparing a initial state on a uniformly superposed state.
 \begin{lstlisting}
 p = 4
 ham = Hamiltonian(build_ham(g))
@@ -103,7 +103,7 @@ init_state_circ = UN(H, g.nodes)
 \end{lstlisting}
 
 The goal of QAOA is to find the optimal parameters that make the cost function or the expectation of hamitonian $\mathcal{E}=\langle \psi(\gamma^*, \beta^*)|\hat{H}|\psi(\gamma, \beta)\rangle$ minimize.
-This problem does not require a coding-layer quantum circuit, so we use MQAnsatzOnlyLayer as a quantum neural network to be trained and the adam as the optimizer.
+This problem does not require a coding-layer quantum circuit, so we use \MQAnsatzOnlyLayer as a quantum neural network to be trained and the adam as the optimizer.
 \begin{lstlisting}
 import mindspore as ms
 ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
@@ -144,7 +144,7 @@ train step: 190 , cut: [4.939257]
 
 According to the above training results, we found that the number of edge cuts corresponding to the ground state energy of the Hamiltonian of this problem approaches 5.
 
-In mindquantum,  we can directly import the function $MaxCutAnsatz$ to build ansatz for the maxcut problem.
+In mindquantum,  we can directly import the function \MaxCutAnsatz to build ansatz for the maxcut problem.
 \begin{lstlisting}
 import numpy as np
 from mindquantum.algorithm.nisq import MaxCutAnsatz
