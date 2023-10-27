@@ -1,7 +1,6 @@
 View demo code of this section: \democode{05}{5.4.3}
 
-\subsubsection{Data re-uploading for a universal quantum classifier}
-\textbf{Background}
+\subsubsection{Background}
 
 % Run-Hong He, State Key Laboratory of Computer Science, Institute of Software Chinese Academy of Science, BeiJing 101408, China
 
@@ -75,10 +74,9 @@ Constructing and training a single-qubit data re-uploading quantum circuit to cl
 
 2. Batching training over input data (multiple data and labels).
 
-\textbf{Implementation}
+\subsubsection{Implementation}
 
-In this example, we focus on a typical classification task: identifying points in different areas of a plane, and implement it based on MindSpore Quantum.
-The full notebook and implementation for this example is available at: XXXXXXXXX.
+In this example, we focus on a typical classification task: identifying points in different areas of a plane, and implement it based on \MindQuantum.
 
 We create a dataset comprising numerous points with coordinates $\overrightarrow{x}=(x_1, x_2)$  randomly distributed on a unit area plane ($x\in[-1,1]$).
 The task of the classifier is to determine, based on the coordinates of these data points, whether they fall within a circle of radius $r$, i.e., $x_1^2+x_2^2<r^2$.

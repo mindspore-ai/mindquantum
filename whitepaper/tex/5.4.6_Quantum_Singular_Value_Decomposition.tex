@@ -1,5 +1,7 @@
 View demo code of this section: \democode{05}{5.4.6}
-\textit{Background} -- Singular Value Decomposition (SVD) is an important matrix decomposition in linear algebra. As a generalization of feature decomposition on arbitrary dimensional matrices, SVD is widely used in the field of machine learning, including matrix compression, recommendation systems, and natural language processing. It is defined as follows:
+
+\subsubsection{Background}
+Singular Value Decomposition (SVD) is an important matrix decomposition in linear algebra. As a generalization of feature decomposition on arbitrary dimensional matrices, SVD is widely used in the field of machine learning, including matrix compression, recommendation systems, and natural language processing. It is defined as follows:
 Given a complex matrix $M \in \mathbb{C}^{m \times n}$, define the SVD of the matrix $M$ as $M = UDV^\dagger$. Where $U$ is an $m \times m$ matrix, $V$ is an $n \times n$ matrix, and both $U$ and $V$ are unitary matrices, that is, satisfy $UU^\dagger = I$, $VV^\dagger = I$. $D$ is a diagonal matrix $m \times n$, with the elements of the main diagonal arranged from largest to smallest, and each element is called a singular value of the matrix $M$.
 
 
@@ -23,9 +25,9 @@ Quantum algorithms for SVD have been proposed in \cite{kerenidis2016quantum, reb
     \item Obtain approximate singular values ${m_1, \cdots, m_r}$ and  singular vectors $U(\alpha^\star)$ and $V(\beta^\star)$.
 \end{enumerate}
 
-\textit{Application} -- In this section, we show how to decompose a randomly generated $8 \times 8$ complex matrix using MindQuantum.
+\subsubsection{Implementation} -- In this section, we show how to decompose a randomly generated $8 \times 8$ complex matrix using MindQuantum.
 
-First we need to introduce the required packages, define the required constants and set the weights, then use the $numpy.random.randint$ function to randomly generate an $8 \times 8$ complex matrix $M$:
+First we need to introduce the required packages, define the required constants and set the weights, then use the \code{numpy.random.randint} function to randomly generate an $8 \times 8$ complex matrix $M$:
 \begin{lstlisting}
 from mindquantum import Simulator, MQAnsatzOnlyLayer, add_prefix
 from mindquantum import Hamiltonian, Circuit, RY, RZ, X
@@ -87,7 +89,7 @@ class Ansatz:
                 self.circ += X.on(i + 1, i)
             self.circ += X.on(0, n - 1)
 \end{lstlisting}
-Then define a quantum network using the given hamiltonian. The $set_q$ function of the simulator is used to set the state of the simulator to the given computational basis, so that we can obtain the measurement results under the basis, that is, the corresponding singular values. The $get\_expectation\_with\_grad$ function is used to compute the gradient of the parameters in the circuit and the value of the following expression: $E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$. Then we can use $MQAnsatzOnlyLayer$ to build a quantum network layer based on a given basis, and its output is: $\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$.
+Then define a quantum network using the given hamiltonian. The $set_q$ function of the simulator is used to set the state of the simulator to the given computational basis, so that we can obtain the measurement results under the basis, that is, the corresponding singular values. The \getexpectationwithgrad function is used to compute the gradient of the parameters in the circuit and the value of the following expression: $E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$. Then we can use \MQAnsatzOnlyLayer to build a quantum network layer based on a given basis, and its output is: $\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$.
 \begin{lstlisting}
 def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
     sim = Simulator('mqvector', qubits_num)
@@ -100,7 +102,7 @@ def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
     quantumnet = MQAnsatzOnlyLayer(grad_ops, 'ones')
     return quantumnet
 \end{lstlisting}
-After sparring the decomposed $8 \times 8$ matrix $M$ and generating the corresponding Hamiltonian $H$, we can then instantiate ansatz $U_ansatz$ and $V_ansatz$ and build a required quantum network layer, which can be used to compute $\{m_j\}_{j=1}^T$, the singular values of $M$.
+After sparring the decomposed $8 \times 8$ matrix $M$ and generating the corresponding Hamiltonian $H$, we can then instantiate ansatz $U_\text{ansatz}$ and $V_\text{ansatz}$ and build a required quantum network layer, which can be used to compute $\{m_j\}_{j=1}^T$, the singular values of $M$.
 \begin{lstlisting}
 u_ansatz = add_prefix(Ansatz(n_qubits, cir_depth).circ, 'u')
 v_ansatz = add_prefix(Ansatz(n_qubits, cir_depth).circ, 'v')

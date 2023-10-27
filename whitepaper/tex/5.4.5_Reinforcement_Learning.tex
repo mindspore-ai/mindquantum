@@ -1,5 +1,8 @@
 View demo code of this section: \democode{05}{5.4.5}
-\textit{Introduction} -- An overall reinforcement learning algorithm(RL) is composed of Agent, Environment, State, Action, and Reward. After the Agent executes an action, the Environment switches to a new State according to the Action and gives a Reward according to certain rules. After that, the Agent updates its decision-making process according to the obtained new State and Reward and gives a new Action, and so on, until the entire control process is completed. We denote $\pi_{\theta}$ as the policy function, $s$ as each state of the environment, $r$ as the reward in each state, and $a$ as the action of the agent. The architecture of RL is demonstrated in Figure~\ref{RL_frame}.
+
+\subsubsection{Background}
+
+An overall reinforcement learning algorithm(RL) is composed of Agent, Environment, State, Action, and Reward. After the Agent executes an action, the Environment switches to a new State according to the Action and gives a Reward according to certain rules. After that, the Agent updates its decision-making process according to the obtained new State and Reward and gives a new Action, and so on, until the entire control process is completed. We denote $\pi_{\theta}$ as the policy function, $s$ as each state of the environment, $r$ as the reward in each state, and $a$ as the action of the agent. The architecture of RL is demonstrated in Figure~\ref{RL_frame}.
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=0.4]{5.4.5_RL/RL.png}
@@ -23,7 +26,8 @@ In order to get the optimal policy function $\pi_{\theta}$, the agent is trained
     \pi_{\theta}^{opt}=\mathrm{argmax}_{\theta}\eta(\pi_{\theta})
 \end{equation}
 In following sections, we will demonstrate how to the agent in quantum devise.
-\textit{Hybrid Deep Q-Network} -- Replace the neural network in the classical Deep Q-network's agent with the quantum variational circuit, we get the hybrid deep Q-network(HDQN)~\cite{Q_rl}. The architecture of HDQN is illustrated in FIG. We calculate the parameters $\theta$ by classical neural network and use them to construct the quantum variational circuit. Finally, the quantum part applies the action to the environment. Meanwhile, the environment responds with a reward $r_i$. We denote $e_i=(s_i,a_i,r_{i+1},s_{i+1})$ as a experience. In the training stage, we will use these experiences as training samples to adjust the parameters in both the classical part and quantum part according to loss function $L(\theta)$:
+
+\subsubsection{Hybrid Deep Q-Network} -- Replace the neural network in the classical Deep Q-network's agent with the quantum variational circuit, we get the hybrid deep Q-network(HDQN)~\cite{Q_rl}. The architecture of HDQN is illustrated in FIG. We calculate the parameters $\theta$ by classical neural network and use them to construct the quantum variational circuit. Finally, the quantum part applies the action to the environment. Meanwhile, the environment responds with a reward $r_i$. We denote $e_i=(s_i,a_i,r_{i+1},s_{i+1})$ as a experience. In the training stage, we will use these experiences as training samples to adjust the parameters in both the classical part and quantum part according to loss function $L(\theta)$:
 \begin{equation}
 \begin{split}
     L(\theta_{j})=&E[R_{i+1}+\\
@@ -104,7 +108,8 @@ env = gym.make('CartPole-v0')
 class Memory(object):
     ......
 \end{lstlisting}
-\textit{Training} -- The final step is model training. At first, we initialize HDQN with random parameters and let the actor interact with the environment. Next, we store the interaction result in the memory buffer as training samples. Finally, we sample from the memory buffer and adjust the parameters both in the classical part and quantum part with loss function (\ref{loss func}). Because of the space limitation, we will not provide the detailed code here.
+
+\subsubsection{Training}The final step is model training. At first, we initialize HDQN with random parameters and let the actor interact with the environment. Next, we store the interaction result in the memory buffer as training samples. Finally, we sample from the memory buffer and adjust the parameters both in the classical part and quantum part with loss function (\ref{loss func}). Because of the space limitation, we will not provide the detailed code here.
 
 \textit{Result of numerical simulation} -- In order to evaluate the result of the HDQN. We do some experiments to evaluate the performance. As shown in Figure ~\ref{stochastic} We compare the average results from multiple experiments with randomized strategy experiments. The results show that reinforcement learning using quantum circuits as the agent has indeed learned the strategy.
 \begin{figure}[ht]

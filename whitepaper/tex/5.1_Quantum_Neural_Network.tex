@@ -1,5 +1,5 @@
 View demo code of this section: \democode{05}{5.1}
-\subsubsection{Overview}
+\subsubsection{Background}
 In this subsection, we will go through how to create a quantum neural network to address the issue of iris classification in supervised learning, which is a challenge in classical machine learning.
 
 The iris dataset is a popular dataset in classical machine learning. This dataset comprises 150 samples (split into three subgenus: setosa, versicolor, and virginica, with 50 samples each), and each sample has four features: sepal length, sepal width, petal length, and petal width.
@@ -59,7 +59,7 @@ plt.show()
 
 %As seen in the images above, the red dots indicate samples with the label ``0", while the green dots represent samples with the label ``1".
 
-\subsubsection{Preprocessing}
+\subsubsection{Encoder and Ansatz}
 Following that, we compute the parameters required to build the encoder.  Activate the upcoming command.
 
 \begin{lstlisting}
@@ -84,14 +84,13 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 At this point there are 80 samples in the training set and 20 samples in the testing set, each with 7 features.
 
-\subsubsection{Encoder}
 Next, we need to build an encoder in MindSpore Quantum to encode classical data into quantum states.
 
 Here, the encoding method we employ is IQP encoding (Instantaneous Quantum Polynomial encoding). Generally speaking, the method of building the encoder is not set in stone, instead, many encoding techniques can be used depending on the demands of the issue at hand, and the encoder may occasionally be modified to improve performance.
 
 The values of the parameters $\alpha_0$, $\alpha_1$, $\cdots$,$\alpha_6$ in the encoder are substituted with the 7 feature values obtained in the data processing of Eq.~\eqref{5.1dataprocessing}.
 
-Now, we can build the quantum circuit of encoder in MindQuantum (see Fig.~\ref{5.1encoder-circuit}) through the following code.
+Now, we can build the quantum circuit of encoder in \MindQuantum (see Fig.~\ref{5.1encoder-circuit}) through the following code.
 
 \begin{lstlisting}
 from mindquantum import *
@@ -120,12 +119,11 @@ encoder.svg()
 As can be seen from the encoder circuit, the quantum circuit consists of 17 quantum gates, of which 7 are
 parameterized quantum gates and the parameters are $\alpha_0$, $\alpha_1$, $\cdots$,$\alpha_6$, respectively. The number of qubits regulated by the encoder circuit is 4.
 
-\subsubsection{Ansatz}
 Furthermore, we need to build an ansatz in MindSpore Quantum.
 
 Like the encoder, the building strategy used by ansatz is flexible, allowing us to examine the effectiveness of various strategies.
 
-In this case, we apply HardwareEfficientAnsatz. The encoding scheme is depicted in the following quantum circuit (see Fig.~\ref{5.1ansatz-circuit}) through the following code.
+In this case, we apply \HardwareEfficientAnsatz. The encoding scheme is depicted in the following quantum circuit (see Fig.~\ref{5.1ansatz-circuit}) through the following code.
 
 \begin{lstlisting}
 ansatz = HardwareEfficientAnsatz(4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3).circuit
@@ -173,7 +171,7 @@ It can be seen from the above print that there are two Hamiltonians constructed 
 
 If the first measurement value is larger, the sample will be classified into the class labeled ``0''.  Similarly, if the second measurement value is larger, this sample will be classified into the class with the label ``1'' . By the training of the quantum neural network, it is expected that the first measurement value of the sample labeled ``0''  in the training sample is larger, and the second measurement value of the sample labeled ``1'' is larger. At last, this trained model is applied to predict the classification of new samples.
 
-\subsubsection{Quantum neural network}
+\subsubsection{Training}
 We construct a quantum neural network by the following command.
 
 \begin{lstlisting}
@@ -199,7 +197,6 @@ MQLayer<
 
 As can be seen from the above print, we have successfully built a quantum machine learning layer, which can seamlessly form a larger machine learning network with other operators in MindSpore.
 
-\subsubsection{Training}
 Next, we need to define the loss function and set the parameters to be optimized. After that, we will combine the built quantum machine learning layer and MindSpore operators to form a larger machine learning network. Finally, we will train the model. %Follow the command below.
 
 \begin{lstlisting}
@@ -257,7 +254,6 @@ epoch: 20 step: 16, loss is 0.3951443135738373
 
 The loss value keeps dropping during training and tends to stable about 20 iterations before convergent at roughly 0.395.
 
-\subsubsection{Accuracy}
 Based on the above convergence situation, we may present the accuracy of the model's predictions during the training process. %Run the following code.
 
 \begin{lstlisting}
