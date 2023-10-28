@@ -22,8 +22,8 @@ from scipy.sparse import csr_matrix
 
 import mindquantum as mq
 from mindquantum.core import gates as G
-from mindquantum.simulator import Simulator
 from mindquantum.core.operators import Hamiltonian, QubitOperator
+from mindquantum.simulator import Simulator
 from mindquantum.utils import random_circuit
 
 _HAS_GPU = False
@@ -131,6 +131,7 @@ def test_non_hermitian_get_expectation_with_grad(virtual_qc, dtype):
     Description: test get expectation
     Expectation: success.
     """
+    # pylint: disable=too-many-locals
     init_state = np.random.rand(8) + np.random.rand(8) * 1j
     init_state = init_state / np.linalg.norm(init_state)
     init_state_left = np.random.rand(8) + np.random.rand(8) * 1j
@@ -178,9 +179,6 @@ single_parameter_gate = [
     G.RY,
     G.RZ,
     G.SWAPalpha,
-    G.XX,
-    G.YY,
-    G.ZZ,
     G.GlobalPhase,
     G.PhaseShift,
     G.Rxx,

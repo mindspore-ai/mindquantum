@@ -52,11 +52,8 @@ mindquantum.core.gates
     mindquantum.core.gates.TGate
     mindquantum.core.gates.U3
     mindquantum.core.gates.XGate
-    mindquantum.core.gates.XX
     mindquantum.core.gates.YGate
-    mindquantum.core.gates.YY
     mindquantum.core.gates.ZGate
-    mindquantum.core.gates.ZZ
 
 功能量子门
 -------------
