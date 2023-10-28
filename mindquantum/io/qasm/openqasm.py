@@ -162,26 +162,6 @@ def rzz_related(gate):
     raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
-def xx_related(gate):
-    """Convert mindquantum gate to qasm."""
-    ctrl = gate.ctrl_qubits
-    jointed = join_qubit(gate)
-    coeff = gate.coeff.const
-    if not ctrl:
-        return f"rxx({coeff*2}) {jointed};"
-    raise ValueError(f"Cannot convert {gate} to qasm.")
-
-
-def zz_related(gate):
-    """Convert mindquantum gate to qasm."""
-    ctrl = gate.ctrl_qubits
-    jointed = join_qubit(gate)
-    coeff = gate.coeff.const
-    if not ctrl:
-        return f"rzz({coeff*2}) {jointed};"
-    raise ValueError(f"Cannot convert {gate} to qasm.")
-
-
 def s_related(gate):
     """Convert mindquantum gate to qasm."""
     ctrl = gate.ctrl_qubits
@@ -620,8 +600,6 @@ class OpenQASM:
             G.RZ: rz_related,
             G.Rxx: rxx_related,
             G.Rzz: rzz_related,
-            G.XX: xx_related,
-            G.ZZ: zz_related,
             G.SGate: s_related,
             G.TGate: t_related,
             G.SWAPGate: swap_related,

@@ -365,8 +365,18 @@ class MatrixGate(QuantumGate):
         super().__init__(name, n_qubits, *args, obj_qubits=obj_qubits, ctrl_qubits=ctrl_qubits, **kwargs)
         self.matrix_value = matrix_value
 
-    def matrix(self):  # pylint: disable=arguments-differ
-        """Matrix of parameterized gate."""
+    def matrix(self, full=False):  # pylint: disable=arguments-differ
+        """
+        Matrix of parameterized gate.
+
+        Args:
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+        """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix()
         return self.matrix_value
 
     def __eq__(self, other):
@@ -526,8 +536,19 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
             return (True, [], None)
         return (False, [self, other], None)
 
-    def matrix(self):
-        """Matrix of parameterized gate."""
+    def matrix(self, full=False):
+        """
+        Matrix of parameterized gate.
+
+        Args:
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+        """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix()
+
         if self.hermitianed:
             return np.conj(self.matrix_value.T)
         return self.matrix_value
@@ -612,8 +633,21 @@ class RotSelfHermMat(ParameterOppsGate):
             return (True, [], None)
         return (True, [self(new_coeff)], None)
 
-    def matrix(self, pr=None, frac=0.5):  # pylint: disable=arguments-differ
-        """Matrix of parameterized gate."""
+    def matrix(self, pr=None, frac=0.5, full=False):  # pylint: disable=arguments-differ
+        """
+        Matrix of parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter of this gate. Default: None.
+            frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+        """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix(pr=pr)
+
         val = 0
         if not self.parameterized:
             val = self.coeff.const
@@ -664,7 +698,7 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
         string = ParameterGate.__str_in_terminal__(self)
         return self.name + NonHermitianGate.__type_specific_str__(self) + string[len(self.name) :]  # noqa: E203
 
-    def matrix(self, pr=None):  # pylint: disable=arguments-differ
+    def matrix(self, pr=None, full=False):  # pylint: disable=arguments-differ
         """
         Matrix of parameterized gate.
 
@@ -673,7 +707,8 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
             you don't need any parameters to get this matrix.
 
         Args:
-            paras_out (Union[dict, ParameterResolver]): Parameters of this gate.
+            pr (Union[dict, ParameterResolver]): Parameters of this gate.
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
 
         Returns:
             numpy.ndarray, Return the numpy array of the matrix.
@@ -689,6 +724,12 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
             array([[0.36+0.j  , 0.  -0.93j],
                    [0.  -0.93j, 0.36+0.j  ]])
         """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix(pr=pr)
+
         val = 0
         if not self.parameterized:
             val = self.coeff.const

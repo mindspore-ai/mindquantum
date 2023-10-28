@@ -17,7 +17,6 @@
 """Circuit module."""
 
 import copy
-import warnings
 from collections.abc import Iterable
 from types import FunctionType, MethodType
 from typing import List
@@ -1068,66 +1067,6 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             ctrl_qubits (Union[int, list[int]]): the control qubits of `U3` gate. Default: ``None``.
         """
         self.append(mq_gates.U3(theta, phi, lamda).on(obj_qubits, ctrl_qubits))
-        return self
-
-    def xx(self, para, obj_qubits, ctrl_qubits=None):
-        """
-        Add a XX gate.
-
-        Note:
-            xx method is deprecated, please use :class:`~.core.circuit.Circuit.rxx`.
-
-        Args:
-            para (Union[dict, ParameterResolver]): The parameter for `XX` gate.
-            obj_qubits (Union[int, list[int]]): The object qubits of `XX` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `XX` gate. Default: ``None``.
-        """
-        warnings.warn(
-            "xx method is deprecated, please use rxx",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.append(mq_gates.XX(para).on(obj_qubits, ctrl_qubits))
-        return self
-
-    def yy(self, para, obj_qubits, ctrl_qubits=None):
-        """
-        Add a YY gate.
-
-        Note:
-            yy method is deprecated, please use :class:`~.core.circuit.Circuit.ryy`.
-
-        Args:
-            para (Union[dict, ParameterResolver]): The parameter for `YY` gate.
-            obj_qubits (Union[int, list[int]]): The object qubits of `YY` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `YY` gate. Default: ``None``.
-        """
-        warnings.warn(
-            "yy method is deprecated, please use ryy",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.append(mq_gates.YY(para).on(obj_qubits, ctrl_qubits))
-        return self
-
-    def zz(self, para, obj_qubits, ctrl_qubits=None):
-        """
-        Add a ZZ gate.
-
-        Note:
-            zz method is deprecated, please use :class:`~.core.circuit.Circuit.rzz`.
-
-        Args:
-            para (Union[dict, ParameterResolver]): The parameter for `ZZ` gate.
-            obj_qubits (Union[int, list[int]]): The object qubits of `ZZ` gate.
-            ctrl_qubits (Union[int, list[int]]): the control qubits of `ZZ` gate. Default: ``None``.
-        """
-        warnings.warn(
-            "zz method is deprecated, please use rzz",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.append(mq_gates.ZZ(para).on(obj_qubits, ctrl_qubits))
         return self
 
     def rxx(self, para, obj_qubits, ctrl_qubits=None):

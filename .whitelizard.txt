@@ -50,3 +50,4 @@ mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::GetEx
 DummyOperator::TermsOperator::operator == ; } ; } using coefficient_t = DummyOperator :: coefficient_t ; using coeff_term_dict_t = DummyOperator :: coeff_term_dict_t ; TEST_CASE
 mindquantum::ops::details::mindquantum::ops::details::pauli_products.QubitOperatorTermPolicy<coefficient_t>::simplify
 tests/st/test_io/test_svg.py:test_measure_svg
+tests/st/test_simulator/test_basic_gate_with_simulator.py:test_custom_gate_expectation_with_grad

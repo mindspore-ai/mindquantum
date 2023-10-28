@@ -429,18 +429,6 @@ mindquantum.core.circuit.Circuit
             - **obj_qubits** (Union[int, list[int]]) - `X` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `X` 门的控制量子比特。默认值： ``None``。
 
-    .. py:method:: xx(para, obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `XX` 门。
-
-        .. note::
-            `xx` 方法已弃用，请使用 :class:`~.core.circuit.Circuit.rxx`。
-
-        参数：
-            - **para** (Union[dict, ParameterResolver]) - `XX` 门的参数。
-            - **obj_qubits** (Union[int, list[int]]) - `XX` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `XX` 门的控制量子比特。默认值： ``None``。
-
     .. py:method:: y(obj_qubits, ctrl_qubits=None)
 
         在电路中添加 `Y` 门。
@@ -449,18 +437,6 @@ mindquantum.core.circuit.Circuit
             - **obj_qubits** (Union[int, list[int]]) - `Y` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `Y` 门的控制量子比特。默认值： ``None``。
 
-    .. py:method:: yy(para, obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `YY` 门。
-
-        .. note::
-            `yy` 方法已弃用，请使用 :class:`~.core.circuit.Circuit.ryy`。
-
-        参数：
-            - **para** (Union[dict, ParameterResolver]) - `YY` 门的参数。
-            - **obj_qubits** (Union[int, list[int]]) - `YY` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `YY` 门的控制量子比特。默认值： ``None``。
-
     .. py:method:: z(obj_qubits, ctrl_qubits=None)
 
         在电路中添加 `Z` 门。
@@ -468,15 +444,3 @@ mindquantum.core.circuit.Circuit
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `Z` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `Z` 门的控制量子比特。默认值： ``None``。
-
-    .. py:method:: zz(para, obj_qubits, ctrl_qubits=None)
-
-        在电路中添加 `ZZ` 门。
-
-        .. note::
-            `zz` 方法已弃用，请使用 :class:`~.core.circuit.Circuit.rzz`。
-
-        参数：
-            - **para** (Union[dict, ParameterResolver]) - `ZZ` 门的参数。
-            - **obj_qubits** (Union[int, list[int]]) - `ZZ` 门的目标量子比特。
-            - **ctrl_qubits** (Union[int, list[int]]) - `ZZ` 门的控制量子比特。默认值： ``None``。

@@ -6,7 +6,7 @@ mindquantum.algorithm.nisq.HardwareEfficientAnsatz
     HardwareEfficientAnsatz是一种可以很容易地在量子芯片上高效实现的ansatz。
 
     HardwareEfficientAnsatz由一层单比特旋转门和一层双比特纠缠门构成。单比特旋转门层由一个或多个作用于每个量子比特的旋转门构造。
-    两个量子比特纠缠门层是由CNOT、CZ、XX、YY、ZZ等作用于纠缠映射构建的。了解更多详细信息，请访问 `Hardware-efficient variational quantum eigensolver for small molecules and quantum magnets <https://www.nature.com/articles/nature23879>`_。
+    两个量子比特纠缠门层是由CNOT、CZ、Rxx、Ryy和Rzz等作用于纠缠映射构建的。了解更多详细信息，请访问 `Hardware-efficient variational quantum eigensolver for small molecules and quantum magnets <https://www.nature.com/articles/nature23879>`_。
 
     参数：
         - **n_qubits** (int) - 此ansatz的比特数。

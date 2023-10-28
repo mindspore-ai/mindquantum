@@ -25,8 +25,8 @@ def test_hiqasm():
     Expectation:
     """
     qasm = random_hiqasm(3, 10)
-    assert len(qasm) == 301
+    assert len(qasm) == 306
     hiqasm = HiQASM()
     circ = hiqasm.from_string(qasm)
     assert len(circ) == 13
-    assert circ[6] == X.on(0, 2)
+    assert circ[1] == X.on(1, 0)

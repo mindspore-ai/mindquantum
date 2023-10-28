@@ -28,7 +28,7 @@ from mindquantum.utils.type_value_check import (
 HIQASM_GATE_SET = {
     '0.1': {
         'np': ['X', 'Y', 'Z', 'S', 'T', 'H', 'CNOT', 'CZ', 'ISWAP', 'CCNOT'],
-        'p': ['RX', 'RY', 'RZ', 'U', 'CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ', 'CCRX', 'CCRY', 'CCRZ'],
+        'p': ['RX', 'RY', 'RZ', 'U', 'CRX', 'CRY', 'CRZ', 'CCRX', 'CCRY', 'CCRZ'],
     }
 }
 
@@ -128,7 +128,7 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):  # pylint: disabl
             elif gate == 'U':
                 qubit_strings = qubit_strings[:1]
                 param_string = f' {",".join(map(str, pval))}'
-            elif gate in ['CRX', 'CRY', 'CRZ', 'XX', 'YY', 'ZZ']:
+            elif gate in ['CRX', 'CRY', 'CRZ']:
                 qubit_strings = qubit_strings[:2]
                 param_string = f' {pval[0]}'
             elif gate in ['CCRX', 'CCRY', 'CCRZ']:
@@ -421,12 +421,6 @@ class HiQASM:
                 self.circuit.ry(*_extr_parameter(cmd), qubit[1], qubit[0])
             elif cmd.startswith('CRZ '):
                 self.circuit.rz(*_extr_parameter(cmd), qubit[1], qubit[0])
-            elif cmd.startswith('XX '):
-                self.circuit.rxx(*_extr_parameter(cmd), qubit[:2])
-            elif cmd.startswith('YY '):
-                self.circuit.ryy(*_extr_parameter(cmd), qubit[:2])
-            elif cmd.startswith('ZZ '):
-                self.circuit.rzz(*_extr_parameter(cmd), qubit[:2])
             elif cmd.startswith('CCRX '):
                 self.circuit.rx(*_extr_parameter(cmd), qubit[-1], qubit[:2])
             elif cmd.startswith('CCRY '):
