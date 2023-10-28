@@ -13,7 +13,7 @@ Furthermore, quantum gates can be categorized based on whether they require para
 
 In essence, quantum gates are the building blocks of quantum computing, allowing for the manipulation, transformation, and interaction of qubits that underpin the unique and powerful computational capabilities of quantum computers.
 
-\subsubsection{None Parameter Gate}
+\subsubsection{Fixed Quantum Gate}
 Similar to logic gates in classical circuits, the transition of a quantum circuit state can be achieved through quantum gates. Any quantum gate can be represented by a matrix, the only limitation being that its matrix representation U is a unitary matrix, i.e. ${UU^{\dagger}=I}$.
 At the same time, any unitary matrix can define a valid quantum gate, and the dimension of the matrix depends on the number of qubits it operates on.
 
@@ -103,7 +103,7 @@ The output is:
 SWAP(0 1)
 \end{lstlisting}
 
-\subsubsection{Basic Parameter Gate}
+\subsubsection{Parameterized Quantum Gate}
 Pauli matrices are the most important matrices, and they form a set of bases for spatial operators. When the Pauli matrix appears on the exponents, three classes of useful unitary operators are produced, namely rotation operators with respect to $\hat{x}, \hat{y}, \hat{z}$, defined by the following equation.
 
 \begin{align*}
