@@ -34,8 +34,8 @@ class PRGenerator:
         >>> pr_gen = PRGenerator()
         >>> print(pr_gen.new())
         p0
-        >>> print(pr_gen.new())
-        p1
+        >>> print(pr_gen.new(suffix='a'))
+        p1_a
         >>> pr_gen.reset()
         >>> print(pr_gen.new())
         p0
@@ -52,7 +52,7 @@ class PRGenerator:
         self.prefix = prefix
         self.suffix = suffix
         if prefix:
-            self.prefix += '-'
+            self.prefix += '_'
         if suffix:
             self.suffix = '_' + self.suffix
         self.current_idx = 0
@@ -63,9 +63,25 @@ class PRGenerator:
         self.current_idx = 0
         self.all_pr = []
 
-    def new(self) -> ParameterResolver:
-        """Generate a new parameter."""
-        out = ParameterResolver(f'{self.prefix}p{self.current_idx}{self.suffix}', dtype=self.dtype)
+    def new(self, prefix: str = '', suffix: str = '') -> ParameterResolver:
+        """
+        Generate a new parameter.
+
+        Args:
+            prefix (str): The prefix when generate this new parameter. Default: ``''``.
+            suffix (str): The suffix when generate this new parameter. Default: ``''``.
+
+        Examples:
+            >>> from mindquantum.core.parameterresolver import PRGenerator
+            >>> pr_gen = PRGenerator(prefix='l')
+            >>> print(pr_gen.new(suffix='a'))
+            l_p1_a
+        """
+        if prefix:
+            prefix += '_'
+        if suffix:
+            suffix = '_' + suffix
+        out = ParameterResolver(f'{prefix}{self.prefix}p{self.current_idx}{self.suffix}{suffix}', dtype=self.dtype)
         self.all_pr.append(out)
         self.current_idx += 1
         return out
