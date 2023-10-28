@@ -19,6 +19,7 @@ import pytest
 
 import mindquantum as mq
 from mindquantum.core.parameterresolver import ParameterResolver as PR
+from mindquantum.core.parameterresolver import PRGenerator
 
 
 @pytest.mark.level0
@@ -98,3 +99,21 @@ def test_parameter_resolver_pickle(dtype):
     """
     pr = PR({'a': 1.2}, dtype=dtype)
     assert pr == pickle.loads(pickle.dumps(pr))
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_pr_generator():
+    """
+    Description: Test pr generator
+    Expectation: success
+    """
+    pr_gen = PRGenerator(prefix='l')
+    pr1 = pr_gen.new()
+    pr2 = pr_gen.new(suffix='a')
+    assert pr1 == PR('l_p0')
+    assert pr2 == PR('l_p1_a')
+    assert pr_gen.size() == 2
+    pr_gen.reset()
+    assert pr_gen.size() == 0
+    assert pr_gen.new() == pr1
