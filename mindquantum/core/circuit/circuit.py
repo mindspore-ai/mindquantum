@@ -22,8 +22,12 @@ from types import FunctionType, MethodType
 from typing import List
 
 import numpy as np
+from rich.box import ROUNDED
 from rich.console import Console
+from rich.table import Table
+from rich.text import Text
 
+from mindquantum.utils.quantifiers import quantifier_selector
 from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
     _check_gate_has_obj,
@@ -254,12 +258,20 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         >>> circuit3= circuit1 + circuit2
         >>> assert len(circuit3) == 3
         >>> circuit3.summary()
-        =======Circuit Summary=======
-        |Total number of gates  : 3.|
-        |Parameter gates        : 2.|
-        |with 1 parameters are  : a.|
-        |Number qubit of circuit: 2 |
-        =============================
+                Circuit Summary
+        ╭──────────────────────┬───────╮
+        │ Info                 │ value │
+        ├──────────────────────┼───────┤
+        │ Number of qubit      │ 2     │
+        ├──────────────────────┼───────┤
+        │ Total number of gate │ 3     │
+        │ Barrier              │ 0     │
+        │ Noise Channel        │ 0     │
+        │ Measurement          │ 0     │
+        ├──────────────────────┼───────┤
+        │ Parameter gate       │ 2     │
+        │ 1 ansatz parameter   │ a     │
+        ╰──────────────────────┴───────╯
         >>> circuit3
         q0: ──RX(a)────RX(a)────X──
                                 │
@@ -599,16 +611,21 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> from mindquantum.core.gates import RX, H
             >>> circuit = Circuit([RX('a').on(1), H.on(1), RX('b').on(0)])
             >>> circuit.summary()
-            =========Circuit Summary=========
-            |Total number of gates  : 3.    |
-            |Parameter gates        : 2.    |
-            |with 2 parameters are  : a, b. |
-            |Number qubit of circuit: 2     |
-            =================================
+                    Circuit Summary
+            ╭──────────────────────┬───────╮
+            │ Info                 │ value │
+            ├──────────────────────┼───────┤
+            │ Number of qubit      │ 2     │
+            ├──────────────────────┼───────┤
+            │ Total number of gate │ 3     │
+            │ Barrier              │ 0     │
+            │ Noise Channel        │ 0     │
+            │ Measurement          │ 0     │
+            ├──────────────────────┼───────┤
+            │ Parameter gate       │ 2     │
+            │ 2 ansatz parameters  │ a, b  │
+            ╰──────────────────────┴───────╯
         """
-        # pylint: disable=import-outside-toplevel,cyclic-import
-        from mindquantum.io import bprint
-
         num_non_para_gate = 0
         num_para_gate = 0
         barrier = 0
@@ -628,22 +645,35 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 num_para_gate += 1
             else:
                 num_non_para_gate += 1
+
+        title = Text("Circuit Summary", style="bold #ff0000")
+        table = Table(title=title, box=ROUNDED)
+        table.add_column("[#3b3b95]Info[/]")
+        table.add_column("[#3b3b95]value[/]")
+        table.add_row("[bold]Number of qubit[/]", f"{self.n_qubits}", end_section=True)
+        table.add_row("[bold]Total number of gate[/]", f"{num_para_gate + num_non_para_gate}")
+        table.add_row("Barrier", f"{barrier}")
+        table.add_row("Noise Channel", f"{noise_channel}")
+        table.add_row("Measurement", f"{measure_gate}", end_section=True)
+
+        def show_params(table: Table, name: str, params, n_limit=10, color='#000000'):
+            if not params:
+                return
+            n_p = len(params)
+            row_name = f"{quantifier_selector(n_p, f'{name} parameter', f'{name} parameters')}"
+            params_name = ', '.join(params[:n_limit])
+            if n_p > n_limit:
+                params_name += '...'
+            table.add_row(row_name, f'[{color}]{params_name}[/]')
+
+        table.add_row("[bold]Parameter gate[/]", f"{num_para_gate}")
+        if self.params_name:
+            show_params(table, "encoder", self.encoder_params_name, color='#00FFFF')
+            show_params(table, "ansatz", self.ansatz_params_name, color='#E74C3C')
+
         if show:
-            info = bprint(
-                [
-                    f'Total number of gates: {num_para_gate + num_non_para_gate}.',
-                    f'Barrier: {barrier}.',
-                    f'Noise channel: {noise_channel}.',
-                    f'Measurement: {measure_gate}.',
-                    f'Parameter gates: {num_para_gate}.',
-                    f"with {len(self.all_paras)} parameters are: ",
-                    f"{', '.join(self.all_paras.keys()[:10])}{'.' if len(self.all_paras) <= 10 else '...'}",
-                    f'Number qubit of circuit: {self.n_qubits}',
-                ],
-                title='Circuit Summary',
-            )
-            for i in info:
-                print(i)
+            console = Console()
+            console.print(table)
 
     def hermitian(self):
         """
