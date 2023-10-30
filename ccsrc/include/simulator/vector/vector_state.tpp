@@ -49,6 +49,13 @@
 #include "simulator/vector/vector_state.h"
 
 namespace mindquantum::sim::vector::detail {
+template <typename qs_policy_t_>
+void VectorState<qs_policy_t_>::SetSeed(unsigned new_seed) {
+    this->seed = new_seed;
+    this->rnd_eng_ = RndEngine(new_seed);
+    std::uniform_real_distribution<double> dist(0., 1.);
+    this->rng_ = std::bind(dist, std::ref(this->rnd_eng_));
+}
 
 template <typename qs_policy_t_>
 VectorState<qs_policy_t_>::VectorState(qbit_t n_qubits, unsigned seed)
@@ -1185,6 +1192,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
     auto tmp_pr{pr};
     VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
     VectorState<qs_policy_t> sim = *this;
+    sim.SetSeed(static_cast<unsigned>(this->rng_() * 10000));
     sim.ApplyCircuit(circ, pr);
     int n_group = n_hams / n_thread;
     if (n_hams % n_thread) {
@@ -1198,8 +1206,10 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
         }
         std::vector<VectorState<qs_policy_t>> sim_rs(end - start);
         auto sim_l = sim;
+        sim_l.SetSeed(static_cast<unsigned>(this->rng_() * 10000));
         for (int j = start; j < end; j++) {
             sim_rs[j - start] = sim_l;
+            sim_rs[j - start].SetSeed(static_cast<unsigned>(this->rng_() * 10000));
             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
             f_and_g[j][0] = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
         }
@@ -1238,8 +1248,10 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                                 tmp_pr.SetItem(key, tmp);
                             }
                             sim_l = *this;
+                            sim_l.SetSeed(static_cast<unsigned>(this->rng_() * 10000));
                             sim_l.ApplyCircuit(circ, tmp_pr);
                             sim_rs[j - start] = sim_l;
+                            sim_rs[j - start].SetSeed(static_cast<unsigned>(this->rng_() * 10000));
                             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
                             auto expect0 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
                             p_gate->prs_[k] += 2 * pr_shift;
@@ -1256,8 +1268,10 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                                 tmp_pr.SetItem(key, tmp);
                             }
                             sim_l = *this;
+                            sim_l.SetSeed(static_cast<unsigned>(this->rng_() * 10000));
                             sim_l.ApplyCircuit(circ, tmp_pr);
                             sim_rs[j - start] = sim_l;
+                            sim_rs[j - start].SetSeed(static_cast<unsigned>(this->rng_() * 10000));
                             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
                             auto expect1 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
                             p_gate->prs_[k] += -pr_shift;
