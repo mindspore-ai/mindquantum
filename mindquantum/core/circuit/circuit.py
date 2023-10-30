@@ -668,8 +668,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
         table.add_row("[bold]Parameter gate[/]", f"{num_para_gate}")
         if self.params_name:
-            show_params(table, "encoder", self.encoder_params_name, color='#00FFFF')
-            show_params(table, "ansatz", self.ansatz_params_name, color='#E74C3C')
+            show_params(table, "encoder", self.encoder_params_name, color='#FFC857')
+            show_params(table, "ansatz", self.ansatz_params_name, color='#48C9B0')
 
         if show:
             console = Console()

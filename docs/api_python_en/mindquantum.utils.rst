@@ -17,3 +17,14 @@ Function
     mindquantum.utils.normalize
     mindquantum.utils.random_circuit
     mindquantum.utils.random_state
+
+Progress bar
+------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.utils.SingleLoopProgress
+    mindquantum.utils.TwoLoopsProgress

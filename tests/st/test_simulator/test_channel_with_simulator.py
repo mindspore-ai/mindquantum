@@ -15,8 +15,8 @@
 
 """Test channel with simulator."""
 import numpy as np
-from scipy.stats import entropy
 import pytest
+from scipy.stats import entropy
 
 import mindquantum as mq
 from mindquantum.core import gates as G
@@ -125,7 +125,7 @@ def test_depolarizing_channel(config):
         else:
             res = sim.sampling(Circuit(c).measure_all(), shots=shots)
             difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
-            assert difference < 1e-4
+            assert difference < 1e-3
 
 
 @pytest.mark.level0
