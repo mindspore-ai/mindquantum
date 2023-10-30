@@ -83,6 +83,9 @@ class VectorState {
     //! Reset the quantum state to quantum zero state
     virtual void Reset();
 
+    //! Set the random seed to a new seed
+    virtual void SetSeed(unsigned new_seed);
+
     //! Display basic information of this quantum state
     virtual void Display(qbit_t qubits_limit = 10) const;
 
