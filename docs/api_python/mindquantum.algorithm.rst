@@ -7,7 +7,7 @@ mindquantum.algorithm
 量子算法。
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: algorithm
 
     mindquantum.algorithm.compiler
     mindquantum.algorithm.library

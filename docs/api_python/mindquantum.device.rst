@@ -10,7 +10,7 @@ Class
 -----
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: device
     :nosignatures:
     :template: classtemplate.rst
 

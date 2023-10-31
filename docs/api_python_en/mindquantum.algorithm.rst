@@ -4,7 +4,7 @@ mindquantum.algorithm
 .. automodule:: mindquantum.algorithm
 
 .. autosummary::
-   :toctree:
+   :toctree: algorithm
 
    mindquantum.algorithm.compiler
    mindquantum.algorithm.library

@@ -7,7 +7,7 @@ mindquantum.core
 MindQuantum的核心特性(eDSL)
 
 .. mscnautosummary::
-   :toctree:
+   :toctree: core
 
    mindquantum.core.gates
    mindquantum.core.circuit

@@ -10,7 +10,7 @@ Function
 ---------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: utils
     :nosignatures:
     :template: classtemplate.rst
 
@@ -25,7 +25,7 @@ Progress bar
 ------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: utils
     :nosignatures:
     :template: classtemplate.rst
 

@@ -10,7 +10,7 @@ Class
 -------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: simulator
     :nosignatures:
     :template: classtemplate.rst
 
@@ -22,7 +22,7 @@ Function
 ---------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: simulator
     :nosignatures:
     :template: classtemplate.rst
 

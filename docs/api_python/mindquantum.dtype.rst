@@ -61,7 +61,7 @@ Function
 ---------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: dtype
     :nosignatures:
     :template: classtemplate.rst
 
