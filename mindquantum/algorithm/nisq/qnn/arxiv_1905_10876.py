@@ -52,6 +52,9 @@ class Ansatz1(Ansatz, Initializer):
     """
     Ansatz 1 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz1.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -85,6 +88,9 @@ class Ansatz1(Ansatz, Initializer):
 class Ansatz2(Ansatz, Initializer):
     """
     Ansatz 2 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz2.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -124,6 +130,9 @@ class Ansatz3(Ansatz, Initializer):
     """
     Ansatz 3 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz3.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -162,6 +171,9 @@ class Ansatz4(Ansatz, Initializer):
     """
     Ansatz 4 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz4.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -199,6 +211,9 @@ class Ansatz4(Ansatz, Initializer):
 class Ansatz5(Ansatz, Initializer):
     """
     Ansatz 5 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz5.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -243,6 +258,9 @@ class Ansatz6(Ansatz, Initializer):
     """
     Ansatz 6 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz6.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -285,6 +303,9 @@ class Ansatz6(Ansatz, Initializer):
 class Ansatz7(Ansatz, Initializer):
     """
     Ansatz 7 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz7.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -341,6 +362,9 @@ class Ansatz8(Ansatz, Initializer):
     """
     Ansatz 8 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz8.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -396,6 +420,9 @@ class Ansatz9(Ansatz, Initializer):
     """
     Ansatz 9 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz9.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -436,6 +463,9 @@ class Ansatz9(Ansatz, Initializer):
 class Ansatz10(Ansatz, Initializer):
     """
     Ansatz 10 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz10.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -478,6 +508,9 @@ class Ansatz10(Ansatz, Initializer):
 class Ansatz11(Ansatz, Initializer):
     """
     Ansatz 11 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz11.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -534,6 +567,9 @@ class Ansatz12(Ansatz, Initializer):
     """
     Ansatz 12 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz12.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -589,6 +625,9 @@ class Ansatz13(Ansatz, Initializer):
     """
     Ansatz 13 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz13.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -636,6 +675,9 @@ class Ansatz13(Ansatz, Initializer):
 class Ansatz14(Ansatz, Initializer):
     """
     Ansatz 14 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz14.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -685,6 +727,9 @@ class Ansatz15(Ansatz, Initializer):
     """
     Ansatz 15 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz15.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -732,6 +777,9 @@ class Ansatz15(Ansatz, Initializer):
 class Ansatz16(Ansatz, Initializer):
     """
     Ansatz 16 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz16.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
@@ -786,6 +834,9 @@ class Ansatz17(Ansatz, Initializer):
     """
     Ansatz 17 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz17.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -839,6 +890,9 @@ class Ansatz18(Ansatz, Initializer):
     """
     Ansatz 18 implement from arxiv paper.
 
+    .. image:: ./ansatz_images/ansatz18.png
+        :height: 180px
+
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
@@ -880,6 +934,9 @@ class Ansatz18(Ansatz, Initializer):
 class Ansatz19(Ansatz, Initializer):
     """
     Ansatz 19 implement from arxiv paper.
+
+    .. image:: ./ansatz_images/ansatz19.png
+        :height: 180px
 
     Please refers to `Expressibility and entangling capability of parameterized quantum circuits for hybrid
     quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.

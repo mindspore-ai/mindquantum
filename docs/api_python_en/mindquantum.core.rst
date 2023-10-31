@@ -4,7 +4,7 @@ mindquantum.core
 .. automodule:: mindquantum.core
 
 .. autosummary::
-   :toctree:
+   :toctree: core
 
    mindquantum.core.gates
    mindquantum.core.circuit

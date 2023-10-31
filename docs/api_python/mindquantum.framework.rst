@@ -11,7 +11,7 @@ Operators
 ---------
 
 .. mscnplatformautosummary::
-    :toctree: operations
+    :toctree: framework/operations
     :nosignatures:
     :template: classtemplate.rst
 
@@ -27,7 +27,7 @@ Layer
 -----
 
 .. mscnplatformautosummary::
-    :toctree: layer
+    :toctree: framework/layer
     :nosignatures:
     :template: classtemplate.rst
 
