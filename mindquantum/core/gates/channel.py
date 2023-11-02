@@ -17,7 +17,7 @@
 """Quantum channel."""
 
 from itertools import product
-from math import sqrt
+from math import sqrt, exp
 
 import numpy as np
 
@@ -641,6 +641,92 @@ class KrausChannel(NoiseGate, NonHermitianGate):
     def __str_in_circ__(self):
         """Return a string representation of the object in a quantum circuit."""
         return self.name
+
+    def matrix(self):  # pylint: disable=arguments-differ
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of this quantum channel.
+        """
+        return list(self.kraus_op)
+
+
+class ThermalRelaxationChannel(NoiseGate, NonHermitianGate):
+    r"""
+    Thermal relaxation channel.
+
+    The thermal relaxation channel describes the thermal decoherence and dephasing of qubit
+    when a quantum gate is applied, and is determined by T1, T2 and gate time.
+
+    Args:
+        t1 (int, float): T1 of the qubit.
+        t2 (int, float): T2 of the qubit.
+        gate_time (int, float): time of the quantum gate.
+
+    Examples:
+        >>> from mindquantum.core.gates import ThermalRelaxationChannel
+        >>> from mindquantum.core.circuit import Circuit
+        >>> t1 = 100000
+        >>> t2 = 50000
+        >>> gate_time = 35
+        >>> circ = Circuit()
+        >>> circ += ThermalRelaxationChannel(t1, t2, gate_time).on(0)
+        >>> print(circ)
+        q0: ──TRC(t1=100000,t2=50000,tg=35)──
+    """
+
+    def __init__(self, t1: float, t2: float, gate_time: float, **kwargs):
+        """Initialize a ThermalRelaxationChannel object."""
+        kwargs['name'] = 'TRC'
+        kwargs['n_qubits'] = 1
+        NoiseGate.__init__(self, **kwargs)
+        NonHermitianGate.__init__(self, **kwargs)
+        self.projectq_gate = None
+        if not isinstance(t1, (int, float)):
+            raise TypeError(f"Unsupported type for t1, get {type(t1)}.")
+        if not isinstance(t2, (int, float)):
+            raise TypeError(f"Unsupported type for t2, get {type(t2)}.")
+        if not isinstance(gate_time, (int, float)):
+            raise TypeError(f"Unsupported type for gate_time, get {type(gate_time)}.")
+        if (t1 <= 0) or (t2 <= 0):
+            raise ValueError(f"T1 and T2 must be positive, but get T1={t1}, T2={t2}")
+        if gate_time < 0:
+            raise ValueError(f"gate time cannot be negative, but get {gate_time}")
+        self.t1 = t1
+        self.t2 = t2
+        self.gate_time = gate_time
+        e_1 = exp(-gate_time / t1)
+        e_2 = exp(-gate_time / t2)
+        p_reset = 1 - e_1
+        if t1 >= t2:
+            pz = e_1 * (1 - e_2 / e_1) / 2
+            kz = [[sqrt(pz), 0], [0, -sqrt(pz)]]
+            ki = [[sqrt(1 - pz - p_reset), 0], [0, sqrt(1 - pz - p_reset)]]
+            k_reset00 = [[sqrt(p_reset), 0], [0, 0]]
+            k_reset01 = [[0, sqrt(p_reset)], [0, 0]]
+            self.kraus_op = [ki, kz, k_reset00, k_reset01]
+        elif 2 * t1 >= t2:
+            eigenvalue1 = (2 - p_reset + sqrt(p_reset**2 + 4 * e_2**2)) / 2
+            eigenvalue2 = (2 - p_reset - sqrt(p_reset**2 + 4 * e_2**2)) / 2
+            eigen_vector1 = (eigenvalue1 - e_1) / e_2
+            eigen_vector2 = (eigenvalue2 - e_1) / e_2
+            k0 = np.array([[eigen_vector1, 0], [0, 1]]) * sqrt(eigenvalue1 / (eigen_vector1**2 + 1))
+            k1 = np.array([[eigen_vector2, 0], [0, 1]]) * sqrt(eigenvalue2 / (eigen_vector2**2 + 1))
+            k2 = [[0, sqrt(p_reset)], [0, 0]]
+            self.kraus_op = [k0, k1, k2]
+        else:
+            raise ValueError("(T2 > 2 * T1) is invalid case.")
+
+    def get_cpp_obj(self):
+        """Get underlying C++ object."""
+        return mb.gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
+
+    def __type_specific_str__(self):
+        """Return a string representation of the object."""
+        return (
+            f't1={string_expression(self.t1)},t2={string_expression(self.t2)},tg={string_expression(self.gate_time)}'
+        )
 
     def matrix(self):  # pylint: disable=arguments-differ
         """
