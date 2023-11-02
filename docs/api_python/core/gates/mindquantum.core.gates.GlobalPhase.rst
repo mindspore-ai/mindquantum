@@ -29,12 +29,13 @@ mindquantum.core.gates.GlobalPhase
 
         返回该门的c++对象。
 
-    .. py:method:: matrix(pr=None, **kwargs)
+    .. py:method:: matrix(pr=None, full=False, **kwargs)
 
         参数门的矩阵形式。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 参数门的参数。默认值： ``None``。
+            - **full** (bool) - 是否获取完整的矩阵（受控制比特和作用比特影响）。默认值： ``False``。
             - **kwargs** (dict) - 其他的参数。
 
         返回：

@@ -18,7 +18,7 @@ Class
 ---------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: operators
     :nosignatures:
     :template: classtemplate.rst
 
@@ -35,7 +35,7 @@ Function
 ---------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: operators
     :nosignatures:
     :template: classtemplate.rst
 

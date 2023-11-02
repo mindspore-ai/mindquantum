@@ -1,30 +1,29 @@
-mindquantum.core.gates.Rxx
+mindquantum.core.gates.Ryy
 ===============================
 
-.. py:class:: mindquantum.core.gates.Rxx(pr)
+.. py:class:: mindquantum.core.gates.Ryy(pr)
 
-    Rxx 门。更多用法，请参见 :class:`~.core.gates.RX`。
+    Ryy 门。更多用法，请参见 :class:`~.core.gates.RX`。
 
     .. math::
 
-        {\rm Rxx_\theta}=\exp{\left(-i\frac{\theta}{2} X\otimes X\right)} =\begin{pmatrix}
-            \cos{\frac{\theta}{2}} & 0 & 0 & -i\sin{\frac{\theta}{2}}\\
+        {\rm Ryy_\theta}=\exp{\left(-i\frac{\theta}{2} Y\otimes Y\right)} =\begin{pmatrix}
+            \cos{\frac{\theta}{2}} & 0 & 0 & i\sin{\frac{\theta}{2}}\\
             0 & \cos{\frac{\theta}{2}} & -i\sin{\frac{\theta}{2}} & 0\\
             0 & -i\sin{\frac{\theta}{2}} & \cos{\frac{\theta}{2}} & 0\\
-            -i\sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
+            i\sin{\frac{\theta}{2}} & 0 & 0 & \cos{\frac{\theta}{2}}\\
             \end{pmatrix}
 
     参数：
         - **pr** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数，详细解释请参见上文。
 
-    .. py:method:: diff_matrix(pr=None, about_what=None, frac=0.5)
+    .. py:method:: diff_matrix(pr=None, about_what=None)
 
         返回该参数化量子门的导数矩阵。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 该参数化量子门的参数值。默认值： ``None``。
             - **about_what** (str) - 关于哪个参数求导数。输入值为str类型的对应参数名。默认值： ``None``。
-            - **frac** (numbers.Number) - 系数的倍数。默认值： ``0.5``。
 
         返回：
             numpy.ndarray，该量子门的导数矩阵形式。
@@ -33,13 +32,13 @@ mindquantum.core.gates.Rxx
 
         返回该门的c++对象。
 
-    .. py:method:: matrix(pr=None, frac=0.5)
+    .. py:method:: matrix(pr=None, full=False)
 
         返回该参数化量子门的矩阵。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 该参数化量子门的参数值。默认值： ``None``。
-            - **frac** (numbers.Number) - 系数的倍数。默认值： ``0.5``。
+            - **full** (bool) - 是否获取完整的矩阵（受控制比特和作用比特影响）。默认值： ``False``。
 
         返回：
             numpy.ndarray，该量子门的矩阵形式。

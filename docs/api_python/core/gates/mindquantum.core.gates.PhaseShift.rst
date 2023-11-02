@@ -28,12 +28,13 @@ mindquantum.core.gates.PhaseShift
 
         返回该门的c++对象。
 
-    .. py:method:: matrix(pr=None)
+    .. py:method:: matrix(pr=None, full=False)
 
         参数门的矩阵形式。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 参数门的矩阵形式。默认值： ``None``。
+            - **full** (bool) - 是否获取完整的矩阵（受控制比特和作用比特影响）。默认值： ``False``。
 
         返回：
             numpy.ndarray，量子门的矩阵形式。

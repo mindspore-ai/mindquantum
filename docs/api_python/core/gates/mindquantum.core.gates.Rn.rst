@@ -48,9 +48,10 @@ mindquantum.core.gates.Rn
 
         获取 Rn 门的厄米共轭形式。
 
-    .. py:method:: matrix(pr: ParameterResolver = None)
+    .. py:method:: matrix(pr: ParameterResolver = None, full=False)
 
         获取 Rn 门的矩阵形式。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - Rn 门的参数。默认值： ``None``。
+            - **full** (bool) - 是否获取完整的矩阵（受控制比特和作用比特影响）。默认值： ``False``。
