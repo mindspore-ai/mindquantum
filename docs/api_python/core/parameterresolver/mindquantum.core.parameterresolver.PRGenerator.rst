@@ -7,13 +7,13 @@
         - **suffix** (str) - 参数的后缀。默认值： ``''``。
         - **dtype** (mindquantum.dtype) - 改参数解析器的数据类型。如果为 ``None``，则类型为 ``mindquantum.float64``。默认： ``None``。
 
-    .. py:method:: new()
+    .. py:method:: new(prefix: str = '', suffix: str = '')
 
         生成下一个新的参数。
 
     参数：
-        - **prefix** (str) - 生成此参数时的前缀。默认值： ``''``。
-        - **suffix** (str) - 生成此参数时的后缀。默认值： ``''``。
+        - **prefix** (str) - 生成此参数时的额外前缀。默认值： ``''``。
+        - **suffix** (str) - 生成此参数时的额外后缀。默认值： ``''``。
 
     .. py:method:: reset()
 

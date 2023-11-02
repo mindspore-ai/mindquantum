@@ -10,7 +10,7 @@ mindquantum.core.gates
 -------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -24,7 +24,7 @@ mindquantum.core.gates
 -------------
 
 .. mscnmathautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -59,7 +59,7 @@ mindquantum.core.gates
 -------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -103,7 +103,7 @@ mindquantum.core.gates
 -------------
 
 .. mscnmathautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -121,7 +121,7 @@ mindquantum.core.gates
 -------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 

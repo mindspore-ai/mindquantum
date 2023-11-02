@@ -68,8 +68,8 @@ class PRGenerator:
         Generate a new parameter.
 
         Args:
-            prefix (str): The prefix when generate this new parameter. Default: ``''``.
-            suffix (str): The suffix when generate this new parameter. Default: ``''``.
+            prefix (str): The extra prefix when generate this new parameter. Default: ``''``.
+            suffix (str): The extra suffix when generate this new parameter. Default: ``''``.
 
         Examples:
             >>> from mindquantum.core.parameterresolver import PRGenerator

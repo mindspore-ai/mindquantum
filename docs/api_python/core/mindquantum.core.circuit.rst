@@ -10,7 +10,7 @@ Class
 ---------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: circuit
     :nosignatures:
     :template: classtemplate.rst
 
@@ -22,7 +22,7 @@ Function
 ---------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: circuit
     :nosignatures:
     :template: classtemplate.rst
 
@@ -45,7 +45,7 @@ Channel adder
 -------------
 
 .. mscnautosummary::
-    :toctree:
+    :toctree: circuit
     :nosignatures:
     :template: classtemplate.rst
 
