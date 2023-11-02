@@ -115,6 +115,7 @@ mindquantum.core.gates
     mindquantum.core.gates.PauliChannel
     mindquantum.core.gates.PhaseDampingChannel
     mindquantum.core.gates.PhaseFlipChannel
+    mindquantum.core.gates.ThermalRelaxationChannel
 
 功能类
 -------------

@@ -73,6 +73,7 @@ from .channel import (
     PauliChannel,
     PhaseDampingChannel,
     PhaseFlipChannel,
+    ThermalRelaxationChannel,
 )
 from .measurement import Measure, MeasureResult
 
@@ -131,6 +132,7 @@ __all__ = [
     "AmplitudeDampingChannel",
     "PhaseDampingChannel",
     "KrausChannel",
+    "ThermalRelaxationChannel",
     "U3",
     "FSim",
 ]

@@ -112,6 +112,7 @@ Quantum Channel
     mindquantum.core.gates.PauliChannel
     mindquantum.core.gates.PhaseDampingChannel
     mindquantum.core.gates.PhaseFlipChannel
+    mindquantum.core.gates.ThermalRelaxationChannel
 
 Functional Class
 -----------------
