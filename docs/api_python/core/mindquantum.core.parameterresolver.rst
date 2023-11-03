@@ -6,8 +6,13 @@ mindquantum.core.parameterresolver
 
 参数解析器模块，用于声明MindSpore Quantum中所使用到的参数。
 
-.. include:: mindquantum.core.parameterresolver.ParameterResolver.rst
-.. include:: mindquantum.core.parameterresolver.PRGenerator.rst
+Class
+---------------
 
-.. automodule:: mindquantum.core.parameterresolver
-    :members:
+.. mscnautosummary::
+    :toctree: parameterresolver
+    :nosignatures:
+    :template: classtemplate.rst
+
+    mindquantum.core.parameterresolver.ParameterResolver
+    mindquantum.core.parameterresolver.PRGenerator

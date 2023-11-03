@@ -7,7 +7,7 @@ Operators
 ---------
 
 .. msplatformautosummary::
-    :toctree: operations
+    :toctree: framework/operations
     :nosignatures:
     :template: classtemplate.rst
 
@@ -23,7 +23,7 @@ Layer
 -----
 
 .. msplatformautosummary::
-    :toctree: layer
+    :toctree: framework/layer
     :nosignatures:
     :template: classtemplate.rst
 

@@ -4,7 +4,7 @@ mindquantum.algorithm.library
 .. automodule:: mindquantum.algorithm.library
 
 .. autosummary::
-    :toctree:
+    :toctree: library
     :nosignatures:
     :template: classtemplate.rst
 

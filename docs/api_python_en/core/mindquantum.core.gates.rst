@@ -7,7 +7,7 @@ Base Class
 -------------
 
 .. autosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -21,7 +21,7 @@ Quantum Gate
 -------------
 
 .. msmathautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -56,7 +56,7 @@ Functional Gate
 ----------------
 
 .. autosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -100,7 +100,7 @@ Quantum Channel
 ----------------
 
 .. msmathautosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
@@ -118,7 +118,7 @@ Functional Class
 -----------------
 
 .. autosummary::
-    :toctree:
+    :toctree: gates
     :nosignatures:
     :template: classtemplate.rst
 
