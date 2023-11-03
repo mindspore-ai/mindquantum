@@ -1375,12 +1375,95 @@ VT<unsigned> VectorState<qs_policy_t_>::Sampling(const circuit_t& circ, const pa
     for (size_t i = 0; i < shots; i++) {
         auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()), qs);
         auto res0 = sim.ApplyCircuit(circ, pr);
-        VT<unsigned> res1(key_map.size());
-        for (const auto& [name, val] : key_map) {
-            res1[val] = res0[name];
+        // VT<unsigned> res1(key_map.size());
+        // for (const auto& [name, val] : key_map) {
+        //     res1[val] = res0[name];
+        // }
+        // for (size_t j = 0; j < key_size; j++) {
+        //     res[i * key_size + j] = res1[j];
+        // }
+        for (auto& [k, v] : res0) {
+            res[i * key_size + key_map.at(k)] = v;
         }
-        for (size_t j = 0; j < key_size; j++) {
-            res[i * key_size + j] = res1[j];
+    }
+    return res;
+}
+
+template <typename qs_policy_t_>
+VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEnding(const circuit_t& circ,
+                                                                  const parameter::ParameterResolver& pr, size_t shots,
+                                                                  const MST<size_t>& key_map, unsigned int seed) const {
+    auto key_size = key_map.size();
+    VT<unsigned> res(shots * key_size);
+    RndEngine rnd_eng = RndEngine(seed);
+    std::uniform_real_distribution<double> dist(1.0, (1 << 20) * 1.0);
+    std::function<double()> rng = std::bind(dist, std::ref(rnd_eng));
+    RndEngine sample_rnd_eng = RndEngine(seed);
+    std::uniform_real_distribution<calc_type> sample_dist(0.0, 1.0);
+    std::function<calc_type()> sample_rng = std::bind(sample_dist, std::ref(sample_rnd_eng));
+
+    VT<int> already_measured(this->n_qubits, 0);
+
+    for (size_t i = 0; i < shots; i++) {
+        auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()), qs);
+        for (auto& g : circ) {
+            if (g->id_ == GateID::M) {
+                auto m_gate = static_cast<MeasureGate*>(g.get());
+                if (already_measured[m_gate->obj_qubits_[0]] != 0) {
+                    throw std::runtime_error("Quantum circuit is not measurement ending circuit.");
+                }
+                already_measured[m_gate->obj_qubits_[0]] = 1;
+
+                index_t one_mask = (static_cast<uint64_t>(1) << m_gate->obj_qubits_[0]);
+                auto one_prob = qs_policy_t::ConditionalCollect(sim.qs, one_mask, one_mask, true, dim).real();
+                auto this_prob = sample_rng();
+                if (this_prob < one_prob) {
+                    res[i * key_size + key_map.at(m_gate->name_)] = 1;
+                }
+            } else {
+                sim.ApplyGate(g, pr, false);
+            }
+        }
+    }
+    return res;
+}
+
+template <typename qs_policy_t_>
+VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit_t& circ,
+                                                                              const parameter::ParameterResolver& pr,
+                                                                              size_t shots, const MST<size_t>& key_map,
+                                                                              unsigned int seed) const {
+    auto key_size = key_map.size();
+    VT<unsigned> res(shots * key_size);
+    RndEngine rnd_eng = RndEngine(seed);
+    std::uniform_real_distribution<double> dist(1.0, (1 << 20) * 1.0);
+    std::function<double()> rng = std::bind(dist, std::ref(rnd_eng));
+    RndEngine sample_rng_eng = RndEngine(seed);
+    std::uniform_real_distribution<calc_type> sample_dist(0.0, 1.0);
+    std::function<calc_type()> sample_rng = std::bind(sample_dist, std::ref(sample_rng_eng));
+
+    auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()), qs);
+
+    VT<int> already_measured(this->n_qubits, 0);
+
+    for (auto& g : circ) {
+        if (g->id_ == GateID::M) {
+            auto m_qid = g->obj_qubits_[0];
+            if (already_measured[m_qid] != 0) {
+                throw std::runtime_error("Quantum circuit is not a measurement ending circuit.");
+            }
+            already_measured[m_qid] = 1;
+
+            index_t one_mask = (static_cast<uint64_t>(1) << m_qid);
+            auto one_prob = qs_policy_t::ConditionalCollect(sim.qs, one_mask, one_mask, true, dim).real();
+            for (size_t i = 0; i < shots; i++) {
+                auto this_prob = sample_rng();
+                if (this_prob < one_prob) {
+                    res[i * key_size + key_map.at(static_cast<MeasureGate*>(g.get())->name_)] = 1;
+                }
+            }
+        } else {
+            sim.ApplyGate(g, pr, false);
         }
     }
     return res;

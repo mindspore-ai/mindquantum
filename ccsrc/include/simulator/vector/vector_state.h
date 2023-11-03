@@ -217,6 +217,11 @@ class VectorState {
 
     virtual VT<unsigned> Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned seed) const;
+    virtual VT<unsigned> SamplingMeasurementEnding(const circuit_t& circ, const parameter::ParameterResolver& pr,
+                                                   size_t shots, const MST<size_t>& key_map, unsigned seed) const;
+    virtual VT<unsigned> SamplingMeasurementEndingWithoutNoise(const circuit_t& circ,
+                                                               const parameter::ParameterResolver& pr, size_t shots,
+                                                               const MST<size_t>& key_map, unsigned seed) const;
 
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
     VectorState<policy_des> astype(unsigned seed) const;
