@@ -7,7 +7,7 @@ Class
 -----
 
 .. autosummary::
-    :toctree:
+    :toctree: device
     :nosignatures:
     :template: classtemplate.rst
 

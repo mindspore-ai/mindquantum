@@ -4,7 +4,7 @@ mindquantum.algorithm.mapping
 .. automodule:: mindquantum.algorithm.mapping
 
 .. autosummary::
-    :toctree:
+    :toctree: mapping
     :nosignatures:
     :template: classtemplate.rst
 

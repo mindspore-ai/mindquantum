@@ -7,7 +7,7 @@ Fixed decompose rules
 ---------------------
 
 .. autosummary::
-    :toctree:
+    :toctree: compiler
     :nosignatures:
     :template: classtemplate.rst
 
@@ -31,7 +31,7 @@ Universal decompose rules
 -------------------------
 
 .. autosummary::
-    :toctree:
+    :toctree: compiler
     :nosignatures:
     :template: classtemplate.rst
 
@@ -46,7 +46,7 @@ Compiler rules
 --------------
 
 .. autosummary::
-    :toctree:
+    :toctree: compiler
     :nosignatures:
     :template: classtemplate.rst
 
@@ -66,7 +66,7 @@ DAG circuit
 -----------
 
 .. autosummary::
-    :toctree:
+    :toctree: compiler
     :nosignatures:
     :template: classtemplate.rst
 

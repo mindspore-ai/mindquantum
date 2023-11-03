@@ -7,7 +7,7 @@ Class
 ------
 
 .. autosummary::
-    :toctree:
+    :toctree: simulator
     :nosignatures:
     :template: classtemplate.rst
 
@@ -19,7 +19,7 @@ Function
 ---------
 
 .. autosummary::
-    :toctree:
+    :toctree: simulator
     :nosignatures:
     :template: classtemplate.rst
 

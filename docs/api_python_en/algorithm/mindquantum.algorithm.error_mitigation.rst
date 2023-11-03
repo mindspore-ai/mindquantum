@@ -4,7 +4,7 @@ mindquantum.algorithm.error_mitigation
 .. automodule:: mindquantum.algorithm.error_mitigation
 
 .. autosummary::
-    :toctree:
+    :toctree: error_mitigation
     :nosignatures:
     :template: classtemplate.rst
 

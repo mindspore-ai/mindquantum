@@ -7,7 +7,7 @@ Function
 ---------
 
 .. autosummary::
-    :toctree:
+    :toctree: utils
     :nosignatures:
     :template: classtemplate.rst
 
@@ -22,7 +22,7 @@ Progress bar
 ------------
 
 .. autosummary::
-    :toctree:
+    :toctree: utils
     :nosignatures:
     :template: classtemplate.rst
 
