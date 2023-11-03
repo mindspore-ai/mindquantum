@@ -1,3 +1,6 @@
+mindquantum.core.parameterresolver.PRGenerator
+==============================================
+
 .. py:class:: mindquantum.core.parameterresolver.PRGenerator(prefix: str = '', suffix: str = '', dtype=None)
 
     一个一个的生成参数。
