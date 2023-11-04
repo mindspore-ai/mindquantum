@@ -13,8 +13,8 @@
 # limitations under the License.
 # ============================================================================
 """Qubit mapping module."""
-
 from .sabre import SABRE
+from .mq_sabre import MQ_SABRE
 
-__all__ = ["SABRE"]
+__all__ = ["SABRE","MQ_SABRE"]
 __all__.sort()
