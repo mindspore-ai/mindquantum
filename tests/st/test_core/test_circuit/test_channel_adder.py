@@ -129,7 +129,7 @@ def test_sequential_adder():
     circ = Circuit().h(0).x(1, 0).measure_all()
     bitflip_error_for_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter(), NoiseExcluder()], add_after=False)
     depolarizing_for_gate = MixerAdder(
-        [NoiseChannelAdder(DepolarizingChannel(0.1)), ReverseAdder(MeasureAccepter()), NoiseExcluder()]
+        [NoiseChannelAdder(BitFlipChannel(0.2)), ReverseAdder(MeasureAccepter()), NoiseExcluder()]
     )
     adder = SequentialAdder(
         [
@@ -138,7 +138,7 @@ def test_sequential_adder():
         ]
     )
     new_circ = adder(circ)
-    noise_1 = DepolarizingChannel(0.1)
+    noise_1 = BitFlipChannel(0.2)
     bfc = BitFlipChannel(0.1)
     exp_circ = Circuit().h(0) + noise_1.on(0) + X.on(1, 0) + noise_1.on(1)
     exp_circ += Circuit([noise_1.on(0), bfc.on(0), Measure().on(0), bfc.on(1)])

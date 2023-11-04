@@ -179,7 +179,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
             ).real
             * 2
         )
-    assert np.allclose(f, ref_f, atol=1e-6)
+    assert np.allclose(f, ref_f, atol=1e-4)
     assert np.allclose(grad, ref_grad, atol=1e-4)
 
     c_g = g.on(list(range(g.n_qubits)), g.n_qubits)

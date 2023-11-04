@@ -1408,7 +1408,7 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
             sim.ApplyGate(g, pr, false);
         }
     }
-    return sim.Sampling(mea_circ, pr, shots, key_map, static_cast<unsigned>(rng()));
+    return sim.Sampling(mea_circ, pr, shots, key_map, seed);
 }
 }  // namespace mindquantum::sim::vector::detail
 
