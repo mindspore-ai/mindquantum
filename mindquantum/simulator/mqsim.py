@@ -443,12 +443,11 @@ class MQSim(BackendBase):
             _check_seed(seed)
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
-        sim = self
         if circuit.is_measure_end and not circuit.is_noise_circuit:
-            sim = self.copy()
-            sim.apply_circuit(circuit.remove_measure(), pr)
-            circuit = Circuit(circuit.all_measures.keys())
-        samples = np.array(sim.sim.sampling(circuit.get_cpp_obj(), pr, shots, res.keys_map, seed)).reshape((shots, -1))
+            sampler = self.sim.sampling_measure_ending_without_nosise
+        else:
+            sampler = self.sim.sampling
+        samples = np.array(sampler(circuit.get_cpp_obj(), pr, shots, res.keys_map, seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
 

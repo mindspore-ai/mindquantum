@@ -981,17 +981,40 @@ VT<unsigned> DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, c
         derived_t sim{n_qubits, static_cast<unsigned>(rng())};
         qs_policy_t::CopyQS(&(sim.qs), qs, dim);
         auto res0 = sim.ApplyCircuit(circ, pr);
-        VT<unsigned> res1(key_map.size());
-        for (const auto& [name, val] : key_map) {
-            res1[val] = res0[name];
-        }
-        for (size_t j = 0; j < key_size; j++) {
-            res[i * key_size + j] = res1[j];
+        for (auto& [k, v] : res0) {
+            res[i * key_size + key_map.at(k)] = v;
         }
     }
     return res;
 }
+template <typename qs_policy_t_>
+VT<unsigned> DensityMatrixState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(
+    const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots, const MST<size_t>& key_map,
+    unsigned int seed) const {
+    RndEngine rnd_eng = RndEngine(seed);
+    std::uniform_real_distribution<double> dist(1.0, (1 << 20) * 1.0);
+    std::function<double()> rng = std::bind(dist, std::ref(rnd_eng));
 
+    auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()));
+    qs_policy_t::CopyQS(&(sim.qs), qs, dim);
+
+    VT<int> already_measured(this->n_qubits, 0);
+    circuit_t mea_circ;
+
+    for (auto& g : circ) {
+        if (g->id_ == GateID::M) {
+            auto m_qid = g->obj_qubits_[0];
+            if (already_measured[m_qid] != 0) {
+                throw std::runtime_error("Quantum circuit is not a measurement ending circuit.");
+            }
+            already_measured[m_qid] = 1;
+            mea_circ.push_back(g);
+        } else {
+            sim.ApplyGate(g, pr, false);
+        }
+    }
+    return sim.Sampling(mea_circ, pr, shots, key_map, static_cast<unsigned>(rng()));
+}
 }  // namespace mindquantum::sim::densitymatrix::detail
 
 #endif

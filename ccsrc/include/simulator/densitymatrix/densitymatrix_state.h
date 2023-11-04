@@ -176,6 +176,10 @@ class DensityMatrixState {
     virtual VT<unsigned> Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned int seed) const;
 
+    virtual VT<unsigned> SamplingMeasurementEndingWithoutNoise(const circuit_t& circ,
+                                                               const parameter::ParameterResolver& pr, size_t shots,
+                                                               const MST<size_t>& key_map, unsigned int seed) const;
+
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
     DensityMatrixState<policy_des> astype(unsigned new_seed) const {
         return DensityMatrixState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim),
