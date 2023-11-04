@@ -105,6 +105,10 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
                std::shared_ptr<mindquantum::PhaseDampingChannel>>(module, "PhaseDampingChannel")
         .def(py::init<double, const qbits_t &, const qbits_t &>(), "damping_coeff"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::ThermalRelaxationChannel, mindquantum::BasicGate,
+               std::shared_ptr<mindquantum::ThermalRelaxationChannel>>(module, "ThermalRelaxationChannel")
+        .def(py::init<double, double, double, const qbits_t &, const qbits_t &>(), "t1"_a, "t2"_a, "gate_time"_a,
+             "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
 }
 
 void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
@@ -269,6 +273,7 @@ PYBIND11_MODULE(mqbackend, m) {
                        .value("AD", mindquantum::GateID::AD)
                        .value("PD", mindquantum::GateID::PD)
                        .value("KRAUS", mindquantum::GateID::KRAUS)
+                       .value("TR", mindquantum::GateID::TR)
                        .value("CUSTOM", mindquantum::GateID::CUSTOM);
     gate_id.attr("__repr__") = pybind11::cpp_function(
         [](const mindquantum::GateID &id) -> pybind11::str { return fmt::format("GateID.{}", id); },

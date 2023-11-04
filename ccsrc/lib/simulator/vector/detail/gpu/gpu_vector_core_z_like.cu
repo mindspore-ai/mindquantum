@@ -119,6 +119,38 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t* qs_p, const
     }
 }
 
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyILike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
+                                                           qs_data_t v1, qs_data_t v2, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    SingleQubitGateMask mask(objs, ctrls);
+    thrust::counting_iterator<index_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_mask = mask.obj_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    if (!mask.ctrl_mask) {
+        thrust::for_each(l, l + dim / 2, [=] __device__(index_t l) {
+            auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
+            auto j = i + obj_mask;
+            qs[i] *= v1;
+            qs[j] *= v2;
+        });
+    } else {
+        thrust::for_each(l, l + dim / 2, [=] __device__(index_t l) {
+            auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = i + obj_mask;
+                qs[i] *= v1;
+                qs[j] *= v2;
+            }
+        });
+    }
+}
+
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 

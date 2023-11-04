@@ -204,6 +204,8 @@ struct CPUDensityMatrixPolicyBase {
     static void ApplyPauli(qs_data_p_t* qs_p, const qbits_t& objs, const VT<double>& probs, index_t dim);
     static void ApplyDepolarizing(qs_data_p_t* qs_p, const qbits_t& objs, calc_type prob, index_t dim);
     static void ApplyKraus(qs_data_p_t* qs_p, const qbits_t& objs, const VT<matrix_t>& kraus_set, index_t dim);
+    static void ApplyThermalRelaxation(qs_data_p_t* qs_p, const qbits_t& objs, calc_type t1, calc_type t2,
+                                       calc_type gate_time, index_t dim);
 
     // gate_expec
     // ========================================================================================================

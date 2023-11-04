@@ -353,6 +353,9 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
         case GateID::KRAUS:
             this->ApplyKrausChannel(gate);
             break;
+        case GateID::TR:
+            this->ApplyThermalRelaxationChannel(gate);
+            break;
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());
             tensor::Matrix mat;
@@ -402,6 +405,9 @@ void VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& g
             break;
         case GateID::KRAUS:
             this->ApplyKrausChannel(gate);
+            break;
+        case GateID::TR:
+            this->ApplyThermalRelaxationChannel(gate);
             break;
         case GateID::AD:
         case GateID::PD:
@@ -486,62 +492,111 @@ void VectorState<qs_policy_t_>::ApplyDepolarizingChannel(const std::shared_ptr<B
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGate>& gate) {
-    auto tmp_qs = qs_policy_t::InitState(dim);
     calc_type relative_prob = 0;
     calc_type total_prob = 1;
     auto g = static_cast<KrausChannel*>(gate.get());
     for (size_t n_kraus = 0; n_kraus < g->kraus_operator_set_.size(); n_kraus++) {
-        qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_,
-                                            tensor::ops::cpu::to_vector<py_qs_data_t>(g->kraus_operator_set_[n_kraus]),
-                                            dim);
-        calc_type prob = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
-        relative_prob = prob / total_prob;
-        total_prob = total_prob - prob;
-        calc_type renormal_factor = 1 / std::sqrt(prob);
-        if (static_cast<calc_type>(rng_()) <= relative_prob) {
-            qs_policy_t::QSMulValue(tmp_qs, &tmp_qs, renormal_factor, dim);
-            qs_policy_t::FreeState(&qs);
-            qs = tmp_qs;
-            tmp_qs = nullptr;
-            break;
+        auto m = tensor::ops::cpu::to_vector<py_qs_data_t>(g->kraus_operator_set_[n_kraus]);
+        // I case
+        if ((std::abs(m[0][1]) < 1e-6) && (std::abs(m[1][0]) < 1e-6) && (std::abs(m[0][0] - m[1][1]) < 1e-6)) {
+            calc_type prob = std::real(m[0][0] * std::conj(m[0][0]));
+            relative_prob = prob / total_prob;
+            total_prob = total_prob - prob;
+            if (static_cast<calc_type>(rng_()) < relative_prob) {
+                if (std::imag(m[0][0]) < 1e-6) {
+                    return;
+                } else {  // I with a phase
+                    qs_policy_t::QSMulValue(qs, &qs, m[0][0] / std::sqrt(prob), dim);
+                    return;
+                }
+            }
+        } else {
+            auto tmp_qs = qs_policy_t::InitState(dim);
+            qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m, dim);
+            calc_type prob = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
+            relative_prob = prob / total_prob;
+            total_prob = total_prob - prob;
+            calc_type renormal_factor = 1 / std::sqrt(prob);
+            if (static_cast<calc_type>(rng_()) < relative_prob) {
+                qs_policy_t::QSMulValue(tmp_qs, &tmp_qs, renormal_factor, dim);
+                qs_policy_t::FreeState(&qs);
+                qs = tmp_qs;
+                tmp_qs = nullptr;
+                break;
+            }
+            qs_policy_t::FreeState(&tmp_qs);
         }
     }
-    qs_policy_t::FreeState(&tmp_qs);
 }
 
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate) {
-    calc_type reduced_factor_b_square = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
-    calc_type reduced_factor_b = std::sqrt(reduced_factor_b_square);
-    if (reduced_factor_b < 1e-8) {
+    calc_type renormal_factor = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
+    if (renormal_factor < 1e-6) {
         return;
     }
     auto id = gate->id_;
     double damping_coeff = 0;
-    if (id == GateID::PD) {
-        damping_coeff = static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_;
-    } else {
+    if (id == GateID::AD) {
         damping_coeff = static_cast<AmplitudeDampingChannel*>(gate.get())->damping_coeff_;
+    } else {
+        damping_coeff = static_cast<PhaseDampingChannel*>(gate.get())->damping_coeff_;
     }
-    calc_type prob = damping_coeff * reduced_factor_b_square;
+    calc_type prob = damping_coeff * renormal_factor;
     if (static_cast<calc_type>(rng_()) <= prob) {
-        auto tmp_qs = qs_policy_t::InitState(dim);
         if (id == GateID::AD) {
-            VVT<py_qs_data_t> m({{0, 1 / reduced_factor_b}, {0, 0}});
-            qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->obj_qubits_[0], gate->ctrl_qubits_, m, dim);
+            qs_policy_t::ApplyXLike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 1 / std::sqrt(renormal_factor), 0, dim);
         } else {
-            qs_policy_t::ConditionalMul(qs, &tmp_qs, (static_cast<uint64_t>(1) << gate->obj_qubits_[0]),
-                                        (static_cast<uint64_t>(1) << gate->obj_qubits_[0]), 1 / reduced_factor_b, 0,
-                                        dim);
+            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 0, 1 / std::sqrt(renormal_factor), dim);
         }
-        qs = tmp_qs;
-        tmp_qs = nullptr;
-        qs_policy_t::FreeState(&tmp_qs);
     } else {
         calc_type coeff_a = 1 / std::sqrt(1 - prob);
         calc_type coeff_b = std::sqrt(1 - damping_coeff) / std::sqrt(1 - prob);
-        qs_policy_t::ConditionalMul(qs, &qs, (static_cast<uint64_t>(1) << gate->obj_qubits_[0]), 0, coeff_a, coeff_b,
-                                    dim);
+        qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, coeff_a, coeff_b, dim);
+    }
+}
+
+template <typename qs_policy_t_>
+void VectorState<qs_policy_t_>::ApplyThermalRelaxationChannel(const std::shared_ptr<BasicGate>& gate) {
+    calc_type t1 = static_cast<ThermalRelaxationChannel*>(gate.get())->t1_;
+    calc_type t2 = static_cast<ThermalRelaxationChannel*>(gate.get())->t2_;
+    calc_type gate_time = static_cast<ThermalRelaxationChannel*>(gate.get())->gate_time_;
+    calc_type e1 = std::exp(-gate_time / t1);
+    calc_type e2 = std::exp(-gate_time / t2);
+    calc_type p_reset = 1 - e1;
+    if (t1 >= t2) {
+        calc_type pz = e1 * (1 - e2 / e1) / 2;
+        calc_type r = static_cast<calc_type>(rng_());
+        if (r < 1 - pz - p_reset) {  // I case
+            return;
+        } else if (r < 1 - p_reset) {  // Z case
+            qs_policy_t::ApplyZ(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+        } else {  // reset case
+            calc_type zero_factor = qs_policy_t::ZeroStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
+            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 1 / std::sqrt(zero_factor), 0, dim);
+        }
+    } else if (2 * t1 > t2) {
+        calc_type r = static_cast<calc_type>(rng_());
+        calc_type eigenvalue0 = (2 - p_reset + std::sqrt(p_reset * p_reset + 4 * e2 * e2)) / 2;
+        calc_type eigenvalue1 = (2 - p_reset - std::sqrt(p_reset * p_reset + 4 * e2 * e2)) / 2;
+        calc_type eigen_vector0 = (eigenvalue0 - e1) / e2;
+        calc_type eigen_vector1 = (eigenvalue1 - e1) / e2;
+        calc_type zero_factor = qs_policy_t::ZeroStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
+        calc_type one_factor = 1 - zero_factor;
+        calc_type c0 = eigen_vector0 * eigen_vector0 * zero_factor + one_factor;
+        calc_type p0 = c0 * eigenvalue0 / (eigen_vector0 * eigen_vector0 + 1);
+        if (r < p0) {  // Kraus operator from eigenvalue0 case
+            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, eigen_vector0 / std::sqrt(c0),
+                                    1 / std::sqrt(c0), dim);
+        } else if (r < 1 - p_reset * one_factor) {  // Kraus operator from eigenvalue1 case
+            calc_type c1 = eigen_vector1 * eigen_vector1 * zero_factor + one_factor;
+            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, eigen_vector1 / std::sqrt(c1),
+                                    1 / std::sqrt(c1), dim);
+        } else {  // Kraus operator from eigenvalue2 (reset) case
+            qs_policy_t::ApplyXLike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 1 / std::sqrt(one_factor), 0, dim);
+        }
+    } else {
+        std::runtime_error("(T2 >= 2 * T1) is invalid case for thermal relaxation channel.");
     }
 }
 
