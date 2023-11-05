@@ -1184,7 +1184,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(mq_gates.FSim(theta, phi).on(obj_qubits, ctrl_qubits))
         return self
 
-    def measure(self, key, obj_qubit=None):
+    def measure(self, key, obj_qubit=None, reset_to=None):
         """
         Add a measure gate.
 
@@ -1192,11 +1192,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             key (Union[int, str]): If `obj_qubit` is ``None``, then `key` should be a int and means which
                 qubit to measure, otherwise, `key` should be a str and means the name of this measure gate.
             obj_qubit (int): Which qubit to measure. Default: ``None``.
+            reset_to (Union[int, None]): Reset the qubit to 0 state or 1 state. If ``None``, do not reset.
+                Default: ``None``.
         """
         if obj_qubit is None:
-            self.append(mq_gates.Measure().on(key))
+            self.append(mq_gates.Measure(reset_to=reset_to).on(key))
         else:
-            self.append(mq_gates.Measure(key).on(obj_qubit))
+            self.append(mq_gates.Measure(key, reset_to=reset_to).on(obj_qubit))
         return self
 
     def measure_all(self, suffix=None, up_to: int = -1):

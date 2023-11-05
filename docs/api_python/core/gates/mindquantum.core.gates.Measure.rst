@@ -7,6 +7,7 @@ mindquantum.core.gates.Measure
 
     参数：
         - **name** (str) - 此测量门的键。在量子线路中，不同测量门的键应该是唯一的。默认值： ``''``。
+        - **reset_to** (Union[int, None]) - 将量子比特重置为0态或者1态。如果是 ``None``，则不重置量子比特。默认值： ``None``。
 
     .. py:method:: get_cpp_obj()
 

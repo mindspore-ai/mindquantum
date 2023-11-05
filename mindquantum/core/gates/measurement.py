@@ -24,6 +24,7 @@ from rich.console import Console
 
 from mindquantum import mqbackend as mb
 from mindquantum.utils.string_utils import join_without_empty
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 from .basic import FunctionalGate
 
@@ -35,6 +36,8 @@ class Measure(FunctionalGate):
     Args:
         name (str): The key of this measurement gate. In a quantum circuit, the
             key of different measurement gate should be unique. Default: ``''``.
+        reset_to (Union[int, None]): Reset the qubit to 0 state or 1 state. If ``None``, do not reset.
+                Default: ``None``.
 
     Examples:
         >>> import numpy as np
@@ -84,35 +87,44 @@ class Measure(FunctionalGate):
         array([0.5 , 0.  , 0.25, 0.25])
     """
 
-    def __init__(self, name=''):
+    def __init__(self, name='', reset_to=None):
         """Initialize a Measure object."""
         super().__init__('Measure', 1)
+        _check_input_type('name', str, name)
+        if reset_to is not None:
+            _check_int_type('reset_to', reset_to)
+            if reset_to not in [0, 1]:
+                raise ValueError(f"reset_to should be 0 or 1, but get {reset_to}")
         self.key = name
+        self.reset_to = reset_to
 
     def get_cpp_obj(self):
         """Get the underlying C++ object."""
-        return mb.gate.MeasureGate(self.key, self.obj_qubits)
+        if self.reset_to is None:
+            return mb.gate.MeasureGate(self.key, self.obj_qubits)
+        return mb.gate.MeasureGate(self.key, self.obj_qubits, self.reset_to)
 
     def __hash__(self):
         """Hash method."""
-        return hash(self.key)
+        return hash((self.key, self.reset_to))
 
     def __eq__(self, other):
         """Equality comparison operator."""
         if isinstance(other, self.__class__):
-            if self.key == other.key:
+            if [self.key, self.reset_to] == [other.key, other.reset_to]:
                 return True
         return False
 
     def __extra_prop__(self):
         """Extra prop magic method."""
-        return {'key': self.key}
+        return {'key': self.key, 'reset_to': self.reset_to}
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
         q_s = self.__qubits_expression__()
         k_s = f"key={self.key}" if self.key else ''
-        return join_without_empty(", ", [q_s, k_s])
+        r_s = f"reset to {self.reset_to}" if self.reset_to is not None else ''
+        return join_without_empty(", ", [q_s, k_s, r_s])
 
     def __str_in_terminal__(self):
         """Return a string representation of the object."""
@@ -121,7 +133,7 @@ class Measure(FunctionalGate):
 
     def __str_in_circ__(self):
         """Return a string representation of the object."""
-        return f"M({self.key})"
+        return f"M({self.key})" if self.reset_to is None else f"M({self.key}, reset to {self.reset_to})"
 
     def on(self, obj_qubits, ctrl_qubits=None):
         """
@@ -147,7 +159,7 @@ class Measure(FunctionalGate):
         """Hermitian gate of measure return itself."""
         if not self.obj_qubits:
             raise ValueError("Measurement should apply on some qubit first.")
-        return self.__class__(self.key).on(self.obj_qubits[0])
+        return self.__class__(self.key, self.reset_to).on(self.obj_qubits[0])
 
 
 class MeasureResult:
