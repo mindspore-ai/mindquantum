@@ -1284,7 +1284,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         return apply(self, [self.n_qubits - 1 - i for i in self.all_qubits.keys()])
 
-    def svg(self, style=None, width=None):
+    def svg(self, style=None, width=None, scale=None):
         """
         Display current quantum circuit into SVG picture in jupyter notebook.
 
@@ -1292,6 +1292,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             style (dict, str): the style to set svg circuit. Currently, we support
                 ``'official'``, ``'light'`` and ``'dark'``. Default: ``None``.
             width (int, float): the max width of circuit. Default: ``None``.
+            scale (Union[float, None]): Scale factor for scaling svg. If ``None``, do
+                not scale. Default: ``None``.
         """
         # pylint: disable=import-outside-toplevel,cyclic-import
         from mindquantum.io.display._config import (
@@ -1319,7 +1321,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             if style not in supported_style:
                 raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
             style = supported_style[style]
-        return SVGCircuit(self, style, width)
+        svg = SVGCircuit(self, style, width)
+        if scale is not None:
+            svg.scale(scale)
+        return svg
 
     def remove_noise(self):
         """Remove all noise gate."""

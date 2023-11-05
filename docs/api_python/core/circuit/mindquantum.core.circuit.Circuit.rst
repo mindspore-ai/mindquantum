@@ -361,13 +361,14 @@ mindquantum.core.circuit.Circuit
         参数：
             - **show** (bool) - 是否显示信息。默认值： ``True``。
 
-    .. py:method:: svg(style=None, width=None)
+    .. py:method:: svg(style=None, width=None, scale=None)
 
         在Jupyter Notebook中将当前量子线路用SVG图展示。
 
         参数：
             - **style** (dict, str) - 设置svg线路的样式。目前，我们支持'official'，'light'和'dark'。默认值： ``None``。
             - **width** (int, float) - 设置量子线路的最大宽度。默认值： ``None``。
+            - **scale** (Union[float, None]) - 设置量子线路的缩放尺度。如果是 ``None``，则不缩放。默认值： ``None``。
 
     .. py:method:: swap(obj_qubits, ctrl_qubits=None)
 
