@@ -53,8 +53,13 @@ struct BasicGate {
 
 struct MeasureGate : public BasicGate {
     std::string name_;
+    index_t reset_to_;
+    bool reset_ = false;
     MeasureGate(const std::string& name, const qbits_t& obj_qubits)
         : BasicGate(GateID::M, obj_qubits, {}), name_(name) {
+    }
+    MeasureGate(const std::string& name, const qbits_t& obj_qubits, index_t reset_to)
+        : BasicGate(GateID::M, obj_qubits, {}), name_(name), reset_to_(reset_to), reset_(true) {
     }
 };
 

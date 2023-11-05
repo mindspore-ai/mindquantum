@@ -60,7 +60,8 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
     using mindquantum::VT;
     py::class_<mindquantum::MeasureGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::MeasureGate>>(
         module, "MeasureGate")
-        .def(py::init<std::string, const qbits_t &>(), "name"_a, "obj_qubits"_a);
+        .def(py::init<std::string, const qbits_t &>(), "name"_a, "obj_qubits"_a)
+        .def(py::init<std::string, const qbits_t &, mindquantum::index_t>(), "name"_a, "obj_qubits"_a, "reset_to"_a);
     py::class_<mindquantum::IGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::IGate>>(module, "IGate")
         .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::XGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::XGate>>(module, "XGate")

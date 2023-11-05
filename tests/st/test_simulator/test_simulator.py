@@ -730,3 +730,24 @@ def test_noise_simulator(config):
         assert res.data['00'] == 1701
     elif virtual_qc.startswith('mqmatrix'):
         assert res.data['00'] == 1684
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_measurement_reset(config):
+    """
+    Description: Test measurement_reset.
+    Expectation: succeed.
+    """
+    virtual_qc, _ = config
+    c = Circuit().rx(2.2, 0).ry(1.2, 1)
+    c.measure(0, reset_to=1)
+    c.measure(1, reset_to=0)
+    c.measure('q0_1', 0)
+    c.measure('q1_1', 1)
+    sim = Simulator(virtual_qc, c.n_qubits)
+    res = sim.sampling(c, shots=100, seed=123)
+    assert all(i[:2] == '01' for i in res.data.keys())

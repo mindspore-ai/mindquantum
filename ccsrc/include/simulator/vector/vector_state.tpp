@@ -378,11 +378,15 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
+    auto m_g = static_cast<MeasureGate*>(gate.get());
     index_t one_mask = (static_cast<uint64_t>(1) << gate->obj_qubits_[0]);
     auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
     index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
     qs_data_t norm_fact = (collapse_mask == 0) ? 1 / std::sqrt(1 - one_amp) : 1 / std::sqrt(one_amp);
     qs_policy_t::ConditionalMul(qs, &qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
+    if (m_g->reset_ && (static_cast<index_t>(collapse_mask != 0) != m_g->reset_to_)) {
+        qs_policy_t::ApplyX(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+    }
     return static_cast<index_t>(collapse_mask != 0);
 }
 

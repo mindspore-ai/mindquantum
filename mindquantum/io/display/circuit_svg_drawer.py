@@ -1257,6 +1257,16 @@ class SVGMeasure(SVGBasicGate):
         super_align(self.rect, self.icon, 0.8, 'bottom', relative=True)
         self.add(self.rect)
         self.add(self.icon)
+        if g.reset_to is not None:
+            text = Text(0, 0, f"{g.reset_to}")
+            text.font_family(self.svg_config['gate_name_font_family'])
+            text.font_size(self.svg_config['gate_name_font_size'] * 0.7)
+            text.font_weight(self.svg_config['gate_name_font_weight'])
+            text.fill(self.svg_config['gate_name_color'])
+            self.text = text
+            self.add(self.text)
+            super_align(self.rect, self.text, 0.05, 'left', relative=True)
+            super_align(self.rect, self.text, 0.05, 'top', relative=True)
         self.as_background(self.rect)
         self.move_to_create_qubit()
 
