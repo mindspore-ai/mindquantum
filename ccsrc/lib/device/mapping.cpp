@@ -143,14 +143,15 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
                 if (i != Qi)
                 {
                     tempCandidatePysicalQubits[i][0] = D[Qi][i];    // ****** 想想能不能优化
-                    tempCandidatePysicalQubits[i][1] = i; 
+                    tempCandidatePysicalQubits[i][1] = i;
                 }
-                else{
+                else
+                {
                     tempCandidatePysicalQubits[i][0] = -1;
                     tempCandidatePysicalQubits[i][1] = i; 
                 }
             }
-            sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(),
+            sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(), \
             [](const VT<int> a,const VT<int> b){
                 if (a[0] <= b[0])
                     return true;
@@ -162,13 +163,12 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
             for (int i = 0; i < qcQueue.size(); i++)
             // find nearest physical qubits and its number equal with qcQueue.size
             {
-                
                 QcQueue.push(tempCandidatePysicalQubits[i+1][1]);
                 Rlayout[tempCandidatePysicalQubits[i+1][1]] = 1;
             }
-
         }
-        else{
+        else
+        {
             VT<int> SubTree;
             for (int i=0; i < this->num_logical; i++)
             // find the subtree of the current logical bit association
@@ -191,10 +191,10 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
                     else
                     {
                         tempCandidatePysicalQubits[i][0] = -1;
-                        tempCandidatePysicalQubits[i][1] = i; 
+                        tempCandidatePysicalQubits[i][1] = i;
                     }
                 }
-                sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(),
+                sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(), \
                 [](const VT<int> a,const VT<int> b){
                     if (a[0] <= b[0])
                         return true;
@@ -222,8 +222,8 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
         count++;
     }
     int start_num_logical = 0;
-    int start_num_physical = 0 ;
-    while ( start_num_logical < this->num_logical)
+    int start_num_physical = 0;
+    while (start_num_logical < this->num_logical)
     // deal with qubits that don't match
     {
         if (layout[start_num_logical] == -1)
