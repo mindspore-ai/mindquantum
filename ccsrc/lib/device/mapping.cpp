@@ -86,79 +86,81 @@ std::pair<qbit_t, VT<Gate>> GateToAbstractGate(const VT<std::shared_ptr<BasicGat
 }
 
 // -----------------------------------------------------------------------------
-int MQ_SABRE::CalGraphCenter(const VT<VT<int>>& graph) {        
+int MQ_SABRE::CalGraphCenter(const VT<VT<int>>& graph) {
     int n = graph.size();
     int center_qubit;
-    int tempmin=INT16_MAX;
-    for(int i=0; i<n; i++)
+    int tempmin = INT16_MAX;
+    for (int i = 0; i < n; i++)
     {
         int temp_sum = 0;
-        for(int j=0; j<n ; j++)
+        for (int j = 0; j < n ; j++)
         {
             temp_sum += graph[i][j];
         }
-        if(temp_sum<tempmin)
+        if (temp_sum < tempmin)
         {
-            tempmin=temp_sum;
-            center_qubit=i;
+            tempmin = temp_sum;
+            center_qubit = i;
         }
     }
     return center_qubit;
 }
 
 VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling_graph) {
-    VT<int> layout(this->num_physical,-1);
-    VT<int> Rlayout(this->num_physical,-1);
+    VT<int> layout(this->num_physical, -1);
+    VT<int> Rlayout(this->num_physical, -1);
     int Qc = CalGraphCenter(this->D);
     int qc = CalGraphCenter(this->Gw);
     layout[qc] = Qc;
     Rlayout[Qc] = 1;
-    std::queue<int> qcQueue;    // the queue of logic qubits 
-    std::queue<int> QcQueue;    // the queue of physical qubits 
+    std::queue<int> qcQueue;    // the queue of logic qubits
+    std::queue<int> QcQueue;    // the queue of physical qubits
     qcQueue.push(qc);
     QcQueue.push(Qc);
-    int flag=1;                 // the flag  whether it is the first mapping
-    int count=1;
-    while(!qcQueue.empty() && !QcQueue.empty())
+    int flag = 1;                 // the flag  whether it is the first mapping
+    int count = 1;
+    while (!qcQueue.empty() && !QcQueue.empty())
     {
         int qi = qcQueue.front();
         int Qi = QcQueue.front();
-        if(layout[qi] == -1)    //judge whether the current logical bit matches the physical bit
+        if (layout[qi] == -1)    //judge whether the current logical bit matches the physical bit
         {
             layout[qi] = Qi;     //  if not ,then map them
         }
-        if(flag==1)              // if it is the first mapping
+        if (flag == 1)              // if it is the first mapping
         {
-            flag=0;
-            for(int i=0; i<this->num_logical; i++)     //find all qubits associated with the current qubit qc
+            flag = 0;
+            for (int i = 0; i < this->num_logical; i++)     //find all qubits associated with the current qubit qc
             {
-                if(Gw[qc][i] != 0 )
+                if (Gw[qc][i] != 0 )
                 {
                     qcQueue.push(i);
                 }
             }
-            VT<VT<int>> tempCandidatePysicalQubits(this->num_physical,VT<int>(2,0)); 
-            for(int i=0; i<this->num_physical; i++)
+            VT<VT<int>> tempCandidatePysicalQubits(this->num_physical, VT<int>(2, 0));
+            for (int i = 0; i < this->num_physical; i++)
             {
-                if(i!=Qi)
+                if (i != Qi)
                 {
-                    tempCandidatePysicalQubits[i][0]=D[Qi][i];    // ****** 想想能不能优化
-                    tempCandidatePysicalQubits[i][1]=i; 
+                    tempCandidatePysicalQubits[i][0] = D[Qi][i];    // ****** 想想能不能优化
+                    tempCandidatePysicalQubits[i][1] = i; 
                 }
                 else{
-                    tempCandidatePysicalQubits[i][0]=-1;
-                    tempCandidatePysicalQubits[i][1]=i; 
+                    tempCandidatePysicalQubits[i][0] = -1;
+                    tempCandidatePysicalQubits[i][1] = i; 
                 }
             }
-            sort(tempCandidatePysicalQubits.begin(),tempCandidatePysicalQubits.end(),[](const VT<int> a,const VT<int> b){
-                if(a[0]<=b[0])
+            sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(),
+            [](const VT<int> a,const VT<int> b){
+                if (a[0] <= b[0])
                     return true;
                 return false;
             });
 
             qcQueue.pop();
             QcQueue.pop();
-            for(int i=0; i<qcQueue.size(); i++)     // find nearest physical qubits and its number equal with qcQueue.size
+            for (int i = 0; i < qcQueue.size(); i++)
+            // find nearest physical qubits and its number equal with qcQueue.size
             {
                 
                 QcQueue.push(tempCandidatePysicalQubits[i+1][1]);
@@ -168,40 +170,43 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
         }
         else{
             VT<int> SubTree;
-            for(int i=0; i < this->num_logical; i++)    // find the subtree of the current logical bit association
+            for (int i=0; i < this->num_logical; i++)
+            // find the subtree of the current logical bit association
             {
-                if(Go[qi][i] != -1 && layout[i] == -1)
+                if (Go[qi][i] != -1 && layout[i] == -1)
                 {
                     SubTree.emplace_back(i);
                 }
             }
-            if(SubTree.size()>0)
+            if (SubTree.size() > 0)
             {
-                VT<VT<int>> tempCandidatePysicalQubits(this->num_physical,VT<int>(2,0));
-                for(int i=0; i<this->num_physical; i++)
+                VT<VT<int>> tempCandidatePysicalQubits(this->num_physical, VT<int>(2, 0));
+                for (int i=0; i < this->num_physical; i++)
                 {
-                    if(i!=Qi)
+                    if (i != Qi)
                     {
-                        tempCandidatePysicalQubits[i][0]=D[Qi][i];    // ****** 想想能不能优化
-                        tempCandidatePysicalQubits[i][1]=i; 
+                        tempCandidatePysicalQubits[i][0] = D[Qi][i];
+                        tempCandidatePysicalQubits[i][1] = i;
                     }
                     else
                     {
-                        tempCandidatePysicalQubits[i][0]=-1;
-                        tempCandidatePysicalQubits[i][1]=i; 
+                        tempCandidatePysicalQubits[i][0] = -1;
+                        tempCandidatePysicalQubits[i][1] = i; 
                     }
                 }
-                sort(tempCandidatePysicalQubits.begin(),tempCandidatePysicalQubits.end(),[](const VT<int> a,const VT<int> b){
-                    if(a[0]<=b[0])
+                sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(),
+                [](const VT<int> a,const VT<int> b){
+                    if (a[0] <= b[0])
                         return true;
                     return false;
                 });
                 int num = SubTree.size();
-                for(int i=0; i<SubTree.size(); i++)     //find nearest physical qubits and its number equal with SubTree.size
+                for (int i = 0; i < SubTree.size(); i++)
+                //find nearest physical qubits and its number equal with SubTree.size
                 {
-                    for(int j=1; j<tempCandidatePysicalQubits.size(); j++)
+                    for (int j = 1; j < tempCandidatePysicalQubits.size(); j++)
                     {
-                        if(Rlayout[tempCandidatePysicalQubits[j][1]] == -1)
+                        if (Rlayout[tempCandidatePysicalQubits[j][1]] == -1)
                         {
                             qcQueue.push(SubTree[i]);
                             QcQueue.push(tempCandidatePysicalQubits[j][1]);
@@ -218,16 +223,18 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
     }
     int start_num_logical = 0;
     int start_num_physical = 0 ;
-    while(start_num_logical<this->num_logical)   // deal with qubits that don't match
+    while ( start_num_logical < this->num_logical)
+    // deal with qubits that don't match
     {
-        if(layout[start_num_logical]==-1)
+        if (layout[start_num_logical] == -1)
         {
-            while(start_num_physical<this->num_physical&&Rlayout[start_num_physical]!=-1)
+            while (start_num_physical < this->num_physical
+            && Rlayout[start_num_physical] != -1)
             {
                 start_num_physical++;
             }
-            layout[start_num_logical]=start_num_physical;
-            Rlayout[start_num_physical]=start_num_logical;
+            layout[start_num_logical] = start_num_physical;
+            Rlayout[start_num_physical] = start_num_logical;
         }
         start_num_logical++;
     }
@@ -236,31 +243,31 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
 }
 
 std::list<int> MQ_SABRE::GetNextLayer(const std::list<int>& F, const VT<VT<int>>& DAG, VT<int>& indeg) {
-   std::list<int> ret;
-   for (int x : F) {
-       for (int y : DAG[x]) {
-           indeg[y]--;
-           if (gates[y].type == "CNOT") {  // y is CNOT gate
-               if (indeg[y] == 0)
+    std::list<int> ret;
+    for (int x : F) {
+        for (int y : DAG[x]) {
+            indeg[y]--;
+            if (gates[y].type == "CNOT") {  // y is CNOT gate
+                if (indeg[y] == 0)
                 {
                     ret.push_back(y);
                 }
-           } else {      
+            } else {      
                 if (indeg[y] == 0)
                 {
                     ret.push_back(y);
                 }              // y is single gate
-           }
-       }
-   }
+            }
+        }
+    }
    return ret;
 }
 std::list<int> MQ_SABRE::GetFLayer(std::list<std::pair<int,int>>& E){
     std::list<int> res;
-    if(E.size()>0)
+    if (E.size() > 0)
     {
-        int flag=E.front().second;
-        while(E.size()>0&& flag==E.front().second)
+        int flag = E.front().second;
+        while (E.size() > 0 && flag == E.front().second)
         {
                 res.push_back(E.front().first);
                 E.pop_front();
@@ -305,22 +312,23 @@ double MQ_SABRE::HBasic(const std::list<int>& F, const VT<int>& pi) const {
     return sum;
 }
 
-std::pair<double,double> MQ_SABRE::HExtended(const std::list<std::pair<int,int>>& E, const VT<int>& tmppi,const VT<int>& pi) const {
+std::pair<double,double> MQ_SABRE::HExtended(const std::list<std::pair<int,int>>& E, 
+const VT<int>& tmppi,const VT<int>& pi) const {
     double sum = 0;
-    double effectcost=0;
+    double effectcost = 0;
     for (auto g : E) {
         int q1 = gates[g.first].q1;
         int q2 = gates[g.first].q2;
         sum += DM[tmppi[q1]][tmppi[q2]];
         effectcost += DM[tmppi[q1]][tmppi[q2]] - DM[pi[q1]][pi[q2]];
     }
-    return std::pair<double,double>({sum,effectcost});
+    return std::pair<double,double>({sum, effectcost});
 }
 
 VT<int> MQ_SABRE::GetReversePi(const VT<int>& pi) const {
     VT<int> rpi(pi.size(),-1);
     for (int i = 0; i < static_cast<int>(pi.size()); ++i) {
-        if(pi[i]!=-1)
+        if (pi[i] != -1)
             rpi[pi[i]] = i;
     }
     return rpi;
@@ -329,42 +337,41 @@ VT<int> MQ_SABRE::GetReversePi(const VT<int>& pi) const {
 VT<Gate> MQ_SABRE::HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG) {
     VT<Gate> ans;
     int tot = 0;
-    auto rpi = GetReversePi(pi);     // mapping from physical to logical
-    VT<int> indeg(DAG.size(), 0);  // in-degree of DAG nodes
+    auto rpi = GetReversePi(pi);    // mapping from physical to logical
+    VT<int> indeg(DAG.size(), 0);   // in-degree of DAG nodes
     int num_of_qubits = this->num_logical;
     for (int i = 0; i < static_cast<int>(DAG.size()); ++i)
         for (int j : DAG[i])
-            indeg[j]++;   
-   std::list<int> F;  // front layer
+            indeg[j]++;
+   std::list<int> F;    //front layer
    std::list<std::pair<int,int>> E;
-   for (int i = 0; i < static_cast<int>(DAG.size()); ++i)  // get first layer
+   for (int i = 0; i < static_cast<int>(DAG.size()); ++i)   //get first layer
        if (indeg[i] == 0)
            F.push_back(i);
    int layer=0;
-   int m=indeg.size();
-   while(F.size()>0)
+   while (F.size() > 0)
    {
         ++layer;
-        for(auto it = F.begin(); it != F.end(); ++it)
-            E.push_back({*it,layer});
-        F = GetNextLayer(F,DAG,indeg);
+        for (auto it = F.begin(); it != F.end(); ++it)
+            E.push_back({*it, layer});
+        F = GetNextLayer(F, DAG, indeg);
    }  
-    while(!E.empty()||!F.empty())               //*****************大循环
+    while (!E.empty() || !F.empty())
     {
         if(F.empty())
-            F=GetFLayer(E);
-        for (auto it = F.begin(); it != F.end();) {   
-            if (IsExecutable(pi, *it)) {   // it用的是迭代器，即指针，所以要用 * 号解析值
+            F = GetFLayer(E);
+        for (auto it = F.begin(); it != F.end();) {  
+            if (IsExecutable(pi, *it)) {
                 int x = *it;
                 if (gates[x].type == "CNOT") {
                 int p = gates[x].q1;
                 int q = gates[x].q2;
-                ans.push_back({"CNOT", pi[p], pi[q], gates[x].tag});   //将可执行CNOT比特门加入到最终门序列中
+                ans.push_back({"CNOT", pi[p], pi[q], gates[x].tag});
                 } else {
                 int p = gates[x].q1;
-                ans.push_back({gates[x].type, pi[p], pi[p], gates[x].tag});   ////将可执行单比特门加入到最终门序列中
+                ans.push_back({gates[x].type, pi[p], pi[p], gates[x].tag});
                 }
-                it=F.erase(it);
+                it = F.erase(it);
             }
             else{
                 it++;
@@ -374,8 +381,7 @@ VT<Gate> MQ_SABRE::HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG) {
         {
             double score=std::numeric_limits<double>::max();
             double effect;
-            auto candidate_SWAPs = ObtainSWAPs(F, pi);  //返回候选SWAP门序列
-            // return VT<Gate>();
+            auto candidate_SWAPs = ObtainSWAPs(F, pi);
             std::pair<int, int> minSWAP;
             VT<int> tmppi;
             VT<int> tmprpi;
@@ -386,28 +392,28 @@ VT<Gate> MQ_SABRE::HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG) {
                 int p = rpi[x], q = rpi[y];
                 tmppi = pi;
                 tmprpi = rpi;
-                if(p==-1)
+                if (p == -1)
                 {
                     tmprpi[x] = temp_num_of_qubits;
                     tmppi[temp_num_of_qubits] = x;
                     p = temp_num_of_qubits;
                 }
-                if(q==-1)
+                if (q == -1)
                 {
                     tmprpi[y] = temp_num_of_qubits;
                     tmppi[temp_num_of_qubits] = y;
                     q = temp_num_of_qubits;
                 }
-                std::swap(tmppi[p], tmppi[q]);   //  对mapping逻辑临时更改，并保留先前的映射
-                double hbasic = HBasic(F,tmppi);
-                auto extendAndeffect = HExtended(E,tmppi,pi);
-                if(E.size()>0)
+                std::swap(tmppi[p], tmppi[q]);
+                double hbasic = HBasic(F, tmppi);
+                auto extendAndeffect = HExtended(E, tmppi, pi);
+                if (E.size() > 0)
                 {
-                    H_ = hbasic/double(F.size()) + this->W*extendAndeffect.first/double(E.size());
+                    H_ = hbasic / double(F.size()) + this->W * extendAndeffect.first / double(E.size());
                 }
                 else
-                    H_ = hbasic/double(F.size());
-                if(H_ < score)
+                    H_ = hbasic / double(F.size());
+                if (H_ < score)
                 {
                     score = H_;
                     minSWAP = SWAP;
@@ -415,49 +421,50 @@ VT<Gate> MQ_SABRE::HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG) {
                 }
             }
             int tempflag=0;
-            if(effect<0)
+            if (effect < 0)
             {
-                for(auto it=F.begin();it!=F.end();)
+                for (auto it = F.begin();it != F.end();)
                 {
                     if (IsExecutable(tmppi, *it))
                     {
                         int x = minSWAP.first, y = minSWAP.second;
                         int p = pi[gates[*it].q1], q = pi[gates[*it].q2];
                         // return VT<Gate>();
-                        if((p==x&&D[q][y]==1)||(p==y&&D[q][x]==1))    //  add bridge gate
+                        if ((p == x && D[q][y] == 1) || (p == y && D[q][x] == 1))    //add bridge gate
                         {
-                            tempflag=1;
-                            if(p==x&&D[q][y]==1)
+                            tempflag = 1;
+                            if (p == x && D[q][y] == 1)
                             {
                                 ans.push_back({"CNOT", q, y, gates[*it].tag});
                                 ans.push_back({"CNOT", y, p, gates[*it].tag});
                                 ans.push_back({"CNOT", q, y, gates[*it].tag});
                                 ans.push_back({"CNOT", y, p, gates[*it].tag});
                             }
-                            else if((p==y&&D[q][x]==1))
+                            else if ((p == y && D[q][x] == 1))
                             {
                                 ans.push_back({"CNOT", q, x, gates[*it].tag});
                                 ans.push_back({"CNOT", x, p, gates[*it].tag});
                                 ans.push_back({"CNOT", q, x, gates[*it].tag});
                                 ans.push_back({"CNOT", x, p, gates[*it].tag});
                             }
-                            it=F.erase(it);
+                            it = F.erase(it);
                         }
                     }
                     it++;
                 }
             }
-            if(tempflag==0){                  // if not meet above conditions ,add swap gate
+            if(tempflag==0){
+                // if not meet above conditions ,add swap gate
                 int x = minSWAP.first, y = minSWAP.second;
                 int p = rpi[x], q = rpi[y];
-                if(p==-1)
+                if (p == -1)
                 {
                     rpi[x] = num_of_qubits;
                     pi[num_of_qubits] = x;
                     p = num_of_qubits;
                     num_of_qubits++;
                 }
-                if(q==-1)
+                if (q == -1)
                 {
                     rpi[y] = num_of_qubits;
                     pi[num_of_qubits] = y;
@@ -481,25 +488,29 @@ const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGat
     this->num_physical = coupling_graph->size();
     this->CNOT_error_rate = VT<VT<double>>(this->num_physical, VT<double>(num_physical));
     this->CNOT_gate_length = VT<VT<double>>(this->num_physical, VT<double>(num_physical));
-    for(int i=0;i<CnotErrrorRateAndGateLength.size();i++) // get cnot error rate matrix and cnot length matrix
+    for(int i=0;i<CnotErrrorRateAndGateLength.size();i++)
+    // get cnot error rate matrix and cnot length matrix
     {
-        CNOT_error_rate[CnotErrrorRateAndGateLength[i].first.first][CnotErrrorRateAndGateLength[i].first.second]=CnotErrrorRateAndGateLength[i].second[0];
-        CNOT_gate_length[CnotErrrorRateAndGateLength[i].first.first][CnotErrrorRateAndGateLength[i].first.second]=CnotErrrorRateAndGateLength[i].second[1];
+        CNOT_error_rate[CnotErrrorRateAndGateLength[i].first.first]\
+        [CnotErrrorRateAndGateLength[i].first.second] = CnotErrrorRateAndGateLength[i].second[0];
+        CNOT_gate_length[CnotErrrorRateAndGateLength[i].first.first]\
+        [CnotErrrorRateAndGateLength[i].first.second] = CnotErrrorRateAndGateLength[i].second[1];
     }
-    this->SWAP_success_rate=VT<VT<double>>(this->num_physical, VT<double>(this->num_physical));
-    this->SWAP_gate_length=VT<VT<double>>(this->num_physical, VT<double>(this->num_physical));
-    for(int i=0;i<this->num_physical;i++)    // get swap correct rate matrix and swap length matrix
+    this->SWAP_success_rate = VT<VT<double>>(this->num_physical, VT<double>(this->num_physical));
+    this->SWAP_gate_length = VT<VT<double>>(this->num_physical, VT<double>(this->num_physical));
+    for(int i=0;i<this->num_physical;i++)
+    // get swap correct rate matrix and swap length matrix
     {
-        for(int j=0;j<this->num_physical;j++)
+        for (int j = 0;j < this->num_physical;j++)
         {
-            if(CNOT_error_rate[i][j]!=0)
+            if (CNOT_error_rate[i][j] != 0)
             {
-                // double temp=(1-(this->CNOT_error_rate[i][j]));   //    为什么不能直接用呢
-                this->SWAP_success_rate[i][j]=1 - (1-(this->CNOT_error_rate[i][j]))*(1-CNOT_error_rate[j][i])*(1-CNOT_error_rate[i][j]);
+                this->SWAP_success_rate[i][j]= 1 - (1-(this->CNOT_error_rate[i][j]))*\
+                (1-CNOT_error_rate[j][i])*(1-CNOT_error_rate[i][j]);
             }
-            if(CNOT_gate_length[i][j]!=0)
+            if (CNOT_gate_length[i][j] != 0)
             {
-                SWAP_gate_length[i][j] = 2*CNOT_gate_length[i][j] + CNOT_gate_length[j][i];
+                SWAP_gate_length[i][j] = 2 * CNOT_gate_length[i][j] + CNOT_gate_length[j][i];
             }
         }
     }
@@ -530,12 +541,13 @@ const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGat
     // get Kesi by D
     {
         int n = num_physical;
-        this->Kesi= VT<VT<double>>(n, VT<double>(n,0.0));
-        for(int i=0;i<n;i++)
+        this->Kesi = VT<VT<double>>(n, VT<double>(n,0.0));
+        for (int i = 0; i < n; i++)
         {
-            for(int j=0;j<n;j++)
+            for (int j = 0; j < n; j++)
             {
-                Kesi[i][j]=1-SWAP_success_rate[i][j]*SWAP_success_rate[j][i]*(std::max(SWAP_success_rate[i][j],SWAP_success_rate[j][i]));
+                Kesi[i][j]=1-SWAP_success_rate[i][j]*SWAP_success_rate[j][i]*\
+                (std::max(SWAP_success_rate[i][j],SWAP_success_rate[j][i]));
             }
         }
         for (int k = 0; k < n; ++k)
@@ -546,12 +558,13 @@ const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGat
     //get T by D
     {
         int n = num_physical;
-        this->T= VT<VT<double>>(n, VT<double>(n,0.0));
-        for(int i=0;i<n;i++)
+        this->T = VT<VT<double>>(n, VT<double>(n,0.0));
+        for (int i = 0; i < n; i++)
         {
-            for(int j=0;j<n;j++)
+            for (int j = 0;j < n; j++)
             {
-                T[i][j]= SWAP_gate_length[i][j]+SWAP_gate_length[j][i]+std::min(SWAP_gate_length[i][j],SWAP_gate_length[j][i]);
+                T[i][j]= SWAP_gate_length[i][j]+SWAP_gate_length[j][i]+\
+                std::min(SWAP_gate_length[i][j],SWAP_gate_length[j][i]);
             }
         }
         for (int k = 0; k < n; ++k)
@@ -567,7 +580,7 @@ const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGat
         this->Dw = VT<VT<int>>(n, VT<int>(n,0));
         for (int i = 0; i < static_cast<int>(gates.size()); ++i) 
         {
-            if(gates[i].type == "CNOT")
+            if (gates[i].type == "CNOT")
             {
                 int q1 = gates[i].q1;
                 int q2 = gates[i].q2;
@@ -575,7 +588,7 @@ const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGat
                 Dw[q2][q1] += 1;
                 Gw[q1][q2] += -1;
                 Gw[q2][q1] += -1;
-                if(Go[q1][q2] == -1)
+                if (Go[q1][q2] == -1)
                 {
                     Go[q1][q2] = i;
                     Go[q2][q1] = i;
@@ -599,14 +612,14 @@ const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGat
 std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>> MQ_SABRE::Solve(double W, double alpha1, double alpha2,double alpha3){
     this->SetParameters(W, alpha1, alpha2, alpha3);     //set parameters
     this->DM= VT<VT<double>>(num_physical,VT<double>(num_physical,0.0));
-    for(int i=0;i<num_physical;i++)
+    for (int i = 0; i < num_physical; i++)
     {
-        for(int j=0;j<num_physical;j++)
+        for (int j=0; j < num_physical; j++)
         {
             DM[i][j] = alpha1 * D[i][j] + alpha2 * Kesi[i][j]+ alpha3 * T[i][j];
         }
     }
-    auto initial_mapping = this->layout;                   // first mapping 
+    auto initial_mapping = this->layout;                   // first mapping
     auto gates = HeuristicSearch(this->layout,this->DAG);  // final mapping
 
     // return std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>>();

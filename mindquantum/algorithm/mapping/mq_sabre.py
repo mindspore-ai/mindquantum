@@ -10,7 +10,7 @@ from typing import List,Tuple
 # pylint: disable=too-few-public-methods
 class MQ_SABRE:
     """
-    SABRE algorithm to implement qubit mapping.
+    MQ_SABRE algorithm to implement qubit mapping.
 
 
     Args:
@@ -20,8 +20,9 @@ class MQ_SABRE:
             connected coupling graph.
         cnoterrorandlength (:the property info of CNOT gate)
     """
-    
-    def __init__(self, circuit: Circuit, topology: QubitsTopology,cnoterrorandlength: List[Tuple[Tuple[int,int],List[float]]]):
+
+    def __init__(self, circuit: Circuit, topology: QubitsTopology, \
+                cnoterrorandlength: List[Tuple[Tuple[int,int],List[float]]]):
         """Initialize a sabre qubit mapping solver."""
         self.circuit = circuit
         self.topology = topology

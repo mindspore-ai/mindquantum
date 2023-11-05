@@ -21,6 +21,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
@@ -129,13 +130,13 @@ void BindQubitMapping(py::module &module) {  // NOLINT(runtime/references)
     saber_m.doc() = "SABER method to implement qubit mapping task.";
     //------------------------------------------------------------------------------
     auto ha_saber_m = py::class_<mm::MQ_SABRE, std::shared_ptr<mm::MQ_SABRE>>(module, "MQ_SABRE")
-                    .def(py::init<const mindquantum::VT<std::shared_ptr<mindquantum::BasicGate>> &,
-                               const std::shared_ptr<mm::QubitsTopology> &,
-                               const std::vector<std::pair<std::pair<int,int>,std::vector<double>>> &>(),
-                    "Initialize mq_saber method.")
-                    .def("solve", &mm::MQ_SABRE::Solve, "W"_a, "alpha1"_a, "alpha2"_a, "alpha3"_a,
-                         "Solve qubit mapping problem with ha_saber method.");
- ha_saber_m.doc() = "HA_SABER method to implement qubit mapping task.";
+                       .def(py::init<const mindquantum::VT<std::shared_ptr<mindquantum::BasicGate>> &,
+                                     const std::shared_ptr<mm::QubitsTopology> &, 
+                                     const std::vector<std::pair<std::pair<int,int>,std::vector<double>>> &>(),
+                            "Initialize mq_saber method.")
+                       .def("solve", &mm::MQ_SABRE::Solve, "W"_a, "alpha1"_a, "alpha2"_a, "alpha3"_a,
+                            "Solve qubit mapping problem with ha_saber method.");
+    ha_saber_m.doc() = "MQ_SABER method to implement qubit mapping task.";
 }
 }  // namespace mindquantum::python
 #endif
