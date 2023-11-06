@@ -573,7 +573,12 @@ void VectorState<qs_policy_t_>::ApplyThermalRelaxationChannel(const std::shared_
             qs_policy_t::ApplyZ(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
         } else {  // reset case
             calc_type zero_factor = qs_policy_t::ZeroStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
-            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 1 / std::sqrt(zero_factor), 0, dim);
+            if (static_cast<calc_type>(rng_()) < zero_factor) {
+                qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 1 / std::sqrt(zero_factor), 0, dim);
+            } else {
+                qs_policy_t::ApplyXLike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 1 / std::sqrt(1 - zero_factor), 0,
+                                        dim);
+            }
         }
     } else if (2 * t1 > t2) {
         calc_type r = static_cast<calc_type>(rng_());
