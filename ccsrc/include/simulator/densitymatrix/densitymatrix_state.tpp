@@ -371,6 +371,12 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
                            [&](auto& k) { return tensor::ops::cpu::to_vector<py_qs_data_t>(k); });
             qs_policy_t::ApplyKraus(&qs, gate->obj_qubits_, k_mat, dim);
         } break;
+        case GateID::TR:
+            qs_policy_t::ApplyThermalRelaxation(&qs, gate->obj_qubits_,
+                                                static_cast<ThermalRelaxationChannel*>(gate.get())->t1_,
+                                                static_cast<ThermalRelaxationChannel*>(gate.get())->t2_,
+                                                static_cast<ThermalRelaxationChannel*>(gate.get())->gate_time_, dim);
+            break;
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());
             tensor::Matrix mat;
@@ -421,6 +427,12 @@ void DensityMatrixState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicG
                            [](auto& m) { return tensor::ops::cpu::to_vector<py_qs_data_t>(m); });
             qs_policy_t::ApplyKraus(&qs, gate->obj_qubits_, k_mat, dim);
         } break;
+        case GateID::TR:
+            qs_policy_t::ApplyThermalRelaxation(&qs, gate->obj_qubits_,
+                                                static_cast<ThermalRelaxationChannel*>(gate.get())->t1_,
+                                                static_cast<ThermalRelaxationChannel*>(gate.get())->t2_,
+                                                static_cast<ThermalRelaxationChannel*>(gate.get())->gate_time_, dim);
+            break;
         default:
             throw std::invalid_argument(fmt::format("{} is not a noise channel.", id));
     }

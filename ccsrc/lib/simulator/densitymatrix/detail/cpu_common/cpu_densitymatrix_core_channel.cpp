@@ -169,6 +169,39 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyKraus(qs_data_p_t* q
     derived::ApplySingleQubitChannel(*qs_p, qs_p, objs[0], kraus_set, dim);
 }
 
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyThermalRelaxation(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                                              calc_type t1, calc_type t2,
+                                                                              calc_type gate_time, index_t dim) {
+    if (t2 >= 2 * t1) {
+        std::runtime_error("(T2 >= 2 * T1) is invalid case for thermal relaxation channel.");
+    }
+    calc_type e1 = std::exp(-gate_time / t1);
+    calc_type e2 = std::exp(-gate_time / t2);
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    SingleQubitGateMask mask(objs, {});
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {  // loop on the row
+            auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+            auto r1 = r0 + mask.obj_mask;
+            for (index_t b = 0; b < a; b++) {  // loop on the column
+                auto c0 = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                auto c1 = c0 + mask.obj_mask;
+                qs[IdxMap(r0, c0)] += qs[IdxMap(r1, c1)] * (1 - e1);
+                qs[IdxMap(r1, c0)] *= e2;
+                qs[IdxMap(r1, c1)] *= e1;
+                SelfMultiply(qs, r0, c1, e2);
+            }
+            // diagonal case
+            qs[IdxMap(r0, r0)] += qs[IdxMap(r1, r1)] * (1 - e1);
+            qs[IdxMap(r1, r0)] *= e2;
+            qs[IdxMap(r1, r1)] *= e1;
+        })
+}
+
 #ifdef __x86_64__
 template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
 template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;

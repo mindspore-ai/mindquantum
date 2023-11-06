@@ -115,6 +115,35 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyPS(qs_data_p_t* qs_p, const
     }
 }
 
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyILike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
+                                                           qs_data_t v1, qs_data_t v2, index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    SingleQubitGateMask mask(objs, ctrls);
+    if (!mask.ctrl_mask) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                auto j = i | mask.obj_mask;
+                qs[i] *= v1;
+                qs[j] *= v2;
+            })
+    } else {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto j = i | mask.obj_mask;
+                    qs[i] *= v1;
+                    qs[j] *= v2;
+                }
+            })
+    }
+}
+
 #ifdef __x86_64__
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
 template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;

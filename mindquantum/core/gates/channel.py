@@ -693,40 +693,19 @@ class ThermalRelaxationChannel(NoiseGate, NonHermitianGate):
             raise ValueError(f"T1 and T2 must be positive, but get T1={t1}, T2={t2}")
         if gate_time < 0:
             raise ValueError(f"gate time cannot be negative, but get {gate_time}")
+        if t2 >= 2 * t1:
+            raise ValueError("(T2 >= 2 * T1) is invalid case for thermal relaxation channel.")
         self.t1 = t1
         self.t2 = t2
         self.gate_time = gate_time
-        e_1 = exp(-gate_time / t1)
-        e_2 = exp(-gate_time / t2)
-        p_reset = 1 - e_1
-        if t1 >= t2:
-            pz = e_1 * (1 - e_2 / e_1) / 2
-            kz = [[sqrt(pz), 0], [0, -sqrt(pz)]]
-            ki = [[sqrt(1 - pz - p_reset), 0], [0, sqrt(1 - pz - p_reset)]]
-            k_reset00 = [[sqrt(p_reset), 0], [0, 0]]
-            k_reset01 = [[0, sqrt(p_reset)], [0, 0]]
-            self.kraus_op = [ki, kz, k_reset00, k_reset01]
-        elif 2 * t1 >= t2:
-            eigenvalue1 = (2 - p_reset + sqrt(p_reset**2 + 4 * e_2**2)) / 2
-            eigenvalue2 = (2 - p_reset - sqrt(p_reset**2 + 4 * e_2**2)) / 2
-            eigen_vector1 = (eigenvalue1 - e_1) / e_2
-            eigen_vector2 = (eigenvalue2 - e_1) / e_2
-            k0 = np.array([[eigen_vector1, 0], [0, 1]]) * sqrt(eigenvalue1 / (eigen_vector1**2 + 1))
-            k1 = np.array([[eigen_vector2, 0], [0, 1]]) * sqrt(eigenvalue2 / (eigen_vector2**2 + 1))
-            k2 = [[0, sqrt(p_reset)], [0, 0]]
-            self.kraus_op = [k0, k1, k2]
-        else:
-            raise ValueError("(T2 > 2 * T1) is invalid case.")
 
     def get_cpp_obj(self):
         """Get underlying C++ object."""
-        return mb.gate.KrausChannel(self.kraus_op, self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.ThermalRelaxationChannel(self.t1, self.t2, self.gate_time, self.obj_qubits, self.ctrl_qubits)
 
     def __type_specific_str__(self):
         """Return a string representation of the object."""
-        return (
-            f't1={string_expression(self.t1)},t2={string_expression(self.t2)},tg={string_expression(self.gate_time)}'
-        )
+        return f't1={string_expression(self.t1)},t2={string_expression(self.t2)},tg={string_expression(self.gate_time)}'
 
     def matrix(self):  # pylint: disable=arguments-differ
         """
@@ -735,4 +714,23 @@ class ThermalRelaxationChannel(NoiseGate, NonHermitianGate):
         Returns:
             list, contains all Kraus operators of this quantum channel.
         """
-        return list(self.kraus_op)
+        e1 = exp(-self.gate_time / self.t1)
+        e2 = exp(-self.gate_time / self.t2)
+        p_reset = 1 - e1
+        if self.t1 >= self.t2:
+            pz = e1 * (1 - e2 / e1) / 2
+            ki = np.array([[sqrt(1 - pz - p_reset), 0], [0, sqrt(1 - pz - p_reset)]])
+            kz = np.array([[sqrt(pz), 0], [0, -sqrt(pz)]])
+            k_reset00 = np.array([[sqrt(p_reset), 0], [0, 0]])
+            k_reset01 = np.array([[0, sqrt(p_reset)], [0, 0]])
+            return [ki, kz, k_reset00, k_reset01]
+        if 2 * self.t1 > self.t2:
+            eigenvalue0 = (2 - p_reset + sqrt(p_reset**2 + 4 * e2**2)) / 2
+            eigenvalue1 = (2 - p_reset - sqrt(p_reset**2 + 4 * e2**2)) / 2
+            eigen_vector0 = (eigenvalue0 - e1) / e2
+            eigen_vector1 = (eigenvalue1 - e1) / e2
+            k0 = np.array([[eigen_vector0, 0], [0, 1]]) * sqrt(eigenvalue0 / (eigen_vector0**2 + 1))
+            k1 = np.array([[eigen_vector1, 0], [0, 1]]) * sqrt(eigenvalue1 / (eigen_vector1**2 + 1))
+            k2 = np.array([[0, sqrt(p_reset)], [0, 0]])
+            return [k0, k1, k2]
+        raise ValueError("(T2 >= 2 * T1) is invalid case for thermal relaxation channel.")

@@ -121,6 +121,9 @@ class VectorState {
     //! Apply a damping channel
     virtual void ApplyDampingChannel(const std::shared_ptr<BasicGate>& gate);
 
+    //! Apply a thermal relaxation channel on this quantum state
+    virtual void ApplyThermalRelaxationChannel(const std::shared_ptr<BasicGate>& gate);
+
     //! calculate the expectation of differential form of parameterized gate two quantum state. That is
     //! <bra| \partial_\theta{U} |ket>
     virtual tensor::Matrix ExpectDiffGate(const qs_data_p_t& bra, const qs_data_p_t& ket,

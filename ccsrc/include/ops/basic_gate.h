@@ -253,6 +253,15 @@ struct PhaseDampingChannel : public BasicGate {
         : BasicGate(GateID::PD, obj_qubits, ctrl_qubits), damping_coeff_(damping_coeff) {
     }
 };
+struct ThermalRelaxationChannel : public BasicGate {
+    double t1_;
+    double t2_;
+    double gate_time_;
+    ThermalRelaxationChannel(double t1, double t2, double gate_time, const qbits_t& obj_qubits,
+                             const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::TR, obj_qubits, ctrl_qubits), t1_(t1), t2_(t2), gate_time_(gate_time) {
+    }
+};
 
 struct CustomGate : public Parameterizable {
     std::string name_;

@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Test channel."""
-from math import sqrt
+from math import sqrt, exp
 import numpy as np
 import pytest
 
@@ -84,6 +84,30 @@ def test_kraus_channel():
     assert np.allclose(C.KrausChannel('AD', [mat_0, mat_1]).matrix(), [mat_0, mat_1])
 
 
+def test_thermal_relaxation_channel():
+    """
+    Description: Test thermal relaxation channel
+    Expectation: success.
+    """
+    t1, t2, gate_time = np.random.rand(3) * 10000
+    if t2 >= 2 * t1:
+        with pytest.raises(ValueError):
+            c = C.ThermalRelaxationChannel(t1, t2, gate_time).on(0)
+        return
+    e1 = exp(-gate_time / t1)
+    e2 = exp(-gate_time / t2)
+    ref_choi = np.array([[1, 0, 0, e2], [0, 0, 0, 0], [0, 0, 1 - e1, 0], [e2, 0, 0, e1]])
+    choi = np.zeros((4, 4))
+    for i in C.ThermalRelaxationChannel(t1, t2, gate_time).matrix():
+        choi += (
+            np.kron(np.array([[1, 0], [0, 0]]), i @ np.array([[1, 0], [0, 0]]) @ i.conj().T)
+            + np.kron(np.array([[0, 1], [0, 0]]), i @ np.array([[0, 1], [0, 0]]) @ i.conj().T)
+            + np.kron(np.array([[0, 0], [1, 0]]), i @ np.array([[0, 0], [1, 0]]) @ i.conj().T)
+            + np.kron(np.array([[0, 0], [0, 1]]), i @ np.array([[0, 0], [0, 1]]) @ i.conj().T)
+        )
+    assert np.allclose(choi, ref_choi)
+
+
 def test_channel_with_ctrl_qubits():
     """
     Description: Test raise channel have control qubits
@@ -99,3 +123,5 @@ def test_channel_with_ctrl_qubits():
         C.DepolarizingChannel(0.1).on(0, 1)
     with pytest.raises(Exception, match=r"cannot have control qubits"):
         C.KrausChannel('kraus', C.DepolarizingChannel(0.1).matrix()).on(0, 1)
+    with pytest.raises(Exception, match=r"cannot have control qubits"):
+        C.ThermalRelaxationChannel(10000, 9000, 30).on(0, 1)
