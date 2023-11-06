@@ -173,30 +173,33 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyThermalRelaxation(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                               calc_type t1, calc_type t2,
                                                                               calc_type gate_time, index_t dim) {
-    VT<matrix_t> kraus_set;
-    calc_type e_1 = std::exp(-gate_time / t1);
-    calc_type e_2 = std::exp(-gate_time / t2);
-    calc_type pz = e_1 * (1 - e_2 / e_1) / 2;
-    calc_type p_reset = 1 - e_1;
-    if (t1 >= t2) {
-        kraus_set.push_back({{std::sqrt(1 - pz - p_reset), 0}, {0, std::sqrt(1 - pz - p_reset)}});
-        kraus_set.push_back({{std::sqrt(pz), 0}, {0, -std::sqrt(pz)}});
-        kraus_set.push_back({{std::sqrt(p_reset), 0}, {0, 0}});
-        kraus_set.push_back({{0, std::sqrt(p_reset)}, {0, 0}});
-    } else if (2 * t1 > t2) {
-        calc_type eigenvalue0 = (2 - p_reset + std::sqrt(p_reset * p_reset + 4 * e_2 * e_2)) / 2;
-        calc_type eigenvalue1 = (2 - p_reset - std::sqrt(p_reset * p_reset + 4 * e_2 * e_2)) / 2;
-        calc_type eigen_vector0 = (eigenvalue0 - e_1) / e_2;
-        calc_type eigen_vector1 = (eigenvalue1 - e_1) / e_2;
-        calc_type c0 = std::sqrt(eigenvalue0 / (eigen_vector0 * eigen_vector0 + 1));
-        calc_type c1 = std::sqrt(eigenvalue1 / (eigen_vector1 * eigen_vector1 + 1));
-        kraus_set.push_back({{eigen_vector0 * c0, 0}, {0, c0}});
-        kraus_set.push_back({{eigen_vector1 * c1, 0}, {0, c1}});
-        kraus_set.push_back({{0, std::sqrt(p_reset)}, {0, 0}});
-    } else {
+    if (t2 >= 2 * t1) {
         std::runtime_error("(T2 >= 2 * T1) is invalid case for thermal relaxation channel.");
     }
-    derived::ApplySingleQubitChannel(*qs_p, qs_p, objs[0], kraus_set, dim);
+    calc_type e1 = std::exp(-gate_time / t1);
+    calc_type e2 = std::exp(-gate_time / t2);
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    SingleQubitGateMask mask(objs, {});
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim / 2); a++) {  // loop on the row
+            auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+            auto r1 = r0 + mask.obj_mask;
+            for (index_t b = 0; b < a; b++) {  // loop on the column
+                auto c0 = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                auto c1 = c0 + mask.obj_mask;
+                qs[IdxMap(r0, c0)] += qs[IdxMap(r1, c1)] * (1 - e1);
+                qs[IdxMap(r1, c0)] *= e2;
+                qs[IdxMap(r1, c1)] *= e1;
+                SelfMultiply(qs, r0, c1, e2);
+            }
+            // diagonal case
+            qs[IdxMap(r0, r0)] += qs[IdxMap(r1, r1)] * (1 - e1);
+            qs[IdxMap(r1, r0)] *= e2;
+            qs[IdxMap(r1, r1)] *= e1;
+        })
 }
 
 #ifdef __x86_64__
