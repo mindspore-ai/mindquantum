@@ -1,17 +1,17 @@
-"""MQ_SABRE algorithm to implement qubit mapping."""
+"""MQSABRE algorithm to implement qubit mapping."""
 import typing
+from typing import List, Tuple
 
 from ...core.circuit import Circuit
 from ...core.gates import SWAP
 from ...device import QubitsTopology
 from ...mqbackend.device import MQ_SABRE as MQ_SABRE_  # pylint: disable=import-error
-from typing import List,Tuple
+
 
 # pylint: disable=too-few-public-methods
-class MQ_SABRE:
+class MQSABRE:
     """
-    MQ_SABRE algorithm to implement qubit mapping.
-
+    MQSABRE algorithm to implement qubit mapping.
 
     Args:
         circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
@@ -21,13 +21,16 @@ class MQ_SABRE:
         cnoterrorandlength (:the property info of CNOT gate)
     """
 
-    def __init__(self, circuit: Circuit, topology: QubitsTopology, \
-                cnoterrorandlength: List[Tuple[Tuple[int,int],List[float]]]):
+    def __init__(
+        self, circuit: Circuit, topology: QubitsTopology, cnoterrorandlength: List[Tuple[Tuple[int, int], List[float]]]
+    ):
         """Initialize a sabre qubit mapping solver."""
         self.circuit = circuit
         self.topology = topology
-        self.cnoterrorandlength=cnoterrorandlength
-        self.cpp_solver = MQ_SABRE_(self.circuit.get_cpp_obj(), self.topology.__get_cpp_obj__(),self.cnoterrorandlength)
+        self.cnoterrorandlength = cnoterrorandlength
+        self.cpp_solver = MQ_SABRE_(
+            self.circuit.get_cpp_obj(), self.topology.__get_cpp_obj__(), self.cnoterrorandlength
+        )
 
         def check_connected(topology: QubitsTopology) -> bool:
             """Check whether topology graph is connected."""
@@ -58,13 +61,12 @@ class MQ_SABRE:
             )
 
     def solve(
-        self, W: float, alpha1: float, alpha2: float, alpha3: float
+        self, w: float, alpha1: float, alpha2: float, alpha3: float
     ) -> typing.Union[Circuit, typing.List[int], typing.List[int]]:
         """
         Solve qubit mapping problem with SABRE algorithm.
 
         Args:
-            iter_num (int): The iteration number for when solving mapping problem.
             w (float): The w parameter. For more detail, please refers to the paper.
             delta1 (float): The delta1 parameter. For more detail, please refers to the paper.
             delta2 (float): The delta2 parameter. For more detail, please refers to the paper.
@@ -74,7 +76,7 @@ class MQ_SABRE:
                 circuit that can execute on given device, the initial mapping order,
                 and the final mapping order.
         """
-        gate_info, (init_map, final_map) = self.cpp_solver.solve(W, alpha1, alpha2, alpha3)
+        gate_info, (init_map, final_map) = self.cpp_solver.solve(w, alpha1, alpha2, alpha3)
         new_circ = Circuit()
         for idx, p1, p2 in gate_info:
             if idx == -1:
