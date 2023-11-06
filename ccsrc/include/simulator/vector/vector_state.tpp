@@ -383,14 +383,23 @@ template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
     auto m_g = static_cast<MeasureGate*>(gate.get());
     index_t one_mask = (static_cast<uint64_t>(1) << gate->obj_qubits_[0]);
-    auto one_amp = qs_policy_t::ConditionalCollect(qs, one_mask, one_mask, true, dim).real();
-    index_t collapse_mask = (static_cast<index_t>(rng_() < one_amp) << gate->obj_qubits_[0]);
-    qs_data_t norm_fact = (collapse_mask == 0) ? 1 / std::sqrt(1 - one_amp) : 1 / std::sqrt(one_amp);
-    qs_policy_t::ConditionalMul(qs, &qs, one_mask, collapse_mask, norm_fact, 0.0, dim);
-    if (m_g->reset_ && (static_cast<index_t>(collapse_mask != 0) != m_g->reset_to_)) {
-        qs_policy_t::ApplyX(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+    auto one_amp = qs_policy_t::OneStateVdot(qs, qs, gate->obj_qubits_[0], dim).real();
+    bool collapse_to_one = (rng_() < one_amp);
+    qs_data_t norm_fact = (collapse_to_one) ? 1 / std::sqrt(one_amp) : 1 / std::sqrt(1 - one_amp);
+    if (collapse_to_one) {
+        if (m_g->reset_ && m_g->reset_to_ == 0) {
+            qs_policy_t::ApplyXLike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, norm_fact, 0, dim);
+        } else {
+            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 0, norm_fact, dim);
+        }
+    } else {
+        if (m_g->reset_ && m_g->reset_to_ == 1) {
+            qs_policy_t::ApplyXLike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, 0, norm_fact, dim);
+        } else {
+            qs_policy_t::ApplyILike(&qs, gate->obj_qubits_, gate->ctrl_qubits_, norm_fact, 0, dim);
+        }
     }
-    return static_cast<index_t>(collapse_mask != 0);
+    return static_cast<index_t>(collapse_to_one);
 }
 
 template <typename qs_policy_t_>
