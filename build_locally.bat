@@ -273,6 +273,7 @@ rem ============================================================================
   )
 
   set unparsed_args=!unparsed_args! %1
+  set unparsed_args=%unparsed_args:'="%
   shift & goto :initial
 
 :done_parsing
