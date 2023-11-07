@@ -41,6 +41,9 @@ ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
 ccsrc/python/math/lib/bind_math.cpp:mindquantum::python::BindQubitOperator
 ccsrc/include/math/tensor/ops_cpu/advance_math.h:tensor::ops::cpu::ElementFunc
 ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp:mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix
+ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::InitialMapping
+ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::HeuristicSearch
+ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::MQ_SABRE
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti

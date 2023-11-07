@@ -22,6 +22,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "device/mapping.h"
 #include "device/topology.h"
@@ -50,59 +51,58 @@ VT<VT<int>> GetCircuitDAG(int n, const VT<Gate>& gates);
 
 class MQ_SABRE {
  private:
-    int num_logical; 
+    int num_logical;
     int num_physical;
     VT<int> layout;
     VT<Gate> gates;  // logical circuit
 
-    VT<VT<int>> DAG;   // DAG of logical circuit
+    VT<VT<int>> DAG;  // DAG of logical circuit
 
-    VT<VT<int>> G;   // physical coupling graph
+    VT<VT<int>> G;  // physical coupling graph
 
     VT<VT<int>> D;  // nearest neighbor cost
 
     VT<VT<int>> Gw;  // interaction weight graph
     VT<VT<int>> Dw;  // nearest neighbor cost
 
-    VT<VT<int>> Go;  // interaction order graph  
-
+    VT<VT<int>> Go;  // interaction order graph
 
     /**
      * @brief calculate center of graph
      *
      * @param graph The graph to be computed
-     * 
+     *
      * @return the center node of graph
-     */    
-   int CalGraphCenter(const VT<VT<int>>& graph);
+     */
+    int CalGraphCenter(const VT<VT<int>>& graph);
 
-   /**
+    /**
      * @brief Preliminary matching result between logical and physical lines
      *
      * @param coupling_graph Topology of quantum logic circuits
-     * 
+     *
      * @return the result of preliminary matching
-     */    
-   VT<int> InitialMapping(const std::shared_ptr<QubitsTopology>& coupling_graph);
+     */
+    VT<int> InitialMapping(const std::shared_ptr<QubitsTopology>& coupling_graph);
 
-   /**
+    /**
      * @brief Calculate the next gate node according to the degree of entry
      *
      * @param last_layer The upper layer contains the quantum gates
      * @param DAG
      * @param indeg in-degree of DAG nodes
      * @return The next layer contains the quantum gates
-     */    
-   std::list<int> GetNextLayer(const std::list<int>& last_layer, const VT<VT<int>>& DAG, VT<int>& indeg);
+     */
+    std::list<int> GetNextLayer(const std::list<int>& last_layer, const VT<VT<int>>& DAG, VT<int>& indeg);
 
     /**
      * @brief Get the next gate node
      *
      * @param E Gate nodes and their corresponding topological layers
-     * 
+     *
      * @return The quantum gate on the next level
-     */    
-   std::list<int> GetFLayer(std::list<std::pair<int,int>>& E);
+     */
+    std::list<int> GetFLayer(std::list<std::pair<int, int>>& E);
 
     /**
      * @brief judge whether gate[g] can be executable under mapping pi
@@ -111,27 +111,27 @@ class MQ_SABRE {
      * @param g id of gate
      * @return true when pi[g.q1] and pi[g.q2] is neighbor in G
      */
-   bool IsExecutable(const VT<int>& pi, int g) const;
+    bool IsExecutable(const VT<int>& pi, int g) const;
 
-   /**
+    /**
      * @brief get the candidate SWAP list when there is no executable gate.
      *   If edge (x,z) in G and gate (x,y) in F, then SWAP (x,z) is possible.
      * @param F current front layer
      * @param pi current mapping from logical to physical
      * @return set<pair<int, int>> set of candidate SWAP list, containing physical id.
      */
-   std::set<std::pair<int, int>> ObtainSWAPs(const std::list<int>& F, const VT<int>& pi) const;
+    std::set<std::pair<int, int>> ObtainSWAPs(const std::list<int>& F, const VT<int>& pi) const;
 
-   /**
-     * @brief function 
+    /**
+     * @brief function
      *        HBasic = \sum_{g\in F} D[pi[g.q1]][pi[g.q2]]
      * @param F set of gates' id
      * @param pi mapping from logical to physical
      * @return double
      */
-   double HBasic(const std::list<int>& F, const VT<int>& pi) const;
+    double HBasic(const std::list<int>& F, const VT<int>& pi) const;
 
-   /**
+    /**
      * @brief function
      *        HExtended = \sum_{g\in E} D[tmppi[g.q1]][tmppi[g.q2]]
      *        effect_cost = \sum_{g\in E} D[tmppi[g.q1]][tmppi[g.q2]] - D[pi[g.q1]][pi[g.q2]]
@@ -139,16 +139,17 @@ class MQ_SABRE {
      * @param pi mapping from logical to physical
      * @return double
      */
-   std::pair<double,double> HExtended(const std::list<std::pair<int,int>>& E, const VT<int>& tmppi,const VT<int>& pi) const;
-  
-   /**
+    std::pair<double, double> HExtended(const std::list<std::pair<int, int>>& E, const VT<int>& tmppi,
+                                        const VT<int>& pi) const;
+
+    /**
      * @brief mapping from physical to logical
      * @param pi mapping from logical to physical
      * @return VT<int>
      */
-   VT<int> GetReversePi(const VT<int>& pi) const;
+    VT<int> GetReversePi(const VT<int>& pi) const;
 
-   /**
+    /**
      * @brief heuristic search algorithm to generate physical circuit
      *
      * @param pi Initial mapping from logical to physical
@@ -156,19 +157,20 @@ class MQ_SABRE {
      * @return vector<Gate> physical circuit that can be executed on hardware,
      *      and modified pi that maps logical qubits to physical qubits.
      */
-   VT<Gate> HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG);
-    double alpha1;    //  parameter alpha1
-    double alpha2;    //  parameter alpha2
-    double alpha3;    //  parameter alpha3
-    double W;         //  parameter W
-    VT<VT<double>> SWAP_success_rate;     //The correct rate of the swap gates
-    VT<VT<double>> SWAP_gate_length;      //The length of the swap gates
-    VT<VT<double>> Kesi;                  // The success rate of a CNOT between the physical qubits Qi and Qj
-    VT<VT<double>> T;                     // The length of a CNOT between the physical qubits Qi and Qj
-    VT<VT<double>> DM;  //distance matrix
+    VT<Gate> HeuristicSearch(VT<int>& pi, const VT<VT<int>>& DAG);
+    double alpha1;                     //  parameter alpha1
+    double alpha2;                     //  parameter alpha2
+    double alpha3;                     //  parameter alpha3
+    double W;                          //  parameter W
+    VT<VT<double>> SWAP_success_rate;  // The correct rate of the swap gates
+    VT<VT<double>> SWAP_gate_length;   // The length of the swap gates
+    VT<VT<double>> Kesi;               // The success rate of a CNOT between the physical qubits Qi and Qj
+    VT<VT<double>> T;                  // The length of a CNOT between the physical qubits Qi and Qj
+    VT<VT<double>> DM;                 // distance matrix
+
  public:
-    VT<VT<double>> CNOT_error_rate;       //The error rate of the cnot gates
-    VT<VT<double>> CNOT_gate_length;      //The length of the cnot gates
+    VT<VT<double>> CNOT_error_rate;   // The error rate of the cnot gates
+    VT<VT<double>> CNOT_gate_length;  // The length of the cnot gates
 
     /**
      * @brief Construct a new MQ_SABRE object
@@ -179,8 +181,8 @@ class MQ_SABRE {
      * @param CnotErrrorRateAndGateLength  The error rate and length of the cnot gate between two adjacent qubits
      */
     MQ_SABRE(const VT<std::shared_ptr<BasicGate>>& circ, const std::shared_ptr<QubitsTopology>& coupling_graph,
-    const std::vector<std::pair<std::pair<int,int>,VT<double>>> CnotErrrorRateAndGateLength);
-   
+             const std::vector<std::pair<std::pair<int, int>, VT<double>>>& CnotErrrorRateAndGateLength);
+
     /**
      * @brief solve qubit mapping problem
      *
@@ -194,7 +196,7 @@ class MQ_SABRE {
      *                        pi0 is initial mapping from logical to physical
      *                        pi1 is final mapping from logical to physical
      */
-    std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>> Solve(double W, double alpha1, double alpha2,double alpha3);
+    std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>> Solve(double W, double alpha1, double alpha2, double alpha3);
     inline void SetParameters(double W, double alpha1, double alpha2, double alpha3);
 };
 
