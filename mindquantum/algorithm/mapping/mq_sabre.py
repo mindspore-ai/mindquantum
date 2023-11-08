@@ -1,3 +1,18 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+
 """MQSABRE algorithm to implement qubit mapping."""
 import typing
 from typing import List, Tuple
@@ -13,12 +28,23 @@ class MQSABRE:
     """
     MQSABRE algorithm to implement qubit mapping.
 
+    This mapping alrogrthm considered the cnot error and executing time in quantum chip.
+
     Args:
         circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
             support circuit constructed by one or two qubits gate, control qubit included.
         topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Currently we only support
             connected coupling graph.
-        cnoterrorandlength (:the property info of CNOT gate)
+        cnoterrorandlength (List[Tuple[Tuple[int, int], List[float]]]): The error and gate length of a cnot gate. The
+            first two integers are qubit node id in topology. The list of float has two element, with first one be the
+            error of cnot and second one be the gate length.
+
+    Examples:
+        >>> from mindquantum.algorithm.mapping import MQSABRE
+        >>> cnot=[((5, 6), [8.136e-4, 248.88]), ((6, 10), [9.136e-4, 248.88]), ((8, 9), [9.136e-4, 248.88])]
+        >>> topology = GridQubits(6,6)
+        >>> mqsaber = MQSABRE(circuit, topology, cnot)
+        >>> new_circ, init_mapping, final_mapping = masaber.solve(1, 0.3, 0.2, 0.1)
     """
 
     def __init__(
@@ -64,12 +90,13 @@ class MQSABRE:
         self, w: float, alpha1: float, alpha2: float, alpha3: float
     ) -> typing.Union[Circuit, typing.List[int], typing.List[int]]:
         """
-        Solve qubit mapping problem with SABRE algorithm.
+        Solve qubit mapping problem with MQSABRE algorithm.
 
         Args:
             w (float): The w parameter. For more detail, please refers to the paper.
-            delta1 (float): The delta1 parameter. For more detail, please refers to the paper.
-            delta2 (float): The delta2 parameter. For more detail, please refers to the paper.
+            alpha1 (float): The alpha1 parameter. For more detail, please refers to the paper.
+            alpha2 (float): The alpha2 parameter. For more detail, please refers to the paper.
+            alpha3 (float): The alpha3 parameter. For more detail, please refers to the paper.
 
         Returns:
             Tuple[:class:`~.core.circuit.Circuit`, List[int], List[int]], a quantum

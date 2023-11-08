@@ -12,3 +12,4 @@ MindQuantum 比特映射模块。
     :template: classtemplate.rst
 
     mindquantum.algorithm.mapping.SABRE
+    mindquantum.algorithm.mapping.MQSABRE

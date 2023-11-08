@@ -9,3 +9,4 @@ mindquantum.algorithm.mapping
     :template: classtemplate.rst
 
     mindquantum.algorithm.mapping.SABRE
+    mindquantum.algorithm.mapping.MQSABRE
