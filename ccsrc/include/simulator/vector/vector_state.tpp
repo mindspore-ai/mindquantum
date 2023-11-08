@@ -1246,11 +1246,13 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
     }
     return output;
 }
+#define CONVERT_GATE(g_t, gate) std::static_pointer_cast<BasicGate>(std::make_shared<g_t>(*static_cast<g_t*>(gate)))
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
-    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
+    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ_,
     const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) -> VVT<py_qs_data_t> {
+    auto circ = circ_;
     auto n_hams = hams.size();
     int max_thread = 15;
     if (n_thread == 0) {
@@ -1286,9 +1288,76 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
             f_and_g[j][0] = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
         }
-        for (auto& gate : circ) {
+        for (Index g_idx = 0; g_idx < circ.size(); ++g_idx) {
+            auto gate = circ[g_idx];
             if (gate->GradRequired()) {
                 auto p_gate = static_cast<Parameterizable*>(gate.get());
+                std::shared_ptr<BasicGate> tmp_gate;
+                switch (gate->id_) {
+                    case (GateID::RX): {
+                        tmp_gate = CONVERT_GATE(RXGate, p_gate);
+                        break;
+                    }
+                    case (GateID::RY): {
+                        tmp_gate = CONVERT_GATE(RYGate, p_gate);
+                        break;
+                    }
+                    case (GateID::RZ): {
+                        tmp_gate = CONVERT_GATE(RZGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Rxx): {
+                        tmp_gate = CONVERT_GATE(RxxGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Ryy): {
+                        tmp_gate = CONVERT_GATE(RyyGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Rzz): {
+                        tmp_gate = CONVERT_GATE(RzzGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Rxy): {
+                        tmp_gate = CONVERT_GATE(RxyGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Rxz): {
+                        tmp_gate = CONVERT_GATE(RxzGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Ryz): {
+                        tmp_gate = CONVERT_GATE(RyzGate, p_gate);
+                        break;
+                    }
+                    case (GateID::SWAPalpha): {
+                        tmp_gate = CONVERT_GATE(SWAPalphaGate, p_gate);
+                        break;
+                    }
+                    case (GateID::GP): {
+                        tmp_gate = CONVERT_GATE(GPGate, p_gate);
+                        break;
+                    }
+                    case (GateID::PS): {
+                        tmp_gate = CONVERT_GATE(PSGate, p_gate);
+                        break;
+                    }
+                    case (GateID::U3): {
+                        tmp_gate = CONVERT_GATE(U3, p_gate);
+                        break;
+                    }
+                    case (GateID::FSim): {
+                        tmp_gate = CONVERT_GATE(FSim, p_gate);
+                        break;
+                    }
+                    case (GateID::CUSTOM): {
+                        tmp_gate = CONVERT_GATE(CustomGate, p_gate);
+                        break;
+                    }
+                    default:
+                        throw std::runtime_error(
+                            fmt::format("gate {} not supported for parameter shift rule.", gate->id_));
+                }
                 calc_type pr_shift = M_PI_2;
                 calc_type coeff = 0.5;
                 if (gate->id_ == GateID::CUSTOM) {
@@ -1303,16 +1372,18 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                     pr_shift = 0.001;
                     coeff = 0.5 / pr_shift;
                 }
-                if (const auto& [title, jac] = p_gate->jacobi; title.size() != 0) {
+                circ[g_idx] = tmp_gate;
+                auto tmp_p_gate = static_cast<Parameterizable*>(tmp_gate.get());
+                if (const auto& [title, jac] = tmp_p_gate->jacobi; title.size() != 0) {
                     for (int j = start; j < end; j++) {
-                        VT<py_qs_data_t> intrin_grad_list(p_gate->prs_.size());
-                        for (int k = 0; k < p_gate->prs_.size(); k++) {
-                            p_gate->prs_[k] += -pr_shift;
+                        VT<py_qs_data_t> intrin_grad_list(tmp_p_gate->prs_.size());
+                        for (int k = 0; k < tmp_p_gate->prs_.size(); k++) {
+                            tmp_p_gate->prs_[k] += -pr_shift;
                             if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
                                 parameter::tn::Tensor tmp;
                                 std::string key;
-                                for (auto& [key_, v] : p_gate->prs_[k].data_) {
+                                for (auto& [key_, v] : tmp_p_gate->prs_[k].data_) {
                                     key = key_;
                                     coeff = v;
                                     tmp = pr.GetItem(key_);
@@ -1327,12 +1398,12 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                             sim_rs[j - start].SetSeed(static_cast<unsigned>(this->rng_() * 10000));
                             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
                             auto expect0 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
-                            p_gate->prs_[k] += 2 * pr_shift;
+                            tmp_p_gate->prs_[k] += 2 * pr_shift;
                             if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
                                 parameter::tn::Tensor tmp;
                                 std::string key;
-                                for (auto& [key_, v] : p_gate->prs_[k].data_) {
+                                for (auto& [key_, v] : tmp_p_gate->prs_[k].data_) {
                                     key = key_;
                                     coeff = v;
                                     tmp = pr.GetItem(key_);
@@ -1347,12 +1418,12 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                             sim_rs[j - start].SetSeed(static_cast<unsigned>(this->rng_() * 10000));
                             sim_rs[j - start].ApplyHamiltonian(*hams[j]);
                             auto expect1 = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
-                            p_gate->prs_[k] += -pr_shift;
+                            tmp_p_gate->prs_[k] += -pr_shift;
                             if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
                                 parameter::tn::Tensor tmp;
                                 std::string key;
-                                for (auto& [key_, v] : p_gate->prs_[k].data_) {
+                                for (auto& [key_, v] : tmp_p_gate->prs_[k].data_) {
                                     key = key_;
                                     coeff = v;
                                     tmp = pr.GetItem(key_);
@@ -1368,6 +1439,7 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                         }
                     }
                 }
+                circ[g_idx] = gate;
             }
         }
     }
