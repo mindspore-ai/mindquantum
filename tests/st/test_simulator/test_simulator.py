@@ -25,6 +25,7 @@ from scipy.sparse import csr_matrix
 import mindquantum as mq
 import mindquantum.core.operators as ops
 from mindquantum.algorithm.library import qft
+from mindquantum.algorithm.nisq import Ansatz6
 from mindquantum.core import gates as G
 from mindquantum.core.circuit import (
     UN,
@@ -751,3 +752,36 @@ def test_measurement_reset(config):
     sim = Simulator(virtual_qc, c.n_qubits)
     res = sim.sampling(c, shots=100, seed=123)
     assert all(i[:2] == '01' for i in res.data.keys())
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_parameter_shift_rule():
+    """
+    Description: Test fix of parameter shift rule bug.
+    Expectation: succeed.
+    """
+    # pylint: disable=too-many-locals
+    # TODO: controlled parameterized not supported for parameter shift currently.
+    c = Ansatz6(3, 1, 'e').circuit.as_encoder() + Ansatz6(3, 1, 'a').circuit.as_ansatz()
+    new_c = Circuit()
+    for i in c:
+        if isinstance(i, G.RX) and i.ctrl_qubits:
+            new_c += G.X.on(i.obj_qubits, i.ctrl_qubits)
+        else:
+            new_c += i
+    c = new_c
+    sim1 = Simulator('mqvector', c.n_qubits)
+    sim2 = Simulator('mqvector', c.n_qubits)
+    ham = Hamiltonian(QubitOperator('Z0 Y1 X2'))
+    grad_ops1 = sim1.get_expectation_with_grad(ham, c, parallel_worker=5)
+    noise_c = c + G.AmplitudeDampingChannel(0.0).on(0)
+    grad_ops2 = sim2.get_expectation_with_grad(ham, noise_c, parallel_worker=5)
+    p_e = np.random.uniform(-3, 3, size=(5, len(c.encoder_params_name)))
+    p_a = np.random.uniform(-3, 3, size=len(c.ansatz_params_name))
+    for i in range(3):
+        f1, ge_1, ga_1 = grad_ops1(p_e, p_a)
+        f2, ge_2, ga_2 = grad_ops2(p_e, p_a)
+        assert np.allclose(f1, f2)
+        assert np.allclose(ge_1, ge_2)
+        assert np.allclose(ga_1, ga_2)
