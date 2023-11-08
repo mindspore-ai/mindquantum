@@ -1,0 +1,42 @@
+# environment
+mode: 'pynative' # graph
+device_target: "CPU"
+device_id: 0
+
+
+# for dense ode net
+max_dt: 0.001
+h_dim: 10
+depth: 4
+w_init_range: [0.9, 1]
+
+# train data generate
+generate_h_num: 10
+generate_init_num: 10
+generate_dt: 0.001
+generate_data_interval: 20
+train_batch_size: 10
+epochs: 200
+# save
+save_directory: './checkpoints'
+data_directory: './data'
+images_directory: './images'
+
+# training
+time_step_num: 20
+lr: 0.005
+lr_reduce_gamma: 0.5
+lr_reduce_interval: 5
+
+# evaluate
+evaluate_max_t: 1
+evaluate_t_points_num: 10
+evaluate_h_num: 10
+evaluate_init_num: 2
+
+# test
+test_max_t: 1
+test_t_points_num: 100
+test_h_num: 100
+test_init_num: 2
+test_acc_path: './data/test_acc.txt'
