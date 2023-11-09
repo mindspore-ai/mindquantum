@@ -123,7 +123,7 @@ class SingleLoopProgress(Progress):
         self.loop_task = self.add_task(description=f"[bold #11aaff]{loop_name}[/]", total=n_loop)
         self.n_loop = n_loop
 
-    def __enter__(self) -> "TwoLoopsProgress":
+    def __enter__(self) -> "SingleLoopProgress":
         """Enter method."""
         self.start()
         return self
