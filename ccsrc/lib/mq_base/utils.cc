@@ -28,10 +28,9 @@ int TimeDuration(TimePoint start, TimePoint end) {
 }
 
 void safe_copy(void *dest, size_t dest_size, const void *src, size_t count) {
-    if (dest == NULL || dest_size == 0 || src == NULL || count == 0) {
+    if ((dest == NULL && dest_size != 0) || (src == NULL && count != 0)) {
         throw std::runtime_error("Invalid parameters for safe_memcpy.");
     }
-
     if (count > dest_size) {
         throw std::runtime_error("Buffer overflow in safe_memcpy.");
     }

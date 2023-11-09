@@ -17,6 +17,7 @@
 #ifndef MQ_GATE_ID
 #define MQ_GATE_ID
 
+#include <fmt/core.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
@@ -98,6 +99,8 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return fmt::format_to(ctx.out(), "M");
             case mindquantum::GateID::CUSTOM:
                 return fmt::format_to(ctx.out(), "CUSTOM");
+            case mindquantum::GateID::SWAPalpha:
+                return fmt::format_to(ctx.out(), "SWAPalpha");
             default:
                 return fmt::format_to(ctx.out(), "Invalid <mindquantum::GateID>");
         }
