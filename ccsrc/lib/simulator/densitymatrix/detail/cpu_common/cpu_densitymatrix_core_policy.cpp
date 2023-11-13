@@ -181,12 +181,12 @@ template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::CopyQS(qs_data_p_t* qs_des, const qs_data_p_t& qs_src,
                                                               index_t dim) {
     auto& qs = *qs_des;
-    if (qs == nullptr) {
-        qs = derived::InitState(dim);
-    }
     if (qs_src == nullptr) {
-        qs[0] = 1.0;
+        FreeState(&qs);
     } else {
+        if (qs == nullptr) {
+            qs = derived::InitState(dim);
+        }
         THRESHOLD_OMP_FOR(
             dim, DimTh,
             for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2); i++) { qs[i] = qs_src[i]; })
