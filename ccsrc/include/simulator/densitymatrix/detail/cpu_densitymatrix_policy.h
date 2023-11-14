@@ -209,50 +209,50 @@ struct CPUDensityMatrixPolicyBase {
 
     // gate_expec
     // ========================================================================================================
-    static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix,
+    static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
                                                  const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
                                                  const matrix_t& diff_m, index_t dim);
-    static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix,
+    static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
                                                const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
                                                const matrix_t& diff_m, index_t dim);
-    static qs_data_t ExpectDiffNQubitsMatrix(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
-                                             const qbits_t& ctrls, const matrix_t& gate_m, const matrix_t& diff_m,
-                                             index_t dim);
+    static qs_data_t ExpectDiffNQubitsMatrix(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
+                                             const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
+                                             const matrix_t& diff_m, index_t dim);
     static qs_data_t ExpectDiffMatrixGate(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
                                           const qbits_t& ctrls, const matrix_t& diff_m, const matrix_t& herm_m,
                                           index_t dim);
-    static qs_data_t ExpectDiffRX(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRX(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRY(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRY(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRZ(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRZ(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffPS(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffPS(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffGP(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffGP(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffU3Theta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
-                                       const qbits_t& ctrls, calc_type phi, index_t dim);
-    static qs_data_t ExpectDiffU3Phi(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffU3Theta(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
+                                       const qbits_t& objs, const qbits_t& ctrls, calc_type phi, index_t dim);
+    static qs_data_t ExpectDiffU3Phi(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                      const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRxx(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRxx(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRyy(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRyy(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRzz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRzz(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRxy(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRxy(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRxz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRxz(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffRyz(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
+    static qs_data_t ExpectDiffRyz(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                    const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
-                                         const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffFSimTheta(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
-                                         const qbits_t& ctrls, index_t dim);
-    static qs_data_t ExpectDiffFSimPhi(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
-                                       const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
+                                         const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffFSimTheta(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
+                                         const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffFSimPhi(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
+                                       const qbits_t& objs, const qbits_t& ctrls, index_t dim);
 };
 
 template <typename policy_src, typename policy_des>
