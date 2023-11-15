@@ -112,6 +112,9 @@ class VectorState {
     //! Apply a pauli channel on this quantum state
     virtual void ApplyPauliChannel(const std::shared_ptr<BasicGate>& gate);
 
+    //! Apply a group of pauli channel
+    virtual void ApplyGroupedPauliChannels(const std::shared_ptr<BasicGate>& gate);
+
     //! Apply a depolarizing channel on this quantum state
     virtual void ApplyDepolarizingChannel(const std::shared_ptr<BasicGate>& gate);
 

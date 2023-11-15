@@ -76,6 +76,7 @@ struct CPUVectorPolicyBase {
     static VT<py_qs_data_t> GetQS(const qs_data_p_t& qs, index_t dim);
     static void SetQS(qs_data_p_t* qs, const VT<qs_data_t>& qs_out, index_t dim);
     static qs_data_p_t ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static void ApplyPauliString(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, index_t dim);
     static py_qs_data_t ExpectationOfTerms(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                            const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(const qs_data_p_t& qs, index_t dim);
@@ -139,6 +140,8 @@ struct CPUVectorPolicyBase {
                         bool diff = false);
     static void ApplyRZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                         bool diff = false);
+    static void ApplyRPS(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, calc_type val, index_t dim,
+                         bool diff = false);
 
     static void ApplySWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyISWAP(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, bool daggered, index_t dim);
@@ -159,6 +162,9 @@ struct CPUVectorPolicyBase {
 
     // gate_expectation
     // ========================================================================================================
+    static qs_data_t ExpectDiffRPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const PauliMask& pauli_mask,
+                                   Index ctrl_mask, calc_type val, index_t dim);
+
     static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                                  const qbits_t& ctrls, const VVT<py_qs_data_t>& m, index_t dim);
     static qs_data_t ExpectDiffTwoQubitsMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,

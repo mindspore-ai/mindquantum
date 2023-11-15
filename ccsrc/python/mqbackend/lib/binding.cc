@@ -70,6 +70,10 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
         .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::ZGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::ZGate>>(module, "ZGate")
         .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::PauliString, mindquantum::BasicGate, std::shared_ptr<mindquantum::PauliString>>(
+        module, "GroupedPauli")
+        .def(py::init<const std::string &, const qbits_t &, const qbits_t &>(), "paulis"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::HGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::HGate>>(module, "HGate")
         .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::ISWAPGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::ISWAPGate>>(module,
@@ -93,6 +97,10 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
         module, "PauliChannel")
         .def(py::init<double, double, double, const qbits_t &, const qbits_t &>(), "px"_a, "py"_a, "pz"_a,
              "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::GroupedPauliChannel, mindquantum::BasicGate,
+               std::shared_ptr<mindquantum::GroupedPauliChannel>>(module, "GroupedPauliChannel")
+        .def(py::init<const mindquantum::VVT<double> &, const qbits_t &, const qbits_t &>(), "probs"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::DepolarizingChannel, mindquantum::BasicGate,
                std::shared_ptr<mindquantum::DepolarizingChannel>>(module, "DepolarizingChannel")
         .def(py::init<double, const qbits_t &, const qbits_t &>(), "p"_a, "obj_qubits"_a,
@@ -145,6 +153,10 @@ void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
     py::class_<mindquantum::RyzGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::RyzGate>>(module, "RyzGate")
         .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
              "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::RotPauliString, mindquantum::BasicGate, std::shared_ptr<mindquantum::RotPauliString>>(
+        module, "RotPauliString")
+        .def(py::init<const std::string &, const ParameterResolver &, const qbits_t &, const qbits_t &>(),
+             "pauli_string"_a, "pr"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::SWAPalphaGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SWAPalphaGate>>(
         module, "SWAPalphaGate")
         .def(py::init<const ParameterResolver &, const qbits_t &, const qbits_t &>(), "pr"_a, "obj_qubits"_a,
@@ -263,6 +275,8 @@ PYBIND11_MODULE(mqbackend, m) {
                        .value("Sdag", mindquantum::GateID::Sdag)
                        .value("CNOT", mindquantum::GateID::CNOT)
                        .value("CZ", mindquantum::GateID::CZ)
+                       .value("PauliString", mindquantum::GateID::PauliString)
+                       .value("RotPauliString", mindquantum::GateID::RPS)
                        .value("GP", mindquantum::GateID::GP)
                        .value("PS", mindquantum::GateID::PS)
                        .value("U3", mindquantum::GateID::U3)

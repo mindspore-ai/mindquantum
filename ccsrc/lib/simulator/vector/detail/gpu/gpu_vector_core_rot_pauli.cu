@@ -26,6 +26,84 @@
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRPS(qs_data_p_t* qs_p, const PauliMask& mask, Index ctrl_mask,
+                                                         calc_type val, index_t dim, bool diff) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto a = std::cos(val / 2);
+    auto b = std::sin(val / 2);
+    if (diff) {
+        a = -std::sin(val / 2) / 2;
+        b = std::cos(val / 2) / 2;
+    }
+    auto m_i = qs_data_t(0, 1);
+    auto mask_f = mask.mask_x | mask.mask_y;
+    auto mask_z = mask.mask_z;
+    auto mask_y = mask.mask_y;
+    auto num_y = mask.num_y;
+    thrust::counting_iterator<index_t> i(0);
+
+    if (ctrl_mask == 0) {
+        thrust::for_each(i, i + dim, [=] __device__(index_t i) {
+            auto j = (i ^ mask_f);
+            if (i <= j) {
+                auto axis2power = __popcll(i & mask_z);
+                auto axis3power = __popcll(i & mask_y);
+                auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
+                auto c = qs_data_t(1, 0);
+                if (idx == 1) {
+                    c = qs_data_t(0, 1);
+                } else if (idx == 2) {
+                    c = qs_data_t(-1, 0);
+                } else if (idx == 3) {
+                    c = qs_data_t(0, -1);
+                }
+                if (i == j) {
+                    qs[i] *= (a - m_i * b * c);
+                } else {
+                    auto qs_i = qs[i];
+                    auto qs_j = qs[j];
+                    qs[i] = qs_i * a - m_i * qs_j * b / c;
+                    qs[j] = qs_j * a - m_i * qs_i * b * c;
+                }
+            }
+        });
+    } else {
+        thrust::for_each(i, i + dim, [=] __device__(index_t i) {
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = (i ^ mask_f);
+                if (i <= j) {
+                    auto axis2power = __popcll(i & mask_z);
+                    auto axis3power = __popcll(i & mask_y);
+                    auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
+                    auto c = qs_data_t(1, 0);
+                    if (idx == 1) {
+                        c = qs_data_t(0, 1);
+                    } else if (idx == 2) {
+                        c = qs_data_t(-1, 0);
+                    } else if (idx == 3) {
+                        c = qs_data_t(0, -1);
+                    }
+                    if (i == j) {
+                        qs[i] *= (a - m_i * b * c);
+                    } else {
+                        auto qs_i = qs[i];
+                        auto qs_j = qs[j];
+                        qs[i] = qs_i * a - m_i * qs_j * b / c;
+                        qs[j] = qs_j * a - m_i * qs_i * b * c;
+                    }
+                }
+            }
+        });
+    }
+    if (diff && ctrl_mask) {
+        derived::SetToZeroExcept(qs_p, ctrl_mask, dim);
+    }
+}
+
+template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
                                                         calc_type val, index_t dim, bool diff) {
     SingleQubitGateMask mask(objs, ctrls);

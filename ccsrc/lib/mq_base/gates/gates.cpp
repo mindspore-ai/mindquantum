@@ -23,6 +23,7 @@
 #include "math/tensor/ops/advance_math.h"
 #include "math/tensor/tensor.h"
 #include "math/tensor/traits.h"
+#include "ops/basic_gate.h"
 
 namespace mindquantum {
 tensor::Matrix U3Matrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor lambda) {

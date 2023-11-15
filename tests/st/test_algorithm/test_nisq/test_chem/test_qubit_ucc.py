@@ -95,5 +95,4 @@ def test_quccsd(config):  # pylint: disable=too-many-locals
     train_net = ms.nn.TrainOneStepCell(net, opti)
     for i in range(100):
         res = train_net().asnumpy()[0]
-        print(res)
     assert np.allclose(round(res, 4), -0.9486, atol=1e-3)

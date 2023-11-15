@@ -14,7 +14,9 @@
 # ============================================================================
 
 """Test channel with simulator."""
+# pylint: disable=too-many-locals,invalid-name
 from math import exp
+
 import numpy as np
 import pytest
 from scipy.stats import entropy
@@ -24,6 +26,7 @@ from mindquantum.core import gates as G
 from mindquantum.core.circuit import Circuit
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
+from mindquantum.utils import random_circuit
 
 flip_and_damping_channel = [
     G.BitFlipChannel,
@@ -161,6 +164,40 @@ def test_kraus_channel(config):
             res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
             difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
             assert difference < 1e-4
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('config', list(SUPPORTED_SIMULATOR))
+def test_grouped_pauli_channel(config):
+    """
+    Description: Test thermal relaxation channel
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    n_qubits = 3
+    old = random_circuit(n_qubits, 20)
+    probs = np.random.uniform(0, 1, size=(n_qubits, 3))
+    probs = probs * (0.8 / probs.sum(axis=1))[:, None]
+    paulis = Circuit([G.PauliChannel(*i).on(idx) for idx, i in enumerate(probs)])
+    grouped = Circuit([G.GroupedPauliChannel(probs).on(list(range(n_qubits)))])
+    sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
+    circ1 = (old + paulis).measure_all()
+    circ2 = (old + grouped).measure_all()
+    if virtual_qc.startswith("mqmatrix"):
+        sim.apply_circuit(circ1.remove_measure())
+        qs1 = sim.get_qs()
+        sim.reset()
+        sim.apply_circuit(circ2.remove_measure())
+        qs2 = sim.get_qs()
+        assert np.allclose(qs1, qs2, atol=1e-4)
+    else:
+        res1 = sim.sampling(circ1, shots=shots)
+        res2 = sim.sampling(circ2, shots=shots)
+        difference = entropy(np.array(list(res1.data.values())) / shots, np.array(list(res2.data.values())) / shots)
+        assert difference < 1e-3
 
 
 @pytest.mark.level0

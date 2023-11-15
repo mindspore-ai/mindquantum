@@ -23,6 +23,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -33,6 +34,7 @@
 #include "math/tensor/matrix.h"
 #include "math/tensor/traits.h"
 #include "ops/gate_id.h"
+#include "ops/hamiltonian.h"
 
 namespace mindquantum {
 struct BasicGate {
@@ -68,6 +70,26 @@ struct IGate : public BasicGate {
         : BasicGate(GateID::I, obj_qubits, ctrl_qubits) {
     }
 };
+
+struct PauliString : public BasicGate {
+    VT<PauliWord> term;
+    PauliMask pauli_mask;
+    Index ctrl_mask;
+    PauliString(const std::string& paulis, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::PauliString, obj_qubits, ctrl_qubits) {
+        if (paulis.length() != obj_qubits.size()) {
+            throw std::runtime_error("pauli string size miss match with qubit size.");
+        }
+        Index i = 0;
+        for (auto pauli : paulis) {
+            term.push_back(PauliWord(obj_qubits.at(i), pauli));
+            ++i;
+        }
+        pauli_mask = GetPauliMask(term);
+        ctrl_mask = GetControlMask(ctrl_qubits);
+    }
+};
+
 struct XGate : public BasicGate {
     explicit XGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::X, obj_qubits, ctrl_qubits) {
@@ -190,6 +212,16 @@ struct RyzGate : public Parameterizable {
         : Parameterizable(GateID::Ryz, {pr}, obj_qubits, ctrl_qubits) {
     }
 };
+
+struct RotPauliString : public Parameterizable {
+    PauliString pauli_string;
+    RotPauliString(const std::string& pauli_string, const parameter::ParameterResolver pr, const qbits_t& obj_qubits,
+                   const qbits_t& ctrl_qubits = {})
+        : Parameterizable(GateID::RPS, {pr}, obj_qubits, ctrl_qubits)
+        , pauli_string(pauli_string, obj_qubits, ctrl_qubits) {
+    }
+};
+
 struct GPGate : public Parameterizable {
     GPGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : Parameterizable(GateID::GP, {pr}, obj_qubits, ctrl_qubits) {
@@ -219,6 +251,18 @@ struct PauliChannel : public BasicGate {
         for (auto it = probs_.begin(); it != probs_.end(); it++) {
             sum += *it;
             cumulative_probs_.push_back(sum);
+        }
+    }
+};
+
+struct GroupedPauliChannel : public BasicGate {
+    VT<PauliChannel> pauli_channels;
+    GroupedPauliChannel(const VVT<double>& probs, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::GPL, obj_qubits, ctrl_qubits) {
+        int idx = 0;
+        for (auto const& prob : probs) {
+            pauli_channels.push_back(PauliChannel(prob[0], prob[1], prob[2], qbits_t({obj_qubits[idx]}), ctrl_qubits));
+            ++idx;
         }
     }
 };

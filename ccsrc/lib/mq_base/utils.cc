@@ -16,6 +16,8 @@
 
 #include "core/utils.h"
 
+#include "core/mq_base_types.h"
+
 namespace mindquantum {
 const VT<CT<double>> POLAR = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 TimePoint NOW() {
@@ -43,7 +45,7 @@ void safe_copy(void *dest, size_t dest_size, const void *src, size_t count) {
     }
 }
 
-Index GetControlMask(const VT<Index> &ctrls) {
+Index GetControlMask(const qbits_t &ctrls) {
     Index ctrlmask = std::accumulate(ctrls.begin(), ctrls.end(), 0,
                                      [&](Index a, Index b) { return a | (static_cast<uint64_t>(1) << b); });
     return ctrlmask;

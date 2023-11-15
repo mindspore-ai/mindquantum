@@ -38,9 +38,11 @@
 #include <vector>
 
 #include "core/mq_base_types.h"
+#include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "math/tensor/matrix.h"
 #include "math/tensor/ops/basic_math.h"
+#include "math/tensor/ops_cpu/memory_operator.h"
 #include "math/tensor/traits.h"
 #include "ops/basic_gate.h"
 #include "ops/gate_id.h"
@@ -185,6 +187,11 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
         case GateID::Tdag:
             qs_policy_t::ApplyTdag(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             break;
+        case GateID::PauliString: {
+            auto g = static_cast<PauliString*>(gate.get());
+            qs_policy_t::ApplyPauliString(&qs, g->pauli_mask, g->ctrl_mask, dim);
+            break;
+        }
         case GateID::SWAP:
             qs_policy_t::ApplySWAP(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             break;
@@ -199,6 +206,15 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             }
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplySWAPalpha(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
+        case GateID::RPS: {
+            auto g = static_cast<RotPauliString*>(gate.get());
+            auto& ps = g->pauli_string;
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyRPS(&qs, ps.pauli_mask, ps.ctrl_mask, val, dim, diff);
         } break;
         case GateID::RX: {
             auto g = static_cast<RXGate*>(gate.get());
@@ -343,6 +359,9 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
         case GateID::PL:
             this->ApplyPauliChannel(gate);
             break;
+        case GateID::GPL:
+            this->ApplyGroupedPauliChannels(gate);
+            break;
         case GateID::DEP:
             this->ApplyDepolarizingChannel(gate);
             break;
@@ -409,6 +428,9 @@ void VectorState<qs_policy_t_>::ApplyChannel(const std::shared_ptr<BasicGate>& g
         case GateID::PL:
             this->ApplyPauliChannel(gate);
             break;
+        case GateID::GPL:
+            this->ApplyGroupedPauliChannels(gate);
+            break;
         case GateID::DEP:
             this->ApplyDepolarizingChannel(gate);
             break;
@@ -445,6 +467,31 @@ void VectorState<qs_policy_t_>::ApplyPauliChannel(const std::shared_ptr<BasicGat
     } else if (gate_index == 2) {
         qs_policy_t::ApplyZ(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
     }
+}
+
+template <typename qs_policy_t_>
+void VectorState<qs_policy_t_>::ApplyGroupedPauliChannels(const std::shared_ptr<BasicGate>& gate) {
+    auto g = static_cast<GroupedPauliChannel*>(gate.get());
+    VT<PauliWord> term;
+    for (auto& pauli_channel : g->pauli_channels) {
+        double r = static_cast<double>(rng_());
+        auto it = std::lower_bound(pauli_channel.cumulative_probs_.begin(), pauli_channel.cumulative_probs_.end(), r);
+        size_t gate_index;
+        if (it != pauli_channel.cumulative_probs_.begin()) {
+            gate_index = std::distance(pauli_channel.cumulative_probs_.begin(), it) - 1;
+        } else {
+            gate_index = 0;
+        }
+        if (gate_index == 0) {
+            term.push_back(PauliWord(pauli_channel.obj_qubits_.at(0), 'X'));
+        } else if (gate_index == 1) {
+            term.push_back(PauliWord(pauli_channel.obj_qubits_.at(0), 'Y'));
+        } else if (gate_index == 2) {
+            term.push_back(PauliWord(pauli_channel.obj_qubits_.at(0), 'Z'));
+        }
+    }
+    PauliMask pauli_mask = GetPauliMask(term);
+    qs_policy_t::ApplyPauliString(&qs, pauli_mask, 0, dim);
 }
 
 template <typename qs_policy_t_>
@@ -699,6 +746,12 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
         case GateID::RZ:
             grad[0] = qs_policy_t::ExpectDiffRZ(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
             return tensor::Matrix(VVT<py_qs_data_t>({grad}));
+        case GateID::RPS: {
+            auto rps = static_cast<RotPauliString*>(gate.get());
+            auto& pauli = rps->pauli_string;
+            grad[0] = qs_policy_t::ExpectDiffRPS(bra, ket, pauli.pauli_mask, pauli.ctrl_mask, val, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>({grad}));
+        }
         case GateID::Rxx:
             grad[0] = qs_policy_t::ExpectDiffRxx(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
             return tensor::Matrix(VVT<py_qs_data_t>({grad}));
