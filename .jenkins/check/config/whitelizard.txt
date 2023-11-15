@@ -23,6 +23,7 @@ mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 mindquantum/mindquantum/io/display/circuit_text_drawer.py:brick_model
 mindquantum/algorithm/compiler/decompose/universal_decompose/two_qubit_decompose.py:kak_decompose
 mindquantum/mindquantum/io/qasm/openqasm.py:__init__
+mindquantum/mindquantum/algorithm/compiler/rules/basic_decompose.py:decom_basic_gate
 
 mindquantum/ccsrc/include/simulator/vector/vector_state.tpp:mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti
 mindquantum/ccsrc/include/ops/gates.h:mindquantum::GetGateByName

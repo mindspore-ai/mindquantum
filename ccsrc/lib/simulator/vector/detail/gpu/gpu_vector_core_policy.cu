@@ -288,7 +288,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPauliString(qs_data_p_t* qs
             }
         });
     }
-};
+}
 
 template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,
