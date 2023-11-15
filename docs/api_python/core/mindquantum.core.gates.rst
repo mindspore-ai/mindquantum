@@ -46,6 +46,7 @@ mindquantum.core.gates
     mindquantum.core.gates.Ryz
     mindquantum.core.gates.RZ
     mindquantum.core.gates.Rzz
+    mindquantum.core.gates.RotPauliString
     mindquantum.core.gates.SGate
     mindquantum.core.gates.SWAPalpha
     mindquantum.core.gates.SWAPGate
@@ -54,6 +55,7 @@ mindquantum.core.gates
     mindquantum.core.gates.XGate
     mindquantum.core.gates.YGate
     mindquantum.core.gates.ZGate
+    mindquantum.core.gates.GroupedPauli
 
 功能量子门
 -------------
@@ -113,6 +115,7 @@ mindquantum.core.gates
     mindquantum.core.gates.DepolarizingChannel
     mindquantum.core.gates.KrausChannel
     mindquantum.core.gates.PauliChannel
+    mindquantum.core.gates.GroupedPauliChannel
     mindquantum.core.gates.PhaseDampingChannel
     mindquantum.core.gates.PhaseFlipChannel
     mindquantum.core.gates.ThermalRelaxationChannel

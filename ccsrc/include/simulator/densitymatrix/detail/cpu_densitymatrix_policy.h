@@ -76,6 +76,9 @@ struct CPUDensityMatrixPolicyBase {
     static matrix_t GetPartialTrace(const qs_data_p_t& qs, const qbits_t& objs, index_t dim);
     static py_qs_datas_t PureStateVector(const qs_data_p_t& qs, index_t dim);
     static void ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
+    static void ApplyPauliString(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, index_t dim);
+    static void ApplyPauliStringNoCtrl(qs_data_p_t* qs_p, const PauliMask& pauli_mask, index_t dim);
+    static void ApplyPauliStringWithCtrl(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, index_t dim);
     static void ApplyCsr(qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim);
     static calc_type DiagonalConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, index_t dim);
 
@@ -114,6 +117,12 @@ struct CPUDensityMatrixPolicyBase {
 
     static void ApplyZLike(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, qs_data_t val, index_t dim);
     static void ApplyZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static void ApplyRPS(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, calc_type val, index_t dim,
+                         bool diff = false);
+    static void ApplyRPSNoCtrl(qs_data_p_t* qs_p, const PauliMask& pauli_mask, calc_type val, index_t dim,
+                               bool diff = false);
+    static void ApplyRPSWithCtrl(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, calc_type val,
+                                 index_t dim, bool diff = false);
     // The crazy code spell check in CI do not allow apply s to name following API, even I set the filter file.
     static void ApplySGate(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static void ApplyT(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
@@ -209,6 +218,8 @@ struct CPUDensityMatrixPolicyBase {
 
     // gate_expec
     // ========================================================================================================
+    static qs_data_t ExpectDiffRPS(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const PauliMask& pauli_mask,
+                                   Index ctrl_mask, index_t dim);
     static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
                                                  const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
                                                  const matrix_t& diff_m, index_t dim);

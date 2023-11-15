@@ -159,6 +159,54 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
     }
     return out;
 };
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyPauliString(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                 Index ctrl_mask, index_t dim) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    if (ctrl_mask == 0) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+                auto j = (i ^ mask_f);
+                if (i <= j) {
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    if (i == j) {
+                        qs[i] = qs[i] * c;
+                    } else {
+                        auto tmp = qs[j];
+                        qs[j] = qs[i] * c;
+                        qs[i] = tmp / c;
+                    }
+                }
+            })
+    } else {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+                if ((i & ctrl_mask) == ctrl_mask) {
+                    auto j = (i ^ mask_f);
+                    if (i <= j) {
+                        auto axis2power = CountOne(i & mask.mask_z);  // -1
+                        auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                        auto c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                        if (i == j) {
+                            qs[i] = qs[i] * c;
+                        } else {
+                            auto tmp = qs[j];
+                            qs[j] = qs[i] * c;
+                            qs[i] = tmp / c;
+                        }
+                    }
+                }
+            })
+    }
+}
 
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data_p_t& bra_out,

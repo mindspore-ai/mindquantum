@@ -257,36 +257,41 @@ def decom_basic_gate(gate: BasicGate, prefer_u3=False):
     res = False
     if isinstance(gate, XGate):
         res = decom_x(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, YGate):
+    elif isinstance(gate, YGate):
         res = decom_y(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, ZGate):
+    elif isinstance(gate, ZGate):
         res = decom_z(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, RX):
+    elif isinstance(gate, RX):
         res = decom_rx(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, RY):
+    elif isinstance(gate, RY):
         res = decom_ry(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, RZ):
+    elif isinstance(gate, RZ):
         res = decom_rz(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, Rxx):
+    elif isinstance(gate, Rxx):
         res = decom_rxx(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, Ryy):
+    elif isinstance(gate, Ryy):
         res = decom_ryy(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, Rzz):
+    elif isinstance(gate, Rzz):
         res = decom_rzz(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, SGate):
+    elif isinstance(gate, SGate):
         res = decom_s(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, TGate):
+    elif isinstance(gate, TGate):
         res = decom_t(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, SWAPGate):
+    elif isinstance(gate, SWAPGate):
         res = decom_swap(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, HGate):
+    elif isinstance(gate, HGate):
         res = decom_h(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, CNOTGate):
+    elif isinstance(gate, CNOTGate):
         res = decom_cnot(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, UnivMathGate):
+    elif isinstance(gate, UnivMathGate):
         res = decom_univ_math_gate(gate, prefer_u3=prefer_u3)
-    if isinstance(gate, PhaseShift):
+    elif isinstance(gate, PhaseShift):
         res = decom_ps(gate, prefer_u3=prefer_u3)
+    else:
+        if hasattr(gate, "__decompose__"):
+            sub_circ = gate.__decompose__()
+            if sub_circ:
+                res = DAGCircuit(sub_circ)
     if res:
         return res
     return False

@@ -25,6 +25,7 @@ mindquantum/core/parameterresolver/parameterresolver.py:__init__
 mindquantum/algorithm/compiler/decompose/universal_decompose/two_qubit_decompose.py:kak_decompose
 mindquantum/simulator/mqsim.py:get_expectation_with_grad.grad_ops
 mindquantum/io/qasm/openqasm.py:__init__
+mindquantum/algorithm/compiler/rules/basic_decompose.py:decom_basic_gate
 
 ccsrc/include/simulator/vector/vector_state.tpp:mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti
 ccsrc/include/ops/gates.h:mindquantum::GetGateByName

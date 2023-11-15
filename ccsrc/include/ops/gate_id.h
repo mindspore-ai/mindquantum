@@ -24,59 +24,88 @@
 namespace mindquantum {
 enum class GateID : uint8_t {
     null,
-    I,          //
-    X,          //
-    Y,          //
-    Z,          //
-    RX,         //
-    RY,         //
-    RZ,         //
-    Rxx,        //
-    Ryy,        //
-    Rzz,        //
-    Rxy,        //
-    Rxz,        //
-    Ryz,        //
-    Rn,         //
-    H,          //
-    SWAP,       //
-    ISWAP,      //
-    SWAPalpha,  //
-    T,          //
-    S,          //
-    Tdag,       //
-    Sdag,       //
-    CNOT,       //
-    CZ,         //
-    GP,         //
-    PS,         //
-    U3,         //
-    FSim,       //
-    M,          //
-    PL,         // Pauli channel
-    DEP,        // depolarizing channel
-    AD,         // amplitude damping channel
-    PD,         // phase damping channel
-    KRAUS,      // Kraus channel
-    TR,         // thermal relaxation channel
-    CUSTOM,     //
-    HOLDER,     // for extended gate id.
+    I,            //
+    X,            //
+    Y,            //
+    Z,            //
+    RX,           //
+    RY,           //
+    RZ,           //
+    Rxx,          //
+    Ryy,          //
+    Rzz,          //
+    Rxy,          //
+    Rxz,          //
+    Ryz,          //
+    Rn,           //
+    H,            //
+    SWAP,         //
+    ISWAP,        //
+    SWAPalpha,    //
+    T,            //
+    S,            //
+    Tdag,         //
+    Sdag,         //
+    CNOT,         //
+    CZ,           //
+    GP,           //
+    PauliString,  //
+    RPS,          // Rot-PauliString
+    PS,           //
+    U3,           //
+    FSim,         //
+    M,            //
+    PL,           // Pauli channel
+    GPL,          // Groupued Pauli channel
+    DEP,          // depolarizing channel
+    AD,           // amplitude damping channel
+    PD,           // phase damping channel
+    KRAUS,        // Kraus channel
+    TR,           // thermal relaxation channel
+    CUSTOM,       //
+    HOLDER,       // for extended gate id.
 };
 
 // NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
-NLOHMANN_JSON_SERIALIZE_ENUM(GateID,
-                             {{GateID::I, "I"},         {GateID::X, "X"},         {GateID::Y, "Y"},
-                              {GateID::Z, "Z"},         {GateID::RX, "RX"},       {GateID::RY, "RY"},
-                              {GateID::RZ, "RZ"},       {GateID::Rxx, "Rxx"},     {GateID::Ryy, "Ryy"},
-                              {GateID::Rzz, "Rzz"},     {GateID::Rxy, "Rxy"},     {GateID::Rxz, "Rxz"},
-                              {GateID::Ryz, "Ryz"},     {GateID::Rn, "Rn"},       {GateID::H, "H"},
-                              {GateID::SWAP, "SWAP"},   {GateID::ISWAP, "ISWAP"}, {GateID::SWAPalpha, "SWAPalpha"},
-                              {GateID::T, "T"},         {GateID::S, "S"},         {GateID::Tdag, "Tdag"},
-                              {GateID::Sdag, "Sdag"},   {GateID::CNOT, "CNOT"},   {GateID::CZ, "CZ"},
-                              {GateID::GP, "GP"},       {GateID::PS, "PS"},       {GateID::U3, "U3"},
-                              {GateID::FSim, "FSim"},   {GateID::M, "M"},         {GateID::PL, "PL"},
-                              {GateID::DEP, "DEP"},     {GateID::AD, "AD"},       {GateID::PD, "PD"},
-                              {GateID::KRAUS, "KRAUS"}, {GateID::TR, "TR"},       {GateID::CUSTOM, "CUSTOM"}});
+NLOHMANN_JSON_SERIALIZE_ENUM(GateID, {{GateID::I, "I"},
+                                      {GateID::X, "X"},
+                                      {GateID::Y, "Y"},
+                                      {GateID::Z, "Z"},
+                                      {GateID::RX, "RX"},
+                                      {GateID::RY, "RY"},
+                                      {GateID::RZ, "RZ"},
+                                      {GateID::Rxx, "Rxx"},
+                                      {GateID::Ryy, "Ryy"},
+                                      {GateID::Rzz, "Rzz"},
+                                      {GateID::Rxy, "Rxy"},
+                                      {GateID::Rxz, "Rxz"},
+                                      {GateID::Ryz, "Ryz"},
+                                      {GateID::Rn, "Rn"},
+                                      {GateID::H, "H"},
+                                      {GateID::SWAP, "SWAP"},
+                                      {GateID::ISWAP, "ISWAP"},
+                                      {GateID::SWAPalpha, "SWAPalpha"},
+                                      {GateID::T, "T"},
+                                      {GateID::S, "S"},
+                                      {GateID::Tdag, "Tdag"},
+                                      {GateID::Sdag, "Sdag"},
+                                      {GateID::CNOT, "CNOT"},
+                                      {GateID::CZ, "CZ"},
+                                      {GateID::GP, "GP"},
+                                      {GateID::PS, "PS"},
+                                      {GateID::U3, "U3"},
+                                      {GateID::FSim, "FSim"},
+                                      {GateID::M, "M"},
+                                      {GateID::PL, "PL"},
+                                      {GateID::GPL, "GPL"},
+                                      {GateID::DEP, "DEP"},
+                                      {GateID::AD, "AD"},
+                                      {GateID::PD, "PD"},
+                                      {GateID::KRAUS, "KRAUS"},
+                                      {GateID::TR, "TR"},
+                                      {GateID::CUSTOM, "CUSTOM"},
+                                      {GateID::PauliString, "PauliString"},
+                                      {GateID::RPS, "RotPauliString"}});
 }  // namespace mindquantum
 template <typename char_t>
 struct fmt::formatter<mindquantum::GateID, char_t> {
@@ -101,6 +130,10 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return fmt::format_to(ctx.out(), "CUSTOM");
             case mindquantum::GateID::SWAPalpha:
                 return fmt::format_to(ctx.out(), "SWAPalpha");
+            case mindquantum::GateID::PauliString:
+                return fmt::format_to(ctx.out(), "PauliString");
+            case mindquantum::GateID::RPS:
+                return fmt::format_to(ctx.out(), "RotPauliString");
             default:
                 return fmt::format_to(ctx.out(), "Invalid <mindquantum::GateID>");
         }
@@ -111,6 +144,8 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
         switch (value) {
             case mindquantum::GateID::PL:
                 return fmt::format_to(ctx.out(), "PL");
+            case mindquantum::GateID::GPL:
+                return fmt::format_to(ctx.out(), "GPL");
             case mindquantum::GateID::DEP:
                 return fmt::format_to(ctx.out(), "DEP");
             case mindquantum::GateID::AD:

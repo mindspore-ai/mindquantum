@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "config/openmp.h"
+#include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
@@ -27,6 +28,99 @@
 #include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"
 
 namespace mindquantum::sim::densitymatrix::detail {
+template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t& qs_out,
+                                                                     const qs_data_p_t& ham_matrix_out,
+                                                                     const PauliMask& mask, Index ctrl_mask,
+                                                                     index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free_qs = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free_qs = true;
+    } else {
+        qs = qs_out;
+    }
+    qs_data_p_t ham_matrix;
+    bool will_free_ham = false;
+    if (ham_matrix_out == nullptr) {
+        ham_matrix = derived::InitState(dim);
+        will_free_ham = true;
+    } else {
+        ham_matrix = ham_matrix_out;
+    }
+    calc_type e_r = 0, e_i = 0;
+    auto mask_f = mask.mask_x | mask.mask_y;
+    // clang-format off
+    if (!ctrl_mask) {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:e_r, e_i) schedule(static)), dim, DimTh,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    auto j = i ^ mask_f;
+                    if (j <= i) {
+                        auto r_axis2power = CountOne(i & mask.mask_z);  // -1
+                        auto r_axis3power = CountOne(i & mask.mask_y);  // -1j
+                        auto c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * r_axis3power + 2 * r_axis2power) & 3)]);
+                        qs_data_t sum = {0.0, 0.0};
+                        for (index_t k = 0; k < dim; k++) {
+                            sum += GetValue(qs, i, k) * GetValue(ham_matrix, k, j);
+                        }
+                        sum *= (c * HALF_MI);
+                        e_r += sum.real();
+                        e_i += sum.imag();
+                        if (i != j) {
+                            qs_data_t sum_j = {0.0, 0.0};
+                            for (index_t k = 0; k < dim; k++) {
+                                sum_j += GetValue(qs, j, k) * GetValue(ham_matrix, k, i);
+                            }
+                            sum_j *= (HALF_MI / c);
+                            e_r += sum_j.real();
+                            e_i += sum_j.imag();
+                        }
+                    }
+                })
+    } else {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:e_r, e_i) schedule(static)), dim, DimTh,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    if ((i & ctrl_mask) == ctrl_mask) {
+                        auto j = i ^ mask_f;
+                        if (j <= i) {
+                            auto r_axis2power = CountOne(i & mask.mask_z);  // -1
+                            auto r_axis3power = CountOne(i & mask.mask_y);  // -1j
+                            auto c = ComplexCast<double, calc_type>::apply(
+                                POLAR[static_cast<char>((mask.num_y + 2 * r_axis3power + 2 * r_axis2power) & 3)]);
+                            qs_data_t sum = {0.0, 0.0};
+                            for (index_t k = 0; k < dim; k++) {
+                                sum += GetValue(qs, i, k) * GetValue(ham_matrix, k, j);
+                            }
+                            sum *= (c * HALF_MI);
+                            e_r += sum.real();
+                            e_i += sum.imag();
+                            if (i != j) {
+                                qs_data_t sum_j = {0.0, 0.0};
+                                for (index_t k = 0; k < dim; k++) {
+                                    sum_j += GetValue(qs, j, k) * GetValue(ham_matrix, k, i);
+                                }
+                                sum_j *= (HALF_MI / c);
+                                e_r += sum_j.real();
+                                e_i += sum_j.imag();
+                            }
+                        }
+                    }
+                })
+    }
+    // clang-format on
+    if (will_free_qs) {
+        derived::FreeState(&qs);
+    }
+    if (will_free_ham) {
+        derived::FreeState(&ham_matrix);
+    }
+    return qs_data_t(e_r, e_i);
+}
+
 template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const Hamiltonian<calc_type>& ham, index_t dim)
     -> qs_data_p_t {

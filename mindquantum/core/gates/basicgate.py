@@ -38,6 +38,7 @@ from ..parameterresolver import ParameterResolver
 from .basic import (
     BasicGate,
     FunctionalGate,
+    NoneParameterGate,
     NoneParamNonHermMat,
     NoneParamSelfHermMat,
     ParameterGate,
@@ -46,6 +47,7 @@ from .basic import (
     PauliGate,
     PauliStringGate,
     RotSelfHermMat,
+    SelfHermitianGate,
 )
 
 
@@ -119,6 +121,82 @@ class HGate(NoneParamSelfHermMat):
     def get_cpp_obj(self):
         """Construct cpp obj."""
         return mb.gate.HGate(self.obj_qubits, self.ctrl_qubits)
+
+
+class GroupedPauli(NoneParameterGate, SelfHermitianGate):
+    r"""
+    Multi qubit pauli string gate.
+
+    Pauli string gate apply all pauli operator on the quantum state at same time,
+    which is much faster than apply them one by one.
+
+    .. math::
+
+        U =\otimes_i\sigma_i, \text{where } \sigma \in \{X, Y, Z\}
+
+    Args:
+        pauli_string (str): The pauli string. Each element should be in ``['x', 'y', 'z', 'X', 'Y', 'Z']``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.core.gates import GroupedPauli
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ1 = Circuit([GroupedPauli('XY').on([0, 1])])
+        >>> circ2 = Circuit().x(0).y(1)
+        >>> np.allclose(circ1.matrix(), circ2.matrix())
+        True
+        >>> np.allclose(circ1.matrix(), circ1[0].matrix())
+        True
+    """
+
+    def __init__(self, pauli_string: str):
+        """Initialize pauli string gate."""
+        _check_input_type("pauli_string", str, pauli_string)
+        for i in pauli_string:
+            if i.upper() not in ['X', 'Y', 'Z']:
+                raise ValueError(f"Unknown pauli operator {i}.")
+        self.pauli_string = pauli_string.upper()
+        super().__init__('GroupedPauli', len(self.pauli_string))
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        if not self.acted:
+            raise RuntimeError("GroupedPauli gate not acted on qubits yet.")
+        from ..circuit import Circuit  # pylint: disable=cyclic-import
+
+        out = Circuit()
+        gate_map = {'X': X, 'Y': Y, 'Z': Z}
+        for p, idx in zip(self.pauli_string, self.obj_qubits):
+            out += gate_map[p.upper()].on(idx, self.ctrl_qubits)
+        return out
+
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        return BasicGate.__eq__(self, other) and self.pauli_string == other.pauli_string
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.GroupedPauli(self.pauli_string, self.obj_qubits, self.ctrl_qubits)
+
+    def matrix(self, full=False):
+        """
+        Matrix of this gate.
+
+        Args:
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix()
+        from mindquantum.core.operators import QubitOperator
+
+        pauli = QubitOperator(' '.join(f'{p}{i}' for i, p in enumerate(self.pauli_string)))
+        return pauli.matrix().toarray()
 
 
 class XGate(PauliGate):
@@ -1343,6 +1421,110 @@ class GlobalPhase(RotSelfHermMat):
 
 
 BARRIER = BarrierGate(show=False)
+
+
+class RotPauliString(ParameterOppsGate):
+    r"""
+    Arbitrary pauli string rotation.
+
+    .. math::
+
+        U(\theta)=e^{-i\theta P/2}, P=\otimes_i\sigma_i, \text{where } \sigma \in \{X, Y, Z\}
+
+    Args:
+        pauli_string (str): The pauli string. Each element should be in ``['x', 'y', 'z', 'X', 'Y', 'Z']``.
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of parameterized gate.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.core.gates import RotPauliString
+        >>> from mindquantum.core.operators import TimeEvolution, QubitOperator
+        >>> from mindquantum.core.circuit import Circuit
+        >>> g = RotPauliString('XYZ', 1.0).on([0, 1, 2])
+        >>> circ1 = Circuit() + g
+        >>> circ2 = TimeEvolution(QubitOperator('X0 Y1 Z2'), 0.5).circuit
+        >>> np.allclose(circ1.matrix(), circ2.matrix())
+        True
+    """
+
+    def __init__(self, pauli_string: str, pr):
+        """Initialize U3 gate."""
+        _check_input_type("pauli_string", str, pauli_string)
+        for i in pauli_string:
+            if i.upper() not in ['X', 'Y', 'Z']:
+                raise ValueError(f"Unknown pauli operator {i}.")
+        self.pauli_string = pauli_string
+        super().__init__(pr=ParameterResolver(pr), name='RPS', n_qubits=len(self.pauli_string))
+
+    def __decompose__(self):
+        """Gate decomposition method."""
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.core.circuit import controlled
+        from mindquantum.core.operators import QubitOperator, TimeEvolution
+
+        if not self.acted:
+            raise ValueError("RotPauliString gate should act to qubit first.")
+        ops = QubitOperator(' '.join(f'{p}{idx}' for idx, p in zip(self.obj_qubits, self.pauli_string)))
+        circ = TimeEvolution(ops, self.coeff / 2).circuit
+        return controlled(circ)(self.ctrl_qubits)
+
+    def matrix(self, pr=None, full=False):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix(pr=pr)
+        val = 0
+        if self.coeff.is_const():
+            val = self.coeff.const
+        else:
+            new_pr = self.coeff.combination(pr)
+            if not new_pr.is_const():
+                raise ValueError("The parameter is not set completed.")
+            val = new_pr.const
+        m_p = GroupedPauli(self.pauli_string).matrix()
+        m_i = np.identity(len(m_p), dtype=m_p.dtype)
+        return np.cos(val / 2) * m_i - 1j * np.sin(val / 2) * m_p
+
+    def diff_matrix(self, pr=None, about_what=None):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        if self.coeff.is_const():
+            return np.zeros((2**self.n_qubits, 2**self.n_qubits))
+        new_pr = self.coeff.combination(pr)
+        if not new_pr.is_const():
+            raise ValueError("The parameter is not set completed.")
+        val = new_pr.const
+        if about_what is None:
+            if len(self.coeff) != 1:
+                raise ValueError("Should specific which parameter are going to do derivation.")
+            for i in self.coeff:
+                about_what = i
+        m_p = GroupedPauli(self.pauli_string).matrix()
+        m_i = np.identity(len(m_p), dtype=m_p.dtype)
+        return (-np.sin(val / 2) * m_i - 1j * np.cos(val / 2) * m_p) * 0.5 * self.coeff[about_what]
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.RotPauliString(self.pauli_string, self.coeff, self.obj_qubits, self.ctrl_qubits)
 
 
 class PhaseShift(ParameterOppsGate):

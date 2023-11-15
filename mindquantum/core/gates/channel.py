@@ -17,15 +17,102 @@
 """Quantum channel."""
 
 from itertools import product
-from math import sqrt, exp
+from math import exp, sqrt
 
 import numpy as np
+import numpy.typing as npt
 
 from mindquantum import mqbackend as mb
-from mindquantum.utils.f import _check_num_array
+from mindquantum.utils.f import _check_input_type, _check_num_array
 from mindquantum.utils.string_utils import string_expression
 
 from .basic import BasicGate, NoiseGate, NonHermitianGate, SelfHermitianGate
+
+
+class GroupedPauliChannel(NoiseGate, SelfHermitianGate):
+    r"""
+    A group of pauli channels.
+
+    This quantum channel is equivalent to a list of pauli channels, but will evaluate much
+    faster than apply them one by one. For detail of pauli channel, please refers to
+    :class:`~.core.gates.PauliChannel`.
+
+    .. math::
+
+        \epsilon(\rho) = \otimes_i \epsilon_\text{pauli}^i(\rho)
+
+    Args:
+        probs (numpy.ndarray): The error probabilities of pauli channel. It has dimension of
+            `(n, 3)`, where the first dimension `n` is the qubit number or the number of pauli channels
+            represented by this quantum channel . The second dimension `3` represents the probability of
+            applying :math:`X`, :math:`Y` or :math:`Z` gate.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.core.gates import GroupedPauliChannel
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.simulator import Simulator
+        >>> probs = np.array([[1.0, 0.0, 0.0], [0.0, 0.3, 0.0]])
+        >>> circ = Circuit([GroupedPauliChannel(probs).on([0, 1])]).measure_all()
+        >>> Simulator('mqvector', circ.n_qubits).sampling(circ, shots=1000, seed=42)
+        shots: 1000
+        Keys: q1 q0│0.00   0.177       0.355       0.532        0.71       0.887
+        ───────────┼───────────┴───────────┴───────────┴───────────┴───────────┴
+                 01│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                   │
+                 11│▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+                   │
+        {'01': 710, '11': 290}
+    """
+
+    def __init__(self, probs: npt.NDArray[np.float64], **kwargs):
+        """Initialize a GroupedPauliChannel object."""
+        if 'name' not in kwargs:
+            kwargs['name'] = 'GPC'
+        kwargs['n_qubits'] = probs.shape[0]
+        _check_input_type("probs", np.ndarray, probs)
+        if not np.issubdtype(probs.dtype, np.floating):
+            raise TypeError(f"probs requires a real number type, but get {probs.dtype}")
+        if np.any(probs < 0.0):
+            raise ValueError("probs cannot be negative value.")
+        shape = probs.shape
+        if len(shape) != 2:
+            raise ValueError(f"probs requires a two dimension array, but get dimension with {shape}")
+        if shape[1] != 3:
+            raise ValueError(f"The second dimension of probs should be two, but get {shape[1]}")
+        wrong_channel = np.where(probs.sum(axis=1) > 1)[0]
+        if wrong_channel.shape[0]:
+            raise ValueError(f"Wrong probs for {wrong_channel[0]}-pauli channel: {probs[wrong_channel[0]]}")
+        self.probs = probs
+        NoiseGate.__init__(self, **kwargs)
+        SelfHermitianGate.__init__(self, **kwargs)
+
+    def __eq__(self, other):
+        """Equality comparison operator."""
+        if isinstance(other, GroupedPauliChannel):
+            return BasicGate.__eq__(self, other) and np.allclose(self.probs, other.probs, atol=1e-8)
+        return False
+
+    def get_cpp_obj(self):
+        """Get underlying C++ object."""
+        return mb.gate.GroupedPauliChannel(self.probs, self.obj_qubits, self.ctrl_qubits)
+
+    def matrix(self):  # pylint: disable=arguments-differ
+        """
+        Kraus operator of the quantum channel.
+
+        Returns:
+            list, contains all Kraus operators of every pauli channel.
+        """
+        mat = []
+        for prob in self.probs:
+            px, py, pz = prob
+            mat_i = sqrt(1 - px - py - pz) * np.array([[1, 0], [0, 1]])
+            mat_x = sqrt(px) * np.array([[0, 1], [1, 0]])
+            mat_y = sqrt(py) * np.array([[0, -1j], [1j, 0]])
+            mat_z = sqrt(pz) * np.array([[1, 0], [0, -1]])
+            mat.append([mat_i, mat_x, mat_y, mat_z])
+        return mat
 
 
 class PauliChannel(NoiseGate, SelfHermitianGate):
@@ -707,7 +794,7 @@ class ThermalRelaxationChannel(NoiseGate, NonHermitianGate):
         """Return a string representation of the object."""
         return f't1={string_expression(self.t1)},t2={string_expression(self.t2)},tg={string_expression(self.gate_time)}'
 
-    def matrix(self):  # pylint: disable=arguments-differ
+    def matrix(self):  # pylint: disable=arguments-differ,too-many-locals
         """
         Kraus operator of the quantum channel.
 

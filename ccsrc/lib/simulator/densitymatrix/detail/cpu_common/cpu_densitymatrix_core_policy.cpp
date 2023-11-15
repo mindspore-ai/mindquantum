@@ -345,6 +345,109 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* q
 }
 
 template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauliString(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                        Index ctrl_mask, index_t dim) {
+    if (!ctrl_mask) {
+        derived_::ApplyPauliStringNoCtrl(qs_p, mask, dim);
+    } else {
+        derived_::ApplyPauliStringWithCtrl(qs_p, mask, ctrl_mask, dim);
+    }
+}
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauliStringNoCtrl(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                              index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    auto origin = derived_::Copy(*qs_p, dim);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
+            auto r_j = (r_i ^ mask_f);
+            if (r_j <= r_i) {
+                for (index_t c_i = 0; c_i <= r_i; c_i++) {
+                    auto c_j = (c_i ^ mask_f);
+                    if (c_j >= c_i) {
+                        auto r_axis2power = CountOne(r_i & mask.mask_z);  // -1
+                        auto r_axis3power = CountOne(r_i & mask.mask_y);  // -1j
+                        auto r_c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * r_axis3power + 2 * r_axis2power) & 3)]);
+                        auto c_axis2power = CountOne(c_i & mask.mask_z);  // -1
+                        auto c_axis3power = CountOne(c_i & mask.mask_y);  // -1j
+                        auto c_c = std::conj(ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * c_axis3power + 2 * c_axis2power) & 3)]));
+                        auto m_ri_ci = GetValue(origin, r_i, c_i);
+                        auto m_ri_cj = GetValue(origin, r_i, c_j);
+                        auto m_rj_ci = GetValue(origin, r_j, c_i);
+                        auto m_rj_cj = GetValue(origin, r_j, c_j);
+                        qs[IdxMap(r_i, c_i)] = m_rj_cj / r_c / c_c;
+                        if ((r_j >= c_i) && (r_i != r_j)) {
+                            qs[IdxMap(r_j, c_i)] = m_ri_cj * r_c / c_c;
+                        }
+                        if ((c_j <= r_i) && (c_i != c_j)) {
+                            qs[IdxMap(r_i, c_j)] = m_rj_ci / r_c * c_c;
+                        }
+                        if ((r_j >= c_j) && (r_i != r_j) && (c_i != c_j)) {
+                            qs[IdxMap(r_j, c_j)] = m_ri_ci * r_c * c_c;
+                        }
+                    }
+                }
+            }
+        })
+    derived_::FreeState(&origin);
+}
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauliStringWithCtrl(qs_data_p_t* qs_p,
+                                                                                const PauliMask& mask, Index ctrl_mask,
+                                                                                index_t dim) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    auto origin = derived_::Copy(*qs_p, dim);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
+            bool r_ctrl = ((r_i & ctrl_mask) == ctrl_mask);
+            auto r_j = r_ctrl ? (r_i ^ mask_f) : r_i;
+            if (r_j <= r_i) {
+                for (index_t c_i = 0; c_i <= r_i; c_i++) {
+                    bool c_ctrl = ((c_i & ctrl_mask) == ctrl_mask);
+                    auto c_j = c_ctrl ? (c_i ^ mask_f) : c_i;
+                    if (c_j >= c_i) {
+                        auto r_axis2power = CountOne(r_i & mask.mask_z);  // -1
+                        auto r_axis3power = CountOne(r_i & mask.mask_y);  // -1j
+                        auto r_c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * r_axis3power + 2 * r_axis2power) & 3)]);
+                        auto c_axis2power = CountOne(c_i & mask.mask_z);  // -1
+                        auto c_axis3power = CountOne(c_i & mask.mask_y);  // -1j
+                        auto c_c = std::conj(ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * c_axis3power + 2 * c_axis2power) & 3)]));
+                        r_c = r_ctrl ? r_c : 1;
+                        c_c = c_ctrl ? c_c : 1;
+                        auto m_ri_ci = GetValue(origin, r_i, c_i);
+                        auto m_ri_cj = GetValue(origin, r_i, c_j);
+                        auto m_rj_ci = GetValue(origin, r_j, c_i);
+                        auto m_rj_cj = GetValue(origin, r_j, c_j);
+                        qs[IdxMap(r_i, c_i)] = m_rj_cj / r_c / c_c;
+                        if ((r_j >= c_i) && (r_i != r_j)) {
+                            qs[IdxMap(r_j, c_i)] = m_ri_cj * r_c / c_c;
+                        }
+                        if ((c_j <= r_i) && (c_i != c_j)) {
+                            qs[IdxMap(r_i, c_j)] = m_rj_ci / r_c * c_c;
+                        }
+                        if ((r_j >= c_j) && (r_i != r_j) && (c_i != c_j)) {
+                            qs[IdxMap(r_j, c_j)] = m_ri_ci * r_c * c_c;
+                        }
+                    }
+                }
+            }
+        })
+    derived_::FreeState(&origin);
+}
+
+template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyCsr(
     qs_data_p_t* qs_p, const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a, index_t dim) {
     if (dim != a->dim_) {

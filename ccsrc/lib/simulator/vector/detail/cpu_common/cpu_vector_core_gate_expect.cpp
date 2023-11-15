@@ -15,6 +15,7 @@
  */
 
 #include "config/openmp.h"
+#include "config/type_promotion.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
 #ifdef __x86_64__
@@ -161,6 +162,83 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(const 
     }
     return {res_real, res_imag};
 };
+
+template <typename derived_, typename calc_type_>
+auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t& bra_out, const qs_data_p_t& ket_out,
+                                                              const PauliMask& mask, Index ctrl_mask, calc_type val,
+                                                              index_t dim) -> qs_data_t {
+    auto bra = bra_out;
+    auto ket = ket_out;
+    bool will_free_bra = false, will_free_ket = false;
+    if (bra == nullptr) {
+        bra = derived::InitState(dim);
+        will_free_bra = true;
+    }
+    if (ket == nullptr) {
+        ket = derived::InitState(dim);
+        will_free_ket = true;
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    calc_type res_real = 0, res_imag = 0;
+    auto a = -std::sin(val / 2) / 2;
+    auto b = std::cos(val / 2) / 2;
+    // clang-format off
+    if (!ctrl_mask) {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    auto j = i ^ mask_f;
+                    if (i <= j) {
+                        auto axis2power = CountOne(i & mask.mask_z);  // -1
+                        auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                        auto c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                        if (i == j) {
+                            auto tmp = std::conj(bra[i]) * ket[i] * (a - IMAGE_I * b * c);
+                            res_real += tmp.real();
+                            res_imag += tmp.imag();
+                        } else {
+                            auto tmp = std::conj(bra[i]) * (ket[i] * a - IMAGE_I * ket[j] * b / c);
+                            tmp += std::conj(bra[j]) * (ket[j] * a - IMAGE_I * ket[i] * b * c);
+                            res_real += tmp.real();
+                            res_imag += tmp.imag();
+                        }
+                    }
+                })
+    } else {
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    if ((i & ctrl_mask) == ctrl_mask) {
+                        auto j = i ^ mask_f;
+                        if (i <= j) {
+                            auto axis2power = CountOne(i & mask.mask_z);  // -1
+                            auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                            auto c = ComplexCast<double, calc_type>::apply(
+                                POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                            if (i == j) {
+                                auto tmp = std::conj(bra[i]) * ket[i] * (a - IMAGE_I * b * c);
+                                res_real += tmp.real();
+                                res_imag += tmp.imag();
+                            } else {
+                                auto tmp = std::conj(bra[i]) * (ket[i] * a - IMAGE_I * ket[j] * b / c);
+                                tmp += std::conj(bra[j]) * (ket[j] * a - IMAGE_I * ket[i] * b * c);
+                                res_real += tmp.real();
+                                res_imag += tmp.imag();
+                            }
+                        }
+                    }
+                })
+    }
+    // clang-format on
+    if (will_free_bra) {
+        derived::FreeState(&bra);
+    }
+    if (will_free_ket) {
+        derived::FreeState(&ket);
+    }
+    return {res_real, res_imag};
+}
 
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra_out,

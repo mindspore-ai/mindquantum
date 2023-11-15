@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Test basic gate with simulator."""
+# pylint: disable=invalid-unary-operand-type
 from inspect import signature
 
 import numpy as np
@@ -24,6 +25,7 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
+from mindquantum.utils import random_circuit
 
 none_parameter_gate = [
     G.HGate,
@@ -590,3 +592,154 @@ def test_rn_expectation_with_grad(config):  # pylint: disable=R0914
     f3 = f3[0, 0]
     g_exp = (np.array([f1, f2, f3]) - f) / delta
     assert np.allclose(g, g_exp, atol=0.01)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_pauli_string_gate(config):  # pylint: disable=too-many-locals
+    """
+    Description: test pauli string gate
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    n_qubits = 5
+
+    def random_pauli_string(obj_qubits):
+        pauli = ['X', 'Y', 'Z']
+        return ''.join(i for i in np.random.choice(pauli, len(obj_qubits)))
+
+    circs = []
+    for i in range(20):
+        qubits = list(range(n_qubits))
+        np.random.shuffle(qubits)
+        obj_qubits = qubits[: n_qubits - 1]
+        ctrl_qubits = None if np.random.random() < 0.5 else qubits[-1]
+        circs.append(G.GroupedPauli(random_pauli_string(obj_qubits)).on(obj_qubits, ctrl_qubits))
+    if virtual_qc.startswith('mqvector'):
+        state = random_circuit(n_qubits, 10).get_qs()
+        sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
+        for g in circs:
+            sim.set_qs(state)
+            sim.apply_gate(g)
+            qs0 = sim.get_qs()
+            sim.set_qs(state)
+            sim.apply_circuit(g.__decompose__())
+            qs1 = sim.get_qs()
+            assert np.allclose(qs0, qs1)
+    elif virtual_qc.startswith("mqmatrix"):
+        qs0 = random_circuit(n_qubits, 10).get_qs()
+        qs1 = random_circuit(n_qubits, 10).get_qs()
+        qs2 = random_circuit(n_qubits, 10).get_qs()
+        qs0 = np.outer(qs0, np.conj(qs0))
+        qs1 = np.outer(qs1, np.conj(qs1))
+        qs2 = np.outer(qs2, np.conj(qs2))
+        state = 0.2 * qs0 + 0.3 * qs1 + 0.5 * qs2
+        sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
+        for g in circs:
+            sim.set_qs(state)
+            sim.apply_gate(g)
+            qs0 = sim.get_qs()
+            sim.set_qs(state)
+            sim.apply_circuit(g.__decompose__())
+            qs1 = sim.get_qs()
+            assert np.allclose(qs0, qs1)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_rot_pauli_string_gate(config):  # pylint: disable=too-many-locals
+    """
+    Description: test pauli string gate
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    n_qubits = 5
+    for _ in range(20):
+        qubits = list(range(n_qubits))
+        np.random.shuffle(qubits)
+        n_obj = np.random.randint(1, n_qubits + 1)
+        if n_obj == n_qubits:
+            n_ctrl = None
+        else:
+            n_ctrl = np.random.randint(0, n_qubits - n_obj)
+        obj_qubits = qubits[:n_obj]
+        if n_ctrl is None or n_ctrl == 0:
+            ctrl_qubits = None
+        else:
+            ctrl_qubits = qubits[-n_ctrl:]
+        pauli_string = ''.join(np.random.choice(['X', 'Y', 'Z'], n_obj))
+        p0 = np.random.uniform(-3, 3)
+        g = G.RotPauliString(pauli_string, p0).on(obj_qubits, ctrl_qubits)
+        circ = g.__decompose__()
+        sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
+        rand_circ = random_circuit(n_qubits, 20)
+        sim.apply_circuit(rand_circ)
+        sim.apply_gate(g)
+        qs1 = sim.get_qs()
+        sim.reset()
+        sim.apply_circuit(rand_circ)
+        sim.apply_circuit(circ)
+        qs2 = sim.get_qs()
+        if dtype == mq.complex64:
+            atol = 1e-4
+        else:
+            atol = 1e-8
+        assert np.allclose(qs1, qs2, atol=atol)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+def test_rot_pauli_string_gate_gradient(config):  # pylint: disable=too-many-locals
+    """
+    Description: test pauli string gate
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    n_qubits = 5
+    for _ in range(20):
+        qubits = list(range(n_qubits))
+        np.random.shuffle(qubits)
+        n_obj = np.random.randint(1, n_qubits + 1)
+        if n_obj == n_qubits:
+            n_ctrl = None
+        else:
+            n_ctrl = np.random.randint(0, n_qubits - n_obj)
+        obj_qubits = qubits[:n_obj]
+        if n_ctrl is None or n_ctrl == 0:
+            ctrl_qubits = None
+        else:
+            ctrl_qubits = qubits[-n_ctrl:]
+        pauli_string = ''.join(np.random.choice(['X', 'Y', 'Z'], n_obj))
+        p0 = np.random.uniform(-3, 3, size=(1,))
+        g = G.RotPauliString(pauli_string, 'a').on(obj_qubits, ctrl_qubits)
+        circ = g.__decompose__()
+        ham = Hamiltonian(
+            QubitOperator(
+                ' '.join(f"{p}{idx}" for idx, p in enumerate(np.random.choice(['X', 'Y', 'Z'], n_qubits)))
+            ).astype(dtype)
+        )
+        sim1 = Simulator(virtual_qc, n_qubits, dtype=dtype)
+        sim2 = Simulator(virtual_qc, n_qubits, dtype=dtype)
+        rand_circ = random_circuit(n_qubits, 20)
+        rc2 = random_circuit(n_qubits, 20)
+        circ1 = rand_circ + g + rc2
+        circ2 = rand_circ + circ + rc2
+        grad_ops1 = sim1.get_expectation_with_grad(ham, circ1)
+        grad_ops2 = sim2.get_expectation_with_grad(ham, circ2)
+        f1, g1 = grad_ops1(p0)
+        f2, g2 = grad_ops2(p0)
+        if dtype == mq.complex64:
+            atol = 1e-4
+        else:
+            atol = 1e-8
+        assert np.allclose(f1, f2, atol=atol)
+        assert np.allclose(g1, g2, atol=atol)

@@ -35,6 +35,7 @@ from .basicgate import (
     CNOTGate,
     FSim,
     GlobalPhase,
+    GroupedPauli,
     H,
     HGate,
     I,
@@ -43,6 +44,7 @@ from .basicgate import (
     PhaseShift,
     Power,
     Rn,
+    RotPauliString,
     Rxx,
     Rxy,
     Rxz,
@@ -69,6 +71,7 @@ from .channel import (
     BitFlipChannel,
     BitPhaseFlipChannel,
     DepolarizingChannel,
+    GroupedPauliChannel,
     KrausChannel,
     PauliChannel,
     PhaseDampingChannel,
@@ -132,9 +135,12 @@ __all__ = [
     "AmplitudeDampingChannel",
     "PhaseDampingChannel",
     "KrausChannel",
+    "GroupedPauliChannel",
     "ThermalRelaxationChannel",
     "U3",
     "FSim",
+    "GroupedPauli",
+    "RotPauliString",
 ]
 
 __all__.sort()

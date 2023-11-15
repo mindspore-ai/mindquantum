@@ -225,6 +225,72 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ApplyTerms(qs_data_p_t* qs_p,
 };
 
 template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyPauliString(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                 Index ctrl_mask, index_t dim) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    auto mask_z = mask.mask_z;
+    auto mask_y = mask.mask_y;
+    auto num_y = mask.num_y;
+    thrust::counting_iterator<index_t> i(0);
+
+    if (ctrl_mask == 0) {
+        thrust::for_each(i, i + dim, [=] __device__(index_t i) {
+            auto j = (i ^ mask_f);
+            if (i <= j) {
+                auto axis2power = __popcll(i & mask_z);
+                auto axis3power = __popcll(i & mask_y);
+                auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
+                auto c = qs_data_t(1, 0);
+                if (idx == 1) {
+                    c = qs_data_t(0, 1);
+                } else if (idx == 2) {
+                    c = qs_data_t(-1, 0);
+                } else if (idx == 3) {
+                    c = qs_data_t(0, -1);
+                }
+                if (i == j) {
+                    qs[i] = qs[i] * c;
+                } else {
+                    auto tmp = qs[j];
+                    qs[j] = qs[i] * c;
+                    qs[i] = tmp / c;
+                }
+            }
+        });
+    } else {
+        thrust::for_each(i, i + dim, [=] __device__(index_t i) {
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = (i ^ mask_f);
+                if (i <= j) {
+                    auto axis2power = __popcll(i & mask_z);
+                    auto axis3power = __popcll(i & mask_y);
+                    auto idx = (num_y + 2 * axis3power + 2 * axis2power) & 3;
+                    auto c = qs_data_t(1, 0);
+                    if (idx == 1) {
+                        c = qs_data_t(0, 1);
+                    } else if (idx == 2) {
+                        c = qs_data_t(-1, 0);
+                    } else if (idx == 3) {
+                        c = qs_data_t(0, -1);
+                    }
+                    if (i == j) {
+                        qs[i] = qs[i] * c;
+                    } else {
+                        auto tmp = qs[j];
+                        qs[j] = qs[i] * c;
+                        qs[i] = tmp / c;
+                    }
+                }
+            }
+        });
+    }
+};
+
+template <typename derived_, typename calc_type_>
 auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<index_t, calc_type>& masks_value,
                                                                  qbit_t n_qubits) -> calc_type {
     auto n_mask = masks_value.size();

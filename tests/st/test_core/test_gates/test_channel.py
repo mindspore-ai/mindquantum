@@ -13,14 +13,14 @@
 # limitations under the License.
 # ============================================================================
 """Test channel."""
-from math import sqrt, exp
+from math import exp, sqrt
+
 import numpy as np
 import pytest
 
 import mindquantum.core.gates.channel as C
 
-
-I = np.array([[1.0 + 0.0j, 0], [0, 1]])
+I = np.array([[1.0 + 0.0j, 0], [0, 1]])  # noqa: E741
 X = np.array([[0, 1], [1, 0]])
 Y = np.array([[0, -1j], [1j, 0]])
 Z = np.array([[1, 0], [0, -1]])
@@ -92,7 +92,7 @@ def test_thermal_relaxation_channel():
     t1, t2, gate_time = np.random.rand(3) * 10000
     if t2 >= 2 * t1:
         with pytest.raises(ValueError):
-            c = C.ThermalRelaxationChannel(t1, t2, gate_time).on(0)
+            _ = C.ThermalRelaxationChannel(t1, t2, gate_time).on(0)
         return
     e1 = exp(-gate_time / t1)
     e2 = exp(-gate_time / t2)
@@ -125,3 +125,5 @@ def test_channel_with_ctrl_qubits():
         C.KrausChannel('kraus', C.DepolarizingChannel(0.1).matrix()).on(0, 1)
     with pytest.raises(Exception, match=r"cannot have control qubits"):
         C.ThermalRelaxationChannel(10000, 9000, 30).on(0, 1)
+    with pytest.raises(Exception, match=r"cannot have control qubits"):
+        C.GroupedPauliChannel(np.array([[0.1, 0.2, 0.3]])).on(0, 1)

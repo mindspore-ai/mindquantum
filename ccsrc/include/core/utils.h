@@ -83,7 +83,7 @@ CT<T> ComplexInnerProductWithControl(const ST *v1, const ST *v2, Index len, Inde
     return result;
 }
 
-Index GetControlMask(const VT<Index> &ctrls);
+Index GetControlMask(const qbits_t &ctrls);
 
 PauliMask GetPauliMask(const VT<PauliWord> &pws);
 

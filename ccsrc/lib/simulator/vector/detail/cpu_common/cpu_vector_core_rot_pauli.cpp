@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "config/openmp.h"
+#include "config/type_promotion.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
 #ifdef __x86_64__
@@ -399,6 +400,66 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRY(qs_data_p_t* qs_p, const
     derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
     if (diff && mask.ctrl_mask) {
         derived::SetToZeroExcept(qs_p, mask.ctrl_mask, dim);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRPS(qs_data_p_t* qs_p, const PauliMask& mask, Index ctrl_mask,
+                                                         calc_type val, index_t dim, bool diff) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto a = std::cos(val / ROT_PAULI_FACTOR);
+    auto b = std::sin(val / ROT_PAULI_FACTOR);
+    if (diff) {
+        a = -std::sin(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR;
+        b = std::cos(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR;
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    if (ctrl_mask == 0) {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                auto j = i ^ mask_f;
+                if (i <= j) {
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    if (i == j) {
+                        qs[i] *= (a - IMAGE_I * b * c);
+                    } else {
+                        auto qs_i = qs[i];
+                        auto qs_j = qs[j];
+                        qs[i] = qs_i * a - IMAGE_I * qs_j * b / c;
+                        qs[j] = qs_j * a - IMAGE_I * qs_i * b * c;
+                    }
+                }
+            })
+    } else {
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+                if ((i & ctrl_mask) == ctrl_mask) {
+                    auto j = i ^ mask_f;
+                    if (i <= j) {
+                        auto axis2power = CountOne(i & mask.mask_z);  // -1
+                        auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                        auto c = ComplexCast<double, calc_type>::apply(
+                            POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                        if (i == j) {
+                            qs[i] *= (a - IMAGE_I * b * c);
+                        } else {
+                            auto qs_i = qs[i];
+                            auto qs_j = qs[j];
+                            qs[i] = qs_i * a - IMAGE_I * qs_j * b / c;
+                            qs[j] = qs_j * a - IMAGE_I * qs_i * b * c;
+                        }
+                    }
+                }
+            })
+    }
+    if (diff && ctrl_mask) {
+        derived::SetToZeroExcept(qs_p, ctrl_mask, dim);
     }
 }
 

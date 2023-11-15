@@ -25,8 +25,131 @@
 #    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.h"
 #endif
 #include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"
-
+#define MATSUM4(a1, b1, c1, d1, a2, b2, c2, d2) ((a1) * (a2) + (b1) * (b2) + (c1) * (c2) + (d1) * (d2))
 namespace mindquantum::sim::densitymatrix::detail {
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRPS(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                Index ctrl_mask, calc_type val, index_t dim,
+                                                                bool diff) {
+    if (!ctrl_mask) {
+        derived_::ApplyRPSNoCtrl(qs_p, mask, val, dim, diff);
+    } else {
+        derived_::ApplyRPSWithCtrl(qs_p, mask, ctrl_mask, val, dim, diff);
+    }
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRPSNoCtrl(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                      calc_type val, index_t dim, bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    auto a = std::cos(val / 2);
+    auto b = std::sin(val / 2) * IMAGE_I;
+    if (diff) {
+        a = -std::sin(val / 2) / 2;
+        b = std::cos(val / 2) / 2 * IMAGE_I;
+    }
+    auto origin = derived_::Copy(*qs_p, dim);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
+            auto r_j = (r_i ^ mask_f);
+            if (r_j <= r_i) {
+                for (index_t c_i = 0; c_i <= r_i; c_i++) {
+                    auto c_j = (c_i ^ mask_f);
+                    if (c_j >= c_i) {
+                        auto r_c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>(
+                            (mask.num_y + 2 * CountOne(r_i & mask.mask_y) + 2 * CountOne(r_i & mask.mask_z)) & 3)]);
+                        auto c_c = std::conj(ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>(
+                            (mask.num_y + 2 * CountOne(c_i & mask.mask_y) + 2 * CountOne(c_i & mask.mask_z)) & 3)]));
+                        auto m_ri_ci = GetValue(origin, r_i, c_i);
+                        auto m_ri_cj = GetValue(origin, r_i, c_j);
+                        auto m_rj_ci = GetValue(origin, r_j, c_i);
+                        auto m_rj_cj = GetValue(origin, r_j, c_j);
+                        qs[IdxMap(r_i, c_i)] = MATSUM4(a * a, a * b / c_c, -a * b / r_c, -b * b / c_c / r_c, m_ri_ci,
+                                                       m_ri_cj, m_rj_ci, m_rj_cj);
+                        if ((r_j >= c_i) && (r_i != r_j)) {
+                            qs[IdxMap(r_j, c_i)] = MATSUM4(-a * b * r_c, -b * b * r_c / c_c, a * a, a * b / c_c,
+                                                           m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        }
+                        if ((c_j <= r_i) && (c_i != c_j)) {
+                            qs[IdxMap(r_i, c_j)] = MATSUM4(a * b * c_c, a * a, -b * b * c_c / r_c, -a * b / r_c,
+                                                           m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        }
+                        if ((r_j >= c_j) && (r_j != r_i) && (c_j != c_i)) {
+                            qs[IdxMap(r_j, c_j)] = MATSUM4(-b * b * c_c * r_c, -a * b * r_c, a * b * c_c, a * a,
+                                                           m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        }
+                    }
+                }
+            }
+        })
+    derived_::FreeState(&origin);
+}
+
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRPSWithCtrl(qs_data_p_t* qs_p, const PauliMask& mask,
+                                                                        Index ctrl_mask, calc_type val, index_t dim,
+                                                                        bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    auto mask_f = mask.mask_x | mask.mask_y;
+    auto a = std::cos(val / 2);
+    auto b = std::sin(val / 2) * IMAGE_I;
+    if (diff) {
+        a = -std::sin(val / 2) / 2;
+        b = std::cos(val / 2) / 2 * IMAGE_I;
+    }
+    auto origin = derived_::Copy(*qs_p, dim);
+    THRESHOLD_OMP_FOR(
+        dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
+            bool r_ctrl = ((r_i & ctrl_mask) == ctrl_mask);
+            auto r_j = r_ctrl ? (r_i ^ mask_f) : r_i;
+            qs_data_t a1 = r_ctrl * a + (1 - r_ctrl);
+            qs_data_t b1 = b * static_cast<calc_type>(r_ctrl);
+            if (r_j <= r_i) {
+                for (index_t c_i = 0; c_i <= r_i; c_i++) {
+                    bool c_ctrl = ((c_i & ctrl_mask) == ctrl_mask);
+                    auto c_j = c_ctrl ? (c_i ^ mask_f) : c_i;
+                    qs_data_t a2 = c_ctrl ? a : 1;
+                    qs_data_t b2 = c_ctrl ? b : 0;
+                    if (c_j >= c_i) {
+                        auto r_c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>(
+                            (mask.num_y + 2 * CountOne(r_i & mask.mask_y) + 2 * CountOne(r_i & mask.mask_z)) & 3)]);
+                        auto c_c = std::conj(ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>(
+                            (mask.num_y + 2 * CountOne(c_i & mask.mask_y) + 2 * CountOne(c_i & mask.mask_z)) & 3)]));
+                        auto m_ri_ci = GetValue(origin, r_i, c_i);
+                        auto m_ri_cj = GetValue(origin, r_i, c_j);
+                        auto m_rj_ci = GetValue(origin, r_j, c_i);
+                        auto m_rj_cj = GetValue(origin, r_j, c_j);
+                        qs[IdxMap(r_i, c_i)] = MATSUM4(a1 * a2, a1 * b2 / c_c, -a2 * b1 / r_c, -b1 * b2 / c_c / r_c,
+                                                       m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        if ((r_j >= c_i) && (r_i != r_j)) {
+                            qs[IdxMap(r_j, c_i)] = MATSUM4(-a2 * b1 * r_c, -b1 * b2 * r_c / c_c, a1 * a2, a1 * b2 / c_c,
+                                                           m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        }
+                        if ((c_j <= r_i) && (c_i != c_j)) {
+                            qs[IdxMap(r_i, c_j)] = MATSUM4(a1 * b2 * c_c, a1 * a2, -b1 * b2 * c_c / r_c, -a2 * b1 / r_c,
+                                                           m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        }
+                        if ((r_j >= c_j) && (r_j != r_i) && (c_j != c_i)) {
+                            qs[IdxMap(r_j, c_j)] = MATSUM4(-b1 * b2 * c_c * r_c, -a2 * b1 * r_c, a1 * b2 * c_c, a1 * a2,
+                                                           m_ri_ci, m_ri_cj, m_rj_ci, m_rj_cj);
+                        }
+                    }
+                }
+            }
+        })
+    if (diff) {
+        derived::SetToZeroExcept(qs_p, ctrl_mask, dim);
+    }
+    derived_::FreeState(&origin);
+}
+
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs,
                                                                const qbits_t& ctrls, calc_type val, index_t dim,
