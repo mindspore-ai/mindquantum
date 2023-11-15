@@ -55,10 +55,10 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRPSNoCtrl(qs_data_p_
     auto origin = derived_::Copy(*qs_p, dim);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
-            auto r_j = (r_i ^ mask_f);
+            omp::idx_t r_j = (r_i ^ mask_f);
             if (r_j <= r_i) {
-                for (index_t c_i = 0; c_i <= r_i; c_i++) {
-                    auto c_j = (c_i ^ mask_f);
+                for (omp::idx_t c_i = 0; c_i <= r_i; c_i++) {
+                    omp::idx_t c_j = (c_i ^ mask_f);
                     if (c_j >= c_i) {
                         auto r_c = ComplexCast<double, calc_type>::apply(POLAR[static_cast<char>(
                             (mask.num_y + 2 * CountOne(r_i & mask.mask_y) + 2 * CountOne(r_i & mask.mask_z)) & 3)]);
@@ -108,13 +108,13 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyRPSWithCtrl(qs_data_
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
             bool r_ctrl = ((r_i & ctrl_mask) == ctrl_mask);
-            auto r_j = r_ctrl ? (r_i ^ mask_f) : r_i;
+            omp::idx_t r_j = r_ctrl ? (r_i ^ mask_f) : r_i;
             qs_data_t a1 = r_ctrl * a + (1 - r_ctrl);
             qs_data_t b1 = b * static_cast<calc_type>(r_ctrl);
             if (r_j <= r_i) {
-                for (index_t c_i = 0; c_i <= r_i; c_i++) {
+                for (omp::idx_t c_i = 0; c_i <= r_i; c_i++) {
                     bool c_ctrl = ((c_i & ctrl_mask) == ctrl_mask);
-                    auto c_j = c_ctrl ? (c_i ^ mask_f) : c_i;
+                    omp::idx_t c_j = c_ctrl ? (c_i ^ mask_f) : c_i;
                     qs_data_t a2 = c_ctrl ? a : 1;
                     qs_data_t b2 = c_ctrl ? b : 0;
                     if (c_j >= c_i) {

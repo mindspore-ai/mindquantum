@@ -364,10 +364,10 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauliStringNoCtrl(qs
     auto origin = derived_::Copy(*qs_p, dim);
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
-            auto r_j = (r_i ^ mask_f);
+            omp::idx_t r_j = (r_i ^ mask_f);
             if (r_j <= r_i) {
-                for (index_t c_i = 0; c_i <= r_i; c_i++) {
-                    auto c_j = (c_i ^ mask_f);
+                for (omp::idx_t c_i = 0; c_i <= r_i; c_i++) {
+                    omp::idx_t c_j = (c_i ^ mask_f);
                     if (c_j >= c_i) {
                         auto r_axis2power = CountOne(r_i & mask.mask_z);  // -1
                         auto r_axis3power = CountOne(r_i & mask.mask_y);  // -1j
@@ -410,11 +410,11 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyPauliStringWithCtrl(
     THRESHOLD_OMP_FOR(
         dim, DimTh, for (omp::idx_t r_i = 0; r_i < static_cast<omp::idx_t>(dim); r_i++) {
             bool r_ctrl = ((r_i & ctrl_mask) == ctrl_mask);
-            auto r_j = r_ctrl ? (r_i ^ mask_f) : r_i;
+            omp::idx_t r_j = r_ctrl ? (r_i ^ mask_f) : r_i;
             if (r_j <= r_i) {
-                for (index_t c_i = 0; c_i <= r_i; c_i++) {
+                for (omp::idx_t c_i = 0; c_i <= r_i; c_i++) {
                     bool c_ctrl = ((c_i & ctrl_mask) == ctrl_mask);
-                    auto c_j = c_ctrl ? (c_i ^ mask_f) : c_i;
+                    omp::idx_t c_j = c_ctrl ? (c_i ^ mask_f) : c_i;
                     if (c_j >= c_i) {
                         auto r_axis2power = CountOne(r_i & mask.mask_z);  // -1
                         auto r_axis3power = CountOne(r_i & mask.mask_y);  // -1j
