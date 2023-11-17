@@ -18,15 +18,117 @@ import os
 import re
 import pytest
 import json
+import numpy as np
+from scipy.optimize import minimize
+
+from mindquantum.core import gates as G
+from mindquantum.core.circuit import Circuit
+from mindquantum.simulator import Simulator
+import mindquantum as mq
+from mindquantum.algorithm.nisq.qaoa import MaxCutAnsatz
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(current_path, os.path.abspath("../data"))
 
-circs = []
+# Section One
+# Benchmark random circuit
+# Available pytest mark: random_circuit, mindquantum
 
-for file_name in os.listdir(data_path):
-    if file_name.startswith("random_circuit"):
-        n_qubits = int(re.search(r"\d+", file_name).group())
-        full_path = os.path.join(data_path, file_name)
-        with open(full_path, "r", encoding="utf-8") as f:
-            str_circ = json.load(f)
+STR_GATE_MAP = {
+    "x": G.XGate,
+    "y": G.YGate,
+    "z": G.ZGate,
+    "h": G.HGate,
+    "swap": G.SWAPGate,
+    "rx": G.RX,
+    "ry": G.RY,
+    "rz": G.RZ,
+    "rxx": G.Rxx,
+    "ryy": G.Ryy,
+    "rzz": G.Rzz,
+    "ps": G.PhaseShift,
+}
+
+
+def convert_back_to_mq_circ(str_circ):
+    """Convert str gate back to MindQuantum circuit."""
+    circ = Circuit()
+    for str_g in str_circ:
+        name = str_g["name"]
+        obj = str_g["obj"]
+        ctrl = str_g["ctrl"]
+        if "val" in str_g:
+            circ += STR_GATE_MAP[name](str_g["val"]).on(obj, ctrl)
+        else:
+            circ += STR_GATE_MAP[name]().on(obj, ctrl)
+    return circ
+
+
+def get_task_file(task: str):
+    """Get all data file name."""
+    all_path = []
+    for file_name in os.listdir(data_path):
+        if file_name.startswith(task):
+            full_path = os.path.join(data_path, file_name)
+            all_path.append(full_path)
+    return all_path
+
+
+random_circuit_data_path = get_task_file("random_circuit")
+random_circuit_data_path.sort()
+random_circuit_data_path = random_circuit_data_path[:5]
+
+
+def benchmark_random_circuit(sim, circ):
+    sim.apply_circuit(circ)
+
+
+@pytest.mark.random_circuit
+@pytest.mark.mindquantum
+@pytest.mark.parametrize("file_name", random_circuit_data_path)
+@pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
+def test_mindquantum_random_circuit(benchmark, file_name, dtype):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        str_circ = json.load(f)
+    sim = Simulator("mqvector", n_qubits, dtype=dtype)
+    circ = convert_back_to_mq_circ(str_circ)
+    benchmark(benchmark_random_circuit, sim, circ)
+
+
+# Section Two
+# Benchmark four regular qaoa
+# Available pytest mark: regular_4, mindquantum
+
+regular_4_data_path = get_task_file("regular_4")
+regular_4_data_path.sort()
+regular_4_data_path = regular_4_data_path[:5]
+
+
+def regular_4_fun(p, grad_ops):
+    f, g = grad_ops(p)
+    f = np.real(f)[0][0]
+    g = np.real(g)[0][0]
+    return f, g
+
+
+def benchmark_regular_4(grad_ops, p0):
+    res = minimize(regular_4_fun, p0, args=(grad_ops,), method="bfgs", jac=True)
+
+
+@pytest.mark.regular_4
+@pytest.mark.mindquantum
+@pytest.mark.parametrize("file_name", regular_4_data_path)
+@pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
+def test_mindquantum_regular_4(benchmark, file_name, dtype):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        edges = [tuple(i) for i in json.load(f)]
+    ansatz = MaxCutAnsatz(edges, 1)
+    circ = ansatz.circuit
+    ham = mq.Hamiltonian(-ansatz.hamiltonian).astype(dtype)
+    sim = Simulator("mqvector", n_qubits, dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(ham, circ)
+    rng = np.random.default_rng(42)
+    p0 = rng.uniform(-3, 3, len(circ.params_name))
+    benchmark(benchmark_regular_4, grad_ops, p0)

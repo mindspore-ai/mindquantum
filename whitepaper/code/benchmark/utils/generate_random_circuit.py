@@ -30,7 +30,7 @@ def prepare_random_circ(
     Prepare random circuit data.
     """
     for i in qubit_range:
-        data_name = f"random_circuit_qubit_{i}_size_{size}.json"
+        data_name = f"random_circuit_qubit_{str(i).zfill(2)}_size_{size}.json"
         circ = convert_circ(random_circuit(i, size, seed=seed))
         path = os.path.join(os.path.abspath(d_path), data_name)
         with open(path, "w", encoding="utf-8") as f:
