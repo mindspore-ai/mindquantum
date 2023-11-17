@@ -25,7 +25,7 @@ def prepare_4_regular(d_path: str, qubit_range: list, seed: int = None):
     Prepare a 4 regular graph.
     """
     for i in qubit_range:
-        data_name = f"regular_4_qubit_{i}.json"
+        data_name = f"regular_4_qubit_{str(i).zfill(2)}.json"
         graph = nx.generators.random_regular_graph(4, i, seed=seed)
         out = []
         for i, j in graph.edges:

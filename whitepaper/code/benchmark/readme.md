@@ -14,7 +14,7 @@
 Create isolated conda environment.
 
 ```bash
-conda create -b benchmark python=3.9.5
+conda create -n benchmark python=3.9.5
 conda activate benchmark
 pip3 install pytest pytest-benchmark
 ```
@@ -105,4 +105,28 @@ Install other packages.
 
 ```bash
 pip3 install networkx
+```
+
+## Generate dataset
+
+```bash
+CUR_DIR=`pwd`
+cd utils
+python3 generate_random_circuit.py
+python3 generate_graph.py
+cd $CUR_DIR
+```
+
+
+## Run benchmark
+
+```bash
+cd src
+pytest -v --benchmark-save=all --benchmark-warmup=on --benchmark-warmup-iterations=1
+```
+
+Or only benchmark one frame with one task, for example
+
+```bash
+pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'random_circuit and mindquantum'
 ```
