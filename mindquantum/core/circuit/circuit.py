@@ -363,6 +363,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 self.append(gate)
         self.has_cpp_obj = False
 
+    def copy(self):
+        """Returns a shallow copy of the circuit."""
+        return copy.copy(self)
+
     def __add__(self, gates):
         """Addition operator."""
         out = Circuit()

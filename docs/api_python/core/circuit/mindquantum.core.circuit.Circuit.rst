@@ -59,6 +59,10 @@ mindquantum.core.circuit.Circuit
 
         删除所有未使用的量子比特，并将量子比特映射到 `range(n_qubits)` 。
 
+    .. py:method:: copy()
+
+        返回该量子线路的浅拷贝。
+
     .. py:method:: encoder_params_name
         :property:
 
