@@ -1411,19 +1411,31 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                         throw std::runtime_error(
                             fmt::format("gate {} not supported for parameter shift rule.", gate->id_));
                 }
-                calc_type pr_shift = M_PI_2;
-                calc_type coeff = 0.5;
-                if (gate->id_ == GateID::CUSTOM) {
-                    pr_shift = 0.001;
-                    coeff = 0.5 / pr_shift;
-                }
-                if (gate->id_ == GateID::SWAPalpha) {
-                    pr_shift = 0.5;
-                    coeff = M_PI_2;
-                }
-                if (gate->id_ == GateID::FSim) {
-                    pr_shift = 0.001;
-                    coeff = 0.5 / pr_shift;
+                calc_type pr_shift;
+                calc_type coeff;
+                switch (gate->id_) {
+                    case GateID::RX:
+                    case GateID::RY:
+                    case GateID::RZ:
+                    case GateID::Rxx:
+                    case GateID::Ryy:
+                    case GateID::Rzz:
+                    case GateID::Rxy:
+                    case GateID::Rxz:
+                    case GateID::Ryz:
+                    case GateID::GP:
+                    case GateID::PS:
+                    case GateID::U3:
+                        pr_shift = M_PI_2;
+                        coeff = 0.5;
+                        break;
+                    case GateID::SWAPalpha:
+                        pr_shift = 0.5;
+                        coeff = M_PI_2;
+                        break;
+                    default:
+                        pr_shift = 0.001;
+                        coeff = 0.5 / pr_shift;
                 }
                 circ[g_idx] = tmp_gate;
                 auto tmp_p_gate = static_cast<Parameterizable*>(tmp_gate.get());
