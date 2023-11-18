@@ -174,6 +174,8 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
             raise TypeError(f"Unsupported type for py, get {type(py)}.")
         if not isinstance(pz, (int, float)):
             raise TypeError(f"Unsupported type for pz, get {type(pz)}.")
+        if np.any(np.array([px, py, pz]) < 0.0):
+            raise ValueError("Probability cannot be negative value.")
         if 0 <= px + py + pz <= 1:
             self.px = float(px)
             self.py = float(py)
