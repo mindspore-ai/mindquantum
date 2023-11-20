@@ -1440,6 +1440,10 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                         pr_shift = 0.001;
                         coeff = 0.5 / pr_shift;
                 }
+                if (tmp_gate->ctrl_qubits_.size() != 0) {
+                    pr_shift = 0.001;
+                    coeff = 0.5 / pr_shift;
+                }
                 circ[g_idx] = tmp_gate;
                 auto tmp_p_gate = static_cast<Parameterizable*>(tmp_gate.get());
                 if (const auto& [title, jac] = tmp_p_gate->jacobi; title.size() != 0) {
