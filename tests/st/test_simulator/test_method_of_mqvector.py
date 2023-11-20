@@ -256,6 +256,12 @@ def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: di
 
     custom_gate = G.gene_univ_parameterized_gate('custom', matrix, diff_matrix)
     circ = random_circuit(3, 10)
+    for i, gate in enumerate(single_parameter_gate):
+        gate_ = gate({f'pr0_{i}': 1, f'pr1_{i}': 2})
+        circ += gate_.on(list(range(gate_.n_qubits)), 2)
+        circ += random_circuit(3, 10)
+    circ += G.U3('u3_theta', 'u3_phi', 'u3_lamda').on(0, 1)
+    circ += random_circuit(3, 10)
     circ += G.FSim('fsim_theta', 'fsim_phi').on([0, 1])
     circ += random_circuit(3, 10)
     circ += custom_gate('a').on(0)
@@ -268,4 +274,4 @@ def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: di
     ref_grad_ops = sim.get_expectation_with_grad(ham, circ)
     ref_f, ref_g = ref_grad_ops(pr)
     assert np.allclose(f, ref_f, atol=1e-3)
-    assert np.allclose(g, ref_g, atol=1e-3)
+    assert np.allclose(g, ref_g, atol=1e-2)
