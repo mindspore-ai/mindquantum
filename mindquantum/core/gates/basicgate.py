@@ -1951,7 +1951,7 @@ class Rn(MultiParamsGate):
         >>> from mindquantum.core.gates import Rn
         >>> theta = ParameterResolver('theta')/np.sqrt(3)
         >>> Rn(theta, theta, theta).on(0, 1)
-        Rn(𝛼=0.5774*theta, 𝛽=0.5774*theta, 𝛾=0.5774*theta|0 <-: 1)
+        Rn(α=0.5774*theta, β=0.5774*theta, γ=0.5774*theta|0 <-: 1)
     """
 
     def __init__(self, alpha: ParameterResolver, beta: ParameterResolver, gamma: ParameterResolver):
@@ -1961,7 +1961,7 @@ class Rn(MultiParamsGate):
 
     def __type_specific_str__(self) -> str:
         """Get parameter string."""
-        return f"𝛼={self.alpha.expression()}, 𝛽={self.beta.expression()}, 𝛾={self.gamma.expression()}"
+        return f"α={self.alpha.expression()}, β={self.beta.expression()}, γ={self.gamma.expression()}"
 
     def __call__(self, alpha: ParameterResolver, beta: ParameterResolver, gamma: ParameterResolver) -> "Rn":
         """Call the Pauli gate with new parameters."""
@@ -2009,7 +2009,7 @@ class Rn(MultiParamsGate):
             >>> from mindquantum.core.gates import Rn
             >>> rn = Rn('a', 'b', 0.5).on(0)
             >>> rn.hermitian()
-            Rn(𝛼=-a, 𝛽=-b, 𝛾=-1/2|0)
+            Rn(α=-a, β=-b, γ=-1/2|0)
         """
         out = Rn(-self.alpha, -self.beta, -self.gamma)
         out.obj_qubits = self.obj_qubits
@@ -2086,7 +2086,7 @@ class U3(MultiParamsGate):
     Examples:
         >>> from mindquantum.core.gates import U3
         >>> U3('theta','phi','lambda').on(0, 1)
-        U3(𝜃=theta, 𝜑=phi, 𝜆=lambda|0 <-: 1)
+        U3(θ=theta, φ=phi, λ=lambda|0 <-: 1)
     """
 
     def __init__(self, theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver):
@@ -2096,7 +2096,7 @@ class U3(MultiParamsGate):
 
     def __type_specific_str__(self) -> str:
         """Get parameter string."""
-        return f"𝜃={self.theta.expression()}, 𝜑={self.phi.expression()}, 𝜆={self.lamda.expression()}"
+        return f"θ={self.theta.expression()}, φ={self.phi.expression()}, λ={self.lamda.expression()}"
 
     def __call__(self, theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver) -> "U3":
         """Call the U3 gate with new parameters."""
@@ -2144,7 +2144,7 @@ class U3(MultiParamsGate):
             >>> from mindquantum.core.gates import U3
             >>> u3 = U3('a', 'b', 0.5).on(0)
             >>> u3.hermitian()
-            U3(𝜃=-a, 𝜑=-1/2, 𝜆=-b|0)
+            U3(θ=-a, φ=-1/2, λ=-b|0)
         """
         out = U3(-self.theta, -self.lamda, -self.phi)
         out.obj_qubits = self.obj_qubits
@@ -2225,7 +2225,7 @@ class FSim(MultiParamsGate):
         >>> from mindquantum.core.gates import FSim
         >>> fsim = FSim('a', 'b').on([0, 1])
         >>> fsim
-        FSim(𝜃=a, 𝜑=b|0 1)
+        FSim(θ=a, φ=b|0 1)
     """
 
     def __init__(self, theta: ParameterResolver, phi: ParameterResolver):
@@ -2235,7 +2235,7 @@ class FSim(MultiParamsGate):
 
     def __type_specific_str__(self) -> str:
         """Get parameter string."""
-        return f"𝜃={self.theta.expression()}, 𝜑={self.phi.expression()}"
+        return f"θ={self.theta.expression()}, φ={self.phi.expression()}"
 
     def __call__(self, theta: ParameterResolver, phi: ParameterResolver) -> "FSim":
         """Generate a new FSim gate with given parameters."""
@@ -2284,7 +2284,7 @@ class FSim(MultiParamsGate):
             >>> from mindquantum.core.gates import FSim
             >>> fsim = FSim('a', 'b').on([0, 1])
             >>> fsim.hermitian()
-            FSim(𝜃=-a, 𝜑=-b|0 1)
+            FSim(θ=-a, φ=-b|0 1)
         """
         out = FSim(-self.theta, -self.phi)
         out.obj_qubits = self.obj_qubits
