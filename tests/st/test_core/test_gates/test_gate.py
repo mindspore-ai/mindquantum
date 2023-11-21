@@ -330,8 +330,8 @@ def test_u3():
     Expectation: success
     """
     u3 = G.U3('a', 'b', 0.5).on(0)
-    assert str(u3) == "U3(𝜃=a, 𝜑=b, 𝜆=1/2|0)"
-    assert str(u3.hermitian()) == "U3(𝜃=-a, 𝜑=-1/2, 𝜆=-b|0)"
+    assert str(u3) == "U3(θ=a, φ=b, λ=1/2|0)"
+    assert str(u3.hermitian()) == "U3(θ=-a, φ=-1/2, λ=-b|0)"
     m_exp = np.array(
         [[0.87758256 + 0.0j, -0.42073549 - 0.22984885j], [-0.19951142 + 0.43594041j, -0.70306967 + 0.52520872j]]
     )
@@ -344,8 +344,8 @@ def test_fsim():
     Expectation: success
     """
     fsim = G.FSim('a', 0.5).on([0, 1])
-    assert str(fsim) == "FSim(𝜃=a, 𝜑=1/2|0 1)"
-    assert str(fsim.hermitian()) == "FSim(𝜃=-a, 𝜑=-1/2|0 1)"
+    assert str(fsim) == "FSim(θ=a, φ=1/2|0 1)"
+    assert str(fsim.hermitian()) == "FSim(θ=-a, φ=-1/2|0 1)"
     m_exp = np.array(
         [
             [1.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
@@ -363,8 +363,8 @@ def test_rn():
     Expectation: success
     """
     rn = G.Rn('a', 0.5, 'c').on(0)
-    assert str(rn) == "Rn(𝛼=a, 𝛽=1/2, 𝛾=c|0)"
-    assert str(rn.hermitian()) == "Rn(𝛼=-a, 𝛽=-1/2, 𝛾=-c|0)"
+    assert str(rn) == "Rn(α=a, β=1/2, γ=c|0)"
+    assert str(rn.hermitian()) == "Rn(α=-a, β=-1/2, γ=-c|0)"
     m_exp = expm(-1j / 2 * (G.X.matrix() + 0.5 * G.Y.matrix() + 2.0 * G.Z.matrix()))
     assert np.allclose(rn.matrix({'a': 1.0, 'c': 2.0}), m_exp)
 
