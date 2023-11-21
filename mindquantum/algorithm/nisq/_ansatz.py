@@ -107,6 +107,7 @@ class Initializer:
         _check_value_should_not_less('depth', 1, depth)
         _check_int_type('depth', depth)
         _check_input_type('prefix', str, prefix)
+        _check_input_type('suffix', str, suffix)
         self.n_qubits = n_qubits
         self.depth = depth
         self.pr_gen = PRGenerator(prefix, suffix)
