@@ -1,12 +1,12 @@
 # MindQuantum
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-37|38|39-blue.svg)](https://pypi.org/project/mindquantum/)
-[![PyPI](https://img.shields.io/badge/pypi_package-0.8.0-{}.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.8/)
+[![PyPI](https://img.shields.io/badge/pypi_package-0.9.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
 [![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
 [![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
-[![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-{}.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
-[![Issues](https://img.shields.io/badge/Issues-MindQuantum-{}.svg)](https://gitee.com/mindspore/mindquantum/issues)
-[![Release](https://img.shields.io/badge/Release-MindQuantum-{}.svg)](https://gitee.com/mindspore/mindquantum/releases)
+[![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-limegreend.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+[![Issues](https://img.shields.io/badge/Issues-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/issues)
+[![Release](https://img.shields.io/badge/Release-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/releases)
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](https://gitee.com/mindspore/mindquantum/blob/master/LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](https://gitee.com/mindspore/mindquantum/pulls)
 
@@ -123,6 +123,10 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
     - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/get_gradient_of_PQC_with_mindquantum.html)
     - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced_operations_of_quantum_circuit.html)
     - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_measurement.html)
+    - [含噪声量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/noise.html)
+    - [噪声模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/noise_simulator.html)
+    - [比特映射](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/qubit_mapping.html)
+    - [布洛赫球](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/bloch_sphere.html)
 
 2. 变分量子算法
 
@@ -130,12 +134,14 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
     - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_approximate_optimization_algorithm.html)
     - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/qnn_for_nlp.html)
     - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/vqe_for_quantum_chemistry.html)
+    - [含参量子线路的等价性检查](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/equivalence_checking_of_PQC.html)
 
 3. 通用量子算法
 
     - [量子相位估计算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/quantum_phase_estimation.html)
-    - [基于MindQuantum的Grover搜索算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/grover_search_algorithm.html)
+    - [基于MindQuantum的Grover搜索算法和龙算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/grover_search_algorithm.html)
     - [基于MindQuantum的Shor算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/shor_algorithm.html)
+    - [HHL算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/hhl_algorithm.html)
 
 ## API
 

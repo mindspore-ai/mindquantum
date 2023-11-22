@@ -1,12 +1,12 @@
 # MindQuantum
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-37|38|39-blue.svg)](https://pypi.org/project/mindquantum/)
-[![PyPI](https://img.shields.io/badge/pypi_package-0.8.0-{}.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.8/)
+[![PyPI](https://img.shields.io/badge/pypi_package-0.9.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
 [![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
 [![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
-[![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-{}.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
-[![Issues](https://img.shields.io/badge/Issues-MindQuantum-{}.svg)](https://gitee.com/mindspore/mindquantum/issues)
-[![Release](https://img.shields.io/badge/Release-MindQuantum-{}.svg)](https://gitee.com/mindspore/mindquantum/releases)
+[![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-limegreend.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/parameterized_quantum_circuit.html)
+[![Issues](https://img.shields.io/badge/Issues-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/issues)
+[![Release](https://img.shields.io/badge/Release-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/releases)
 [![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](https://gitee.com/mindspore/mindquantum/blob/master/LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](https://gitee.com/mindspore/mindquantum/pulls)
 
@@ -117,18 +117,24 @@ The trained parameters are,
 1. Basic usage
 
     - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/master/parameterized_quantum_circuit.html)
+    - [Quantum simulator](https://www.mindspore.cn/mindquantum/docs/en/master/quantum_simulator.html)
     - [Initial experience of quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/initial_experience_of_quantum_neural_network.html)
     - [Advanced gradient calculation of variational quantum circuits](https://www.mindspore.cn/mindquantum/docs/en/master/get_gradient_of_PQC_with_mindquantum.html)
-
+    - [Advanced operations of quantum circuit](https://www.mindspore.cn/mindquantum/docs/en/master/advanced_operations_of_quantum_circuit.html)
+    - [Quantum Measurement](https://www.mindspore.cn/mindquantum/docs/en/master/quantum_measurement.html)
+    - [Noisy Quantum Circuit](https://www.mindspore.cn/mindquantum/docs/en/master/noise.html)
+    - [Noise simulator](https://www.mindspore.cn/mindquantum/docs/en/master/noise_simulator.html)
+    - [Qubit Mapping](https://www.mindspore.cn/mindquantum/docs/en/master/qubit_mapping.html)
+    - [Bloch Sphere](https://www.mindspore.cn/mindquantum/docs/en/master/bloch_sphere.html)
 2. Variational quantum algorithm
     - [Classification of iris by quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/classification_of_iris_by_qnn.html)
     - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/master/quantum_approximate_optimization_algorithm.html)
     - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/master/qnn_for_nlp.html)
     - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/master/vqe_for_quantum_chemistry.html)
-
+    - [Equivalence Checking of Parameterized Quantum Circuits](https://www.mindspore.cn/mindquantum/docs/en/master/equivalence_checking_of_PQC.html)
 3. GENERAL QUANTUM ALGORITHM
     - [Quantum Phase Estimation algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/quantum_phase_estimation.html)
-    - [Grover search algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/grover_search_algorithm.html)
+    - [Grover search and long algorithms based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/grover_search_algorithm.html)
     - [Shor’s algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/shor_algorithm.html)
 
 ## API
