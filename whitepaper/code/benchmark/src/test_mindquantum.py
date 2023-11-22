@@ -47,6 +47,10 @@ STR_GATE_MAP = {
     "ryy": G.Ryy,
     "rzz": G.Rzz,
     "ps": G.PhaseShift,
+    "s": G.SGate,
+    "sdag": G.SGate,
+    "t": G.TGate,
+    "tdag": G.TGate,
 }
 
 
@@ -58,9 +62,10 @@ def convert_back_to_mq_circ(str_circ):
         obj = str_g["obj"]
         ctrl = str_g["ctrl"]
         if "val" in str_g:
-            circ += STR_GATE_MAP[name](str_g["val"]).on(obj, ctrl)
+            gate = STR_GATE_MAP[name](str_g["val"]).on(obj, ctrl)
         else:
-            circ += STR_GATE_MAP[name]().on(obj, ctrl)
+            gate = STR_GATE_MAP[name]().on(obj, ctrl)
+        circ += gate.hermitian() if name.endswith("dag") else gate
     return circ
 
 
@@ -97,6 +102,28 @@ def test_mindquantum_random_circuit(benchmark, file_name, dtype):
 
 
 # Section Two
+# Benchmark simple gate set circuit
+# Available pytest mark: simple_circuit, mindquantum
+
+simple_circuit_data_path = get_task_file("simple_circuit")
+simple_circuit_data_path.sort()
+simple_circuit_data_path = simple_circuit_data_path[:5]
+
+
+@pytest.mark.simple_circuit
+@pytest.mark.mindquantum
+@pytest.mark.parametrize("file_name", simple_circuit_data_path)
+@pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
+def test_mindquantum_simple_circuit(benchmark, file_name, dtype):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        str_circ = json.load(f)
+    sim = Simulator("mqvector", n_qubits, dtype=dtype)
+    circ = convert_back_to_mq_circ(str_circ)
+    benchmark(benchmark_random_circuit, sim, circ)
+
+
+# Section Three
 # Benchmark four regular qaoa
 # Available pytest mark: regular_4, mindquantum
 
