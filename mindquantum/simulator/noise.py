@@ -37,6 +37,7 @@ class NoiseBackendImpl(BackendBase):
         self.base_sim = Simulator(base_sim, n_qubits, seed=seed)
         self.adder: ChannelAdderBase = adder
         self.name = "NoiseBackend"
+        self.n_qubits = n_qubits
 
     def apply_circuit(self, circuit: Circuit, pr: Union[Dict, ParameterResolver] = None):
         """Apply a quantum circuit."""
