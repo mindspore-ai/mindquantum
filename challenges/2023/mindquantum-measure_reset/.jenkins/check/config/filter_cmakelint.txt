@@ -1,4 +1,0 @@
-# MindQuantum
-"mindquantum/cmake"                                                                    "whitespace/indent"
-"mindquantum/cmake/Modules"                                                            "whitespace/indent"
-"mindquantum/cmake/Modules/apple"                                                      "whitespace/indent"

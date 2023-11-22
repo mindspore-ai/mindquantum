@@ -1,5 +1,0 @@
-https://apt.repos.intel.com/oneapi
-https://github.com/Kitware/CMake/releases/download
-https://github.com/ccache/ccache/releases/download/
-https://github.com/ccache/ccache/releases/download/v
-https://mirror.baidu.com/pypi/simple
