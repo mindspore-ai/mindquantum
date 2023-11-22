@@ -130,3 +130,9 @@ Or only benchmark one frame with one task, for example
 ```bash
 pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'random_circuit and mindquantum'
 ```
+
+Take a look at the previous result.
+
+```bash
+pytest-benchmark compare 0009
+```

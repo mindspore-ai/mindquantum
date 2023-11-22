@@ -19,6 +19,8 @@ import os
 
 from mindquantum.utils import random_circuit
 from circuit_convert import convert_circ
+from mindquantum.algorithm.compiler import BasicDecompose, compile_circuit
+from mindquantum.core import U3, Circuit
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,8 +32,11 @@ def prepare_random_circ(
     Prepare random circuit data.
     """
     for i in qubit_range:
-        data_name = f"random_circuit_qubit_{str(i).zfill(2)}_size_{size}.json"
-        circ = convert_circ(random_circuit(i, size, ctrl_rate=0.5, seed=seed))
+        data_name = f"simple_circuit_qubit_{str(i).zfill(2)}_size_{size}.json"
+        simple_circ = compile_circuit(
+            BasicDecompose(), random_circuit(i, size, seed=seed)
+        )
+        circ = convert_circ(Circuit([i for i in simple_circ if not isinstance(i, U3)]))
         path = os.path.join(os.path.abspath(d_path), data_name)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(circ, f, indent=2)

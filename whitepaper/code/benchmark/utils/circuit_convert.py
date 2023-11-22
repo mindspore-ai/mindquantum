@@ -24,6 +24,8 @@ FIX_GATE_MAP = {
     G.ZGate: "z",
     G.HGate: "h",
     G.SWAPGate: "swap",
+    G.SGate: "s",
+    G.TGate: "t",
 }
 
 PARA_GATE_MAP = {
@@ -48,7 +50,10 @@ def convert_circ(circ: Circuit):
         obj = g.obj_qubits
         ctrl = g.ctrl_qubits
         g_type = g.__class__
-        name = GATE_MAP[g_type]
+        if isinstance(g, (G.SGate, G.TGate)):
+            name = g.name.lower() + ("dag" if g.hermitianed else "")
+        else:
+            name = GATE_MAP[g_type]
         out.append({"name": name, "obj": obj, "ctrl": ctrl})
         if g_type in PARA_GATE_MAP:
             coeff: ParameterResolver = g.coeff
