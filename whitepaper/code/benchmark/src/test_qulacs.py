@@ -110,6 +110,26 @@ def convert_back_to_qulacs_circ(str_circ, n_qubits, circ):
                 raise_error(name, obj, ctrl)
             else:
                 circ.add_gate(gate.SWAP(obj[0], obj[1]))
+        elif name == "s":
+            if ctrl:
+                raise_error(name, obj, ctrl)
+            else:
+                circ.add_gate(gate.S(obj[0]))
+        elif name == "sdag":
+            if ctrl:
+                raise_error(name, obj, ctrl)
+            else:
+                circ.add_gate(gate.Sdag(obj[0]))
+        elif name == "t":
+            if ctrl:
+                raise_error(name, obj, ctrl)
+            else:
+                circ.add_gate(gate.T(obj[0]))
+        elif name == "tdag":
+            if ctrl:
+                raise_error(name, obj, ctrl)
+            else:
+                circ.add_gate(gate.Tdag(obj[0]))
         else:
             raise ValueError(f"Can not convert {name}({obj}, {ctrl}) to qulacs")
     return circ
@@ -148,6 +168,28 @@ def test_qulacs_random_circuit(benchmark, file_name):
 
 
 # Section Two
+# Benchmark simple gate set circuit
+# Available pytest mark: simple_circuit, qulacs
+
+simple_circuit_data_path = get_task_file("simple_circuit")
+simple_circuit_data_path.sort()
+simple_circuit_data_path = simple_circuit_data_path[:5]
+
+
+@pytest.mark.simple_circuit
+@pytest.mark.qulacs
+@pytest.mark.parametrize("file_name", simple_circuit_data_path)
+def test_qulacs_random_circuit(benchmark, file_name):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        str_circ = json.load(f)
+    state = QuantumState(n_qubits)
+    circ = QuantumCircuit(n_qubits)
+    convert_back_to_qulacs_circ(str_circ, n_qubits, circ)
+    benchmark(benchmark_random_circuit, state, circ)
+
+
+# Section Three
 # Benchmark four regular qaoa
 # Available pytest mark: regular_4, qulacs
 
