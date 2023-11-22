@@ -1,3 +1,69 @@
-设计原理：ZZ哈密顿量绝热近似加速
 
-性能与优势
+\subsubsection{Introduction}
+The Quantum Approximate Optimization Algorithm (QAOA) stands as one of the most promising Variational Quantum Algorithms (VQAs) that has garnered significant attention in recent years. QAOA is specifically designed for the purpose of finding approximate solutions to challenging combinatorial optimization problems using quantum computers. It achieves this by encoding the problem's associated Hamiltonian into a quantum circuit. QAOA then leverages adiabatic time evolution and layering techniques to optimize the variational parameters of the circuit. This optimization aims to construct an approximate solution to the problem, which can be obtained by measuring the QAOA circuit with the optimal parameter set.
+
+\subsubsection{Basic Usage}
+The QAOA class requires three input parameters:
+\begin{itemize}
+    \item n\_qubits: Corresponding to the number of qubits required for the QAOA circuit.
+    \item depth: The number of layers in the ansatz circuit.
+    \item h: The Hamiltonian associated with the problem to be solved.
+\end{itemize}
+
+Once these three parameters are provided, the simulator will generate the corresponding parameterized circuit.
+
+Next, we'll illustrate how to use the QAOA simulator with a specific example of a max-cut problem. Firstly, we determine the circuit's size and generate the graph to be solved. In this case, we choose to compute a graph with 5 nodes (requiring 5 qubits), and set the depth of the ansatz circuit to 10 layers.
+
+\begin{lstlisting}
+from qupack.qaoa import QAOA
+import networkx as nx
+
+depth = 10
+n_qubits = 5
+graph = nx.complete_graph(n_qubits)
+graph = list(graph.edges)
+\end{lstlisting}
+
+Next, we construct the Hamiltonian corresponding to the problem. It's important to note that in the QAOA problem, the Hamiltonian is diagonalized, meaning the Pauli operators in the input QubitOperator should only include Z. If the QubitOperator contains X or Y, the QAOA simulator will produce an error report.
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator
+
+ham = QubitOperator()
+for node in graph:
+    ham += QubitOperator('Z{} Z{}'.format(*node), 1)
+\end{lstlisting}
+
+Now, we can instantiate a QAOA simulator.
+\begin{lstlisting}
+sim = QAOA(n_qubits, depth, ham)
+\end{lstlisting}
+
+There are the following interfaces that can be called to implement various functions:
+
+\begin{itemize}
+    \item get\_expectation\_with\_grad(): Based on the given quantum gate parameters, obtain the expectation value of the final state of the circuit with respect to the Hamiltonian, along with the gradients of each parameter.
+    \item get\_expectation(): Based on the given quantum gate parameters, obtain the expectation value of the evolved quantum state with respect to the Hamiltonian.
+evolution(): Run the circuit to evolve the quantum state based on the given quantum gate parameters.
+    \item get\_qs(): Get the current quantum state of the simulator.
+    \item set\_qs(): Set the current quantum state of the simulator.
+\end{itemize}
+
+The quantum gate parameters consist of two components: gamma and beta. Gamma represents the parameters for ZZ gates, while beta represents the parameters for RX gates. These parameters should be provided as one-dimensional lists or numpy.ndarrays. Each entry in the array corresponds to the parameters for all ZZ (or RX) gates in one layer of the ansatz circuit. Therefore, the lengths of gamma and beta should match the depth.
+
+Below, we will set all ZZ gate parameters to 1 and all RX gate parameters to 2, for the purpose of demonstrating these interfaces.
+
+\begin{lstlisting}
+gamma = [1] * depth
+beta = [2] * depth
+expectation, gamma_grad, beta_grad = sim.get_expectation_with_grad(gamma, beta)
+print("expectation: ", expectation)
+print("gradient with respect to gamma: ", gamma_grad)
+print("gradient with respect to beta: ", beta_grad)
+\end{lstlisting}
+Output:
+\begin{lstlisting}
+expectation:  2.4222583315861312
+gradient with respect to gamma:  [21.06869750223758, -46.18915014748717, 9.446358158199573, 11.021141208662032, -28.573493584250016, 35.674550037397935, -37.62868932163818, -13.136244193793484, 29.942571461897476, -21.026027385573684]
+gradient with respect to beta:  [-3.264446786318293, 9.713011195857428, -11.622454620714056, 10.958548703603533, -2.4125637780460947, -4.314674707938554, 10.2451658203689, -9.335013624102858, 7.359235130728157, -1.431435776010227]
+\end{lstlisting}
