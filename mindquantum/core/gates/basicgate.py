@@ -1459,14 +1459,15 @@ class RotPauliString(ParameterOppsGate):
     def __decompose__(self):
         """Gate decomposition method."""
         # pylint: disable=import-outside-toplevel
-        from mindquantum.core.circuit import controlled
+        from mindquantum.core.circuit import Circuit, controlled
         from mindquantum.core.operators import QubitOperator, TimeEvolution
 
         if not self.acted:
             raise ValueError("RotPauliString gate should act to qubit first.")
         ops = QubitOperator(' '.join(f'{p}{idx}' for idx, p in zip(self.obj_qubits, self.pauli_string)))
-        if ops == 0:
-            return controlled(GlobalPhase(self.coeff / 2).on(self.obj_qubits[0]))(self.ctrl_qubits)
+        if ops == 1:
+            circ = Circuit([GlobalPhase(self.coeff / 2).on(self.obj_qubits[0])])
+            return controlled(circ)(self.ctrl_qubits)
         circ = TimeEvolution(ops, self.coeff / 2).circuit
         return controlled(circ)(self.ctrl_qubits)
 
