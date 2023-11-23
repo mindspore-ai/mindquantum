@@ -9,10 +9,10 @@ mindquantum.core.gates.GroupedPauli
 
     .. math::
 
-        U =\otimes_i\sigma_i, \text{where } \sigma \in \{X, Y, Z\}
+        U =\otimes_i\sigma_i, \text{where } \sigma \in \{I, X, Y, Z\}
 
     参数：
-        - **pauli_string** (str) - 泡利串。泡利串中的元素只能是 ``['x', 'y', 'z', 'X', 'Y', 'Z']``。
+        - **pauli_string** (str) - 泡利串。泡利串中的元素只能是 ``['i', 'x', 'y', 'z', 'I', 'X', 'Y', 'Z']``。
 
     .. py:method:: get_cpp_obj()
 
