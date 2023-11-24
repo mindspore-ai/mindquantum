@@ -5,23 +5,23 @@ An ansatz is essentially a guess or an assumption about the form of the quantum 
 The $algorithm$ module in \MindQuantum \ contains many commonly used Ansatz, as shown below.
 
 \begin{itemize}
-    \item $IQPEncoding$: IQP Encoding is a method for encoding classical data into quantum states. It uses rotation gates and controlled gates to construct a quantum circuit, such that the input data can be adjusted by the parameters of the rotation gates, and the output quantum state can reflect the features of the input data. One advantage of IQP Encoding is that it can generate a high-dimensional quantum feature space, which can improve the performance of machine learning.
+    \item $IQPEncoding$: IQP Encoding is a method for encoding classical data into quantum states\cite{Havlíček2019}. It uses rotation gates and controlled gates to construct a quantum circuit, such that the input data can be adjusted by the parameters of the rotation gates, and the output quantum state can reflect the features of the input data. One advantage of IQP Encoding is that it can generate a high-dimensional quantum feature space, which can improve the performance of machine learning.
 
-    \item $HardwareEfficientAnsatz$: It is a kind of ansatz that can be easily implement on quantum chip. The hardware efficient is constructed by a layer of single qubit rotation gate and a layer of two qubits entanglement gate. The single qubit rotation gate layer is constructed by one or several rotation gate that act on every qubit. The two qubits entanglement gate layer is constructed by CNOT, CZ, Rxx, Ryy, Rzz, etc. acting on entangle mapping.
+    \item $HardwareEfficientAnsatz$: It is a kind of ansatz that can be easily implement on quantum chip\cite{Kandala2017}. The hardware efficient is constructed by a layer of single qubit rotation gate and a layer of two qubits entanglement gate. The single qubit rotation gate layer is constructed by one or several rotation gate that act on every qubit. The two qubits entanglement gate layer is constructed by CNOT, CZ, Rxx, Ryy, Rzz, etc. acting on entangle mapping.
 
     \item $StronglyEntangling$: It is usually used in quantum machine learning. Its advantage is that it can reach 'wide corners of the Hilbert space'\cite{Schuld_2020}, so it is considered to be very suitable as ansatz of classifier.
 
-    \item $MaxCutAnsatz$: $MaxCutAnsatz$ is a kind of ansatz circuit for QAOA. It is designed to solve the Max Cut Problem on regular graphs. The Max Cut problem is an NP-complete problem in graph theory, which requires dividing the vertices of a graph into two parts and maximizing the number of edges that are cut. The mathematical representation of $MaxCutAnsatz$ is as follows:
+    \item $MaxCutAnsatz$: $MaxCutAnsatz$ is a kind of ansatz circuit for QAOA\cite{farhi2014quantum}. It is designed to solve the Max Cut Problem on regular graphs. The Max Cut problem is an NP-complete problem in graph theory, which requires dividing the vertices of a graph into two parts and maximizing the number of edges that are cut. The mathematical representation of $MaxCutAnsatz$ is as follows:
     $$U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
     \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}$$
     where $H_b = \sum_{i\in n}X_{i}, H_c = \sum_{(i,j)\in C}Z_iZ_j$.
 
-    \item $Max2SATAnsatz$: $Max2SATAnsatz$ is a kind of ansatz circuit for QAOA. It is designed to solve the Max-2-SAT Problem. Max-2-SAT is a combinatorial optimization problem, where the goal is to find a truth assignment for a given Boolean formula, such that the number of satisfied clauses is maximized. Max-2-SAT is a special case of the Boolean satisfiability problem (SAT), where only clauses with two literals are considered. Max-2-SAT is NP-hard, which means that there is no known polynomial-time algorithm to solve it. It has many applications, such as data clustering, geometric and visualization problems. The mathematical representation of $Max2SATAnsatz$ is as follows:
+    \item $Max2SATAnsatz$: $Max2SATAnsatz$ is a kind of ansatz circuit for QAOA\cite{Akshay_2020}. It is designed to solve the Max-2-SAT Problem. Max-2-SAT is a combinatorial optimization problem, where the goal is to find a truth assignment for a given Boolean formula, such that the number of satisfied clauses is maximized. Max-2-SAT is a special case of the Boolean satisfiability problem (SAT), where only clauses with two literals are considered. Max-2-SAT is NP-hard, which means that there is no known polynomial-time algorithm to solve it. It has many applications, such as data clustering, geometric and visualization problems. The mathematical representation of $Max2SATAnsatz$ is as follows:
     $$U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
     \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}$$
     where $H_b = \sum_{i\in n}X_{i}, H_c = \sum_{l\in m}P(l)$.
 
-    \item $QubitUCCAnsatz$: Qubit Unitary Coupled-Cluster (qUCC) ansatz is a variant of unitary coupled-cluster ansatz which uses qubit excitation operators instead of Fermion excitation operators. The Fock space spanned by qubit excitation operators is equivalent as Fermion operators, therefore the exact wave function can be approximated using qubit excitation operators at the expense of a higher order of Trotterization.
+    \item $QubitUCCAnsatz$: Qubit Unitary Coupled-Cluster (qUCC) ansatz is a variant of unitary coupled-cluster ansatz which uses qubit excitation operators instead of Fermion excitation operators\cite{PhysRevA.102.062612}. The Fock space spanned by qubit excitation operators is equivalent as Fermion operators, therefore the exact wave function can be approximated using qubit excitation operators at the expense of a higher order of Trotterization.
 
     The greatest advantage of qUCC is that the number of CNOT gates is much smaller than the original version of UCC, even using a 3rd or 4th order Trotterization. Also, the accuracy is greatly improved despite that the number of variational parameters is increased.
 
@@ -37,7 +37,16 @@ The $algorithm$ module in \MindQuantum \ contains many commonly used Ansatz, as 
 In addition, there are some quantum chemistry-related generators in \MindQuantum \ that can generate corresponding VQE ansatz.
 
 \begin{itemize}
-    \item $generate\_uccsd$: Generate a uccsd quantum circuit based on a molecular data generated by Openfermion.
+    \item $generate\_uccsd$: Generate a UCCSD quantum circuit based on a molecular data generated by Openfermion\cite{Peruzzo2014}. The basic idea of UCCSD ansatz is to use the unitary coupled cluster (UCC) theory, which expresses the quantum state as a product of a reference state and an exponential form of the coupled cluster operator, that is:
+    $$
+    |\Psi(\vec{\theta})\rangle = \exp(\hat{T} - \hat{T}^\dagger)|\Psi_0\rangle
+    $$
+    Here, $\hat{T}$ is the coupled cluster operator, which contains the single and double excitations, that is:
+    $$
+    \hat{T} = \sum_{pq}\theta_{pq}a_p^\dagger a_q + \sum_{pqrs}\theta_{pqrs}a_p^\dagger a_q^\dagger a_r a_s
+    $$
+    Here, $a_p^\dagger$ and $a_q$ are the creation and annihilation operators of fermions, $\theta_{pq}$ and $\theta_{pqrs}$ are the variational parameters, which can be determined by optimizing the objective function.
+
     \item $quccsd\_generator$: Generate qubit-UCCSD (qUCCSD) ansatz using qubit-excitation operators.
     \item $uccsd0\_singlet\_generator$: Generate UCCSD operators using CCD0 ansatz for molecular systems.
     \item $uccsd\_singlet\_generator$: Create a singlet UCCSD generator for a system with n electrons.
