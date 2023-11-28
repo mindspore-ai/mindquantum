@@ -69,4 +69,76 @@ Fisrt we need to import some packages we need.
 from openfermion.chem import MolecularData
 from openfermionpyscf import run_pyscf
 \end{lstlisting}
-The openfermion and the openfermionpyscf are open resourced packages that can be used to construct the corresponding Hamiltonian of a given Chemical molecular configuration.
+The openfermion and the openfermionpyscf are open resourced packages that can be used to construct the corresponding Hamiltonian of a given Chemical molecular configuration.For example, we can define the $LiH$ molecular geometry in this way
+\begin{lstlisting}
+    dist=1.5
+    geometry=[
+    ["Li",[0.0,0.0,0.0*dist]],
+    ["H",[0.0,0.0,1.0*dist]]
+    ]
+    basis="sto3g"
+    spin = 0
+    molecule = MolecularData(
+    geometry,
+    basis,
+    multiplicity=2*spin+1
+    )
+\end{lstlisting}
+Based on "molecule", we can use the function in mindquantum to obtain the corresponding qubit Hamiltonian formula,
+\begin{lstlisting}
+    from mindquantum.algorithm.nisq import get_qubit_hamiltonian
+    hamiltonian_QubitOP = get_qubit_hamiltonian(molecule)
+\end{lstlisting}
+So far, we finished to build the Hamiltonian formula of LiH easily.
+The next step of VQE is to choose a good wavefunction ansatz. In quantum chemistry, the Unitary Coupled-Cluster Single and Double excitations (UCCSD) variational form is a very powerful ansatz. In mindquantum, the UCCSD ansatz of LiH can be built by
+\begin{lstlisting}
+    from mindquantum.algorithm.nisq import uccsd_singlet_generator, uccsd_singlet_get_packed_amplitudes
+    ucc_fermion_ops = uccsd_singlet_generator(
+    molecule.n_qubits, molecule.n_electrons, anti_hermitian=True)
+    ucc_qubit_ops = Transform(ucc_fermion_ops).jordan_wigner()
+    ansatz_circuit = TimeEvolution(ucc_qubit_ops.imag, 1.0).circuit
+ansatz_parameter_names = ansatz_circuit.params_name
+\end{lstlisting}
+In general, the initial state of VQE for this chemistry problem is the Hartreefock state. We apply the Pauli $X$ gate to make sure that the initial state contains $|1\rangle$ as much as the number of electrons in the molecule.
+\begin{lstlisting}
+    hartreefock_wfn_circuit = Circuit([X.on(i) for i in range(molecule.n_electrons)])
+\end{lstlisting}
+So the total quantum circuit of VQE to solve the ground energy of LiH is
+\begin{lstlisting}
+    total_circuit = hartreefock_wfn_circuit + ansatz_circuit
+\end{lstlisting}
+
+In VQE, gradient descent methods are usually chosen as the optimizer to get the optimal parameter such that it can output the minimal expectation value. 
+In mindquantum, we can easily utilize MindSpore Quantum to get the gradient operator.
+The gradient operator is a special function, when we input the initial parameter, it can output the corresponding gradient values.
+In mindquantum, the gradient operator of VQE can be obtained as
+\begin{lstlisting}
+    grad_ops = Simulator('mqvector', total_circuit.n_qubits).get_expectation_with_grad(
+    Hamiltonian(hamiltonian_QubitOp.real),
+    total_circuit)
+\end{lstlisting}
+In general, we need to provide appropriate initial parameter for circuit such that we can more quickly converge to the minimal value. For UCCSD ansatz, the CCSD value is a good choice, which can be obtained by
+\begin{lstlisting}
+    init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(
+    molecule_of.ccsd_single_amps, molecule_of.ccsd_double_amps, molecule_of.n_qubits, molecule_of.n_electrons)
+init_amplitudes_ccsd = [init_amplitudes_ccsd[param_i] for param_i in ansatz_parameter_names]
+\end{lstlisting}
+So far, we have prepared all the things needed in VQE.
+The final step of VQE is to minimize the cost function to get the expected value of energy, which can be done by using the scipy package.
+\begin{lstlisting}
+    from scipy.optimize import minimize
+    energy_list = []
+    res = minimize(fun, p0, args=(molecule_pqc, energy_list), method='bfgs', jac=True)
+\end{lstlisting}
+If everything works well, we will get the result like this
+\begin{lstlisting}
+    Step: 5,        energy: -7.878223282730547
+    Step: 10,       energy: -7.880288481438961
+    Step: 15,       energy: -7.882035668304055
+    Step: 20,       energy: -7.882302370885741
+    Step: 25,       energy: -7.882349803534313
+    Step: 30,       energy: -7.882352702053751
+    Step: 35,       energy: -7.8823527077335065
+    Step: 40,       energy: -7.882352708347106
+\end{lstlisting}
+So far, we have used the mindquantum to find the approximate value of ground energy. 
