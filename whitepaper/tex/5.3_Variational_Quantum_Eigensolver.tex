@@ -1,1 +1,144 @@
-分工：ab老师课题组
+%分工：ab老师课题组
+%分工：ab老师课题组
+%Pauli encoding
+%Ansatz and initial trial function
+%Measurement
+%variational method and optimization
+%classical optimization methods
+% an example for simulating the ground energy of a Molecule
+In quantum computing, the variational quantum eigensolver (VQE) is a flagship algorithm for solving eigenproblems on near-term quantum computers, which was originally developed by Peruzzo et al, ant its theoretical framework was extended and formalized by McClean et at.
+VQE is widely used to compute the energetic properties of molecules and materials, for example, the study of electronic structures which is a critical application for quantum chemistry and condensed matter physics. 
+Conventional computational chemistry provides efficient methods to approximate such properties for small systems, but it becomes intractable and expensive for very accurate calculations on increasingly large systems. In addition, the interactions between electrons formally require computation that scales exponentially in the size of the system, rendering exact quantum chemistry methods in general intractable with conventional computing.
+
+In its most general description, VQE aims to approximate the ground energy $E_0$ (the smallest eigenvalue) and the corresponding ground state $|E_0\rangle$ of a given Hamiltonian $\hat{H}$ by the Ritz variational principle.
+The Rayleigh quotient for a given complex Hermitian matrix $M$ and nonzero vector $X$ is defined as:
+\begin{equation}
+    R(M,x)=\frac{x^*Mx}{x^*x}
+\end{equation}
+And $R(M,x)$ always satisfies $E_0\leq R(M,x)\leq E_N$ (the smallest and largest eigenvalues).
+
+
+Namely, giving a interesting Hamiltonian $\hat{H}$, and a presupposed wavefunction $|\psi\rangle$, the ground state energy $E_{0}$ of $\hat{H}$ always satisfies
+% \begin{equation}
+%     \E_{0} \leq \frac{\langle \psi |H| \psi \rangle}{\langle \psi |\psi\rangle}
+% \end{equation}
+Therefore the main objective of VQE is to find an applicable $|\psi^*\rangle$, such that the expectation value of $\hat{H}$ is minimized. In the same time, the $|E_0\rangle = |\psi^*\rangle$ and $E_0 = \langle \psi^* |H| \psi^* \rangle$, if the ground energy is non-degenerate. (If the ground energy is degenerate, the $|\psi^*\rangle$ is usually in the space spanned by all ground states.)
+
+However, since directly finding $|\psi^*\rangle$ is an intractable problem, VQE starts by defining a so-called ansatz wavefunction $|\psi(\vec{\theta})\rangle$, which can be implemented on a quantum device as a series of quantum gates and whose behavior can be described by parameters $\vec{\theta}$.
+Consequently, we can only perform in order to translate this minimization task into a problem that can be executed on a quantum computer, one 
+
+VQE is widely used to compute the energetic properties of molecules and materials, for example, the study of electronic structures which is a critical application for quantum chemistry and condensed matter physics.
+
+This bottleneck is the motivation for investigating methods such as the VQE, with the anticipation that these could one day outperform the conventional computing paradigm for these problems.
+
+
+The other feature of VQE is that it is a hybrid algorithm that uses both classical and quantum computers.
+The quantum eigensolver aims to find eigenvalues and eigenstates of a given Hamiltonian $H$.
+The Ritz variational principle tells us that for a given $H$, and arbitrary state $|\vec{\theta}$,
+\begin{equation}
+    \lambda_{\min}\leq \frac{\langle \vec{\theta} |H| \vec{\theta}\rangle}{\langle \vec{\theta}|\vec{\theta}\rangle} \leq \lambda_{\max}
+\end{equation}
+where $\lambda_{\min, \max}$ is the minimum (maximum) eigenvalue of $H$, and $\langle \vec{\theta}|\vec{\theta}\rangle = 1, \forall \vec{\theta}$ in quantum computing.
+With the help of Ritz variational principle, VQE converts the eigenproblem into an iterative optimization problem whose cost function is $\min_{\vec{\theta}}\hat{E}= \langle \vec{\theta} |H| \vec{\theta}\rangle$.
+By optimizing the value of $\vec{\theta}$ by a classical optimizer to minimize the $\hat{E}$, we can get the $\hat{E}(\vec{\theta}^*)\approx E_{gs}$ and $|\langle \vec{\theta}^*|E_1\rangle| \approx = 1$, if the ground state of $H$ is non-degenerate.
+
+VQE starts with an initialized qubit state. A parameterized quantum circuit is then applied to this state to model the physics and entanglement of the electronic wavefunction.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\textwidth]{tex/images/VQE.png}
+    \caption{The VQE Pipeline}
+    \label{fig:enter-label}
+\end{figure*}
+
+The VQE pipeline
+\begin{itemize}
+    \item Hamiltonian construction and representation: fermionic space to spin space transformations, encoding of operators
+    
+    \item Ansatz selection and state preparation: Hardware efficient, QubitUCCAnsatz, UCCAnsatz, Hartreefock state
+    \item Measurement: expectation
+    \item Parameter optimization: optimizer parameter-shift rule, finite difference, automatic differentiation
+    %\item Error mitigation
+\end{itemize}
+
+
+Before studying any physical model or molecule by VQE, we must transform them into a qubit Hamiltonian considering the present leading quantum platforms as a qubit basis.
+Here, we show how mindquantum simulates a quantum chemistry example $LiH$ by step and step. 
+Fisrt we need to import some packages we need.
+\begin{lstlisting}
+from openfermion.chem import MolecularData
+from openfermionpyscf import run_pyscf
+\end{lstlisting}
+The openfermion and the openfermionpyscf are open resourced packages that can be used to construct the corresponding Hamiltonian of a given Chemical molecular configuration.For example, we can define the $LiH$ molecular geometry in this way
+\begin{lstlisting}
+    dist=1.5
+    geometry=[
+    ["Li",[0.0,0.0,0.0*dist]],
+    ["H",[0.0,0.0,1.0*dist]]
+    ]
+    basis="sto3g"
+    spin = 0
+    molecule = MolecularData(
+    geometry,
+    basis,
+    multiplicity=2*spin+1
+    )
+\end{lstlisting}
+Based on "molecule", we can use the function in mindquantum to obtain the corresponding qubit Hamiltonian formula,
+\begin{lstlisting}
+    from mindquantum.algorithm.nisq import get_qubit_hamiltonian
+    hamiltonian_QubitOP = get_qubit_hamiltonian(molecule)
+\end{lstlisting}
+So far, we finished to build the Hamiltonian formula of LiH easily.
+The next step of VQE is to choose a good wavefunction ansatz. In quantum chemistry, the Unitary Coupled-Cluster Single and Double excitations (UCCSD) variational form is a very powerful ansatz. In mindquantum, the UCCSD ansatz of LiH can be built by
+\begin{lstlisting}
+    from mindquantum.algorithm.nisq import uccsd_singlet_generator, uccsd_singlet_get_packed_amplitudes
+    ucc_fermion_ops = uccsd_singlet_generator(
+    molecule.n_qubits, molecule.n_electrons, anti_hermitian=True)
+    ucc_qubit_ops = Transform(ucc_fermion_ops).jordan_wigner()
+    ansatz_circuit = TimeEvolution(ucc_qubit_ops.imag, 1.0).circuit
+ansatz_parameter_names = ansatz_circuit.params_name
+\end{lstlisting}
+In general, the initial state of VQE for this chemistry problem is the Hartreefock state. We apply the Pauli $X$ gate to make sure that the initial state contains $|1\rangle$ as much as the number of electrons in the molecule.
+\begin{lstlisting}
+    hartreefock_wfn_circuit = Circuit([X.on(i) for i in range(molecule.n_electrons)])
+\end{lstlisting}
+So the total quantum circuit of VQE to solve the ground energy of LiH is
+\begin{lstlisting}
+    total_circuit = hartreefock_wfn_circuit + ansatz_circuit
+\end{lstlisting}
+
+In VQE, gradient descent methods are usually chosen as the optimizer to get the optimal parameter such that it can output the minimal expectation value. 
+In mindquantum, we can easily utilize MindSpore Quantum to get the gradient operator.
+The gradient operator is a special function, when we input the initial parameter, it can output the corresponding gradient values.
+In mindquantum, the gradient operator of VQE can be obtained as
+\begin{lstlisting}
+    grad_ops = Simulator('mqvector', total_circuit.n_qubits).get_expectation_with_grad(
+    Hamiltonian(hamiltonian_QubitOp.real),
+    total_circuit)
+\end{lstlisting}
+In general, we need to provide appropriate initial parameter for circuit such that we can more quickly converge to the minimal value. For UCCSD ansatz, the CCSD value is a good choice, which can be obtained by
+\begin{lstlisting}
+    init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(
+    molecule_of.ccsd_single_amps, molecule_of.ccsd_double_amps, molecule_of.n_qubits, molecule_of.n_electrons)
+init_amplitudes_ccsd = [init_amplitudes_ccsd[param_i] for param_i in ansatz_parameter_names]
+\end{lstlisting}
+So far, we have prepared all the things needed in VQE.
+The final step of VQE is to minimize the cost function to get the expected value of energy, which can be done by using the scipy package.
+\begin{lstlisting}
+    from scipy.optimize import minimize
+    energy_list = []
+    res = minimize(fun, p0, args=(molecule_pqc, energy_list), method='bfgs', jac=True)
+\end{lstlisting}
+If everything works well, we will get the result like this
+\begin{lstlisting}
+    Step: 5,        energy: -7.878223282730547
+    Step: 10,       energy: -7.880288481438961
+    Step: 15,       energy: -7.882035668304055
+    Step: 20,       energy: -7.882302370885741
+    Step: 25,       energy: -7.882349803534313
+    Step: 30,       energy: -7.882352702053751
+    Step: 35,       energy: -7.8823527077335065
+    Step: 40,       energy: -7.882352708347106
+\end{lstlisting}
+So far, we have used the mindquantum to find the approximate value of ground energy. 
