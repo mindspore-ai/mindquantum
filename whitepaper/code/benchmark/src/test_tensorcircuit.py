@@ -43,18 +43,14 @@ def convert_back_to_tc_circ(str_circ, circ):
         ctrl = str_g["ctrl"]
         val = str_g.get("val", 0)
         if name in ["x", "y", "z", "swap"]:
-            if ctrl:
-                try:
-                    getattr(circ, "c" + name)(*ctrl, *obj)
-                except:
-                    raise_error(name, obj, ctrl)
+            if len(ctrl) > 1:
+                raise_error(name, obj, ctrl)
+            elif ctrl:
+                getattr(circ, "c" + name)(*ctrl, *obj)
             else:
-                try:
-                    getattr(circ, name)(*obj)
-                except:
-                    raise_error(name, obj, ctrl)
+                getattr(circ, name)(*obj)
         elif name in ["h"]:
-            if len(ctrl) > 2:
+            if len(ctrl) > 1:
                 raise_error(name, obj, ctrl)
             elif ctrl:
                 circ.multicontrol(ctrl[0], obj[0], unitary=tc.gates._h_matrix)
@@ -83,9 +79,12 @@ def convert_back_to_tc_circ(str_circ, circ):
             if ctrl:
                 raise_error(name, obj, ctrl)
             else:
-                getattr(circ, name)(*obj, theta=val)
+                getattr(circ, name)(*obj)
         elif name in ["sdag", "tdag"]:
-            raise_error(name, obj, ctrl)
+            if ctrl:
+                raise_error(name, obj, ctrl)
+            else:
+                getattr(circ, name[:2])(*obj)
         else:
             raise ValueError(f"Can not convert {name}({obj}, {ctrl}) to tensorcircuit")
     return circ
