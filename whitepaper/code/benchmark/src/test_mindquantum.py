@@ -152,7 +152,13 @@ def test_mindquantum_regular_4(benchmark, file_name, dtype):
     with open(file_name, "r", encoding="utf-8") as f:
         edges = [tuple(i) for i in json.load(f)]
     ansatz = MaxCutAnsatz(edges, 1)
-    circ = ansatz.circuit
+    circ = Circuit()
+    for i in range(n_qubits):
+        circ.h(i)
+    for idx, (i, j) in enumerate(edges):
+        circ.rzz(f"p_{idx}", [i, j])
+    for i in range(n_qubits):
+        circ.rx(f"p_{len(edges)+i}", i)
     ham = mq.Hamiltonian(-ansatz.hamiltonian).astype(dtype)
     sim = Simulator("mqvector", n_qubits, dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ)
