@@ -21,6 +21,11 @@ from abc import abstractmethod
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import NoneParameterGate, ParameterGate
 from mindquantum.core.parameterresolver import PRGenerator
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_not_less,
+)
 
 
 class Ansatz:  # pylint: disable=too-few-public-methods
@@ -81,3 +86,27 @@ def single_qubit_gate_layer(
         else:
             circ += gate.on(i)
     return circ
+
+
+# pylint: disable=too-few-public-methods
+class Initializer:
+    """
+    Initialize parameters for ansatz.
+
+    Args:
+        n_qubits (int): total qubits number of this ansatz.
+        depth (int): depth of ansatz.
+        prefix (str): prefix of parameters. Default: ``''``.
+        suffix (str): suffix of parameters. Default: ``''``.
+    """
+
+    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
+        """Initialize parameters."""
+        _check_int_type('n_qubits', n_qubits)
+        _check_value_should_not_less('n_qubits', 0, n_qubits)
+        _check_value_should_not_less('depth', 1, depth)
+        _check_int_type('depth', depth)
+        _check_input_type('prefix', str, prefix)
+        self.n_qubits = n_qubits
+        self.depth = depth
+        self.pr_gen = PRGenerator(prefix, suffix)

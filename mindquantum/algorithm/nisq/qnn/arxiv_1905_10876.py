@@ -14,38 +14,13 @@
 # ============================================================================
 """These ansatz are adpot from arxiv 1906 10876."""
 # pylint: disable=too-few-public-methods
-from mindquantum.algorithm.nisq._ansatz import Ansatz, single_qubit_gate_layer
+from mindquantum.algorithm.nisq._ansatz import (
+    Ansatz,
+    Initializer,
+    single_qubit_gate_layer,
+)
 from mindquantum.core.circuit import UN
 from mindquantum.core.gates import BARRIER, RX, RY, RZ, H, X, Z
-from mindquantum.core.parameterresolver import PRGenerator
-from mindquantum.utils.type_value_check import (
-    _check_input_type,
-    _check_int_type,
-    _check_value_should_not_less,
-)
-
-
-class Initializer:
-    """
-    Initialize parameters for ansatz.
-
-    Args:
-        n_qubits (int): total qubits number of this ansatz.
-        depth (int): depth of ansatz.
-        prefix (str): prefix of parameters. Default: ``''``.
-        suffix (str): suffix of parameters. Default: ``''``.
-    """
-
-    def __init__(self, n_qubits: int, depth: int, prefix: str = '', suffix: str = ''):
-        """Initialize parameters."""
-        _check_int_type('n_qubits', n_qubits)
-        _check_value_should_not_less('n_qubits', 0, n_qubits)
-        _check_value_should_not_less('depth', 1, depth)
-        _check_int_type('depth', depth)
-        _check_input_type('prefix', str, prefix)
-        self.n_qubits = n_qubits
-        self.depth = depth
-        self.pr_gen = PRGenerator(prefix, suffix)
 
 
 class Ansatz1(Ansatz, Initializer):
