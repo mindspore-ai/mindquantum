@@ -98,6 +98,7 @@ pip3 install tensorcircuit==0.11.0
 Install tensorflow quantum 0.7.2
 
 ```bash
+pip3 install tensorflow==2.7
 pip3 install tensorflow-quantum==0.7.2
 ```
 
