@@ -21,9 +21,19 @@ from mindquantum.third_party.unitary_cc import (
 )
 
 from .hardware_efficient_ansatz import HardwareEfficientAnsatz
+from .more_hardware_efficient_ansatz import (
+    ASWAP,
+    PCHeaXYZ1F,
+    PCHeaXYZ2F,
+    RYCascade,
+    RYFull,
+    RYLinear,
+    RYRZFull,
+)
 from .qubit_hamiltonian import get_qubit_hamiltonian
 from .qubit_ucc_ansatz import QubitUCCAnsatz
 from .quccsd import quccsd_generator
+from .reference_state import get_reference_circuit
 from .transform import Transform
 from .uccsd import generate_uccsd
 from .uccsd0 import uccsd0_singlet_generator
@@ -40,6 +50,14 @@ __all__ = [
     'QubitUCCAnsatz',
     'generate_uccsd',
     'UCCAnsatz',
+    'get_reference_circuit',
+    'RYLinear',
+    'RYFull',
+    'RYCascade',
+    'RYRZFull',
+    'PCHeaXYZ1F',
+    'PCHeaXYZ2F',
+    'ASWAP',
 ]
 
 __all__.sort()

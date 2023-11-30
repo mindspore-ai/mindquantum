@@ -41,6 +41,45 @@ Ansatz
     mindquantum.algorithm.nisq.StronglyEntangling
     mindquantum.algorithm.nisq.UCCAnsatz
 
+.. toctree::
+    :hidden:
+
+    nisq/mindquantum.algorithm.nisq.RYLinear
+    nisq/mindquantum.algorithm.nisq.RYFull
+    nisq/mindquantum.algorithm.nisq.RYCascade
+    nisq/mindquantum.algorithm.nisq.RYRZFull
+    nisq/mindquantum.algorithm.nisq.PCHeaXYZ1F
+    nisq/mindquantum.algorithm.nisq.PCHeaXYZ2F
+    nisq/mindquantum.algorithm.nisq.ASWAP
+
+.. list-table::
+    :widths: 20 80
+    :header-rows: 1
+
+    * - Class
+      - Images
+    * - :class:`mindquantum.algorithm.nisq.RYLinear`
+      - .. image:: nisq/ansatz_images/RYLinear.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.RYFull`
+      - .. image:: nisq/ansatz_images/RYFull.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.RYCascade`
+      - .. image:: nisq/ansatz_images/RYCascade.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.RYRZFull`
+      - .. image:: nisq/ansatz_images/RYRZFull.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.PCHeaXYZ1F`
+      - .. image:: nisq/ansatz_images/PCHeaXYZ1F.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.PCHeaXYZ2F`
+      - .. image:: nisq/ansatz_images/PCHeaXYZ2F.png
+            :height: 180px
+    * - :class:`mindquantum.algorithm.nisq.ASWAP`
+      - .. image:: nisq/ansatz_images/ASWAP.png
+            :height: 180px
+
 以下Ansatz来源于论文 `Expressibility and entangling capability of parameterized quantum circuits for hybrid quantum-classical algorithms <https://arxiv.org/abs/1905.10876>`_.
 
 .. toctree::
@@ -155,3 +194,4 @@ Functional
     mindquantum.algorithm.nisq.get_qubit_hamiltonian
     mindquantum.algorithm.nisq.uccsd_singlet_get_packed_amplitudes
     mindquantum.algorithm.nisq.ansatz_variance
+    mindquantum.algorithm.nisq.get_reference_circuit
