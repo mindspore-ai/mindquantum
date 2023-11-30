@@ -18,7 +18,14 @@
 # Affiliation: College of Chemistry, Beijing Normal University
 # Publication: Xiao, X., Zhao, H., Ren, J., Fang, W. H., & Li, Z. (2023). arXiv:2307.03563.
 """Get a reference state preparation circuit."""
-from typing import Iterable, Literal, Optional, Union, get_args
+import sys
+from typing import Iterable, Optional, Union
+
+# pylint: disable=wrong-import-position
+if sys.version_info < (3, 8):
+    from typing_extensions import Literal, get_args
+else:
+    from typing import Literal, get_args
 
 import numpy as np
 

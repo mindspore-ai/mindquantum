@@ -4,4 +4,5 @@ openfermion>=1.5.0
 matplotlib>=3.4.3
 rich==10.9.0
 importlib-metadata>=0.9;python_version<"3.8"
+typing_extensions;python_version<"3.8"
 numba>=0.53.1
