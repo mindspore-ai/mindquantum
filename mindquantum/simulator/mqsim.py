@@ -30,6 +30,7 @@ from mindquantum.utils.type_value_check import (
     _check_and_generate_pr_type,
     _check_ansatz,
     _check_encoder,
+    _check_gate_has_obj,
     _check_hamiltonian_qubits_number,
     _check_input_type,
     _check_int_type,
@@ -107,6 +108,7 @@ class MQSim(BackendBase):
     ):
         """Apply a quantum gate."""
         _check_input_type("gate", BasicGate, gate)
+        _check_gate_has_obj(gate)
         if not isinstance(gate, BarrierGate):
             gate_max = max(max(gate.obj_qubits, gate.ctrl_qubits))
             if self.n_qubits <= gate_max:

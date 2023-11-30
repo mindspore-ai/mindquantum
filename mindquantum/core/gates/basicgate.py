@@ -132,10 +132,10 @@ class GroupedPauli(NoneParameterGate, SelfHermitianGate):
 
     .. math::
 
-        U =\otimes_i\sigma_i, \text{where } \sigma \in \{X, Y, Z\}
+        U =\otimes_i\sigma_i, \text{where } \sigma \in \{I, X, Y, Z\}
 
     Args:
-        pauli_string (str): The pauli string. Each element should be in ``['x', 'y', 'z', 'X', 'Y', 'Z']``.
+        pauli_string (str): The pauli string. Each element should be in ``['i', 'x', 'y', 'z', 'I', 'X', 'Y', 'Z']``.
 
     Examples:
         >>> import numpy as np
@@ -153,7 +153,7 @@ class GroupedPauli(NoneParameterGate, SelfHermitianGate):
         """Initialize pauli string gate."""
         _check_input_type("pauli_string", str, pauli_string)
         for i in pauli_string:
-            if i.upper() not in ['X', 'Y', 'Z']:
+            if i.upper() not in ['I', 'X', 'Y', 'Z']:
                 raise ValueError(f"Unknown pauli operator {i}.")
         self.pauli_string = pauli_string.upper()
         super().__init__('GroupedPauli', len(self.pauli_string))
@@ -165,7 +165,7 @@ class GroupedPauli(NoneParameterGate, SelfHermitianGate):
         from ..circuit import Circuit  # pylint: disable=cyclic-import
 
         out = Circuit()
-        gate_map = {'X': X, 'Y': Y, 'Z': Z}
+        gate_map = {'I': I, 'X': X, 'Y': Y, 'Z': Z}
         for p, idx in zip(self.pauli_string, self.obj_qubits):
             out += gate_map[p.upper()].on(idx, self.ctrl_qubits)
         return out
@@ -1451,7 +1451,7 @@ class RotPauliString(ParameterOppsGate):
         """Initialize U3 gate."""
         _check_input_type("pauli_string", str, pauli_string)
         for i in pauli_string:
-            if i.upper() not in ['X', 'Y', 'Z']:
+            if i.upper() not in ['I', 'X', 'Y', 'Z']:
                 raise ValueError(f"Unknown pauli operator {i}.")
         self.pauli_string = pauli_string
         super().__init__(pr=ParameterResolver(pr), name='RPS', n_qubits=len(self.pauli_string))
@@ -1459,12 +1459,15 @@ class RotPauliString(ParameterOppsGate):
     def __decompose__(self):
         """Gate decomposition method."""
         # pylint: disable=import-outside-toplevel
-        from mindquantum.core.circuit import controlled
+        from mindquantum.core.circuit import Circuit, controlled
         from mindquantum.core.operators import QubitOperator, TimeEvolution
 
         if not self.acted:
             raise ValueError("RotPauliString gate should act to qubit first.")
         ops = QubitOperator(' '.join(f'{p}{idx}' for idx, p in zip(self.obj_qubits, self.pauli_string)))
+        if ops == 1:
+            circ = Circuit([GlobalPhase(self.coeff / 2).on(self.obj_qubits[0])])
+            return controlled(circ)(self.ctrl_qubits)
         circ = TimeEvolution(ops, self.coeff / 2).circuit
         return controlled(circ)(self.ctrl_qubits)
 
