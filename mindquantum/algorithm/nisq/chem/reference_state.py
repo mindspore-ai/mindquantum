@@ -54,8 +54,7 @@ def get_reference_circuit(
     | Neel   |   Generate the Neel reference state, where electrons with different spins    |
     |        |   occupy adjacent orbitals, suitable for orthonormalized atomic orbitals.    |
     +--------+------------------------------------------------------------------------------+
-    | Bell   |   Generate the tensor product of the Bell state (Ψ⁻ = √2/2(|10⟩ - √2/2|01⟩)) |
-    |        |     as the reference state.                                                  |
+    | Bell   |   Generate the tensor product of the Bell state as the reference state.      |
     +--------+------------------------------------------------------------------------------+
     | AllH   |   Generate the uniform superposition state as the reference state.           |
     +--------+------------------------------------------------------------------------------+
