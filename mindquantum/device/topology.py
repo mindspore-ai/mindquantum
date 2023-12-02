@@ -16,12 +16,24 @@
 
 import copy
 import numbers
+import sys
 import typing
+from typing import Optional
+
+# pylint: disable=wrong-import-position
+if sys.version_info < (3, 8):
+    from typing_extensions import Literal, get_args
+else:
+    from typing import Literal, get_args
+
+from rich.console import Console
 
 from mindquantum.utils.type_value_check import _check_input_type, _check_int_type
 
 from ..mqbackend.device import QubitNode as QubitNode_
 from ..mqbackend.device import QubitsTopology as QubitsTopology_
+
+AVA_SHOW_METHOD = Literal['mpl', 'svg']  # pylint: disable=invalid-name
 
 
 class QubitNode:
@@ -198,7 +210,7 @@ class QubitNode:
         """
         _check_input_type("other", QubitNode, other)
         if self.qubit_id == other.qubit_id:
-            raise RuntimeError("Cannot disconnect itself.")
+            raise RuntimeError("Cannot connect itself.")
         self.neighbor.add(other.qubit_id)
         other.neighbor.add(self.qubit_id)
 
@@ -313,6 +325,7 @@ class QubitsTopology:
             if node.qubit_id in self.qubits:
                 raise ValueError(f"Qubit with id {node.qubit_id} already exists.")
             self.qubits[node.qubit_id] = node
+        self.cached_edge_color: typing.Dict[typing.Tuple[int, int], str] = {}
 
     def __getitem__(self, qubit_id: int) -> QubitNode:
         """
@@ -404,6 +417,9 @@ class QubitsTopology:
         out = QubitsTopology(nodes)
         for i, j in self.edges_with_id():
             _ = out[old_new_id_dict[i]] >> out[old_new_id_dict[j]]
+            edge_color = self.get_edge_color(i, j)
+            if edge_color is not None:
+                out.set_edge_color(old_new_id_dict[i], old_new_id_dict[j], edge_color)
         return out, old_new_id_dict
 
     def edges_with_id(self) -> typing.Set[typing.Tuple[int, int]]:
@@ -624,7 +640,11 @@ class QubitsTopology:
         nodes = copy.deepcopy(self.choose(ids))
         for node in nodes:
             node.neighbor &= ids_set
-        return QubitsTopology(nodes)
+        out = QubitsTopology(nodes)
+        for (i, j), c in self.cached_edge_color.items():
+            if out.is_coupled_with(i, j):
+                out.set_edge_color(i, j, c)
+        return out
 
     def set_color(self, qubit_id: int, color: str) -> None:
         """
@@ -644,6 +664,34 @@ class QubitsTopology:
         _check_int_type("qubit_id", qubit_id)
         _check_input_type("color", str, color)
         self[qubit_id].color_ = color
+
+    def set_edge_color(self, qubit_id1: int, qubit_id2: int, color: str) -> None:
+        """
+        Set color of edge.
+
+        The order of qubit_id1 and qubit_id2 does not matter.
+
+        Args:
+            qubit_id1 (int): The first qubit of edge.
+            qubit_id2 (int): The second qubit of edge.
+            color (str): The color of edge.
+        """
+        _check_input_type("color", str, color)
+        if not self.is_coupled_with(qubit_id1, qubit_id2):
+            raise ValueError(f"qubit {qubit_id1} is not connected with qubit {qubit_id2}")
+        self.cached_edge_color[tuple(sorted([qubit_id1, qubit_id2]))] = color
+
+    def get_edge_color(self, qubit_id1: int, qubit_id2: int) -> str:
+        """
+        Get color of edge.
+
+        The order of qubit_id1 and qubit_id2 does not matter.
+
+        Args:
+            qubit_id1 (int): The first qubit of edge.
+            qubit_id2 (int): The second qubit of edge.
+        """
+        return self.cached_edge_color.get(tuple(sorted([qubit_id1, qubit_id2])), None)
 
     def set_position(self, qubit_id: int, poi_x: float, poi_y: float) -> None:
         """
@@ -665,6 +713,27 @@ class QubitsTopology:
         _check_input_type("poi_x", numbers.Real, poi_x)
         _check_input_type("poi_y", numbers.Real, poi_y)
         self[qubit_id].set_poi(poi_x, poi_y)
+
+    def show(self, method: Optional[AVA_SHOW_METHOD] = None):
+        """
+        Display the topology.
+
+        Args:
+            method (str): The method you want to display the topology. If ``None``, we will use default method,
+                which is ``'mpl'`` in terminal environment and ``'svg'`` in jupyter notebook environment. You
+                can also set it to ``'mpl'`` or ``'svg'`` manually. Default: ``None``.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.display import draw_topology, draw_topology_plt
+
+        is_jupyter = Console().is_jupyter
+        if method is None:
+            method = 'svg' if is_jupyter else 'mpl'
+        if method not in get_args(AVA_SHOW_METHOD):
+            raise ValueError(f"method should be one of {get_args(AVA_SHOW_METHOD)}, but get {method}.")
+        if method == 'svg':
+            return draw_topology(self)
+        return draw_topology_plt(self)
 
     def size(self) -> int:
         """

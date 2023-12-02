@@ -26,3 +26,4 @@ Function
     mindquantum.io.bprint
     mindquantum.io.random_hiqasm
     mindquantum.io.draw_topology
+    mindquantum.io.draw_topology_plt

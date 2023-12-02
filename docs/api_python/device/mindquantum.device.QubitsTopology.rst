@@ -55,6 +55,16 @@ mindquantum.device.QubitsTopology
         返回：
             Set[Tuple[Tuple[float, float], Tuple[float, float]]]，量子拓扑结构中相连接的量子比特所在的边，用坐标表示。
 
+    .. py:method:: get_edge_color(qubit_id1: int, qubit_id2: int) -> str:
+
+        获取边的颜色。
+
+        qubit_id1 和 qubit_id2 的顺序不重要。
+
+        参数：
+            - **qubit_id1** (int) - 边的第一个比特序号。
+            - **qubit_id2** (int) - 边的第二个比特序号。
+
     .. py:method:: has_qubit_node(qubit_id: int) -> bool:
 
         检查某个量子比特是否在该拓扑结构中。
@@ -119,6 +129,17 @@ mindquantum.device.QubitsTopology
             - **qubit_id** (int) - 想要改变颜色的量子别的 id。
             - **color** (str) - RGB颜色。
 
+    .. py:method:: set_edge_color(qubit_id1: int, qubit_id2: int, color: str) -> None:
+
+        设置给定边的颜色。
+
+        qubit_id1 和 qubit_id2 的顺序不重要。
+
+        参数：
+            - **qubit_id1** (int) - 边的第一个比特序号。
+            - **qubit_id2** (int) - 边的第二个比特序号。
+            - **color** (str) - 边的颜色。
+
     .. py:method:: set_position(qubit_id: int, poi_x: float, poi_y: float) -> None:
 
         设置给定比特的位置。
@@ -127,6 +148,13 @@ mindquantum.device.QubitsTopology
             - **qubit_id** (int) - 想要改变位置的量子比特的 id。
             - **poi_x** (float) - 新的 x 轴坐标。
             - **poi_y** (float) - 新的 y 轴坐标。
+
+    .. py:method:: show(method:Optional[AVA_SHOW_METHOD]=None):
+
+        展示拓扑结构。
+
+        参数：
+            - **method** (str) - 想要使用的展示方式。如果为 ``None``，我们将采用默认方式展示。在终端模式，默认方式为 ``'mpl'``，在jupyter notebook 环境中，我们使用 ``'svg'`` 方式展示。你也可以手动设置展示方法为 ``'mpl'`` 或者 ``'svg'``。默认值： ``None``。
 
     .. py:method:: size() -> int:
 
