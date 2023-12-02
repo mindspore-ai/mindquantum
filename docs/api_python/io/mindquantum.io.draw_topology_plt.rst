@@ -1,9 +1,9 @@
-mindquantum.io.draw_topology
-============================
+mindquantum.io.draw_topology_plt
+================================
 
-.. py:function:: mindquantum.io.draw_topology(topo: QubitsTopology, circuit: Circuit = None, style: Dict = None)
+.. py:function:: mindquantum.io.draw_topology_plt(topo: QubitsTopology, circuit: Circuit = None, style: Dict = None)
 
-    以svg图的形式打印量子拓扑结构。
+    用 matplotlib 打印量子拓扑结构。
 
     参数：
         - **topo** (:class:`.device.QubitsTopology`) - 量子比特拓扑结构。
