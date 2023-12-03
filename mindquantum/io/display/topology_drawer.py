@@ -177,8 +177,8 @@ def draw_topology_plt(
     for q1, q2 in selected:
         if not topo.is_coupled_with(q1, q2):
             raise RuntimeError(f"Failed to execute circuit: qubit {q1} is not coupled with {q2}.")
-    _, ax = plt.subplots()
-
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_axes([0, 0, 1, 1])
     edge_color = {}
     for edge in topo.edges_with_id():
         color = topo.get_edge_color(*edge)

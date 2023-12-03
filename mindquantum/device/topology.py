@@ -731,9 +731,23 @@ class QubitsTopology:
             method = 'svg' if is_jupyter else 'mpl'
         if method not in get_args(AVA_SHOW_METHOD):
             raise ValueError(f"method should be one of {get_args(AVA_SHOW_METHOD)}, but get {method}.")
+        rescale_topo = copy.deepcopy(self)
+        top = min(i.poi_y for i in self.qubits.values())
+        bottom = max(i.poi_y for i in self.qubits.values())
+        left = min(i.poi_x for i in self.qubits.values())
+        right = max(i.poi_x for i in self.qubits.values())
+        width = max(1, right - left)
+        high = max(1, bottom - top)
+
+        def rescale(x, y):
+            """Scale position."""
+            return (x - left) / width * 8, (y - top) / high * 8
+
+        for i in rescale_topo.qubits.values():
+            i.set_poi(*rescale(i.poi_x, i.poi_y))
         if method == 'svg':
-            return draw_topology(self)
-        return draw_topology_plt(self)
+            return draw_topology(rescale_topo)
+        return draw_topology_plt(rescale_topo)
 
     def size(self) -> int:
         """
@@ -749,95 +763,3 @@ class QubitsTopology:
             3
         """
         return len(self.qubits)
-
-
-class LinearQubits(QubitsTopology):
-    """
-    Linear qubit topology.
-
-    Args:
-        n_qubits (int): total qubit size.
-
-    Examples:
-        >>> from mindquantum.device import LinearQubits
-        >>> topology = LinearQubits(5)
-        >>> topology.is_coupled_with(0, 1)
-        True
-        >>> topology.is_coupled_with(0, 2)
-        False
-    """
-
-    def __init__(self, n_qubits: int):
-        """Initialize a linear topology."""
-        _check_int_type("n_qubits", n_qubits)
-        nodes = [QubitNode(i, poi_x=i) for i in range(n_qubits)]
-        left_node = nodes[0]
-        for node in nodes[1:]:
-            left_node = left_node >> node
-        super().__init__(nodes)
-
-
-class GridQubits(QubitsTopology):
-    """
-    Grid qubit topology.
-
-    Args:
-        n_row (int): how many rows of your grid qubits.
-        n_col (int): how many columns of your grid quits.
-
-    Examples:
-        >>> from mindquantum.device import GridQubits
-        >>> topology = GridQubits(2, 3)
-        >>> topology.n_row()
-        2
-    """
-
-    def __init__(self, n_row: int, n_col: int) -> None:
-        """Initialize a grid topology with row and col number."""
-        _check_int_type("n_row", n_row)
-        _check_int_type("n_col", n_col)
-        self.n_row_ = n_row
-        self.n_col_ = n_col
-        qubits = []
-        for r in range(n_row):
-            for c in range(n_col):
-                qubits.append(QubitNode(r * n_col + c, poi_x=c, poi_y=r))
-        for r in range(n_row):
-            next_node = qubits[r * n_col]
-            for c in range(n_col - 1):
-                next_node = next_node >> qubits[next_node.qubit_id + 1]
-        for c in range(n_col):
-            next_node = qubits[c]
-            for r in range(n_row - 1):
-                next_node = next_node >> qubits[next_node.qubit_id + n_col]
-        super().__init__(qubits)
-
-    def n_col(self) -> int:
-        """
-        Get column number.
-
-        Returns:
-            int, the column number.
-
-        Examples:
-            >>> from mindquantum.device import GridQubits
-            >>> topology = GridQubits(2, 3)
-            >>> topology.n_col()
-            3
-        """
-        return self.n_col_
-
-    def n_row(self) -> int:
-        """
-        Get row number.
-
-        Returns:
-            int, the row number.
-
-        Examples:
-            >>> from mindquantum.device import GridQubits
-            >>> topology = GridQubits(2, 3)
-            >>> topology.n_row()
-            2
-        """
-        return self.n_row_
