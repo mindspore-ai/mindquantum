@@ -130,3 +130,11 @@ class Kagome(QubitsTopology):
             else:
                 poi_x += 1.5 * (i & 1) - 0.5 * (i & 1 == 0)
             poi_y += np.sqrt(3) / 2
+
+
+class HeavyHexgon(QubitsTopology):
+    pass
+
+
+class TriangularLattice(QubitsTopology):
+    pass

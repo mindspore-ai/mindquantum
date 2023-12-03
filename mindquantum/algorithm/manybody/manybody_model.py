@@ -101,6 +101,22 @@ class IsingModel(ManyBodyModel):
         return ground_state_of_sum_zz(self.get_hamiltonian(), sim)
 
 
+class XYZModel(ManyBodyModel):
+    pass
+
+
+class XXZModel(ManyBodyModel):
+    pass
+
+
+class FermionHubbardModel(ManyBodyModel):
+    pass
+
+
+class BoseHubbardModel(ManyBodyModel):
+    pass
+
+
 if __name__ == '__main__':
     from mindquantum.device.lattice import GridQubits
 
