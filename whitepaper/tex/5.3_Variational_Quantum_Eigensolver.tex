@@ -44,17 +44,9 @@ By optimizing the value of $\vec{\theta}$ by a classical optimizer to minimize t
 
 VQE starts with an initialized qubit state. A parameterized quantum circuit is then applied to this state to model the physics and entanglement of the electronic wavefunction.
 
-\begin{figure*}
-    \centering
-    \includegraphics[width=\textwidth]{tex/images/VQE.png}
-    \caption{The VQE Pipeline}
-    \label{fig:enter-label}
-\end{figure*}
-
 The VQE pipeline
 \begin{itemize}
     \item Hamiltonian construction and representation: fermionic space to spin space transformations, encoding of operators
-    
     \item Ansatz selection and state preparation: Hardware efficient, QubitUCCAnsatz, UCCAnsatz, Hartreefock state
     \item Measurement: expectation
     \item Parameter optimization: optimizer parameter-shift rule, finite difference, automatic differentiation
@@ -63,7 +55,7 @@ The VQE pipeline
 
 
 Before studying any physical model or molecule by VQE, we must transform them into a qubit Hamiltonian considering the present leading quantum platforms as a qubit basis.
-Here, we show how mindquantum simulates a quantum chemistry example $LiH$ by step and step. 
+Here, we show how \MindQuantum\ simulates a quantum chemistry example $LiH$ by step and step. 
 Fisrt we need to import some packages we need.
 \begin{lstlisting}
 from openfermion.chem import MolecularData
@@ -84,13 +76,13 @@ The openfermion and the openfermionpyscf are open resourced packages that can be
     multiplicity=2*spin+1
     )
 \end{lstlisting}
-Based on "molecule", we can use the function in mindquantum to obtain the corresponding qubit Hamiltonian formula,
+Based on "molecule", we can use the function in \MindQuantum\ to obtain the corresponding qubit Hamiltonian formula,
 \begin{lstlisting}
     from mindquantum.algorithm.nisq import get_qubit_hamiltonian
     hamiltonian_QubitOP = get_qubit_hamiltonian(molecule)
 \end{lstlisting}
 So far, we finished to build the Hamiltonian formula of LiH easily.
-The next step of VQE is to choose a good wavefunction ansatz. In quantum chemistry, the Unitary Coupled-Cluster Single and Double excitations (UCCSD) variational form is a very powerful ansatz. In mindquantum, the UCCSD ansatz of LiH can be built by
+The next step of VQE is to choose a good wavefunction ansatz. In quantum chemistry, the Unitary Coupled-Cluster Single and Double excitations (UCCSD) variational form is a very powerful ansatz. In \MindQuantum, the UCCSD ansatz of LiH can be built by
 \begin{lstlisting}
     from mindquantum.algorithm.nisq import uccsd_singlet_generator, uccsd_singlet_get_packed_amplitudes
     ucc_fermion_ops = uccsd_singlet_generator(
@@ -109,9 +101,9 @@ So the total quantum circuit of VQE to solve the ground energy of LiH is
 \end{lstlisting}
 
 In VQE, gradient descent methods are usually chosen as the optimizer to get the optimal parameter such that it can output the minimal expectation value. 
-In mindquantum, we can easily utilize MindSpore Quantum to get the gradient operator.
+In \MindQuantum, we can easily utilize MindSpore Quantum to get the gradient operator.
 The gradient operator is a special function, when we input the initial parameter, it can output the corresponding gradient values.
-In mindquantum, the gradient operator of VQE can be obtained as
+In \MindQuantum, the gradient operator of VQE can be obtained as
 \begin{lstlisting}
     grad_ops = Simulator('mqvector', total_circuit.n_qubits).get_expectation_with_grad(
     Hamiltonian(hamiltonian_QubitOp.real),
@@ -141,4 +133,4 @@ If everything works well, we will get the result like this
     Step: 35,       energy: -7.8823527077335065
     Step: 40,       energy: -7.882352708347106
 \end{lstlisting}
-So far, we have used the mindquantum to find the approximate value of ground energy. 
+So far, we have used the \MindQuantum\ to find the approximate value of ground energy. 

@@ -14,7 +14,7 @@ A notable advantage of the weighted SSVQE is that it delivers all the $k$ lowest
 Symmetry is one of the most profound concepts in physics, especially in quantum mechanics. A majority of physical systems exhibit various types of symmetries that can be accurately described mathematically. The VQE algorithm can also significantly benefit from the integration of these symmetries. There are two ways to incorporate symmetries in the VQE algorithms: (i) designing the circuit to naturally generate the quantum states with the relevant symmetry~\cite{?}, and (ii) adding extra terms to the cost function to penalize the quantum states without the relevant symmetry~\cite{?}.
 
 \subsubsection{Implementation}
-Leveraging the adaptability and comprehensive capabilities of \MindQuantum, researchers are able to work with any optimization target by defining custom objective functions. Here, we present an example of implementing SSVQE through \MindQuantum to accurately determine the four lowest state energies of the Heisenberg Hamiltonian, employing different symmetry incorporation strategies.
+Leveraging the adaptability and comprehensive capabilities of \MindQuantum, researchers are able to work with any optimization target by defining custom objective functions. Here, we present an example of implementing SSVQE through \MindQuantum\ to accurately determine the four lowest state energies of the Heisenberg Hamiltonian, employing different symmetry incorporation strategies.
 
 First, we need to construct the symmetry preserving ansatz~\cite{?}.
 \begin{lstlisting}

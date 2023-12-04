@@ -21,13 +21,13 @@ where the $\Psi$ is a wave function and $\hat{H}$ is the Hamiltonian of the quan
     i\hbar\frac{d}{dt}\ket{\psi}=H\ket{\psi}
     \label{shro}
 \end{equation}
-where $\ket{\psi}$ is the state vector of $l$ energy level and $H$ is the matrix representation of the Hamiltonian. In Mindquantum we can use a list to define the quantum state $\ket{\psi}$ as the initial state of the whole evolution progress. 
+where $\ket{\psi}$ is the state vector of $l$ energy level and $H$ is the matrix representation of the Hamiltonian. In \MindQuantum\ we can use a list to define the quantum state $\ket{\psi}$ as the initial state of the whole evolution progress. 
 \begin{lstlisting}
 import numpy as np
 psi0=np.zeros((1,2**qubit_num),dtype=complex)
 psi0[0][0]=1+0j
 \end{lstlisting}
-Given a Hamiltonian, we can calculate the unitary (non-dissipative) time-evolution of an arbitrary initial state vector $\ket{\psi_{0}}$ using the Mindquantum function MQsesolve and we can get the result state in each time slot.
+Given a Hamiltonian, we can calculate the unitary (non-dissipative) time-evolution of an arbitrary initial state vector $\ket{\psi_{0}}$ using the \MindQuantum\ function MQsesolve and we can get the result state in each time slot.
 \begin{lstlisting}
 t_list=np.linspace(0.0,10.0,100)
 H=[[H_d]]
@@ -37,7 +37,7 @@ The function MQsesolve calculates states in each time slot during the schröding
 \begin{equation}
     H_{c}=\sin(0.2\pi t)\sigma_{0}^{y}\sigma_{1}^{z}
 \end{equation}
-which we can easily realize in Mindquantum.
+which we can easily realize in \MindQuantum.
 \begin{lstlisting}
 qubit_num=1
 H_c=Q('Y0 Z1',qubit_num).matrix()
@@ -62,7 +62,7 @@ Because in quantum computing, most people only focus on the quantum system, we c
 &+\sum_{n}\frac{1}{2}\left[2C_{n}\rho(t)C^{\dagger}_{n}-\rho(t)C_{n}^{\dagger}C_{n}-C_{n}^{\dagger}C_{n}\rho(t)\right]
 \end{split}
 \end{equation}
-where $C_{n}=\sqrt{\gamma_{n}}A_{n}$ and $A_n$ are collapse operators through which the environment couples to the system in $H_{int}$ with corresponding rates $\gamma_{n}$. In Mindquantum, we have no functions to derive collapse operators. Therefore, we have to design $C_{n}$ as followings:
+where $C_{n}=\sqrt{\gamma_{n}}A_{n}$ and $A_n$ are collapse operators through which the environment couples to the system in $H_{int}$ with corresponding rates $\gamma_{n}$. In \MindQuantum, we have no functions to derive collapse operators. Therefore, we have to design $C_{n}$ as followings:
 \begin{lstlisting}
 G=0.5
 g=0.04
@@ -75,12 +75,12 @@ decay=csr_matrix([[0,1],[0,0]],\
 cl_ops=[[decay,np.sqrt(g)],[dephase1,\
     np.sqrt(G-g/2)],[dephase2,np.sqrt(G-g/2)]]
 \end{lstlisting}
-For the non-unitary evolution of a quantum system, i.e., evolution that includes incoherent processes such as relaxation and dephasing, it is common to use master equations. In Mindquantum, we use MQmesolve for both. Though these two are different, MQmesolve can automatically determine which one is proper according to the input parameters.
+For the non-unitary evolution of a quantum system, i.e., evolution that includes incoherent processes such as relaxation and dephasing, it is common to use master equations. In \MindQuantum, we use MQmesolve for both. Though these two are different, MQmesolve can automatically determine which one is proper according to the input parameters.
 \begin{lstlisting}
     result=MQmesolve(H,psi0,t_list,col_ops=cl_ops)
 \end{lstlisting}
 
-\textit{Quantum optimal control} -- In addition to quantum evolution, Mindquantum can also do tasks about quantum optimal control. There are three algorithms in Mindquantum that can be chosen: (1)grape, (2)crab, and (3)goat. The task of optimal control is always to minimize or maximize some functions that define how well a control pulse drives a quantum system to target in closed or open system. In the following sections.
+\textit{Quantum optimal control} -- In addition to quantum evolution, \MindQuantum\ can also do tasks about quantum optimal control. There are three algorithms in \MindQuantum\ that can be chosen: (1)grape, (2)crab, and (3)goat. The task of optimal control is always to minimize or maximize some functions that define how well a control pulse drives a quantum system to target in closed or open system. In the following sections.
 
 \textit{closed quantum system} -- We denote $U_{targ}$ as the target and $U_{T}$ as the actual unitary evolution operator. What we want to do is to maximize the overlap:
 \begin{equation}
@@ -184,7 +184,7 @@ where
         &\left[\hat{H}(t_m),\hat{H}_{k}\right]_{s}=\left[\hat{H}(t_m),\left[\hat{H}(t_m),\hat{H}_{k}\right]_{s-1}\right]
     \end{split}
 \end{equation}
-in Mindquantum, the order of gradient function can be first order(S=0) or second order(S=1), which can fulfill most scenarios. Higher orders are computationally harder and have no significant improvement.
+in \MindQuantum, the order of gradient function can be first order(S=0) or second order(S=1), which can fulfill most scenarios. Higher orders are computationally harder and have no significant improvement.
 
 If we want to use GRAPE an open system, we can adjust the formulas by following:
 \begin{equation}
@@ -195,7 +195,7 @@ If we want to use GRAPE an open system, we can adjust the formulas by following:
 \end{split}
 \end{equation}
 
-In Mindquantum, we provide two functions for state preparation and optimal gate control for both open and closed systems. Here, we illustrate the realization of Hadamard gate as an example. First, we need to define the target.
+In \MindQuantum, we provide two functions for state preparation and optimal gate control for both open and closed systems. Here, we illustrate the realization of Hadamard gate as an example. First, we need to define the target.
 \begin{lstlisting}
 target=gen_target(qubit_num,\\
             eigen_states,hadmamard)
@@ -257,7 +257,7 @@ result_open=MQ_opt_pulse_grape(drift=drift,\\
     fid_err=fid_err)
 \end{lstlisting}
 
-\textit{Gradient optimization of analytic controls} -- Gradient optimization of analytic controls(GOAT) is the last method in Mindquantum for optimal control. The Hamiltonian of a controllable system is:
+\textit{Gradient optimization of analytic controls} -- Gradient optimization of analytic controls(GOAT) is the last method in \MindQuantum\ for optimal control. The Hamiltonian of a controllable system is:
 \begin{equation}
     \vec{H}(\vec{a},t)=\hat{H}_{0}+\sum_{k=1}c_{k}(\vec{a},t)\hat{H}_{k}
 \end{equation}
