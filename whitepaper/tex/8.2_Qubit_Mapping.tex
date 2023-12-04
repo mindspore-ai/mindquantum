@@ -1,7 +1,7 @@
 
 Due to some physical limitations in the realization of quantum hardware, today's quantum computers are qualified as noisy intermediate-scale quantum (NISQ) hardware. NISQ hardware is characterized by a few qubits (50 to a few hundred) and noisy operations. Moreover, current realizations of superconducting quantum chips do not have the ideal all-to-all connectivity between qubits, but rather at most a nearest-neighbor connectivity. Due to these constraints, most quantum algorithms cannot be able to directly executed on the NISQ devices. Dynamically remapping logical qubits to physical qubits is needed to enable the two-qubit gates in the algorithm. This is called the qubit mapping problem.
 
-The qubit mapping problem has been proved to be NP-Complete~\cite{siraichi2018qubit}. Considering the time-complexity, MindQuantum chooses a swap-based bidirectional heuristic algorithm, named SABRE~\cite{li2019tackling}.
+The qubit mapping problem has been proved to be NP-Complete~\cite{siraichi2018qubit}. Considering the time-complexity, \MindQuantum\ chooses a swap-based bidirectional heuristic algorithm, named SABRE~\cite{li2019tackling}.
 
 Fig.~\ref{fig:qubit-mapping-sample} gives a sample of qubit mapping.
 The physical hardware has its own physical connected graph. When we map the logical qubits to physical qubits, some two-qubit gates may not be able to realize, because two qubits are not connected in the physical connected graph. The trivial solution is using the swap gate. By some swap-operations, the logical circuit can be realized.
@@ -80,7 +80,7 @@ shows the procedure of updating the initial mapping.
 	\label{fig:qubit-mapping-initial-mapping}
 \end{figure}
 
-Here we introduce how to use SABRE in MindQuantum. We can use \code{QubitNode} and \code{QubitsTopology} to generate physical topology graph.
+Here we introduce how to use SABRE in \MindQuantum. We can use \code{QubitNode} and \code{QubitsTopology} to generate physical topology graph.
 
 \begin{lstlisting}
 from mindquantum.device import QubitNode, QubitsTopology
@@ -118,7 +118,7 @@ topology[i] << topology[i+1]
 draw_topology(topology)
 \end{lstlisting}
 
-MindQuantum also defines some usefull structures. The following code defines a linear topology in Fig.~\ref{fig:qubit-mapping-linear} and a grid topology in Fig.~\ref{fig:qubit-mapping-grid1}.
+\MindQuantum\ also defines some usefull structures. The following code defines a linear topology in Fig.~\ref{fig:qubit-mapping-linear} and a grid topology in Fig.~\ref{fig:qubit-mapping-grid1}.
 
 \begin{lstlisting}
 from mindquantum.device import LinearQubits, GridQubits
@@ -217,7 +217,7 @@ display_svg(new_circ.svg())
 	\caption{An example of SABRE algorithm.}
 \end{figure}
 
-There are also some shortcomings. Current MindQuantum only supports connected topology graphs. If physical topology is not connected, users have to allocate logical qubits to physical connected subgraphs manually.
+There are also some shortcomings. Current \MindQuantum\ only supports connected topology graphs. If physical topology is not connected, users have to allocate logical qubits to physical connected subgraphs manually.
 Another one is gates' type. Current version only supports single gates and CNOT gate. Any quantum circuit can be realized by single gates and CNOT, therefore it's not a big problem.
 
 % Test \code{hello world} .
