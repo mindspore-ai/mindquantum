@@ -1,6 +1,6 @@
 
 
-%To run this example in the browser through Mindquantum, follow the link:
+%To run this example in the browser through MindQuantum, follow the link:
 
 %\href{https://blog.csdn.net/fisherish/article/details/105115272}{https://blog.csdn.net/fisherish/article/details/105115272}
 %\cite{PhysRevLett.131.030402}
@@ -8,7 +8,7 @@ View demo code of this section: \democode{05}{5.2}
 
 \subsubsection{Background}
 
-In this section, we present an introduction to the Quantum Approximate Optimization Algorithm (QAOA) and demonstrate its implementation using Mindquantum. Additionally, we explore advanced applications in Section D, where we apply techniques STA to achieve improved convergence ansatz CD-QAOA\cite{PhysRevResearch.4.013141}.
+In this section, we present an introduction to the Quantum Approximate Optimization Algorithm (QAOA) and demonstrate its implementation using \MindQuantum. Additionally, we explore advanced applications in Section D, where we apply techniques STA to achieve improved convergence ansatz CD-QAOA\cite{PhysRevResearch.4.013141}.
 
 
 QAOA is a powerful quantum algorithm designed to address combinatorial optimization problems by harnessing the capabilities of quantum computers. It was first proposed by Farhi et al. in 2014\cite{farhi2014quantum}, and since then, numerous variants have been developed to overcome the limitations of the original algorithm.
@@ -144,7 +144,7 @@ train step: 190 , cut: [4.939257]
 
 According to the above training results, we found that the number of edge cuts corresponding to the ground state energy of the Hamiltonian of this problem approaches 5.
 
-In mindquantum,  we can directly import the function \MaxCutAnsatz to build ansatz for the maxcut problem.
+In \MindQuantum, we can directly import the function \MaxCutAnsatz to build ansatz for the maxcut problem.
 \begin{lstlisting}
 import numpy as np
 from mindquantum.algorithm.nisq import MaxCutAnsatz

@@ -44,7 +44,7 @@ In following sections, we will demonstrate how to the agent in quantum devise.
   \caption{\label{Agent_qc} The overall quantum circuit of agent in RL.}
 \end{figure*}
 
-\textit{The implement in mindquantum} -- Here, we give the example of realizing HDQN by mindquantum. The first step is to construct the quantum variational circuit including the encoder and the ansatz.
+\textit{The implement in MindQuantum} -- Here, we give the example of realizing HDQN by \MindQuantum. The first step is to construct the quantum variational circuit including the encoder and the ansatz.
 \begin{lstlisting}
 def __get_encoder(self):
     encoder = Circuit()
@@ -70,7 +70,7 @@ After the progress of the quantum circuit, we need to construct an observable Ha
 \begin{equation}
     H=I\otimes I\otimes\sigma_y\otimes\sigma_y
 \end{equation}
-We can construct the hamiltonian by mindquantum as follows:
+We can construct the hamiltonian by \MindQuantum\ as follows:
 \begin{lstlisting}
 def __get_observable(self):
     hams=[Hamiltonian(QubitOperator(f'Y{i}'))\\

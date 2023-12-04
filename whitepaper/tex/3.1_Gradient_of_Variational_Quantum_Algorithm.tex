@@ -53,7 +53,7 @@ Optimization algorithms in VQA can be categorized into two types based on their 
 
 \subsubsection{Learning a rotation}
 
-In this sub-section, we will delve into the implementation of variational quantum algorithms in \MindQuantum by exploring a task of learning a rotation quantum gate.
+In this sub-section, we will delve into the implementation of variational quantum algorithms in \MindQuantum\ by exploring a task of learning a rotation quantum gate.
 
 Suppose we have a initial quantum state $\ket{\psi_0}=\ket{0}$, and we are going to find a single qubit unitary operator $U(\theta)$, which can rotate $\ket{\psi_0}$ to $\ket{\psi_f}$ so that to minimum $E_X(\theta) = \bra{\psi_f}X\ket{\psi}$:
 
@@ -251,4 +251,4 @@ You can set $U_l$ to an empty circuit and $H$ to identity \QubitOperator, so tha
 \begin{equation}
   E=\left|\bra{0}U_r\ket{\psi}\right|^2
 \end{equation}
-You can also set the observable to a list of hamiltonian, so that \MindQuantum can calculate the expectation and gradient in parallel.
+You can also set the observable to a list of hamiltonian, so that \MindQuantum\ can calculate the expectation and gradient in parallel.
