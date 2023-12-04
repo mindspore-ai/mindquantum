@@ -131,7 +131,7 @@ Pauli matrices are the most important matrices, and they form a set of bases for
 \end{align*}
 
 
-Since there are an infinite number of $2*2$ matrices, the number of quantum gates is also infinite. According to the Z-Y decomposition, a unitary matrix U over any single qubit can be represented as $U=e^{i\alpha}Rz(\beta)Ry(\gamma)Rz(\delta)$. Therefore, in order to construct arbitrary quantum gates, it is necessary to use parameters to construct rotating gates. There are three initialization methods provided in mindquantum, because \ParameterResolver has three initialization methods. Take the RX gate as an example:
+Since there are an infinite number of $2*2$ matrices, the number of quantum gates is also infinite. According to the Z-Y decomposition, a unitary matrix U over any single qubit can be represented as $U=e^{i\alpha}Rz(\beta)Ry(\gamma)Rz(\delta)$. Therefore, in order to construct arbitrary quantum gates, it is necessary to use parameters to construct rotating gates. There are three initialization methods provided in \MindQuantum, because \ParameterResolver has three initialization methods. Take the RX gate as an example:
 
 \begin{lstlisting}
 from mindquantum.core.gates import RX
@@ -200,7 +200,7 @@ test2 = TestGate('a').on(0)
 \end{lstlisting}
 
 \subsubsection{On Method}
-In quantum circuits, controlled operation is very common. Let U be any single qubit unitary operation, then the controlled U operation is a double qubit operation. One is the control bit and one is the target bit. In mindquantum, we can implement this function through the on method. This method takes two parameters. One is the target bit and the other is the control bit, both of which can be single qubit or multi-qubits.It is worth emphasizing that any gate can add arbitrary control operations.
+In quantum circuits, controlled operation is very common. Let U be any single qubit unitary operation, then the controlled U operation is a double qubit operation. One is the control bit and one is the target bit. In \MindQuantum, we can implement this function through the on method. This method takes two parameters. One is the target bit and the other is the control bit, both of which can be single qubit or multi-qubits.It is worth emphasizing that any gate can add arbitrary control operations.
 
 Example:
 \begin{lstlisting}
