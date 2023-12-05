@@ -15,11 +15,9 @@
 """Hardware device module."""
 # pylint: disable=import-error
 
-from .topology import GridQubits, LinearQubits, QubitNode, QubitsTopology
+from .topology import QubitNode, QubitsTopology
 
 __all__ = [
-    "GridQubits",
-    "LinearQubits",
     "QubitNode",
     "QubitsTopology",
 ]
