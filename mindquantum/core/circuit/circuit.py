@@ -364,7 +364,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.has_cpp_obj = False
 
     def copy(self):
-        """Returns a shallow copy of the circuit."""
+        """Return a shallow copy of the circuit."""
         return copy.copy(self)
 
     def __add__(self, gates):
@@ -973,26 +973,56 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(mq_gates.Z.on(obj_qubits, ctrl_qubits))
         return self
 
-    def s(self, obj_qubits, ctrl_qubits=None):
+    def s(self, obj_qubits, ctrl_qubits=None, hermitian=False):
         """
         Add a S gate.
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `S` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `S` gate. Default: ``None``.
+            hermitian (bool): Whether use the hermitian conjugated version. Default: ``False``.
         """
-        self.append(mq_gates.S.on(obj_qubits, ctrl_qubits))
+        gate = mq_gates.S.on(obj_qubits, ctrl_qubits)
+        if hermitian:
+            gate = gate.hermitian()
+        self.append(gate)
         return self
 
-    def t(self, obj_qubits, ctrl_qubits=None):
+    def t(self, obj_qubits, ctrl_qubits=None, hermitian=False):
         """
         Add a T gate.
 
         Args:
             obj_qubits (Union[int, list[int]]): The object qubits of `T` gate.
             ctrl_qubits (Union[int, list[int]]): the control qubits of `T` gate. Default: ``None``.
+            hermitian (bool): Whether use the hermitian conjugated version. Default: ``False``.
         """
-        self.append(mq_gates.T.on(obj_qubits, ctrl_qubits))
+        gate = mq_gates.T.on(obj_qubits, ctrl_qubits)
+        if hermitian:
+            gate = gate.hermitian()
+        self.append(gate)
+        return self
+
+    def to_openqasm(self) -> str:
+        """Convert a MindQuantum circuit to openqasm format."""
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.qasm import OpenQASM
+
+        return OpenQASM().to_string(self)
+
+    def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):
+        """
+        Add a SX gate.
+
+        Args:
+            obj_qubits (Union[int, list[int]]): The object qubits of `SX` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `SX` gate. Default: ``None``.
+            hermitian (bool): Whether use the hermitian conjugated version. Default: ``False``.
+        """
+        gate = mq_gates.SX.on(obj_qubits, ctrl_qubits)
+        if hermitian:
+            gate = gate.hermitian()
+        self.append(gate)
         return self
 
     def swap(self, obj_qubits, ctrl_qubits=None):
@@ -1174,6 +1204,19 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         self.append(mq_gates.Rzz(para).on(obj_qubits, ctrl_qubits))
         return self
+
+    @staticmethod
+    def from_openqasm(openqasm_str: str):
+        """
+        Converit a openqasm string to MindQuantum circuit.
+
+        Args:
+            openqasm_str (str): String format of openqasm.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.qasm import OpenQASM
+
+        return OpenQASM().from_string(openqasm_str)
 
     def fsim(self, theta, phi, obj_qubits, ctrl_qubits=None):
         """

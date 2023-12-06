@@ -30,6 +30,22 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t* qs_p,
     matrix_t m{{M_SQRT1_2, M_SQRT1_2}, {M_SQRT1_2, -M_SQRT1_2}};
     derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
 }
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySX(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                               const qbits_t& ctrls, index_t dim) {
+    py_qs_data_t a = py_qs_data_t(0.5, 0.5);
+    py_qs_data_t b = std::conj(a);
+    matrix_t m{{a, b}, {b, a}};
+    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
+}
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySXdag(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                                  const qbits_t& ctrls, index_t dim) {
+    py_qs_data_t a = py_qs_data_t(0.5, -0.5);
+    py_qs_data_t b = std::conj(a);
+    matrix_t m{{a, b}, {b, a}};
+    derived::ApplySingleQubitMatrix(*qs_p, qs_p, objs[0], ctrls, m, dim);
+}
 
 template <typename derived_, typename calc_type_>
 void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyGP(qs_data_p_t* qs_p, const qbits_t& objs,

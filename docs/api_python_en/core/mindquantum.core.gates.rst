@@ -47,6 +47,7 @@ Quantum Gate
     mindquantum.core.gates.SGate
     mindquantum.core.gates.SWAPGate
     mindquantum.core.gates.SWAPalpha
+    mindquantum.core.gates.SXGate
     mindquantum.core.gates.TGate
     mindquantum.core.gates.U3
     mindquantum.core.gates.XGate
@@ -89,6 +90,8 @@ The gates blow are the pre-instantiated quantum gates, which can be used directl
      - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/2)
    * - mindquantum.core.gates.SWAP
      - :class:`mindquantum.core.gates.SWAPGate`
+   * - mindquantum.core.gates.SX
+     - :class:`mindquantum.core.gates.SXGate`
    * - mindquantum.core.gates.T
      - :class:`mindquantum.core.gates.PhaseShift` (numpy.pi/4)
    * - mindquantum.core.gates.X

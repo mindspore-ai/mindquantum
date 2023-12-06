@@ -123,6 +123,16 @@ struct ISWAPGate : public BasicGate {
         : BasicGate(GateID::ISWAP, obj_qubits, ctrl_qubits), daggered_(daggered) {
     }
 };
+struct SXGate : public BasicGate {
+    explicit SXGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::SX, obj_qubits, ctrl_qubits) {
+    }
+};
+struct SXdagGate : public BasicGate {
+    explicit SXdagGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : BasicGate(GateID::SXdag, obj_qubits, ctrl_qubits) {
+    }
+};
 struct SGate : public BasicGate {
     explicit SGate(const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::S, obj_qubits, ctrl_qubits) {
