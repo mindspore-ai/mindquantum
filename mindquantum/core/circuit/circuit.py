@@ -1018,6 +1018,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         if file_name is None:
             return OpenQASM().to_string(self)
         OpenQASM().to_file(file_name, self)
+        return ""
 
     def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):
         """
