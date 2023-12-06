@@ -112,9 +112,40 @@
 \title{MindSpore Quantum: XXXXXXXXX
 }
 
-\author{author}
-\email{email}
-
+\author{Qingyu Li}
+\affiliation{organization}
+\author{Qiang Zheng}
+\affiliation{organization}
+\author{Jiale Liu}
+\affiliation{organization}
+\author{Yanling Lin}
+\affiliation{organization}
+\author{Xusheng Xu}
+\affiliation{organization}
+\email{xuxusheng2@huawei.com}
+\author{Zuoheng Zou}
+\affiliation{organization}
+\email{zouzuoheng2@huawei.com}
+\author{Junyuan Zhou}
+\affiliation{organization}
+\email{zhoujunyuan1@huawei.com}
+\author{Xu Zhou}
+\affiliation{organization}
+\author{Jialiang Tang}
+\affiliation{organization}
+\author{Ruoqian Xu}
+\affiliation{organization}
+\author{Chufan Lyu}
+\affiliation{organization}
+\author{Runhong He}
+\affiliation{organization}
+\author{Runqiu Shu}
+\affiliation{organization}
+\author{Zidong Cui}
+\affiliation{organization}
+\author{Yikang Zhu}
+\affiliation{organization}
+\author{Xiaoting Wang}
 \affiliation{organization}
 
 \date{\today}
@@ -201,11 +232,11 @@ Introduction of MindSpore Quantum.
 \subsection{Variational Quantum Eigensolver}
 \input{6.1_Variational_Quantum_Eigensolver}
 
-% \subsection{Quantum Approximate Optimization Algorithm}
-% \input{6.2_Quantum_Approximate_Optimization_Algorithm}
+\subsection{Quantum Approximate Optimization Algorithm}
+\input{6.2_Quantum_Approximate_Optimization_Algorithm}
 
-% \subsection{Tensor Network Simulator}
-% \input{6.3_Tensor_Network_Simulator}
+\subsection{Tensor Network Simulator}
+\input{6.3_Tensor_Network_Simulator}
 
 \subsection{Pulse Engineering}
 \input{6.4_Pulse_Engineering}
@@ -230,13 +261,38 @@ Introduction of MindSpore Quantum.
 % \subsection{Third-party Quantum Chip}
 % \input{8.4_Third-party_Quantum_Chip}
 
-
-% \section{Advanced Quantum Applications}
-% \input{5.4_Advanced_Quantum_Aplications}
 \section{Summary}
 We introduced \MindQuantum, a hybrid quantum-classical framework which focus on the design and implement of NISQ algorithm, especially Variational Quantum Algorithm. First, we showed the eDSL (embedded domain specific language) of how to manipulate quantum gate, quantum circuit and observable. \MindQuantum\ support arbitrary control qubits on any quantum gate, and based on JIT, high performance arbitrary costumed parameterized or non-parameterized gate is also supported. Then we showed how we implement state vector, density matrix and noisy quantum simulator and how we optimized the simulation with gate based optimization with SIMD, OpenMP, Kunpeng and GPU acceleration. Furthermore,we provide numerous application examples to help you quickly grasp the usage of \MindQuantum. These applications include VQE, QAOA and QNN. A acceleration engine call \QuPack\ was introduce, including how we speed up the simulation of VQE and QAOA algorithm. A benchmark on the performance compared with other quantum frameworks was demonstrated in Chapter ~\ref{sec:benchmark}, which showed advantages of \MindQuantum\ in several scenarios. Finally, we also showed the work that we have done about how to quickly compile and execute a quantum circuit on a real quantum chip.
 
 \section{Acknowledgement}
+We sincerely thank the authors of this paper and their respective contributions, as follows:
+
+\begin{table}[ht]
+    \begin{tabular}{|p{3cm}|p{3cm}|}
+        \toprule
+        Author          & Section \\
+        \midrule
+        Qingyu Li       & 2.1, 2.2, 5.3 \\
+        Qiang Zheng     & 2.3 \\
+        Jiale Liu       & 2.4 \\
+        Yanling Lin     & 2.5, 5.9 \\
+        Xusheng Xu      & 1, 2.6, 3.1, 3.2, 3.3, 4.1, 6.1, 7, 8.1, 9 \\
+        Zuoheng Zou     & 6.2, 6.3, 7 \\
+        Junyuan Zhou    & 3.3, 4.2, 4.3, 7 \\
+        Xu Zhou         & 5.1 \\
+        Jialiang Tang   & 5.2 \\
+        Ruoqian Xu      & 5.4 \\
+        Chufan Lyu      & 5.5 \\
+        Runhong He      & 5.6 \\
+        Runqiu Shu      & 5.7 \\
+        Zidong Cui      & 5.8, 6.4 \\
+        Yikang Zhu      & 8.2 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Contributions of authors}
+    \label{tab:contributions}
+\end{table}
+
 We would like to thank all the contributors and users of \MindQuantum. It is the collective effort and attention of you that keeps this project going.
 This work is supported by the National Natural Science Foundation of China under the Grant No. XXXXXX.
 \bibliography{lib.bib}
