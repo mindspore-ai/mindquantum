@@ -37,6 +37,10 @@ none_parameter_gate = [
     G.XGate,
     G.YGate,
     G.ZGate,
+    G.SXGate,
+    lambda: G.SXGate().hermitian(),
+    lambda: G.TGate().hermitian(),
+    lambda: G.SGate().hermitian(),
 ]
 
 single_parameter_gate = [

@@ -78,6 +78,13 @@ mindquantum.core.circuit.Circuit
         参数：
             - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。
 
+    .. py:method:: from_openqasm(openqasm_str:str)
+
+        将 OpenQASM 格式的量子线路转化为 MindQuantum 中的量子线路。
+
+        参数：
+            - **openqasm_str** (str) - OpenQASM 中的字符串格式量子线路。
+
     .. py:method:: fsim(theta, phi, obj_qubits, ctrl_qubits=None)
 
         在电路中添加 `FSim` 门。
@@ -350,13 +357,14 @@ mindquantum.core.circuit.Circuit
             - **obj_qubits** (Union[int, list[int]]) - `Rzz` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `Rzz` 门的控制量子比特。默认值： ``None``。
 
-    .. py:method:: s(obj_qubits, ctrl_qubits=None)
+    .. py:method:: s(obj_qubits, ctrl_qubits=None, hermitian=False)
 
         在电路中添加 `S` 门。
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `S` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `S` 门的控制量子比特。默认值： ``None``。
+            - **hermitian** (bool) - 是否添加 `S` 门的轭米形式。默认值： ``False``。
 
     .. py:method:: summary(show=True)
 
@@ -391,13 +399,23 @@ mindquantum.core.circuit.Circuit
             - **obj_qubits** (Union[int, list[int]]) - `SWAPalpha` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `SWAPalpha` 门的控制量子比特。默认值： ``None`` 。
 
-    .. py:method:: t(obj_qubits, ctrl_qubits=None)
+    .. py:method:: sx(obj_qubits, ctrl_qubits=None, hermitian=False)
+
+        在电路中添加 `SX` 门。
+
+        参数：
+            - **obj_qubits** (Union[int, list[int]]) - `SX` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `SX` 门的控制量子比特。默认值： ``None``。
+            - **hermitian** (bool) - 是否添加 `SX` 门的轭米形式。默认值： ``False``。
+
+    .. py:method:: t(obj_qubits, ctrl_qubits=None, hermitian=False)
 
         在电路中添加 `T` 门。
 
         参数：
             - **obj_qubits** (Union[int, list[int]]) - `T` 门的目标量子比特。
             - **ctrl_qubits** (Union[int, list[int]]) - `T` 门的控制量子比特。默认值： ``None``。
+            - **hermitian** (bool) - 是否添加 `T` 门的轭米形式。默认值： ``False``。
 
     .. py:method:: u3(theta, phi, lamda, obj_qubits, ctrl_qubits=None)
 

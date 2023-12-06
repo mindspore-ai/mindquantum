@@ -44,6 +44,8 @@ enum class GateID : uint8_t {
     SWAPalpha,    //
     T,            //
     S,            //
+    SX,           //
+    SXdag,        //
     Tdag,         //
     Sdag,         //
     CNOT,         //
@@ -89,6 +91,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(GateID, {{GateID::I, "I"},
                                       {GateID::S, "S"},
                                       {GateID::Tdag, "Tdag"},
                                       {GateID::Sdag, "Sdag"},
+                                      {GateID::SX, "SX"},
+                                      {GateID::SXdag, "SXdag"},
                                       {GateID::CNOT, "CNOT"},
                                       {GateID::CZ, "CZ"},
                                       {GateID::GP, "GP"},
@@ -210,8 +214,12 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return fmt::format_to(ctx.out(), "T");
             case mindquantum::GateID::S:
                 return fmt::format_to(ctx.out(), "S");
+            case mindquantum::GateID::SX:
+                return fmt::format_to(ctx.out(), "SX");
             case mindquantum::GateID::Tdag:
                 return fmt::format_to(ctx.out(), "Tdag");
+            case mindquantum::GateID::SXdag:
+                return fmt::format_to(ctx.out(), "SXdag");
             case mindquantum::GateID::Sdag:
                 return fmt::format_to(ctx.out(), "Sdag");
             case mindquantum::GateID::CNOT:

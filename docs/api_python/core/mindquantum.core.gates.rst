@@ -50,6 +50,7 @@ mindquantum.core.gates
     mindquantum.core.gates.SGate
     mindquantum.core.gates.SWAPalpha
     mindquantum.core.gates.SWAPGate
+    mindquantum.core.gates.SXGate
     mindquantum.core.gates.TGate
     mindquantum.core.gates.U3
     mindquantum.core.gates.XGate
@@ -92,6 +93,8 @@ mindquantum.core.gates
      - :class:`~.core.gates.PhaseShift` (numpy.pi/2)
    * - mindquantum.core.gates.SWAP
      - :class:`~.core.gates.SWAPGate`
+   * - mindquantum.core.gates.SX
+     - :class:`~.core.gates.SXGate`
    * - mindquantum.core.gates.T
      - :class:`~.core.gates.PhaseShift` (numpy.pi/4)
    * - mindquantum.core.gates.X

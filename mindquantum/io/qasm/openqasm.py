@@ -184,6 +184,17 @@ def t_related(gate):
     raise ValueError(f"Cannot convert {gate} to qasm.")
 
 
+def sx_related(gate):
+    """Convert mindquantum gate to qasm."""
+    ctrl = gate.ctrl_qubits
+    jointed = join_qubit(gate)
+    if not ctrl:
+        if not gate.hermitianed:
+            return f"sx {jointed};"
+        return f"sxdg {jointed};"
+    raise ValueError(f"Cannot convert {gate} to qasm.")
+
+
 def swap_related(gate):
     """Convert mindquantum gate to qasm."""
     ctrl = gate.ctrl_qubits
@@ -563,18 +574,8 @@ class OpenQASM:
             's': lambda prs, qids: G.S.on(qids),
             'sdg': lambda prs, qids: G.S.on(qids).hermitian(),
             'swap': lambda prs, qids: G.SWAP.on(qids),
-            'sx': lambda prs, qids: Circuit(
-                [
-                    G.RX(np.pi / 2).on(qids),
-                    G.GlobalPhase(-np.pi / 4).on(qids),
-                ]
-            ),
-            'sxdg': lambda prs, qids: Circuit(
-                [
-                    G.RX(-np.pi / 2).on(qids),
-                    G.GlobalPhase(-np.pi / 4).on(qids),
-                ]
-            ),
+            'sx': lambda prs, qids: G.SX.on(qids),
+            'sxdg': lambda prs, qids: G.SX.on(qids).hermitian(),
             't': lambda prs, qids: G.T.on(qids),
             'tdg': lambda prs, qids: G.T.on(qids).hermitian(),
             'u': lambda prs, qids: G.U3(*prs).on(qids),
@@ -602,6 +603,7 @@ class OpenQASM:
             G.Rzz: rzz_related,
             G.SGate: s_related,
             G.TGate: t_related,
+            G.SXGate: sx_related,
             G.SWAPGate: swap_related,
             G.U3: u3_related,
         }

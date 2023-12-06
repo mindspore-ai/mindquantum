@@ -557,6 +557,33 @@ class TGate(NoneParamNonHermMat):
         return mb.gate.TGate(self.obj_qubits, self.ctrl_qubits)
 
 
+class SXGate(NoneParamNonHermMat):
+    r"""
+    Sqrt X (SX) gate.
+
+    SX gate with matrix as :
+
+    .. math::
+        {\rm SX}=\frac{1}{2}\begin{pmatrix}1+i&1-i\\1-i&1+i\end{pmatrix}
+
+    More usage, please see :class:`~.core.gates.XGate`.
+    """
+
+    def __init__(self):
+        """Initialize a TGate object."""
+        super().__init__(
+            name='SX',
+            n_qubits=1,
+            matrix_value=_GLOBAL_MAT_VALUE['SX'],
+        )
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        if self.hermitianed:
+            return mb.gate.SXdagGate(self.obj_qubits, self.ctrl_qubits)
+        return mb.gate.SXGate(self.obj_qubits, self.ctrl_qubits)
+
+
 class SGate(NoneParamNonHermMat):
     r"""
     S gate.
@@ -2343,6 +2370,7 @@ I = IGate()  # noqa: E741
 H = HGate()
 T = TGate()
 S = SGate()
+SX = SXGate()
 CNOT = CNOTGate()
 ISWAP = ISWAPGate()
 SWAP = SWAPGate()

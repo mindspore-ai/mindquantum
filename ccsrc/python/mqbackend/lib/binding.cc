@@ -88,6 +88,11 @@ void BindTypeIndependentGate(py::module &module) {  // NOLINT(runtime/references
     py::class_<mindquantum::SdagGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SdagGate>>(module,
                                                                                                       "SdagGate")
         .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::SXGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SXGate>>(module, "SXGate")
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
+    py::class_<mindquantum::SXdagGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::SXdagGate>>(module,
+                                                                                                        "SXdagGate")
+        .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::TGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::TGate>>(module, "TGate")
         .def(py::init<const qbits_t &, const qbits_t &>(), "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>());
     py::class_<mindquantum::TdagGate, mindquantum::BasicGate, std::shared_ptr<mindquantum::TdagGate>>(module,
@@ -270,9 +275,11 @@ PYBIND11_MODULE(mqbackend, m) {
                        .value("ISWAP", mindquantum::GateID::ISWAP)
                        .value("SWAPalpha", mindquantum::GateID::SWAPalpha)
                        .value("T", mindquantum::GateID::T)
-                       .value("Tdag", mindquantum::GateID::T)
-                       .value("S", mindquantum::GateID::Sdag)
+                       .value("Tdag", mindquantum::GateID::Tdag)
+                       .value("S", mindquantum::GateID::S)
                        .value("Sdag", mindquantum::GateID::Sdag)
+                       .value("SX", mindquantum::GateID::SX)
+                       .value("SXdag", mindquantum::GateID::SXdag)
                        .value("CNOT", mindquantum::GateID::CNOT)
                        .value("CZ", mindquantum::GateID::CZ)
                        .value("PauliString", mindquantum::GateID::PauliString)

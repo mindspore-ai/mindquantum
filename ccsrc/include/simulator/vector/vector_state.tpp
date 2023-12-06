@@ -187,6 +187,12 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
         case GateID::Tdag:
             qs_policy_t::ApplyTdag(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             break;
+        case GateID::SX:
+            qs_policy_t::ApplySX(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
+        case GateID::SXdag:
+            qs_policy_t::ApplySXdag(&qs, gate->obj_qubits_, gate->ctrl_qubits_, dim);
+            break;
         case GateID::PauliString: {
             auto g = static_cast<PauliString*>(gate.get());
             qs_policy_t::ApplyPauliString(&qs, g->pauli_mask, g->ctrl_mask, dim);

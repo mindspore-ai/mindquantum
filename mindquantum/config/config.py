@@ -29,6 +29,7 @@ _GLOBAL_MAT_VALUE = {
     'H': np.array([[1, 1], [1, -1]]) / np.sqrt(2),
     'S': np.array([[1, 0], [0, 1j]]),
     'T': np.array([[1, 0], [0, (1 + 1j) / np.sqrt(2)]]),
+    'SX': np.array([[1 + 1j, 1 - 1j], [1 - 1j, 1 + 1j]]) / 2,
     'ISWAP': np.array([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0], [0, 0, 0, 1]]),
     'SWAP': np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]),
     'CNOT': np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]),
@@ -39,7 +40,7 @@ _GLOBAL_CONFIG = {
 }
 
 
-class context:
+class context:  # pylint: disable=invalid-name # noqa: N801
     """
     Set context for running environment.
 
