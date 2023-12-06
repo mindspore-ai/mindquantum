@@ -1,20 +1,20 @@
 \MindQuantum\ places great emphasis on the simulation efficiency of NISQ algorithms, particularly variational quantum algorithms. In this study, we benchmarked \MindQuantum\ against other mainstream quantum computing frameworks. Firstly, we used random circuit simulation to benchmark the fundamental performance of the framework. Secondly, we used Quantum Approximate Optimization Algorithm (QAOA) for benchmarking, demonstrating MindQuantum’s ability to solve practical problems. The table below shows the frameworks that participated in the benchmark.
 
-\begin{table}[h!]\centering
-\begin{minipage}{\columnwidth}
-        \begin{tabularx}{0.9\textwidth}{X c}\toprule
-            \textbf{Framework} & \textbf{Version}\\
-            \hline
-            MindQuantum & 0.9.0\\
-            Qiskit & 0.45.0\\
-            Qulacs & 0.6.2\\
-            Tensorflow Quantum & 0.7.2\\
-            Intel-QS & 2.0.0-beta\\
-            QuEST & 3.7.0\\
-            \bottomrule
-        \end{tabularx}
-    \caption{The software version of benchmarking.}\label{software version}
-\end{minipage}
+\begin{table}[ht]
+    \begin{tabular}{cc}
+        \toprule
+        Framework           & Version       \\
+        \midrule
+        MindQuantum         & 0.9.0         \\
+        Qiskit              & 0.45.0        \\
+        Qulacs              & 0.6.2         \\
+        Tensorflow Quantum  & 0.7.2         \\
+        Intel-QS            & 2.0.0-beta    \\
+        QuEST               & 3.7.0         \\
+        \bottomrule
+    \end{tabular}
+    \caption{The software version of benchmarking.}
+    \label{tab:software version}
 \end{table}
 
 The hardware platform used for the benchmark test is Intel® Xeon® CPU E5-2690 v3 @ 2.60GHz, with 8 CPUs and 32G memory, with SIMD enabled. The GPU model is NVIDA-V100.
