@@ -667,7 +667,7 @@ class OpenQASM:
         """
         with fdopen(file_name, 'r') as fd:
             cmds = fd.readlines()
-        return qasm_to_mq_v2(cmds, self.gate_map_openqasm_mq)
+        return qasm_to_mq_v2('\n'.join(cmds), self.gate_map_openqasm_mq)
 
     def from_string(self, string):
         """

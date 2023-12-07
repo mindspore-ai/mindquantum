@@ -17,6 +17,7 @@
 """Circuit module."""
 
 import copy
+import os
 from collections.abc import Iterable
 from types import FunctionType, MethodType
 from typing import List
@@ -1003,12 +1004,21 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(gate)
         return self
 
-    def to_openqasm(self) -> str:
-        """Convert a MindQuantum circuit to openqasm format."""
+    def to_openqasm(self, file_name: str = None) -> str:
+        """
+        Convert a MindQuantum circuit to openqasm format string or file.
+
+        Args:
+            file_name (str): File name if you want to save openqasm. If it is ``None``, we
+                will return the string. Otherwise, we will save to given file.
+                Default: ``Non``.
+        """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
-
-        return OpenQASM().to_string(self)
+        if file_name is None:
+            return OpenQASM().to_string(self)
+        OpenQASM().to_file(file_name, self)
+        return ""
 
     def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):
         """
@@ -1208,14 +1218,15 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     @staticmethod
     def from_openqasm(openqasm_str: str):
         """
-        Converit a openqasm string to MindQuantum circuit.
+        Converit a openqasm string or a openqasm file to MindQuantum circuit.
 
         Args:
-            openqasm_str (str): String format of openqasm.
+            openqasm_str (str): String format of openqasm or a openqasm file name.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
-
+        if os.path.exists(openqasm_str):
+            return OpenQASM().from_file(openqasm_str)
         return OpenQASM().from_string(openqasm_str)
 
     def fsim(self, theta, phi, obj_qubits, ctrl_qubits=None):
