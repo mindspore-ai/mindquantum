@@ -4,10 +4,10 @@
 .. currentmodule:: mindquantum.algorithm.nisq
 
 
-mindquantum.algorithm.nisq.PEHeaXYZ1F
+mindquantum.algorithm.nisq.PCHeaXYZ2F
 =====================================
 
-.. autoclass:: PEHeaXYZ1F
+.. autoclass:: PCHeaXYZ2F
     :exclude-members: bprop, construct, extend_repr
     :members:
 
