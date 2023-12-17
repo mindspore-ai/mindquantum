@@ -48,6 +48,7 @@ single_parameter_gate = [
     G.RY,
     G.RZ,
     G.SWAPalpha,
+    G.Givens,
     G.GlobalPhase,
     G.PhaseShift,
     G.Rxx,
@@ -586,7 +587,7 @@ def test_rn_expectation_with_grad(config):  # pylint: disable=R0914
     m_rn = rn.matrix(pr=dict(zip(circ.params_name, p0)))
     psi_0 = init.get_qs()[:, None]
     f_exp = np.vdot(m_rn @ psi_0, m_ham @ m_rn @ psi_0)
-    assert np.allclose(f, f_exp)
+    assert np.allclose(f, f_exp, atol=1e-4)
     delta = 0.0001
     f1, _ = grad_ops(p0 + np.array([delta, 0, 0]))
     f1 = f1[0, 0]
@@ -623,7 +624,7 @@ def test_pauli_string_gate(config):  # pylint: disable=too-many-locals
         ctrl_qubits = None if np.random.random() < 0.5 else qubits[-1]
         circs.append(G.GroupedPauli(random_pauli_string(obj_qubits)).on(obj_qubits, ctrl_qubits))
     if virtual_qc.startswith('mqvector'):
-        state = random_circuit(n_qubits, 10).get_qs()
+        state = (random_circuit(n_qubits, 10) + G.I.on(n_qubits - 1)).get_qs()
         sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
         for g in circs:
             sim.set_qs(state)

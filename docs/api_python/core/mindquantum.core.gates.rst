@@ -57,6 +57,7 @@ mindquantum.core.gates
     mindquantum.core.gates.YGate
     mindquantum.core.gates.ZGate
     mindquantum.core.gates.GroupedPauli
+    mindquantum.core.gates.Givens
 
 功能量子门
 -------------

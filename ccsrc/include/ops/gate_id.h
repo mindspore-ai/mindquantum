@@ -37,6 +37,7 @@ enum class GateID : uint8_t {
     Rxy,          //
     Rxz,          //
     Ryz,          //
+    Givens,       //
     Rn,           //
     H,            //
     SWAP,         //
@@ -82,6 +83,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(GateID, {{GateID::I, "I"},
                                       {GateID::Rxy, "Rxy"},
                                       {GateID::Rxz, "Rxz"},
                                       {GateID::Ryz, "Ryz"},
+                                      {GateID::Givens, "Givens"},
                                       {GateID::Rn, "Rn"},
                                       {GateID::H, "H"},
                                       {GateID::SWAP, "SWAP"},
@@ -120,6 +122,8 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
     auto format_one(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
         -> decltype(ctx.out()) {
         switch (value) {
+            case mindquantum::GateID::Givens:
+                return fmt::format_to(ctx.out(), "Givens");
             case mindquantum::GateID::GP:
                 return fmt::format_to(ctx.out(), "GP");
             case mindquantum::GateID::PS:

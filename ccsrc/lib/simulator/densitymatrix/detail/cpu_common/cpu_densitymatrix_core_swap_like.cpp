@@ -292,6 +292,24 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_
     derived::ApplyTwoQubitsMatrix(qs, qs_p, objs, ctrls, m, dim);
 }
 
+template <typename derived_, typename calc_type_>
+void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyGivens(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                                   const qbits_t& ctrls, calc_type val, index_t dim,
+                                                                   bool diff) {
+    auto& qs = (*qs_p);
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    auto c = std::cos(val);
+    auto s = std::sin(val);
+    if (diff) {
+        c = -std::sin(val);
+        s = std::cos(val);
+    }
+    matrix_t m = {{1, 0, 0, 0}, {0, c, -s, 0}, {0, s, c, 0}, {0, 0, 0, 1}};
+    derived::ApplyTwoQubitsMatrix(qs, qs_p, objs, ctrls, m, dim);
+}
 #ifdef __x86_64__
 template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxFloat, float>;
 template struct CPUDensityMatrixPolicyBase<CPUDensityMatrixPolicyAvxDouble, double>;

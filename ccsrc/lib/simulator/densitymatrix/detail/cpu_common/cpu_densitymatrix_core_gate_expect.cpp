@@ -1568,6 +1568,81 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const
 };
 
 template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffGivens(const qs_data_p_t& qs_out,
+                                                                        const qs_data_p_t& ham_matrix_out,
+                                                                        const qbits_t& objs, const qbits_t& ctrls,
+                                                                        index_t dim) -> qs_data_t {
+    qs_data_p_t qs;
+    bool will_free = false;
+    if (qs_out == nullptr) {
+        qs = derived::InitState(dim);
+        will_free = true;
+    } else {
+        qs = qs_out;
+    }
+    qs_data_p_t ham_matrix;
+    bool will_free_ham = false;
+    if (ham_matrix_out == nullptr) {
+        ham_matrix = derived::InitState(dim);
+        will_free_ham = true;
+    } else {
+        ham_matrix = ham_matrix_out;
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    calc_type res_real = 0, res_imag = 0;
+    if (!mask.ctrl_mask) {
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                    index_t r0;
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
+                    auto r3 = r0 + mask.obj_mask;
+                    auto r1 = r0 + mask.obj_min_mask;
+                    auto r2 = r0 + mask.obj_max_mask;
+                    qs_data_t this_res = 0;
+                    for (index_t col = 0; col < dim; col++) {
+                        this_res += - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
+                                    + GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2);
+                    }
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                })
+        // clang-format on
+    } else {
+        // clang-format off
+        THRESHOLD_OMP(
+            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                    index_t r0;
+                    SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                  l, r0);
+                    if ((r0 & mask.ctrl_mask) == mask.ctrl_mask) {
+                        auto r3 = r0 + mask.obj_mask;
+                        auto r1 = r0 + mask.obj_min_mask;
+                        auto r2 = r0 + mask.obj_max_mask;
+                        qs_data_t this_res = 0;
+                        for (index_t col = 0; col < dim; col++) {
+                            this_res += - GetValue(qs, r2, col) * GetValue(ham_matrix, col, r1)
+                                        + GetValue(qs, r1, col) * GetValue(ham_matrix, col, r2);
+                        }
+                        res_real += this_res.real();
+                        res_imag += this_res.imag();
+                    }
+                })
+        // clang-format on
+    }
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
+    if (will_free_ham) {
+        derived::FreeState(&ham_matrix);
+    }
+    return {res_real, res_imag};
+};
+
+template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimTheta(const qs_data_p_t& qs_out,
                                                                            const qs_data_p_t& ham_matrix_out,
                                                                            const qbits_t& objs, const qbits_t& ctrls,

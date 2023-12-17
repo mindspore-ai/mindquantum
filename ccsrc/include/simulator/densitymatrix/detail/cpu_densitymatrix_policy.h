@@ -166,6 +166,8 @@ struct CPUDensityMatrixPolicyBase {
                                index_t dim);
     static void ApplySWAPalpha(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                                bool diff = false);
+    static void ApplyGivens(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                            bool diff = false);
     static void ApplyRxx(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyRxxNoCtrl(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim, calc_type c,
@@ -262,6 +264,8 @@ struct CPUDensityMatrixPolicyBase {
                                    const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
                                          const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    static qs_data_t ExpectDiffGivens(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
+                                      const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimTheta(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,
                                          const qbits_t& objs, const qbits_t& ctrls, index_t dim);
     static qs_data_t ExpectDiffFSimPhi(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out,

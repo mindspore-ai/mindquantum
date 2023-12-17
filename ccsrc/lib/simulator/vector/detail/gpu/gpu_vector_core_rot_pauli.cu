@@ -524,7 +524,69 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t* qs_p, cons
         }
     }
 }
-
+template <typename derived_, typename calc_type_>
+void GPUVectorPolicyBase<derived_, calc_type_>::ApplyGivens(qs_data_p_t* qs_p, const qbits_t& objs,
+                                                            const qbits_t& ctrls, calc_type val, index_t dim,
+                                                            bool diff) {
+    auto& qs = *qs_p;
+    if (qs == nullptr) {
+        qs = derived::InitState(dim);
+    }
+    DoubleQubitGateMask mask(objs, ctrls);
+    thrust::counting_iterator<index_t> l(0);
+    auto obj_high_mask = mask.obj_high_mask;
+    auto obj_rev_high_mask = mask.obj_rev_high_mask;
+    auto obj_low_mask = mask.obj_low_mask;
+    auto obj_rev_low_mask = mask.obj_rev_low_mask;
+    auto obj_min_mask = mask.obj_min_mask;
+    auto obj_max_mask = mask.obj_max_mask;
+    auto ctrl_mask = mask.ctrl_mask;
+    auto obj_mask = mask.obj_mask;
+    auto c = std::cos(val);
+    auto s = std::sin(val);
+    if (diff) {
+        c = -std::sin(val);
+        s = std::cos(val);
+    }
+    if (!mask.ctrl_mask) {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            auto j = i + obj_min_mask;
+            auto k = i + obj_max_mask;
+            auto m = i + obj_mask;
+            auto v01 = c * qs[j] - s * qs[k];
+            auto v10 = s * qs[j] + c * qs[k];
+            qs[j] = v01;
+            qs[k] = v10;
+            if (diff) {
+                qs[i] = 0.0;
+                qs[m] = 0.0;
+            }
+        });
+    } else {
+        thrust::for_each(l, l + dim / 4, [=] __device__(index_t l) {
+            index_t i;
+            SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
+            if ((i & ctrl_mask) == ctrl_mask) {
+                auto j = i + obj_min_mask;
+                auto k = i + obj_max_mask;
+                auto m = i + obj_mask;
+                auto v01 = c * qs[j] - s * qs[k];
+                auto v10 = s * qs[j] + c * qs[k];
+                qs[j] = v01;
+                qs[k] = v10;
+                if (diff) {
+                    qs[i] = 0.0;
+                    qs[m] = 0.0;
+                }
+            }
+        });
+        if (diff) {
+            derived::SetToZeroExcept(&qs, ctrl_mask, dim);
+        }
+    }
+}
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 

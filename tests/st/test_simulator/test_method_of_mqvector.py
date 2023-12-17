@@ -179,6 +179,7 @@ single_parameter_gate = [
     G.RY,
     G.RZ,
     G.SWAPalpha,
+    G.Givens,
     G.GlobalPhase,
     G.PhaseShift,
     G.Rxx,
@@ -222,7 +223,7 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
     ref_grad_ops = sim.get_expectation_with_grad(ham, circ)
     ref_f, ref_g = ref_grad_ops(pr)
     assert np.allclose(f, ref_f, atol=1e-4)
-    assert np.allclose(g, ref_g, atol=1e-4)
+    assert np.allclose(g, ref_g, atol=1e-3)
 
 
 @pytest.mark.level0

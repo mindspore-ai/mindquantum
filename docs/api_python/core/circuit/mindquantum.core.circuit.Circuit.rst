@@ -113,6 +113,15 @@ mindquantum.core.circuit.Circuit
             - **seed** (int) - 模拟器的随机种子。默认值： ``None``。
             - **dtype** (mindquantum.dtype) - 模拟器的数据类型。默认值： ``None``。
 
+    .. py:method:: givens(para, obj_qubits, ctrl_qubits=None)
+
+        在电路中添加 `Givens` 门。
+
+        参数：
+            - **para** (Union[dict, ParameterResolver]) - `Givens` 门的参数。
+            - **obj_qubits** (Union[int, list[int]]) - `Givens` 门的目标量子比特。
+            - **ctrl_qubits** (Union[int, list[int]]) - `Givens` 门的控制量子比特。默认值： ``None``。
+
     .. py:method:: global_phase(para, obj_qubits, ctrl_qubits=None)
 
         在电路中添加 `GlobalPhase` 门。

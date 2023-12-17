@@ -300,6 +300,14 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRyz(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
+        case GateID::Givens: {
+            auto g = static_cast<GivensGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyGivens(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::PS: {
             auto g = static_cast<PSGate*>(gate.get());
             if (!g->GradRequired()) {
@@ -532,6 +540,11 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& dens_ma
         case GateID::Ryz:
             grad[0] = qs_policy_t::ExpectDiffRyz(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_, dim);
             return tensor::Matrix(VVT<py_qs_data_t>{grad});
+        case GateID::Givens: {
+            grad[0] = qs_policy_t::ExpectDiffGivens(dens_matrix, ham_matrix, gate->obj_qubits_, gate->ctrl_qubits_,
+                                                    dim);
+            return tensor::Matrix(VVT<py_qs_data_t>({grad}));
+        }
         case GateID::RPS: {
             auto rps = static_cast<RotPauliString*>(gate.get());
             auto& pauli = rps->pauli_string;
