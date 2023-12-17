@@ -294,6 +294,14 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
             qs_policy_t::ApplyRyz(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
         } break;
+        case GateID::Givens: {
+            auto g = static_cast<GivensGate*>(gate.get());
+            if (!g->GradRequired()) {
+                diff = false;
+            }
+            auto val = tensor::ops::cpu::to_vector<calc_type>(g->prs_[0].Combination(pr).const_value)[0];
+            qs_policy_t::ApplyGivens(&qs, gate->obj_qubits_, gate->ctrl_qubits_, val, dim, diff);
+        } break;
         case GateID::PS: {
             auto g = static_cast<PSGate*>(gate.get());
             if (!g->GradRequired()) {
@@ -775,6 +783,9 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
             return tensor::Matrix(VVT<py_qs_data_t>({grad}));
         case GateID::Ryz:
             grad[0] = qs_policy_t::ExpectDiffRyz(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
+            return tensor::Matrix(VVT<py_qs_data_t>({grad}));
+        case GateID::Givens:
+            grad[0] = qs_policy_t::ExpectDiffGivens(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
             return tensor::Matrix(VVT<py_qs_data_t>({grad}));
         case GateID::PS:
             grad[0] = qs_policy_t::ExpectDiffPS(bra, ket, gate->obj_qubits_, gate->ctrl_qubits_, val, dim);
@@ -1388,6 +1399,10 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                     }
                     case (GateID::Ryz): {
                         tmp_gate = CONVERT_GATE(RyzGate, p_gate);
+                        break;
+                    }
+                    case (GateID::Givens): {
+                        tmp_gate = CONVERT_GATE(GivensGate, p_gate);
                         break;
                     }
                     case (GateID::SWAPalpha): {

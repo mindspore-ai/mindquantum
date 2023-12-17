@@ -223,6 +223,12 @@ struct RyzGate : public Parameterizable {
     }
 };
 
+struct GivensGate : public Parameterizable {
+    GivensGate(const parameter::ParameterResolver pr, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : Parameterizable(GateID::Givens, {pr}, obj_qubits, ctrl_qubits) {
+    }
+};
+
 struct RotPauliString : public Parameterizable {
     PauliString pauli_string;
     RotPauliString(const std::string& pauli_string, const parameter::ParameterResolver pr, const qbits_t& obj_qubits,

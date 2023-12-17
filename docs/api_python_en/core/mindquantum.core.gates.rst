@@ -54,6 +54,7 @@ Quantum Gate
     mindquantum.core.gates.YGate
     mindquantum.core.gates.ZGate
     mindquantum.core.gates.GroupedPauli
+    mindquantum.core.gates.Givens
 
 Functional Gate
 ----------------

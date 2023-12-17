@@ -611,6 +611,93 @@ class SGate(NoneParamNonHermMat):
         return mb.gate.SGate(self.obj_qubits, self.ctrl_qubits)
 
 
+class Givens(ParameterOppsGate):
+    r"""
+    Givens rotation gate.
+
+    .. math::
+
+        {\rm G}(\theta)=\exp{\left(-i\frac{\theta}{2} (Y\otimes X - X\otimes Y)\right)} =
+        \begin{pmatrix}
+            1 & 0 & 0 & 0\\
+            0 & \cos{\theta} & -\sin{\theta} & 0\\
+            0 & \sin{\theta} & \cos{\theta} & 0\\
+            0 & 0 & 0 & 1\\
+        \end{pmatrix}
+
+    Args:
+        pr (Union[int, float, str, dict, ParameterResolver]): the parameters of
+            parameterized gate, see above for detail explanation.
+    """
+
+    def __init__(self, pr):
+        """Initialize a Givens object."""
+        super().__init__(
+            pr=ParameterResolver(pr),
+            name='Givens',
+            n_qubits=2,
+        )
+
+    def matrix(self, pr=None, full=False):
+        """
+        Get the matrix of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+
+        Returns:
+            numpy.ndarray, the matrix of this gate.
+        """
+        if full:
+            # pylint: disable=import-outside-toplevel
+            from mindquantum.core.circuit import Circuit
+
+            return Circuit([self]).matrix()
+
+        val = 0
+        if self.coeff.is_const():
+            val = self.coeff.const
+        else:
+            new_pr = self.coeff.combination(pr)
+            if not new_pr.is_const():
+                raise ValueError("The parameter is not set completed.")
+            val = new_pr.const
+        return np.array(
+            [[1, 0, 0, 0], [0, np.cos(val), -np.sin(val), 0], [0, np.sin(val), np.cos(val), 0], [0, 0, 0, 1]]
+        )
+
+    def diff_matrix(self, pr=None, about_what=None):
+        """
+        Differential form of this parameterized gate.
+
+        Args:
+            pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
+            about_what (str): calculate the gradient w.r.t which parameter.
+
+        Returns:
+            numpy.ndarray, the differential form matrix.
+        """
+        if self.coeff.is_const():
+            return np.zeros((4, 4))
+        new_pr = self.coeff.combination(pr)
+        if not new_pr.is_const():
+            raise ValueError("The parameter is not set completed.")
+        val = new_pr.const
+        if about_what is None:
+            if len(self.coeff) != 1:
+                raise ValueError("Should specific which parameter are going to do derivation.")
+            for i in self.coeff:
+                about_what = i
+        c_val = -self.coeff[about_what] * np.sin(val)
+        s_val = self.coeff[about_what] * np.cos(val)
+        return np.array([[0, 0, 0, 0], [0, c_val, -s_val, 0], [0, s_val, c_val, 0], [0, 0, 0, 0]])
+
+    def get_cpp_obj(self):
+        """Construct cpp obj."""
+        return mb.gate.GivensGate(self.coeff, self.obj_qubits, self.ctrl_qubits)
+
+
 class RX(RotSelfHermMat):
     r"""
     Rotation gate around x-axis.
@@ -824,7 +911,7 @@ class SWAPalpha(ParameterOppsGate):
             numpy.ndarray, the differential form matrix.
         """
         if self.coeff.is_const():
-            return np.zeros((2, 2))
+            return np.zeros((4, 4))
         new_pr = self.coeff.combination(pr)
         if not new_pr.is_const():
             raise ValueError("The parameter is not set completed.")

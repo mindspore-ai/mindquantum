@@ -45,6 +45,8 @@ ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp
 ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::InitialMapping
 ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::HeuristicSearch
 ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::MQ_SABRE
+ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_swap_like.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ApplySWAP
+ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ExpectDiffTwoQubitsMatrix
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti

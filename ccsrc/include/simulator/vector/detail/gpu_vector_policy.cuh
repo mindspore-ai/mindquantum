@@ -150,7 +150,8 @@ struct GPUVectorPolicyBase {
                          bool diff = false);
     static void ApplyRyz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
-
+    static void ApplyGivens(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                         bool diff = false);
     // gate_expec
     // ========================================================================================================
     static qs_data_t ExpectDiffRPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const PauliMask& pauli_mask,
@@ -181,6 +182,8 @@ struct GPUVectorPolicyBase {
     static qs_data_t ExpectDiffRxz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                    const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffRyz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, calc_type val, index_t dim);
+    static qs_data_t ExpectDiffGivens(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                    const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                          const qbits_t& ctrls, calc_type val, index_t dim);

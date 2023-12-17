@@ -1015,6 +1015,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
+
         if file_name is None:
             return OpenQASM().to_string(self)
         OpenQASM().to_file(file_name, self)
@@ -1129,6 +1130,18 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(mq_gates.GlobalPhase(para).on(obj_qubits, ctrl_qubits))
         return self
 
+    def givens(self, para, obj_qubits, ctrl_qubits=None):
+        """
+        Add a Givens rotation gate.
+
+        Args:
+            para (Union[dict, ParameterResolver]): The parameter for `Givens` gate.
+            obj_qubits (Union[int, list[int]]): The object qubits of `Givens` gate.
+            ctrl_qubits (Union[int, list[int]]): the control qubits of `Givens` gate. Default: ``None``.
+        """
+        self.append(mq_gates.Givens(para).on(obj_qubits, ctrl_qubits))
+        return self
+
     def u3(self, theta, phi, lamda, obj_qubits, ctrl_qubits=None):
         """
         Add a U3 gate.
@@ -1225,6 +1238,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
+
         if os.path.exists(openqasm_str):
             return OpenQASM().from_file(openqasm_str)
         return OpenQASM().from_string(openqasm_str)

@@ -278,6 +278,55 @@ def test_SWAPlapha():
     assert np.allclose(g[0].diff_matrix({'alpha': alpha}), g[2](alpha))
 
 
+def test_Givens():
+    """
+    Description: Test Givens gate
+    Expectation:
+    """
+    alpha = 0.5
+    g = [
+        G.Givens("alpha").on((0, 1)),
+        lambda alpha: np.array(
+            [
+                [1.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                [
+                    0.0 + 0.0j,
+                    np.cos(alpha),
+                    -np.sin(alpha),
+                    0.0 + 0.0j,
+                ],
+                [
+                    0.0 + 0.0j,
+                    np.sin(alpha),
+                    np.cos(alpha),
+                    0.0 + 0.0j,
+                ],
+                [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 1.0 + 0.0j],
+            ]
+        ),
+        lambda alpha: np.array(
+            [
+                [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                [
+                    0.0 + 0.0j,
+                    -np.sin(alpha),
+                    -np.cos(alpha),
+                    0.0 + 0.0j,
+                ],
+                [
+                    0.0 + 0.0j,
+                    np.cos(alpha),
+                    -np.sin(alpha),
+                    0.0 + 0.0j,
+                ],
+                [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+            ]
+        ),
+    ]
+    assert np.allclose(g[0].matrix({'alpha': alpha}), g[1](alpha))
+    assert np.allclose(g[0].diff_matrix({'alpha': alpha}), g[2](alpha))
+
+
 def test_univ_mat_gate():
     """
     Description: Test UnivMathGate
@@ -383,6 +432,7 @@ def test_hermitian():
         G.RY,
         G.RZ,
         G.SWAPalpha,
+        G.Givens,
         G.GlobalPhase,
         G.PhaseShift,
         G.Rxx,
