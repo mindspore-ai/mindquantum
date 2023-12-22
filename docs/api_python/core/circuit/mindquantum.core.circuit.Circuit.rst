@@ -78,12 +78,19 @@ mindquantum.core.circuit.Circuit
         参数：
             - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。
 
-    .. py:method:: from_openqasm(openqasm_str:str)
+    .. py:method:: from_openqasm(openqasm_str: str)
 
         将 OpenQASM 字符串的量子线路或者 OpenQASM 文件转化为 MindQuantum 中的量子线路。
 
         参数：
-            - **openqasm_str** (str) - OpenQASM 中的字符串格式量子线路或者 OpenQASM 的文件。
+            - **openqasm_str** (str) - OpenQASM 中的字符串格式量子线路或者 OpenQASM 的文件名。
+
+    .. py:method:: from_hiqasm(hiqasm_str: str)
+
+        将 HiQASM 字符串的量子线路或者 HiQASM 文件转化为 MindQuantum 中的量子线路。
+
+        参数：
+            - **hiqasm_str** (str) - HiQASM 中的字符串格式量子线路或者 HiQASM 的文件名。
 
     .. py:method:: fsim(theta, phi, obj_qubits, ctrl_qubits=None)
 
@@ -426,12 +433,21 @@ mindquantum.core.circuit.Circuit
             - **ctrl_qubits** (Union[int, list[int]]) - `T` 门的控制量子比特。默认值： ``None``。
             - **hermitian** (bool) - 是否添加 `T` 门的轭米形式。默认值： ``False``。
 
-    .. py:method:: to_openqasm(file_name: str = None) -> str
+    .. py:method:: to_openqasm(file_name: Optional[str] = None, version: str = '2.0') -> str
 
         将 MindQuantum 中的量子线路转化为 OpenQASM 字符串或者文件。
 
         参数：
             - **file_name** (str) - 保存成 OpenQASM 文件的文件名。如果为 ``None``，则直接输出 OpenQASM 字符串，否者将保存为文件。默认值： ``None``。
+            - **version** (str) - OpenQASM 版本。默认值： ``2.0``。
+    
+    .. py:method:: to_hiqasm(file_name: Optional[str] = None, version: str = '0.1') -> str
+
+        将 MindQuantum 中的量子线路转化为 HiQASM 字符串或者文件。
+
+        参数：
+            - **file_name** (str) - 保存成 HiQASM 文件的文件名。如果为 ``None``，则直接输出 OpenQASM 字符串，否者将保存为文件。默认值： ``None``。
+            - **version** (str) - HiQASM 版本。默认值： ``0.1``。
 
     .. py:method:: u3(theta, phi, lamda, obj_qubits, ctrl_qubits=None)
 

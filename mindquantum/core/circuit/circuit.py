@@ -20,7 +20,7 @@ import copy
 import os
 from collections.abc import Iterable
 from types import FunctionType, MethodType
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from rich.box import ROUNDED
@@ -1004,21 +1004,48 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         self.append(gate)
         return self
 
-    def to_openqasm(self, file_name: str = None) -> str:
+    def to_openqasm(self, file_name: Optional[str] = None, version: str = '2.0') -> str:
         """
-        Convert a MindQuantum circuit to openqasm format string or file.
+        Convert a MindQuantum circuit to OpenQASM format string or file.
 
         Args:
-            file_name (str): File name if you want to save openqasm. If it is ``None``, we
+            file_name (str): File name if you want to save OpenQASM. If it is ``None``, we
                 will return the string. Otherwise, we will save to given file.
-                Default: ``Non``.
+                Default: ``None``.
+            version (str): The OpenQASM version you want to use. Default: ``'2.0'``.
+
+        Raises:
+            TypeError: if `version` is not a str.
+            NotImplementedError: if OpenQASM version not implement.
+            ValueError: if gate not implement in this version.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
-
         if file_name is None:
-            return OpenQASM().to_string(self)
-        OpenQASM().to_file(file_name, self)
+            return OpenQASM().to_string(self, version=version)
+        OpenQASM().to_file(file_name, self, version=version)
+        return ""
+
+    def to_hiqasm(self, file_name: Optional[str] = None, version: str = '0.1') -> str:
+        """
+        Convert a MindQuantum circuit to HiQASM format string or file.
+
+        Args:
+            file_name (str): File name if you want to save HiQASM. If it is ``None``, we
+                will return the string. Otherwise, we will save to given file.
+                Default: ``None``.
+            version (str): The HiQASM version you want to use. Default: ``'0.1'``.
+
+        Raises:
+            TypeError: if `version` is not a str.
+            NotImplementedError: if HiQASM version not implement.
+            ValueError: if gate not implement in this version.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.qasm import HiQASM
+        if file_name is None:
+            return HiQASM().to_string(self, version=version)
+        HiQASM().to_file(file_name, self, version=version)
         return ""
 
     def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):
@@ -1231,17 +1258,36 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     @staticmethod
     def from_openqasm(openqasm_str: str):
         """
-        Converit a openqasm string or a openqasm file to MindQuantum circuit.
+        Converit an OpenQASM string or an OpenQASM file to MindQuantum circuit.
 
         Args:
-            openqasm_str (str): String format of openqasm or a openqasm file name.
+            openqasm_str (str): String format of OpenQASM or an OpenQASM file name.
+
+        Returns:
+            Circuit, The MindQuantum circuit converited from OpenQASM.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
-
         if os.path.exists(openqasm_str):
             return OpenQASM().from_file(openqasm_str)
         return OpenQASM().from_string(openqasm_str)
+
+    @staticmethod
+    def from_hiqasm(hiqasm_str: str):
+        """
+        Converit a HiQASM string or a HiQASM file to MindQuantum circuit.
+
+        Args:
+            hiqasm_str (str): String format of HiQASM or a HiQASM file name.
+
+        Returns:
+            Circuit, The MindQuantum circuit converited from HiQASM.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.qasm import HiQASM
+        if os.path.exists(hiqasm_str):
+            return HiQASM().from_file(hiqasm_str)
+        return HiQASM().from_string(hiqasm_str)
 
     def fsim(self, theta, phi, obj_qubits, ctrl_qubits=None):
         """
