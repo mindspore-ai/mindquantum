@@ -37,13 +37,18 @@ def rzz_decompose(gate: gates.Rzz):
         >>> origin_circ = Circuit() + rzz
         >>> decomposed_circ = rzz_decompose(rzz)[0]
         >>> origin_circ
-        q0: ──Rzz(1)──
-                │
-        q1: ──Rzz(1)──
+             ┏━━━━━━━━┓
+        q0: ──┨        ┠───
+             ┃        ┃
+             ┃ Rzz(1) ┃
+        q1: ──┨        ┠───
+             ┗━━━━━━━━┛
         >>> decomposed_circ
-        q0: ──●─────────────●──
-              │             │
-        q1: ──X────RZ(1)────X──
+        q0: ────■───────────────■─────
+                ┃               ┃
+              ┏━┻━┓ ┏━━━━━━━┓ ┏━┻━┓
+        q1: ──┨╺╋╸┠─┨ RZ(1) ┠─┨╺╋╸┠───
+              ┗━━━┛ ┗━━━━━━━┛ ┗━━━┛
     """
     _check_input_type('gate', gates.Rzz, gate)
     _check_control_num(gate.ctrl_qubits, 0)

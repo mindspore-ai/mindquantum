@@ -37,13 +37,17 @@ def ch_decompose(gate: gates.HGate):
         >>> origin_circ = Circuit() + ch
         >>> decomposed_circ = ch_decompose(ch)[0]
         >>> origin_circ
-        q0: ──●──
-              │
-        q1: ──H──
+        q0: ────■─────
+                ┃
+              ┏━┻━┓
+        q1: ──┨ H ┠───
+              ┗━━━┛
         >>> decomposed_circ
-        q0: ─────────────────●───────────────────
-                             │
-        q1: ──S────H────T────X────T†────H────S†──
+        q0: ──────────────────────■─────────────────────────
+                                  ┃
+              ┏━━━┓ ┏━━━┓ ┏━━━┓ ┏━┻━┓ ┏━━━━┓ ┏━━━┓ ┏━━━━┓
+        q1: ──┨ S ┠─┨ H ┠─┨ T ┠─┨╺╋╸┠─┨ T† ┠─┨ H ┠─┨ S† ┠───
+              ┗━━━┛ ┗━━━┛ ┗━━━┛ ┗━━━┛ ┗━━━━┛ ┗━━━┛ ┗━━━━┛
     """
     _check_input_type('gate', gates.HGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)

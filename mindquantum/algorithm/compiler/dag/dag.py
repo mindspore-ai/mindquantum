@@ -196,9 +196,11 @@ class DAGCircuit:
             >>> from mindquantum.core.circuit import Circuit
             >>> circ = Circuit().x(1, 0)
             >>> circ
-            q0: ──●──
-                  │
-            q1: ──X──
+            q0: ────■─────
+                    ┃
+                  ┏━┻━┓
+            q1: ──┨╺╋╸┠───
+                  ┗━━━┛
             >>> dag_circ = DAGCircuit(circ)
             >>> node = dag_circ.head_node[0].child[0]
             >>> node
@@ -206,9 +208,11 @@ class DAGCircuit:
             >>> sub_dag = DAGCircuit(Circuit().h(1).z(1, 0).h(1))
             >>> DAGCircuit.replace_node_with_dag_circuit(node, sub_dag)
             >>> dag_circ.to_circuit()
-            q0: ───────●───────
-                       │
-            q1: ──H────Z────H──
+            q0: ──────────■───────────
+                          ┃
+                  ┏━━━┓ ┏━┻━┓ ┏━━━┓
+            q1: ──┨ H ┠─┨ Z ┠─┨ H ┠───
+                  ┗━━━┛ ┗━━━┛ ┗━━━┛
         """
         if set(node.local) != {head.qubit for head in coming.head_node.values()}:
             raise ValueError(f"Circuit in coming DAG is not aligned with gate in node: {node}")
@@ -229,18 +233,24 @@ class DAGCircuit:
             >>> import mindquantum.core.gates as G
             >>> circ = Circuit().h(0).x(1, 0)
             >>> circ
-            q0: ──H────●──
-                       │
-            q1: ───────X──
+                  ┏━━━┓
+            q0: ──┨ H ┠───■─────
+                  ┗━━━┛   ┃
+                        ┏━┻━┓
+            q1: ────────┨╺╋╸┠───
+                        ┗━━━┛
             >>> dag_circ = DAGCircuit(circ)
             >>> node = GateNode(G.RX('a').on(0, 2))
             >>> dag_circ.append_node(node)
             >>> dag_circ.to_circuit()
-            q0: ──H────●────RX(a)──
-                       │      │
-            q1: ───────X──────┼────
-                              │
-            q2: ──────────────●────
+                  ┏━━━┓       ┏━━━━━━━┓
+            q0: ──┨ H ┠───■───┨ RX(a) ┠───
+                  ┗━━━┛   ┃   ┗━━━┳━━━┛
+                        ┏━┻━┓     ┃
+            q1: ────────┨╺╋╸┠─────╂───────
+                        ┗━━━┛     ┃
+                                  ┃
+            q2: ──────────────────■───────
         """
         _check_input_type('node', DAGNode, node)
         for local in node.local:
@@ -259,9 +269,12 @@ class DAGCircuit:
             >>> from mindquantum.algorithm.compiler import DAGCircuit
             >>> circ = Circuit().h(0).h(1).x(1, 0)
             >>> circ
-            q0: ──H────●──
-                       │
-            q1: ──H────X──
+                  ┏━━━┓
+            q0: ──┨ H ┠───■─────
+                  ┗━━━┛   ┃
+                  ┏━━━┓ ┏━┻━┓
+            q1: ──┨ H ┠─┨╺╋╸┠───
+                  ┗━━━┛ ┗━━━┛
             >>> DAGCircuit(circ).depth()
             2
         """
@@ -308,31 +321,49 @@ class DAGCircuit:
         Examples:
             >>> from mindquantum.algorithm.compiler import DAGCircuit
             >>> from mindquantum.utils import random_circuit
-            >>> circ = random_circuit(3, 5)
+            >>> circ = random_circuit(3, 5, seed=42)
             >>> circ
-            q0: ──Ryy(-0.8987)────RY(3.3894)───────────────────RZ(-1.5916)──
-                       │                                            │
-            q1: ──Ryy(-0.8987)────────@─────────────────────────────┼───────
-                                      │                             │
-            q2: ──────────────────────@─────────RX(-5.1924)─────────●───────
+                  ┏━━━━━━━━━━━━━┓   ┏━━━━━━━━━━━━━┓
+            q0: ──┨             ┠─╳─┨ RY(-6.1944) ┠───────────────────
+                  ┃             ┃ ┃ ┗━━━━━━┳━━━━━━┛
+                  ┃ Rxx(1.2171) ┃ ┃        ┃        ┏━━━━━━━━━━━━━┓
+            q1: ──┨             ┠─┃────────╂────────┨             ┠───
+                  ┗━━━━━━━━━━━━━┛ ┃        ┃        ┃             ┃
+                  ┏━━━━━━━━━━━━┓  ┃        ┃        ┃ Rzz(-0.552) ┃
+            q2: ──┨ PS(2.6147) ┠──╳────────■────────┨             ┠───
+                  ┗━━━━━━━━━━━━┛                    ┗━━━━━━━━━━━━━┛
             >>> dag_circ = DAGCircuit(circ)
             >>> for idx, c in enumerate(dag_circ.layering()):
-            ...     print(f"layer {idx}:\n", c)
+            ...     print(f"layer {idx}:")
+            ...     print(c)
             layer 0:
-             q0: ──Ryy(-0.8987)──
-                       │
-            q1: ──Ryy(-0.8987)──
+                  ┏━━━━━━━━━━━━━┓
+            q0: ──┨             ┠───
+                  ┃             ┃
+                  ┃ Rxx(1.2171) ┃
+            q1: ──┨             ┠───
+                  ┗━━━━━━━━━━━━━┛
+                  ┏━━━━━━━━━━━━┓
+            q2: ──┨ PS(2.6147) ┠────
+                  ┗━━━━━━━━━━━━┛
             layer 1:
-             q0: ──RY(3.3894)──
-            q1: ──────@───────
-                      │
-            q2: ──────@───────
+            q0: ──╳───
+                  ┃
+                  ┃
+            q2: ──╳───
             layer 2:
-             q2: ──RX(-5.1924)──
+                  ┏━━━━━━━━━━━━━┓
+            q0: ──┨ RY(-6.1944) ┠───
+                  ┗━━━━━━┳━━━━━━┛
+                         ┃
+            q2: ─────────■──────────
             layer 3:
-             q0: ──RZ(-1.5916)──
-                       │
-            q2: ───────●───────
+                  ┏━━━━━━━━━━━━━┓
+            q1: ──┨             ┠───
+                  ┃             ┃
+                  ┃ Rzz(-0.552) ┃
+            q2: ──┨             ┠───
+                  ┗━━━━━━━━━━━━━┛
         """
 
         def _layering(current_node: GateNode, depth_map):
@@ -371,14 +402,20 @@ class DAGCircuit:
             >>> from mindquantum.algorithm.compiler import DAGCircuit
             >>> circ = Circuit().h(0).h(1).x(1, 0)
             >>> circ
-            q0: ──H────●──
-                       │
-            q1: ──H────X──
+                  ┏━━━┓
+            q0: ──┨ H ┠───■─────
+                  ┗━━━┛   ┃
+                  ┏━━━┓ ┏━┻━┓
+            q1: ──┨ H ┠─┨╺╋╸┠───
+                  ┗━━━┛ ┗━━━┛
             >>> dag_circ = DAGCircuit(circ)
             >>> dag_circ.to_circuit()
-            q0: ──H────●──
-                       │
-            q1: ──H────X──
+                  ┏━━━┓
+            q0: ──┨ H ┠───■─────
+                  ┗━━━┛   ┃
+                  ┏━━━┓ ┏━┻━┓
+            q1: ──┨ H ┠─┨╺╋╸┠───
+                  ┗━━━┛ ┗━━━┛
         """
         circuit = Circuit()
         considered_node = set(self.head_node.values())

@@ -37,13 +37,17 @@ def swap_decompose(gate: gates.SWAPGate):
         >>> origin_circ = Circuit() + swap
         >>> decomposed_circ = swap_decompose(swap)[0]
         >>> origin_circ
-        q0: ──@──
-              │
-        q1: ──@──
+        q0: ──╳───
+              ┃
+              ┃
+        q1: ──╳───
         >>> decomposed_circ
-        q0: ──X────●────X──
-              │    │    │
-        q1: ──●────X────●──
+              ┏━━━┓       ┏━━━┓
+        q0: ──┨╺╋╸┠───■───┨╺╋╸┠───
+              ┗━┳━┛   ┃   ┗━┳━┛
+                ┃   ┏━┻━┓   ┃
+        q1: ────■───┨╺╋╸┠───■─────
+                    ┗━━━┛
     """
     _check_input_type('gate', gates.SWAPGate, gate)
     _check_control_num(gate.obj_qubits, 2)
@@ -70,21 +74,26 @@ def cswap_decompose(gate: gates.SWAPGate):
     Examples:
         >>> from mindquantum.algorithm.compiler.decompose import cswap_decompose
         >>> from mindquantum.core import Circuit, SWAP
-        >>> swap = SWAP.on([1, 2], 0)
+        >>> cswap = SWAP.on([1, 2], 0)
         >>> origin_circ = Circuit() + cswap
-        >>> decomposed_circ = cswap_decompose(swap)[0]
+        >>> decomposed_circ = cswap_decompose(cswap)[0]
         >>> origin_circ
-        q0: ──●──
-              │
-        q1: ──@──
-              │
-        q2: ──@──
+        q0: ──■───
+              ┃
+              ┃
+        q1: ──╳───
+              ┃
+              ┃
+        q2: ──╳───
         >>> decomposed_circ
-        q0: ───────●───────
-                   │
-        q1: ──X────●────X──
-              │    │    │
-        q2: ──●────X────●──
+        q0: ──────────■───────────
+                      ┃
+              ┏━━━┓   ┃   ┏━━━┓
+        q1: ──┨╺╋╸┠───■───┨╺╋╸┠───
+              ┗━┳━┛   ┃   ┗━┳━┛
+                ┃   ┏━┻━┓   ┃
+        q2: ────■───┨╺╋╸┠───■─────
+                    ┗━━━┛
     """
     _check_input_type('gate', gates.SWAPGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)

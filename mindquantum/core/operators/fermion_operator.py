@@ -595,7 +595,7 @@ class FermionOperator(FermionOperator_):
             >>> origin = FermionOperator('0 1^')
             >>> origin
             1.0 [0 1^]
-                >>> origin.normal_ordered()
+            >>> origin.normal_ordered()
             -1.0 [1^ 0]
         """
         return FermionOperator(FermionOperator_.normal_ordered(self), internal=True)

@@ -40,23 +40,30 @@ class UN(Circuit):
         >>> from mindquantum.core.gates import X
         >>> circuit1 = UN(X, maps_obj = [0, 1], maps_ctrl = [2, 3])
         >>> print(circuit1)
-        q0: ──X───────
-              │
-        q1: ──┼────X──
-              │    │
-        q2: ──●────┼──
-                   │
-        q3: ───────●──
+              ┏━━━┓
+        q0: ──┨╺╋╸┠─────────
+              ┗━┳━┛
+                ┃   ┏━━━┓
+        q1: ────╂───┨╺╋╸┠───
+                ┃   ┗━┳━┛
+                ┃     ┃
+        q2: ────■─────╂─────
+                      ┃
+                      ┃
+        q3: ──────────■─────
         >>> from mindquantum.core.gates import SWAP
         >>> circuit2 = UN(SWAP, maps_obj =[[0, 1], [2, 3]]).x(2, 1)
         >>> print(circuit2)
-        q0: ──@───────
-              │
-        q1: ──@────●──
-                   │
-        q2: ──@────X──
-              │
-        q3: ──@───────
+        q0: ──╳─────────
+              ┃
+              ┃
+        q1: ──╳───■─────
+                  ┃
+                ┏━┻━┓
+        q2: ──╳─┨╺╋╸┠───
+              ┃ ┗━━━┛
+              ┃
+        q3: ──╳─────────
     """
 
     def __init__(self, gate: BasicGate, maps_obj, maps_ctrl=None):
@@ -95,15 +102,19 @@ class SwapParts(Circuit):
     Examples:
         >>> from mindquantum.core.circuit import SwapParts
         >>> SwapParts([1, 2], [3, 4], 0)
-        q0: ──●────●──
-              │    │
-        q1: ──@────┼──
-              │    │
-        q2: ──┼────@──
-              │    │
-        q3: ──@────┼──
-                   │
-        q4: ───────@──
+        q0: ──■─■───
+              ┃ ┃
+              ┃ ┃
+        q1: ──╳─╂───
+              ┃ ┃
+              ┃ ┃
+        q2: ──┃─╳───
+              ┃ ┃
+              ┃ ┃
+        q3: ──╳─┃───
+                ┃
+                ┃
+        q4: ────╳───
     """
 
     def __init__(self, a: Iterable, b: Iterable, maps_ctrl=None):

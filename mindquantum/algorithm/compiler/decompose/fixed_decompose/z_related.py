@@ -37,13 +37,17 @@ def cz_decompose(gate: gates.ZGate):
         >>> origin_circ = Circuit() + cz
         >>> decomposed_circ = cz_decompose(cz)[0]
         >>> origin_circ
-        q0: ──●──
-              │
-        q1: ──Z──
+        q0: ────■─────
+                ┃
+              ┏━┻━┓
+        q1: ──┨ Z ┠───
+              ┗━━━┛
         >>> decomposed_circ
-        q0: ───────●───────
-                   │
-        q1: ──H────X────H──
+        q0: ──────────■───────────
+                      ┃
+              ┏━━━┓ ┏━┻━┓ ┏━━━┓
+        q1: ──┨ H ┠─┨╺╋╸┠─┨ H ┠───
+              ┗━━━┛ ┗━━━┛ ┗━━━┛
     """
     _check_input_type('gate', gates.ZGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)

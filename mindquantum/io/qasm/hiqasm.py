@@ -82,9 +82,12 @@ def random_hiqasm(n_qubits, gate_num, version='0.1', seed=42):  # pylint: disabl
         >>> HiQASM = HiQASM()
         >>> circuit = HiQASM.from_string(HiQASM_str)
         >>> circuit
-        q0: ──RZ(-2.513)────RZ(-3.012)────RX(0.738)────M(k0)───────────
-                                              │
-        q1: ──────S───────────────────────────●──────────Z──────M(k1)──
+              ┏━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━┓ ┍━━━━━━┑
+        q0: ──┨ RZ(-2.5134) ┠─┨ RZ(-3.0123) ┠─┨ RX(0.7382) ┠─┤ ⊾ k0 ├─────────
+              ┗━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━━┛ ┗━━━━━━┳━━━━━┛ ┕━━━━━━┙
+              ┏━━━┓                                  ┃       ┏━━━┓ ┍━━━━━━┑
+        q1: ──┨ S ┠──────────────────────────────────■───────┨ Z ┠─┤ ⊾ k1 ├───
+              ┗━━━┛                                          ┗━━━┛ ┕━━━━━━┙
     """
     _check_int_type("n_qubits", n_qubits)
     _check_value_should_not_less("n_qubits", 1, n_qubits)
@@ -152,7 +155,7 @@ class HiQASM:
         >>> import numpy as np
         >>> from mindquantum.io.qasm import HiQASM
         >>> from mindquantum.core import Circuit
-        >>> circuit = Circuit().rx(0.3, 0).z(0, 1).zz(np.pi, [0, 1])
+        >>> circuit = Circuit().rx(0.3, 0).z(0, 1).rzz(np.pi, [0, 1])
         >>> HiQASM = HiQASM()
         >>> circuit_str = HiQASM.to_string(circuit)
         >>> print(circuit_str[68: 80])

@@ -685,9 +685,12 @@ class OpenQASM:
             >>> circ = Circuit().x(0, 1).h(1)
             >>> string = OpenQASM().to_string(circ)
             >>> OpenQASM().from_string(string)
-            q0: ──X───────
-                  │
-            q1: ──●────H──
+                  ┏━━━┓
+            q0: ──┨╺╋╸┠─────────
+                  ┗━┳━┛
+                    ┃   ┏━━━┓
+            q1: ────■───┨ H ┠───
+                        ┗━━━┛
         """
         _check_input_type('string', str, string)
         return qasm_to_mq_v2(string, self.gate_map_openqasm_mq)

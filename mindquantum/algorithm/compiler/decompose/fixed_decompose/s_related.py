@@ -39,13 +39,18 @@ def cs_decompose(gate: gates.SGate):
         >>> origin_circ = Circuit() + cs
         >>> decomposed_circ = cs_decompose(cs)[0]
         >>> origin_circ
-        q0: ──●──
-              │
-        q1: ──S──
+        q0: ────■─────
+                ┃
+              ┏━┻━┓
+        q1: ──┨ S ┠───
+              ┗━━━┛
         >>> decomposed_circ
-        q0: ──T────●──────────●──
-                   │          │
-        q1: ──T────X────T†────X──
+              ┏━━━┓
+        q0: ──┨ T ┠───■────────────■─────
+              ┗━━━┛   ┃            ┃
+              ┏━━━┓ ┏━┻━┓ ┏━━━━┓ ┏━┻━┓
+        q1: ──┨ T ┠─┨╺╋╸┠─┨ T† ┠─┨╺╋╸┠───
+              ┗━━━┛ ┗━━━┛ ┗━━━━┛ ┗━━━┛
     """
     _check_input_type('gate', gates.SGate, gate)
     _check_control_num(gate.ctrl_qubits, 1)
