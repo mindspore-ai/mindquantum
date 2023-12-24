@@ -77,13 +77,17 @@ def get_reference_circuit(
     Examples:
         >>> from mindquantum.algorithm.nisq import get_reference_circuit
         >>> get_reference_circuit(4, 1, 1, 'HF')
-        q0: ──X────‖──
-                   ‖
-        q1: ──X────‖──
-                   ‖
-        q2: ───────‖──
-                   ‖
-        q3: ───────‖──
+              ┏━━━┓
+        q0: ──┨╺╋╸┠─▓───
+              ┗━━━┛ ▓
+              ┏━━━┓ ▓
+        q1: ──┨╺╋╸┠─▓───
+              ┗━━━┛ ▓
+                    ▓
+        q2: ────────▓───
+                    ▓
+                    ▓
+        q3: ────────▓───
     """
     ava_ref = get_args(AVA_REF)
     _check_int_type('n_qubits', n_qubits)

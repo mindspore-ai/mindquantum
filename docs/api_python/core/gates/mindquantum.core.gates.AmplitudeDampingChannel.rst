@@ -1,3 +1,4 @@
+
 mindquantum.core.gates.AmplitudeDampingChannel
 ===============================================
 

@@ -54,6 +54,13 @@ class GroupedPauliChannel(NoiseGate, SelfHermitianGate):
         >>> from mindquantum.simulator import Simulator
         >>> probs = np.array([[1.0, 0.0, 0.0], [0.0, 0.3, 0.0]])
         >>> circ = Circuit([GroupedPauliChannel(probs).on([0, 1])]).measure_all()
+        >>> circ
+              ╭ ╔═══Grouped Pauli Channel     ╮ ┍━━━━━━┑
+        q0: ──┤─╢ PC(px=1, py=0, pz=0) ╟──────├─┤ ⊾ q0 ├───
+              │ ╚══════════════════════╝      │ ┕━━━━━━┙
+              │ ╔═════════════════════════╗   │ ┍━━━━━━┑
+        q1: ──┤─╢ PC(px=0, py=3/10, pz=0) ╟───├─┤ ⊾ q1 ├───
+              ╰ ╚═════════════════════════╝   ╯ ┕━━━━━━┙
         >>> Simulator('mqvector', circ.n_qubits).sampling(circ, shots=1000, seed=42)
         shots: 1000
         Keys: q1 q0│0.00   0.177       0.355       0.532        0.71       0.887
@@ -145,7 +152,9 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         >>> circ += PauliChannel(0.8, 0.1, 0.1).on(0)
         >>> circ.measure_all()
         >>> print(circ)
-        q0: ──PC(px=0.8, py=0.1, pz=0.1)────M(q0)──
+              ╔══════════════════════════════╗ ┍━━━━━━┑
+        q0: ──╢ PC(px=4/5, py=1/10, pz=1/10) ╟─┤ ⊾ q0 ├───
+              ╚══════════════════════════════╝ ┕━━━━━━┙
         >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('mqvector', 1)
         >>> sim.sampling(circ, shots=1000, seed=42)
@@ -245,7 +254,9 @@ class BitFlipChannel(PauliChannel):
         >>> circ = Circuit()
         >>> circ += BitFlipChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──BFC(p=0.02)──
+              ╔═════════════╗
+        q0: ──╢ BFC(p=1/50) ╟───
+              ╚═════════════╝
     """
 
     # pylint: disable=invalid-name
@@ -307,7 +318,9 @@ class PhaseFlipChannel(PauliChannel):
         >>> circ = Circuit()
         >>> circ += PhaseFlipChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──PFC(p=0.02)──
+              ╔═════════════╗
+        q0: ──╢ PFC(p=1/50) ╟───
+              ╚═════════════╝
     """
 
     # pylint: disable=invalid-name
@@ -370,7 +383,9 @@ class BitPhaseFlipChannel(PauliChannel):
         >>> circ = Circuit()
         >>> circ += BitPhaseFlipChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──BPFC(p=0.02)──
+              ╔══════════════╗
+        q0: ──╢ BPFC(p=1/50) ╟───
+              ╚══════════════╝
     """
 
     # pylint: disable=invalid-name
@@ -450,9 +465,12 @@ class DepolarizingChannel(NoiseGate, SelfHermitianGate):
         >>> circ += DepolarizingChannel(0.02).on(0)
         >>> circ += DepolarizingChannel(0.01, 2).on([0, 1])
         >>> print(circ)
-        q0: ──DC(p=0.02)────DC(p=0.01)──
-                                │
-        q1: ────────────────DC(p=0.01)──
+              ╔════════════╗ ╔═════════════╗
+        q0: ──╢ DC(p=1/50) ╟─╢             ╟───
+              ╚════════════╝ ║             ║
+                             ║ DC(p=1/100) ║
+        q1: ─────────────────╢             ╟───
+                             ╚═════════════╝
     """
 
     # pylint: disable=invalid-name
@@ -538,7 +556,9 @@ class AmplitudeDampingChannel(NoiseGate, NonHermitianGate):
         >>> circ = Circuit()
         >>> circ += AmplitudeDampingChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──ADC(γ=0.02)──
+              ╔═════════════╗
+        q0: ──╢ ADC(γ=1/50) ╟───
+              ╚═════════════╝
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -616,7 +636,9 @@ class PhaseDampingChannel(NoiseGate, NonHermitianGate):
         >>> circ = Circuit()
         >>> circ += PhaseDampingChannel(0.02).on(0)
         >>> print(circ)
-        q0: ──PDC(γ=0.02)──
+              ╔═════════════╗
+        q0: ──╢ PDC(γ=1/50) ╟───
+              ╚═════════════╝
     """
 
     def __init__(self, gamma: float, **kwargs):
@@ -692,7 +714,9 @@ class KrausChannel(NoiseGate, NonHermitianGate):
         >>> circ = Circuit()
         >>> circ += amplitude_damping.on(0)
         >>> print(circ)
-        q0: ──damping──
+              ╔═════════╗
+        q0: ──╢ damping ╟───
+              ╚═════════╝
     """
 
     def __init__(self, name: str, kraus_op, **kwargs):
@@ -762,7 +786,9 @@ class ThermalRelaxationChannel(NoiseGate, NonHermitianGate):
         >>> circ = Circuit()
         >>> circ += ThermalRelaxationChannel(t1, t2, gate_time).on(0)
         >>> print(circ)
-        q0: ──TRC(t1=100000,t2=50000,tg=35)──
+              ╔═══════════════════════════════╗
+        q0: ──╢ TRC(t1=100000,t2=50000,tg=35) ╟───
+              ╚═══════════════════════════════╝
     """
 
     def __init__(self, t1: float, t2: float, gate_time: float, **kwargs):

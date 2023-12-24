@@ -48,7 +48,7 @@ class NoiseBackendImpl(BackendBase):
         if diff:
             raise ValueError("For noise simulator, you cannot set diff to True.")
         # pylint: disable=too-many-function-args
-        return self.base_sim.apply_circuit(self.adder(Circuit[gate]), pr, diff)
+        return self.base_sim.apply_circuit(self.adder(Circuit(gate)), pr, diff)
 
     def apply_hamiltonian(self, hamiltonian: Hamiltonian):
         """Apply a hamiltonian."""
@@ -97,17 +97,23 @@ class NoiseBackend(NoiseBackendImpl):
         >>> from mindquantum.core.circuit import Circuit, MeasureAccepter, MixerAdder, BitFlipAdder
         >>> circ = Circuit().h(0).x(1, 0).measure_all()
         >>> circ
-        q0: ──H────●────M(q0)──
-                   │
-        q1: ───────X────M(q1)──
+              ┏━━━┓       ┍━━━━━━┑
+        q0: ──┨ H ┠───■───┤ ⊾ q0 ├───
+              ┗━━━┛   ┃   ┕━━━━━━┙
+                    ┏━┻━┓ ┍━━━━━━┑
+        q1: ────────┨╺╋╸┠─┤ ⊾ q1 ├───
+                    ┗━━━┛ ┕━━━━━━┙
         >>> adder = MixerAdder([
         ...     MeasureAccepter(),
         ...     BitFlipAdder(0.2),
         ... ], add_after=False)
         >>> adder(circ)
-        q0: ──H────●────BFC(p=1/5)────M(q0)──
-                   │
-        q1: ───────X────BFC(p=1/5)────M(q1)──
+              ┏━━━┓       ╔════════════╗ ┍━━━━━━┑
+        q0: ──┨ H ┠───■───╢ BFC(p=1/5) ╟─┤ ⊾ q0 ├───
+              ┗━━━┛   ┃   ╚════════════╝ ┕━━━━━━┙
+                    ┏━┻━┓ ╔════════════╗ ┍━━━━━━┑
+        q1: ────────┨╺╋╸┠─╢ BFC(p=1/5) ╟─┤ ⊾ q1 ├───
+                    ┗━━━┛ ╚════════════╝ ┕━━━━━━┙
         >>> noise_sim = Simulator(NoiseBackend('mqvector', 2, adder=adder))
         >>> noise_sim.sampling(circ,seed=42, shots=5000)
         shots: 5000

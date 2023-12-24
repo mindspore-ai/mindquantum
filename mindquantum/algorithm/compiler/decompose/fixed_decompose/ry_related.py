@@ -37,13 +37,17 @@ def cry_decompose(gate: gates.RY):
         >>> origin_circ = Circuit() + cry
         >>> decomposed_circ = cry_decompose(cry)[0]
         >>> origin_circ
-        q0: ─────●─────
-                 │
-        q1: ───RY(1)───
+        q0: ──────■───────
+                  ┃
+              ┏━━━┻━━━┓
+        q1: ──┨ RY(1) ┠───
+              ┗━━━━━━━┛
         >>> decomposed_circ
-        q0: ─────────────●────────────────●──
-                         │                │
-        q1: ──RY(1/2)────X────RY(-1/2)────X──
+        q0: ────────────────■──────────────────■─────
+                            ┃                  ┃
+              ┏━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━┓ ┏━┻━┓
+        q1: ──┨ RY(1/2) ┠─┨╺╋╸┠─┨ RY(-1/2) ┠─┨╺╋╸┠───
+              ┗━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━┛ ┗━━━┛
     """
     _check_input_type('gate', gates.RY, gate)
     _check_control_num(gate.ctrl_qubits, 1)

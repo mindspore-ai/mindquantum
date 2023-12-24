@@ -95,9 +95,11 @@ class CircuitEngine:
             ...     G.X | (qubits[0], qubits[1])
             ...     G.RX(prefix+'_0') | qubits[1]
             >>> print(ansatz)
-            q0: ──●─────────────
-                  │
-            q1: ──X────RX(p_0)──
+            q0: ────■─────────────────
+                    ┃
+                  ┏━┻━┓ ┏━━━━━━━━━┓
+            q1: ──┨╺╋╸┠─┨ RX(p_0) ┠───
+                  ┗━━━┛ ┗━━━━━━━━━┛
             >>> print(type(ansatz))
             <class 'mindquantum.core.circuit.circuit.Circuit'>
         """

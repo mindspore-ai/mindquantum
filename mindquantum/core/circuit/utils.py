@@ -54,9 +54,12 @@ def decompose_single_term_time_evolution(term, para):  # pylint: disable=too-man
         >>> ham = QubitOperator('X0 Y1')
         >>> circuit = decompose_single_term_time_evolution(ham, {'a':1})
         >>> print(circuit)
-        q0: ─────H───────●───────────────●───────H──────
-                         │               │
-        q1: ──RX(π/2)────X────RZ(2*a)────X────RX(7π/2)──
+              ┏━━━┓                               ┏━━━┓
+        q0: ──┨ H ┠─────────■─────────────────■───┨ H ┠──────────
+              ┗━━━┛         ┃                 ┃   ┗━━━┛
+              ┏━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━┓
+        q1: ──┨ RX(π/2) ┠─┨╺╋╸┠─┨ RZ(2*a) ┠─┨╺╋╸┠─┨ RX(7π/2) ┠───
+              ┗━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━┛
     """
     # pylint: disable=import-outside-toplevel,cyclic-import
     from mindquantum.core import gates
@@ -128,9 +131,12 @@ def pauli_word_to_circuits(qubitops):
         >>> from mindquantum.core.circuit import pauli_word_to_circuits
         >>> qubitops = QubitOperator('X0 Y1')
         >>> pauli_word_to_circuits(qubitops) + X(1, 0)
-        q0: ──X────●──
-                   │
-        q1: ──Y────X──
+              ┏━━━┓
+        q0: ──┨╺╋╸┠───■─────
+              ┗━━━┛   ┃
+              ┏━━━┓ ┏━┻━┓
+        q1: ──┨ Y ┠─┨╺╋╸┠───
+              ┗━━━┛ ┗━━━┛
     """
     # pylint: disable=import-outside-toplevel
     from mindquantum import operators as ops
@@ -210,17 +216,23 @@ def controlled(circuit_fn):
         >>> u3 = controlled(qft)
         >>> u3 = u3(2, [0, 1])
         >>> u2(2)
-        q0: ──H────PS(π/2)─────────@──
-              │       │            │
-        q1: ──┼───────●───────H────@──
-              │       │       │    │
-        q2: ──●───────●───────●────●──
+              ┏━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ H ┠─┨ PS(π/2) ┠───────╳───
+              ┗━┳━┛ ┗━━━━┳━━━━┛       ┃
+                ┃        ┃      ┏━━━┓ ┃
+        q1: ────╂────────■──────┨ H ┠─╳───
+                ┃        ┃      ┗━┳━┛ ┃
+                ┃        ┃        ┃   ┃
+        q2: ────■────────■────────■───■───
         >>> u3
-        q0: ──H────PS(π/2)─────────@──
-              │       │            │
-        q1: ──┼───────●───────H────@──
-              │       │       │    │
-        q2: ──●───────●───────●────●──
+              ┏━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ H ┠─┨ PS(π/2) ┠───────╳───
+              ┗━┳━┛ ┗━━━━┳━━━━┛       ┃
+                ┃        ┃      ┏━━━┓ ┃
+        q1: ────╂────────■──────┨ H ┠─╳───
+                ┃        ┃      ┗━┳━┛ ┃
+                ┃        ┃        ┃   ┃
+        q2: ────■────────■────────■───■───
     """
     if isinstance(circuit_fn, (FunctionType, MethodType)):
 
@@ -260,13 +272,19 @@ def dagger(circuit_fn):
         >>> u3 = dagger(qft)
         >>> u3 = u3([0, 1])
         >>> u2
-        q0: ──@─────────PS(-π/2)────H──
-              │            │
-        q1: ──@────H───────●───────────
+                      ┏━━━━━━━━━━┓ ┏━━━┓
+        q0: ──╳───────┨ PS(-π/2) ┠─┨ H ┠───
+              ┃       ┗━━━━━┳━━━━┛ ┗━━━┛
+              ┃ ┏━━━┓       ┃
+        q1: ──╳─┨ H ┠───────■──────────────
+                ┗━━━┛
         >>> u3
-        q0: ──@─────────PS(-π/2)────H──
-              │            │
-        q1: ──@────H───────●───────────
+                      ┏━━━━━━━━━━┓ ┏━━━┓
+        q0: ──╳───────┨ PS(-π/2) ┠─┨ H ┠───
+              ┃       ┗━━━━━┳━━━━┛ ┗━━━┛
+              ┃ ┏━━━┓       ┃
+        q1: ──╳─┨ H ┠───────■──────────────
+                ┗━━━┛
     """
     if isinstance(circuit_fn, (FunctionType, MethodType)):
 
@@ -357,9 +375,13 @@ def add_prefix(circuit_fn, prefix: str):
         >>> u3 = add_prefix(u, 'ansatz')
         >>> u3 = u3(0)
         >>> u2
-        q0: ──H────RX(ansatz_a)──
+              ┏━━━┓ ┏━━━━━━━━━━━━━━┓
+        q0: ──┨ H ┠─┨ RX(ansatz_a) ┠───
+              ┗━━━┛ ┗━━━━━━━━━━━━━━┛
         >>> u3
-        q0: ──H────RX(ansatz_a)──
+              ┏━━━┓ ┏━━━━━━━━━━━━━━┓
+        q0: ──┨ H ┠─┨ RX(ansatz_a) ┠───
+              ┗━━━┛ ┗━━━━━━━━━━━━━━┛
     """
     return add_prefix_or_suffix(circuit_fn, prefix, True)
 
@@ -392,9 +414,13 @@ def add_suffix(circuit_fn, suffix: str):
         >>> u3 = add_suffix(u, '1')
         >>> u3 = u3(0)
         >>> u2
-        q0: ──H────RX(a_1)──
+              ┏━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ H ┠─┨ RX(a_1) ┠───
+              ┗━━━┛ ┗━━━━━━━━━┛
         >>> u3
-        q0: ──H────RX(a_1)──
+              ┏━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ H ┠─┨ RX(a_1) ┠───
+              ┗━━━┛ ┗━━━━━━━━━┛
     """
     return add_prefix_or_suffix(circuit_fn, suffix, False)
 
@@ -411,13 +437,17 @@ def shift(circ, inc):
         >>> from mindquantum.core.circuit import shift, Circuit
         >>> circ = Circuit().x(1, 0)
         >>> circ
-        q0: ──●──
-              │
-        q1: ──X──
+        q0: ────■─────
+                ┃
+              ┏━┻━┓
+        q1: ──┨╺╋╸┠───
+              ┗━━━┛
         >>> shift(circ, 1)
-        q1: ──●──
-              │
-        q2: ──X──
+        q1: ────■─────
+                ┃
+              ┏━┻━┓
+        q2: ──┨╺╋╸┠───
+              ┗━━━┛
 
     Returns:
         Circuit, the shifted circuit.
@@ -483,9 +513,13 @@ def change_param_name(circuit_fn, name_map):
         >>> u3 = change_param_name(u, {'a': 'b'})
         >>> u3 = u3(0)
         >>> u2
-        q0: ──H────RX(b)──
+              ┏━━━┓ ┏━━━━━━━┓
+        q0: ──┨ H ┠─┨ RX(b) ┠───
+              ┗━━━┛ ┗━━━━━━━┛
         >>> u3
-        q0: ──H────RX(b)──
+              ┏━━━┓ ┏━━━━━━━┓
+        q0: ──┨ H ┠─┨ RX(b) ┠───
+              ┗━━━┛ ┗━━━━━━━┛
     """
     if not isinstance(name_map, dict):
         raise TypeError(f"name_map need map, but get {type(name_map)}")

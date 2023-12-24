@@ -15,6 +15,7 @@
 # pylint: disable=cyclic-import
 
 """Configuration."""
+from dataclasses import dataclass
 
 CIRCUIT_HTML_FORMAT = """\
 <div style="{stylesheet}color: {foreground}; background-color: {background}"></div>
@@ -38,23 +39,6 @@ _res_text_drawer_config = {
     'deci': 3,
 }
 
-_text_drawer_config = {
-    'ctrl_mask': '●',  # ⨉
-    'circ_line': '─',
-    'ctrl_line': '│',
-    'cross_mask': '┼',
-    'v_n': 1,
-    'swap_mask': ['@', '@'],  # ✖, ⨯⨯
-    'edge_num': 2,
-    'barrier': '‖',
-    'continue_left': '<<',
-    'continue_right': '>>',
-    'horizontal_split': "/",
-}
-
-_text_drawer_config['edge'] = _text_drawer_config['circ_line'] * _text_drawer_config['edge_num']
-
-_CIRCUIT_STYLE = 'blue bold'
 _MEA_RES_STYLE = 'yellow'
 _DAGGER_MASK = '†'
 
@@ -358,3 +342,40 @@ _topology_default_style = {
     'couple_w': 8,
     'selected_edge_c': '#ff0000',
 }
+
+
+# pylint: disable=too-many-instance-attributes
+@dataclass
+class TextCircConfig:
+    """The configuration for display circuit in text."""
+
+    qubit_line_v_dist: int = 2
+    qubit_line_thickness: str = 'normal'
+    qubit_line_style: str = '#D2D4D9'
+    gate_v_dist: int = 0
+    simple_gate_str_style: str = 'bold'
+    simple_gate_width_padding: int = 2
+    simple_gate_box_style: str = 'regular_heavy'
+    control_dot: str = "■"
+    control_line_thickness: str = 'thick'
+    obj_dot: str = "●"
+    obj_dot_style: str = "#1877FC"
+    cnot_symbol: str = "╺╋╸"
+    swap_symbol: str = "╳"
+    swap_symbol_style: str = "#0e36d6"
+    barrier_style: str = '#ACACAC'
+    barrier_symbol: str = "▓"
+    measurement_symbol: str = "⊾"
+    measurement_box: str = "ud_heavy"
+    noise_box: str = "double"
+    parameterized_box: str = "regular_heavy"
+    parameterized_box_style: str = "#FEB439"
+    window_padding: int = 10
+    continue_symbol: str = "↯"
+    continue_symbol_style: str = "red bold"
+    simple_mode: bool = False
+    compress_unuse_qubit: bool = True
+    qubit_line_final_width: int = 3
+
+
+_text_circ_config = TextCircConfig()

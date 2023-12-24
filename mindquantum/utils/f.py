@@ -46,9 +46,12 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
     Examples:
         >>> from mindquantum.utils import random_circuit
         >>> random_circuit(3, 4, 0.5, 0.5, 100)
-        q1: ──Z────RX(0.944)────────●────────RX(-0.858)──
-              │        │            │            │
-        q2: ──●────────●────────RZ(-2.42)────────●───────
+              ┏━━━┓ ┏━━━━━━━━━━━━┓               ┏━━━━━━━━━━━━━┓
+        q1: ──┨ Z ┠─┨ RX(0.9437) ┠───────■───────┨ RX(-0.8582) ┠───
+              ┗━┳━┛ ┗━━━━━━┳━━━━━┛       ┃       ┗━━━━━━┳━━━━━━┛
+                ┃          ┃       ┏━━━━━┻━━━━━┓        ┃
+        q2: ────■──────────■───────┨ RZ(-2.42) ┠────────■──────────
+                                   ┗━━━━━━━━━━━┛
     """
     # pylint: disable=import-outside-toplevel,cyclic-import
     from ..core import gates

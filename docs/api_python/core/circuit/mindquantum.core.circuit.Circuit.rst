@@ -63,6 +63,13 @@ mindquantum.core.circuit.Circuit
 
         返回该量子线路的浅拷贝。
 
+    .. py:method:: display_detail(state: bool)
+
+        是否展示线路细节。
+
+        参数：
+            - **state** (bool) - 是否展示细节的布尔值状态。
+
     .. py:method:: encoder_params_name
         :property:
 

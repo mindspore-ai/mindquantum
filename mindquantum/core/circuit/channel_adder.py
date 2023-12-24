@@ -95,10 +95,14 @@ class ReverseAdder(ChannelAdderBase):
         >>> circ = Circuit().rx('a', 0).measure_all()
         >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()])
         >>> only_measure(circ)
-        q0: ──RX(a)────M(q0)────BFC(p=1/10)──
+              ┏━━━━━━━┓ ┍━━━━━━┑ ╔═════════════╗
+        q0: ──┨ RX(a) ┠─┤ ⊾ q0 ├─╢ BFC(p=1/10) ╟───
+              ┗━━━━━━━┛ ┕━━━━━━┙ ╚═════════════╝
         >>> no_measure = ReverseAdder(only_measure)
         >>> no_measure(circ)
-        q0: ──RX(a)────BFC(p=1/10)────M(q0)──
+              ┏━━━━━━━┓ ╔═════════════╗ ┍━━━━━━┑
+        q0: ──┨ RX(a) ┠─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+              ┗━━━━━━━┛ ╚═════════════╝ ┕━━━━━━┙
     """
 
     def __init__(self, adder: ChannelAdderBase):
@@ -140,7 +144,9 @@ class MeasureAccepter(ChannelAdderBase):
         >>> circ = Circuit().rx('a', 0).h(0).measure_all()
         >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()], add_after=False)
         >>> only_measure(circ)
-        q0: ──RX(a)────H────BFC(p=1/10)────M(q0)──
+              ┏━━━━━━━┓ ┏━━━┓ ╔═════════════╗ ┍━━━━━━┑
+        q0: ──┨ RX(a) ┠─┨ H ┠─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+              ┗━━━━━━━┛ ┗━━━┛ ╚═════════════╝ ┕━━━━━━┙
     """
 
     def __init__(self):
@@ -165,12 +171,18 @@ class NoiseExcluder(ChannelAdderBase):
         >>> circ = Circuit().x(0)
         >>> circ += DepolarizingChannel(0.1).on(0)
         >>> circ
-        q0: ──X────DC(p=1/10)──
+              ┏━━━┓ ╔════════════╗
+        q0: ──┨╺╋╸┠─╢ DC(p=1/10) ╟───
+              ┗━━━┛ ╚════════════╝
         >>> BitFlipAdder(0.1)(circ)
-        q0: ──X────BFC(p=1/10)────DC(p=1/10)────BFC(p=1/10)──
+              ┏━━━┓ ╔═════════════╗ ╔════════════╗ ╔═════════════╗
+        q0: ──┨╺╋╸┠─╢ BFC(p=1/10) ╟─╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟───
+              ┗━━━┛ ╚═════════════╝ ╚════════════╝ ╚═════════════╝
         >>> adder = MixerAdder([NoiseExcluder(), BitFlipAdder(0.1)])
         >>> adder(circ)
-        q0: ──X────BFC(p=1/10)────DC(p=1/10)──
+              ┏━━━┓ ╔═════════════╗ ╔════════════╗
+        q0: ──┨╺╋╸┠─╢ BFC(p=1/10) ╟─╢ DC(p=1/10) ╟───
+              ┗━━━┛ ╚═════════════╝ ╚════════════╝
     """
 
     def _excluder(self, *args, **kwargs) -> typing.List[typing.Union[FunctionType, MethodType]]:
@@ -197,14 +209,20 @@ class BitFlipAdder(ChannelAdderBase):
         >>> circ = Circuit().h(0).x(1, 0)
         >>> adder1 = BitFlipAdder(0.1, with_ctrl=False)
         >>> adder1(circ)
-        q0: ──H────BFC(p=1/10)────●─────────────────
-                                  │
-        q1: ──────────────────────X────BFC(p=1/10)──
+              ┏━━━┓ ╔═════════════╗
+        q0: ──┨ H ┠─╢ BFC(p=1/10) ╟───■─────────────────────
+              ┗━━━┛ ╚═════════════╝   ┃
+                                    ┏━┻━┓ ╔═════════════╗
+        q1: ────────────────────────┨╺╋╸┠─╢ BFC(p=1/10) ╟───
+                                    ┗━━━┛ ╚═════════════╝
         >>> adder2 = BitFlipAdder(0.1, with_ctrl=False, focus_on=1)
         >>> adder2(circ)
-        q0: ──H────●─────────────────
-                   │
-        q1: ───────X────BFC(p=1/10)──
+              ┏━━━┓
+        q0: ──┨ H ┠───■─────────────────────
+              ┗━━━┛   ┃
+                    ┏━┻━┓ ╔═════════════╗
+        q1: ────────┨╺╋╸┠─╢ BFC(p=1/10) ╟───
+                    ┗━━━┛ ╚═════════════╝
     """
 
     def __init__(self, flip_rate: float, with_ctrl=True, focus_on: int = None, add_after: bool = True):
@@ -252,14 +270,20 @@ class NoiseChannelAdder(ChannelAdderBase):
         >>> channel = AmplitudeDampingChannel(0.3)
         >>> adder1 = NoiseChannelAdder(channel, with_ctrl=True, add_after=True)
         >>> adder1(circ)
-        q0: ──H────ADC(γ=3/10)────●────ADC(γ=3/10)──
-                                  │
-        q1: ──────────────────────X────ADC(γ=3/10)──
+              ┏━━━┓ ╔═════════════╗       ╔═════════════╗
+        q0: ──┨ H ┠─╢ ADC(γ=3/10) ╟───■───╢ ADC(γ=3/10) ╟───
+              ┗━━━┛ ╚═════════════╝   ┃   ╚═════════════╝
+                                    ┏━┻━┓ ╔═════════════╗
+        q1: ────────────────────────┨╺╋╸┠─╢ ADC(γ=3/10) ╟───
+                                    ┗━━━┛ ╚═════════════╝
         >>> adder2 = NoiseChannelAdder(channel, with_ctrl=True, focus_on=1, add_after=True)
         >>> adder2(circ)
-        q0: ──H────●─────────────────
-                   │
-        q1: ───────X────ADC(γ=3/10)──
+              ┏━━━┓
+        q0: ──┨ H ┠───■─────────────────────
+              ┗━━━┛   ┃
+                    ┏━┻━┓ ╔═════════════╗
+        q1: ────────┨╺╋╸┠─╢ ADC(γ=3/10) ╟───
+                    ┗━━━┛ ╚═════════════╝
     """
 
     def __init__(self, channel: NoiseGate, with_ctrl=True, focus_on: int = None, add_after: bool = True):
@@ -314,9 +338,12 @@ class DepolarizingChannelAdder(ChannelAdderBase):
         >>> circ = Circuit().h(0).x(1, 0)
         >>> adder = MixerAdder([GateSelector('cx'), DepolarizingChannelAdder(0.1, 2)])
         >>> adder(circ)
-        q0: ──H────●────DC(p=1/10)──
-                   │        │
-        q1: ───────X────DC(p=1/10)──
+              ┏━━━┓       ╔════════════╗
+        q0: ──┨ H ┠───■───╢            ╟───
+              ┗━━━┛   ┃   ║            ║
+                    ┏━┻━┓ ║ DC(p=1/10) ║
+        q1: ────────┨╺╋╸┠─╢            ╟───
+                    ┗━━━┛ ╚════════════╝
     """
 
     def __init__(self, p: float, n_qubits: int, add_after: bool = True):
@@ -353,17 +380,23 @@ class QubitNumberConstrain(ChannelAdderBase):
         >>> from mindquantum.core.circuit import QubitNumberConstrain, Circuit, BitFlipAdder, MixerAdder
         >>> circ = Circuit().h(0).x(1, 0)
         >>> circ
-        q0: ──H────●──
-                   │
-        q1: ───────X──
+              ┏━━━┓
+        q0: ──┨ H ┠───■─────
+              ┗━━━┛   ┃
+                    ┏━┻━┓
+        q1: ────────┨╺╋╸┠───
+                    ┗━━━┛
         >>> adder = MixerAdder([
         ...     QubitNumberConstrain(2),
         ...     BitFlipAdder(0.1)
         ... ])
         >>> adder(circ)
-        q0: ──H────●────BFC(p=1/10)──
-                   │
-        q1: ───────X────BFC(p=1/10)──
+              ┏━━━┓       ╔═════════════╗
+        q0: ──┨ H ┠───■───╢ BFC(p=1/10) ╟───
+              ┗━━━┛   ┃   ╚═════════════╝
+                    ┏━┻━┓ ╔═════════════╗
+        q1: ────────┨╺╋╸┠─╢ BFC(p=1/10) ╟───
+                    ┗━━━┛ ╚═════════════╝
     """
 
     def __init__(self, n_qubits: int, with_ctrl: bool = True, add_after: bool = True):
@@ -395,21 +428,29 @@ class QubitIDConstrain(ChannelAdderBase):
         >>> from mindquantum.core.circuit import MixerAdder, BitFlipAdder, QubitIDConstrain, Circuit
         >>> circ = Circuit().h(0).h(1).h(2).x(1, 0).x(2, 1)
         >>> circ
-        q0: ──H────●───────
-                   │
-        q1: ──H────X────●──
-                        │
-        q2: ──H─────────X──
+              ┏━━━┓
+        q0: ──┨ H ┠───■───────────
+              ┗━━━┛   ┃
+              ┏━━━┓ ┏━┻━┓
+        q1: ──┨ H ┠─┨╺╋╸┠───■─────
+              ┗━━━┛ ┗━━━┛   ┃
+              ┏━━━┓       ┏━┻━┓
+        q2: ──┨ H ┠───────┨╺╋╸┠───
+              ┗━━━┛       ┗━━━┛
         >>> adder = MixerAdder([
         ...     QubitIDConstrain([0, 1]),
         ...     BitFlipAdder(0.1),
         ... ])
         >>> adder(circ)
-        q0: ──H────BFC(p=1/10)────●────BFC(p=1/10)───────
-                                  │
-        q1: ──H────BFC(p=1/10)────X────BFC(p=1/10)────●──
-                                                      │
-        q2: ──H───────────────────────────────────────X──
+              ┏━━━┓ ╔═════════════╗       ╔═════════════╗
+        q0: ──┨ H ┠─╢ BFC(p=1/10) ╟───■───╢ BFC(p=1/10) ╟─────────
+              ┗━━━┛ ╚═════════════╝   ┃   ╚═════════════╝
+              ┏━━━┓ ╔═════════════╗ ┏━┻━┓ ╔═════════════╗
+        q1: ──┨ H ┠─╢ BFC(p=1/10) ╟─┨╺╋╸┠─╢ BFC(p=1/10) ╟───■─────
+              ┗━━━┛ ╚═════════════╝ ┗━━━┛ ╚═════════════╝   ┃
+              ┏━━━┓                                       ┏━┻━┓
+        q2: ──┨ H ┠───────────────────────────────────────┨╺╋╸┠───
+              ┗━━━┛                                       ┗━━━┛
     """
 
     def __init__(self, qubit_ids: typing.Union[int, typing.List[int]], add_after: bool = True):
@@ -446,7 +487,9 @@ class MixerAdder(ChannelAdderBase):
         >>> circ = Circuit().rx('a', 0).h(0).measure_all()
         >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()], add_after=False)
         >>> only_measure(circ)
-        q0: ──RX(a)────H────BFC(p=1/10)────M(q0)──
+              ┏━━━━━━━┓ ┏━━━┓ ╔═════════════╗ ┍━━━━━━┑
+        q0: ──┨ RX(a) ┠─┨ H ┠─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+              ┗━━━━━━━┛ ┗━━━┛ ╚═════════════╝ ┕━━━━━━┙
     """
 
     def __init__(self, adders: typing.List[ChannelAdderBase], add_after=True):
@@ -496,9 +539,12 @@ class SequentialAdder(ChannelAdderBase):
         >>> from mindquantum.core.gates import DepolarizingChannel
         >>> circ = Circuit().h(0).x(1, 0).measure_all()
         >>> circ
-        q0: ──H────●────M(q0)──
-                   │
-        q1: ───────X────M(q1)──
+              ┏━━━┓       ┍━━━━━━┑
+        q0: ──┨ H ┠───■───┤ ⊾ q0 ├───
+              ┗━━━┛   ┃   ┕━━━━━━┙
+                    ┏━┻━┓ ┍━━━━━━┑
+        q1: ────────┨╺╋╸┠─┤ ⊾ q1 ├───
+                    ┗━━━┛ ┕━━━━━━┙
         >>> bitflip_error_for_measure = MixerAdder([
         ...     BitFlipAdder(0.1),
         ...     MeasureAccepter(),
@@ -514,9 +560,12 @@ class SequentialAdder(ChannelAdderBase):
         ...     depolarizing_for_gate,
         ... ])
         >>> adder(circ)
-        q0: ──H────DC(p=1/10)────●────DC(p=1/10)────BFC(p=1/10)────M(q0)──
-                                 │
-        q1: ─────────────────────X────DC(p=1/10)────BFC(p=1/10)────M(q1)──
+              ┏━━━┓ ╔════════════╗       ╔════════════╗ ╔═════════════╗ ┍━━━━━━┑
+        q0: ──┨ H ┠─╢ DC(p=1/10) ╟───■───╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+              ┗━━━┛ ╚════════════╝   ┃   ╚════════════╝ ╚═════════════╝ ┕━━━━━━┙
+                                   ┏━┻━┓ ╔════════════╗ ╔═════════════╗ ┍━━━━━━┑
+        q1: ───────────────────────┨╺╋╸┠─╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟─┤ ⊾ q1 ├───
+                                   ┗━━━┛ ╚════════════╝ ╚═════════════╝ ┕━━━━━━┙
     """
 
     def __init__(self, adders: typing.List[ChannelAdderBase]):
@@ -555,14 +604,20 @@ class GateSelector(ChannelAdderBase):
         >>> from mindquantum.core.circuit import BitFlipAdder, GateSelector, Circuit, MixerAdder
         >>> circ = Circuit().h(0).x(1, 0)
         >>> circ
-        q0: ──H────●──
-                   │
-        q1: ───────X──
+              ┏━━━┓
+        q0: ──┨ H ┠───■─────
+              ┗━━━┛   ┃
+                    ┏━┻━┓
+        q1: ────────┨╺╋╸┠───
+                    ┗━━━┛
         >>> adder = MixerAdder([BitFlipAdder(0.1), GateSelector('cx')])
         >>> adder(circ)
-        q0: ──H────●────BFC(p=1/10)──
-                   │
-        q1: ───────X────BFC(p=1/10)──
+              ┏━━━┓       ╔═════════════╗
+        q0: ──┨ H ┠───■───╢ BFC(p=1/10) ╟───
+              ┗━━━┛   ┃   ╚═════════════╝
+                    ┏━┻━┓ ╔═════════════╗
+        q1: ────────┨╺╋╸┠─╢ BFC(p=1/10) ╟───
+                    ┗━━━┛ ╚═════════════╝
     """
 
     _single_qubit_gate = ['H', 'X', 'Y', 'Z', 'RX', 'RY', 'RZ']

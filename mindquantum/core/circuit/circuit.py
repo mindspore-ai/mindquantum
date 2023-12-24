@@ -86,13 +86,19 @@ def apply(circuit_fn, qubits):
         >>> u3 = apply(qft, [1, 0])
         >>> u3 = u3([0, 1])
         >>> u2
-        q0: ──────────●───────H────@──
-                      │            │
-        q1: ──H────PS(π/2)─────────@──
+                                ┏━━━┓
+        q0: ─────────────■──────┨ H ┠─╳───
+                         ┃      ┗━━━┛ ┃
+              ┏━━━┓ ┏━━━━┻━━━━┓       ┃
+        q1: ──┨ H ┠─┨ PS(π/2) ┠───────╳───
+              ┗━━━┛ ┗━━━━━━━━━┛
         >>> u3
-        q0: ──────────●───────H────@──
-                      │            │
-        q1: ──H────PS(π/2)─────────@──
+                                ┏━━━┓
+        q0: ─────────────■──────┨ H ┠─╳───
+                         ┃      ┗━━━┛ ┃
+              ┏━━━┓ ┏━━━━┻━━━━┓       ┃
+        q1: ──┨ H ┠─┨ PS(π/2) ┠───────╳───
+              ┗━━━┛ ┗━━━━━━━━━┛
     """
     if not isinstance(qubits, list):
         raise TypeError(f"qubits need a list, but get {type(qubits)}!")
@@ -254,7 +260,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         >>> circuit1 += RX('a').on(0)
         >>> circuit1 *= 2
         >>> circuit1
-        q0: ──RX(a)────RX(a)──
+              ┏━━━━━━━┓ ┏━━━━━━━┓
+        q0: ──┨ RX(a) ┠─┨ RX(a) ┠───
+              ┗━━━━━━━┛ ┗━━━━━━━┛
         >>> circuit2 = Circuit([X.on(0,1)])
         >>> circuit3= circuit1 + circuit2
         >>> assert len(circuit3) == 3
@@ -274,9 +282,18 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         │ 1 ansatz parameter   │ a     │
         ╰──────────────────────┴───────╯
         >>> circuit3
-        q0: ──RX(a)────RX(a)────X──
-                                │
-        q1: ────────────────────●──
+              ┏━━━━━━━┓ ┏━━━━━━━┓ ┏━━━┓
+        q0: ──┨ RX(a) ┠─┨ RX(a) ┠─┨╺╋╸┠───
+              ┗━━━━━━━┛ ┗━━━━━━━┛ ┗━┳━┛
+                                    ┃
+        q1: ────────────────────────■─────
+        >>> Circuit.display_detail(False)
+        >>> circuit3
+             ┏━━━━┓┏━━━━┓┏━━━┓
+        q0: ─┨ RX ┠┨ RX ┠┨╺╋╸┠───
+             ┗━━━━┛┗━━━━┛┗━┳━┛
+                           ┃
+        q1: ───────────────■─────
     """
 
     # pylint: disable=invalid-name
@@ -544,17 +561,25 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Examples:
             >>> from mindquantum.algorithm.library import qft
             >>> qft([0, 2, 4])
-            q0: ──H────PS(π/2)────PS(π/4)─────────────────────────@──
-                          │          │                            │
-            q2: ──────────●──────────┼───────H────PS(π/2)─────────┼──
-                                     │               │            │
-            q4: ─────────────────────●───────────────●───────H────@──
+                  ┏━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━┓
+            q0: ──┨ H ┠─┨ PS(π/2) ┠─┨ PS(π/4) ┠─────────────────────────╳───
+                  ┗━━━┛ ┗━━━━┳━━━━┛ ┗━━━━┳━━━━┛                         ┃
+                             ┃           ┃      ┏━━━┓ ┏━━━━━━━━━┓       ┃
+            q2: ─────────────■───────────╂──────┨ H ┠─┨ PS(π/2) ┠───────┃───
+                                         ┃      ┗━━━┛ ┗━━━━┳━━━━┛       ┃
+                                         ┃                 ┃      ┏━━━┓ ┃
+            q4: ─────────────────────────■─────────────────■──────┨ H ┠─╳───
+                                                                  ┗━━━┛
             >>> qft([0, 2, 4]).compress()
-            q0: ──H────PS(π/2)────PS(π/4)─────────────────────────@──
-                          │          │                            │
-            q1: ──────────●──────────┼───────H────PS(π/2)─────────┼──
-                                     │               │            │
-            q2: ─────────────────────●───────────────●───────H────@──
+                  ┏━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━┓
+            q0: ──┨ H ┠─┨ PS(π/2) ┠─┨ PS(π/4) ┠─────────────────────────╳───
+                  ┗━━━┛ ┗━━━━┳━━━━┛ ┗━━━━┳━━━━┛                         ┃
+                             ┃           ┃      ┏━━━┓ ┏━━━━━━━━━┓       ┃
+            q1: ─────────────■───────────╂──────┨ H ┠─┨ PS(π/2) ┠───────┃───
+                                         ┃      ┗━━━┛ ┗━━━━┳━━━━┛       ┃
+                                         ┃                 ┃      ┏━━━┓ ┃
+            q2: ─────────────────────────■─────────────────■──────┨ H ┠─╳───
+                                                                  ┗━━━┛
         """
         return apply(self, list(range(len(self.all_qubits))))
 
@@ -564,32 +589,53 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
     def __repr__(self):
         """Return a string representation of the object."""
-        # pylint: disable=import-outside-toplevel,cyclic-import
-        from mindquantum.io.display import brick_model
-        from mindquantum.io.display._config import _CIRCUIT_STYLE
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.display._config import _text_circ_config
+        from mindquantum.io.display.circuit_text_drawer import rich_circuit
+        from mindquantum.io.display.circuit_text_drawer_helper import Monitor
 
+        if not self:
+            return ""
         console = Console(record=True)
-        circ = self.compress()
-        string = brick_model(circ, sorted(self.all_qubits.map), console.width)
-        string = '\n'.join(string)
+        circ = self.compress() if _text_circ_config.compress_unuse_qubit else self
+        string = Monitor(
+            rich_circuit(
+                circ,
+                console.width,
+                style=_text_circ_config,
+                qubit_map=dict(enumerate(sorted(self.all_qubits.map.keys()))),
+            )
+        ).get_str()
         if not console.is_jupyter:
             with console.capture() as capture:
-                console.print(string, style=_CIRCUIT_STYLE, width=len(string))
+                console.print(string, width=len(string))
             return capture.get()
         return string
 
     def _repr_html_(self):
         """Repr for jupyter notebook."""
         # pylint: disable=import-outside-toplevel,cyclic-import
-        from mindquantum.io.display import brick_model
-        from mindquantum.io.display._config import _CIRCUIT_STYLE, CIRCUIT_HTML_FORMAT
+        from mindquantum.io.display._config import (
+            CIRCUIT_HTML_FORMAT,
+            _text_circ_config,
+        )
+        from mindquantum.io.display.circuit_text_drawer import rich_circuit
+        from mindquantum.io.display.circuit_text_drawer_helper import Monitor
 
+        if not self:
+            return ""
         console = Console(record=True)
-        circ = self.compress()
-        string = brick_model(circ, sorted(self.all_qubits.map), console.width)
-        string = '\n'.join(string)
+        circ = self.compress() if _text_circ_config.compress_unuse_qubit else self
+        string = Monitor(
+            rich_circuit(
+                circ,
+                console.width,
+                style=_text_circ_config,
+                qubit_map=dict(enumerate(sorted(self.all_qubits.map.keys()))),
+            )
+        ).get_str()
         with console.capture() as _:
-            console.print(string, style=_CIRCUIT_STYLE, width=len(string))
+            console.print(string, width=len(string))
         string = console.export_html(code_format=CIRCUIT_HTML_FORMAT, inline_styles=True)
         return '\n'.join(string.split('\n')[1:])
 
@@ -690,7 +736,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> circ = Circuit(RX({'a': 0.2}).on(0))
             >>> herm_circ = circ.hermitian()
             >>> print(herm_circ)
-            q0: ──RX(-1/5*a)──
+                  ┏━━━━━━━━━━━━┓
+            q0: ──┨ RX(-1/5*a) ┠───
+                  ┗━━━━━━━━━━━━┛
         """
         return Circuit([gate.hermitian() for gate in self[::-1]])
 
@@ -849,7 +897,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> circuit += RX({'a': 2}).on(0)
             >>> circuit = circuit.apply_value({'a': 1.5})
             >>> circuit
-            q0: ──X────RX(3)──
+                  ┏━━━┓ ┏━━━━━━━┓
+            q0: ──┨╺╋╸┠─┨ RX(3) ┠───
+                  ┗━━━┛ ┗━━━━━━━┛
         """
         circuit = Circuit()
         for gate in self:
@@ -866,6 +916,32 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                     coeffs.append(coeff)
                 circuit += gate.__class__(*coeffs).on(gate.obj_qubits, gate.ctrl_qubits)
         return circuit
+
+    @staticmethod
+    def display_detail(state: bool):
+        """
+        Whether to display the detail of circuit.
+
+        Args:
+            state (bool): The state of whether to display the detail of circuit.
+
+        Examples:
+            >>> from mindquantum import Circuit
+            >>> circ = Circuit().rx('a', 0).ry(1.2, 0)
+            >>> circ
+                  ┏━━━━━━━┓ ┏━━━━━━━━━┓
+            q0: ──┨ RX(a) ┠─┨ RY(6/5) ┠───
+                  ┗━━━━━━━┛ ┗━━━━━━━━━┛
+            >>> Circuit.display_detail(False)
+            >>> circ
+                 ┏━━━━┓┏━━━━┓
+            q0: ─┨ RX ┠┨ RY ┠───
+                 ┗━━━━┛┗━━━━┛
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.display._config import _text_circ_config
+
+        _text_circ_config.simple_mode = not state
 
     def remove_barrier(self):
         """Remove all barrier gates."""
@@ -897,11 +973,15 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> circ += H.on(0)
             >>> circ += Measure('q0_1').on(0)
             >>> circ.remove_measure_on_qubits(0)
-            q0: ──H────X────H───────────
-                       │
-            q1: ──H────●────X────M(q1)──
-                            │
-            q2: ──H─────────●────M(q2)──
+                  ┏━━━┓ ┏━━━┓ ┏━━━┓
+            q0: ──┨ H ┠─┨╺╋╸┠─┨ H ┠────────────
+                  ┗━━━┛ ┗━┳━┛ ┗━━━┛
+                  ┏━━━┓   ┃   ┏━━━┓ ┍━━━━━━┑
+            q1: ──┨ H ┠───■───┨╺╋╸┠─┤ ⊾ q1 ├───
+                  ┗━━━┛       ┗━┳━┛ ┕━━━━━━┙
+                  ┏━━━┓         ┃   ┍━━━━━━┑
+            q2: ──┨ H ┠─────────■───┤ ⊾ q2 ├───
+                  ┗━━━┛             ┕━━━━━━┙
         """
         if not isinstance(qubits, list):
             qubits = [qubits]
@@ -1342,17 +1422,25 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> from mindquantum.core.circuit import Circuit
             >>> circ = Circuit().h(0).x(2, 0).y(3).x(3, 2)
             >>> circ
-            q0: ──H────●───────
-                       │
-            q2: ───────X────●──
-                            │
-            q3: ──Y─────────X──
+                  ┏━━━┓
+            q0: ──┨ H ┠───■───────────
+                  ┗━━━┛   ┃
+                        ┏━┻━┓
+            q2: ────────┨╺╋╸┠───■─────
+                        ┗━━━┛   ┃
+                  ┏━━━┓       ┏━┻━┓
+            q3: ──┨ Y ┠───────┨╺╋╸┠───
+                  ┗━━━┛       ┗━━━┛
             >>> circ.reverse_qubits()
-            q0: ──Y─────────X──
-                            │
-            q1: ───────X────●──
-                       │
-            q3: ──H────●───────
+                  ┏━━━┓       ┏━━━┓
+            q0: ──┨ Y ┠───────┨╺╋╸┠───
+                  ┗━━━┛       ┗━┳━┛
+                        ┏━━━┓   ┃
+            q1: ────────┨╺╋╸┠───■─────
+                        ┗━┳━┛
+                  ┏━━━┓   ┃
+            q3: ──┨ H ┠───■───────────
+                  ┗━━━┛
         """
         return apply(self, [self.n_qubits - 1 - i for i in self.all_qubits.keys()])
 
