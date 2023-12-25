@@ -619,7 +619,7 @@ def test_pauli_string_gate(config):  # pylint: disable=too-many-locals
         ctrl_qubits = None if np.random.random() < 0.5 else qubits[-1]
         circs.append(G.GroupedPauli(random_pauli_string(obj_qubits)).on(obj_qubits, ctrl_qubits))
     if virtual_qc.startswith('mqvector'):
-        state = random_circuit(n_qubits, 10).get_qs()
+        state = (random_circuit(n_qubits, 10) + G.I.on(n_qubits - 1)).get_qs()
         sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
         for g in circs:
             sim.set_qs(state)
@@ -630,9 +630,9 @@ def test_pauli_string_gate(config):  # pylint: disable=too-many-locals
             qs1 = sim.get_qs()
             assert np.allclose(qs0, qs1)
     elif virtual_qc.startswith("mqmatrix"):
-        qs0 = random_circuit(n_qubits, 10).get_qs()
-        qs1 = random_circuit(n_qubits, 10).get_qs()
-        qs2 = random_circuit(n_qubits, 10).get_qs()
+        qs0 = (random_circuit(n_qubits, 10) + G.I.on(n_qubits - 1)).get_qs()
+        qs1 = (random_circuit(n_qubits, 10) + G.I.on(n_qubits - 1)).get_qs()
+        qs2 = (random_circuit(n_qubits, 10) + G.I.on(n_qubits - 1)).get_qs()
         qs0 = np.outer(qs0, np.conj(qs0))
         qs1 = np.outer(qs1, np.conj(qs1))
         qs2 = np.outer(qs2, np.conj(qs2))
