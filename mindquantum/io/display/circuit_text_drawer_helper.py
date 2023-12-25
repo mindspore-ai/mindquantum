@@ -421,6 +421,8 @@ class BasicObj(ABC):
     def __init__(self):
         """Construct a basic object."""
         self.post_process = []
+        self.__rich_style__ = {}
+        self.__rich_property__ = self.register_rich_prop()
 
     @abstractmethod
     def shift(self, x, y):
@@ -445,6 +447,24 @@ class BasicObj(ABC):
     @abstractmethod
     def __create_frame__(self) -> Frame:
         """Create frame data."""
+
+    @abstractmethod
+    def register_rich_prop(self) -> List[str]:
+        """Register rich property."""
+
+    def disable_rich(self):
+        """Disable all rich style."""
+        for prop in self.__rich_property__:
+            self.__rich_style__[prop] = getattr(self, prop)
+            setattr(self, prop, None)
+        return self
+
+    def enable_rich(self):
+        """Enable all rich style."""
+        for prop in self.__rich_property__:
+            if getattr(self, prop) is None:
+                setattr(self, prop, self.__rich_style__.get(prop, None))
+        return self
 
     def append_post_process(self, fun: Callable[[Frame], Frame]):
         """
@@ -533,6 +553,22 @@ class Container(BasicObj):
         """Get the bottom position."""
         return max(ele.bottom() for ele in self.eles)
 
+    def disable_rich(self):
+        """Disable rich style of all elements."""
+        for ele in self.eles:
+            ele.disable_rich()
+        return self
+
+    def enable_rich(self):
+        """Enable rich style of all elements."""
+        for ele in self.eles:
+            ele.enable_rich()
+        return self
+
+    def register_rich_prop(self) -> List[str]:
+        """Register rich property."""
+        return []
+
 
 class Line(BasicObj):
     """The line object."""
@@ -549,6 +585,10 @@ class Line(BasicObj):
         self.direction = direction
         self.line_style = line_style
         self.factor = factor
+
+    def register_rich_prop(self) -> List[str]:
+        """Register rich property."""
+        return ['line_style']
 
     def end_point(self) -> Tuple[float, float]:
         """Get the end point coordinate."""
@@ -699,6 +739,10 @@ class Rect(BasicObj):
         self.box_color = box_color
         self.box_style = list(box_style)
 
+    def register_rich_prop(self) -> List[str]:
+        """Register rich property."""
+        return ['bg', 'box_color']
+
     def __dye_box__(self, char) -> str:
         """Dye the given char with the style of this rectangle."""
         if self.box_color is None:
@@ -794,6 +838,10 @@ class Text(BasicObj):
         self.high = 1
         self.align = align
         self.bg = bg
+
+    def register_rich_prop(self) -> List[str]:
+        """Register rich property."""
+        return ['bg', 'str_style']
 
     def __create_frame__(self) -> Frame:
         """Create a frame of this text object."""

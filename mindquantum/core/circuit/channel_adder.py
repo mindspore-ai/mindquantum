@@ -96,12 +96,12 @@ class ReverseAdder(ChannelAdderBase):
         >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()])
         >>> only_measure(circ)
               ┏━━━━━━━┓ ┍━━━━━━┑ ╔═════════════╗
-        q0: ──┨ RX(a) ┠─┤ ⊾ q0 ├─╢ BFC(p=1/10) ╟───
+        q0: ──┨ RX(a) ┠─┤ M q0 ├─╢ BFC(p=1/10) ╟───
               ┗━━━━━━━┛ ┕━━━━━━┙ ╚═════════════╝
         >>> no_measure = ReverseAdder(only_measure)
         >>> no_measure(circ)
               ┏━━━━━━━┓ ╔═════════════╗ ┍━━━━━━┑
-        q0: ──┨ RX(a) ┠─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+        q0: ──┨ RX(a) ┠─╢ BFC(p=1/10) ╟─┤ M q0 ├───
               ┗━━━━━━━┛ ╚═════════════╝ ┕━━━━━━┙
     """
 
@@ -145,7 +145,7 @@ class MeasureAccepter(ChannelAdderBase):
         >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()], add_after=False)
         >>> only_measure(circ)
               ┏━━━━━━━┓ ┏━━━┓ ╔═════════════╗ ┍━━━━━━┑
-        q0: ──┨ RX(a) ┠─┨ H ┠─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+        q0: ──┨ RX(a) ┠─┨ H ┠─╢ BFC(p=1/10) ╟─┤ M q0 ├───
               ┗━━━━━━━┛ ┗━━━┛ ╚═════════════╝ ┕━━━━━━┙
     """
 
@@ -488,7 +488,7 @@ class MixerAdder(ChannelAdderBase):
         >>> only_measure = MixerAdder([BitFlipAdder(0.1), MeasureAccepter()], add_after=False)
         >>> only_measure(circ)
               ┏━━━━━━━┓ ┏━━━┓ ╔═════════════╗ ┍━━━━━━┑
-        q0: ──┨ RX(a) ┠─┨ H ┠─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+        q0: ──┨ RX(a) ┠─┨ H ┠─╢ BFC(p=1/10) ╟─┤ M q0 ├───
               ┗━━━━━━━┛ ┗━━━┛ ╚═════════════╝ ┕━━━━━━┙
     """
 
@@ -540,10 +540,10 @@ class SequentialAdder(ChannelAdderBase):
         >>> circ = Circuit().h(0).x(1, 0).measure_all()
         >>> circ
               ┏━━━┓       ┍━━━━━━┑
-        q0: ──┨ H ┠───■───┤ ⊾ q0 ├───
+        q0: ──┨ H ┠───■───┤ M q0 ├───
               ┗━━━┛   ┃   ┕━━━━━━┙
                     ┏━┻━┓ ┍━━━━━━┑
-        q1: ────────┨╺╋╸┠─┤ ⊾ q1 ├───
+        q1: ────────┨╺╋╸┠─┤ M q1 ├───
                     ┗━━━┛ ┕━━━━━━┙
         >>> bitflip_error_for_measure = MixerAdder([
         ...     BitFlipAdder(0.1),
@@ -561,10 +561,10 @@ class SequentialAdder(ChannelAdderBase):
         ... ])
         >>> adder(circ)
               ┏━━━┓ ╔════════════╗       ╔════════════╗ ╔═════════════╗ ┍━━━━━━┑
-        q0: ──┨ H ┠─╢ DC(p=1/10) ╟───■───╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟─┤ ⊾ q0 ├───
+        q0: ──┨ H ┠─╢ DC(p=1/10) ╟───■───╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟─┤ M q0 ├───
               ┗━━━┛ ╚════════════╝   ┃   ╚════════════╝ ╚═════════════╝ ┕━━━━━━┙
                                    ┏━┻━┓ ╔════════════╗ ╔═════════════╗ ┍━━━━━━┑
-        q1: ───────────────────────┨╺╋╸┠─╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟─┤ ⊾ q1 ├───
+        q1: ───────────────────────┨╺╋╸┠─╢ DC(p=1/10) ╟─╢ BFC(p=1/10) ╟─┤ M q1 ├───
                                    ┗━━━┛ ╚════════════╝ ╚═════════════╝ ┕━━━━━━┙
     """
 

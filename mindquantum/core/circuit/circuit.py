@@ -598,14 +598,15 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             return ""
         console = Console(record=True)
         circ = self.compress() if _text_circ_config.compress_unuse_qubit else self
-        string = Monitor(
-            rich_circuit(
-                circ,
-                console.width,
-                style=_text_circ_config,
-                qubit_map=dict(enumerate(sorted(self.all_qubits.map.keys()))),
-            )
-        ).get_str()
+        rich_circ = rich_circuit(
+            circ,
+            console.width,
+            style=_text_circ_config,
+            qubit_map=dict(enumerate(sorted(self.all_qubits.map.keys()))),
+        )
+        if console.is_jupyter:
+            rich_circ.disable_rich()
+        string = Monitor(rich_circ).get_str()
         if not console.is_jupyter:
             with console.capture() as capture:
                 console.print(string, width=len(string))
@@ -977,10 +978,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             q0: ──┨ H ┠─┨╺╋╸┠─┨ H ┠────────────
                   ┗━━━┛ ┗━┳━┛ ┗━━━┛
                   ┏━━━┓   ┃   ┏━━━┓ ┍━━━━━━┑
-            q1: ──┨ H ┠───■───┨╺╋╸┠─┤ ⊾ q1 ├───
+            q1: ──┨ H ┠───■───┨╺╋╸┠─┤ M q1 ├───
                   ┗━━━┛       ┗━┳━┛ ┕━━━━━━┙
                   ┏━━━┓         ┃   ┍━━━━━━┑
-            q2: ──┨ H ┠─────────■───┤ ⊾ q2 ├───
+            q2: ──┨ H ┠─────────■───┤ M q2 ├───
                   ┗━━━┛             ┕━━━━━━┙
         """
         if not isinstance(qubits, list):
@@ -1101,6 +1102,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
+
         if file_name is None:
             return OpenQASM().to_string(self, version=version)
         OpenQASM().to_file(file_name, self, version=version)
@@ -1123,6 +1125,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import HiQASM
+
         if file_name is None:
             return HiQASM().to_string(self, version=version)
         HiQASM().to_file(file_name, self, version=version)
@@ -1348,6 +1351,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
+
         if os.path.exists(openqasm_str):
             return OpenQASM().from_file(openqasm_str)
         return OpenQASM().from_string(openqasm_str)
@@ -1365,6 +1369,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import HiQASM
+
         if os.path.exists(hiqasm_str):
             return HiQASM().from_file(hiqasm_str)
         return HiQASM().from_string(hiqasm_str)

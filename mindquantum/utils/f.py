@@ -14,22 +14,24 @@
 # ============================================================================
 
 """Useful functions."""
-
 from __future__ import annotations
+
 import numbers
+from collections.abc import Iterable
 from functools import lru_cache
-from typing import List, Union, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from mindquantum.config.config import _GLOBAL_MAT_VALUE
+
 from .type_value_check import (
+    _check_gate_type,
     _check_input_type,
     _check_int_type,
+    _check_seed,
     _check_value_should_between_close_set,
     _check_value_should_not_less,
-    _check_seed,
-    _check_gate_type,
 )
 
 if TYPE_CHECKING:
@@ -113,14 +115,17 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
     return circuit
 
 
-def random_insert_gates(circuit: Circuit,
-                        gates: Union[BasicGate, List[BasicGate]],
-                        nums: Union[int, List[int]],
-                        focus_on: Optional[Union[int, List[int]]] = None,
-                        with_ctrl: bool = True,
-                        after_measure: bool = False,
-                        shots: int = 1,
-                        seed: Optional[int] = None):
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches
+def random_insert_gates(
+    circuit: Circuit,
+    gates: BasicGate | list[BasicGate],
+    nums: int | list[int],
+    focus_on: int | list[int] | None = None,
+    with_ctrl: bool = True,
+    after_measure: bool = False,
+    shots: int = 1,
+    seed: int | None = None,
+):
     """
     Randomly insert given numbers of single-qubit gates into a quantum circuit.
 
@@ -146,7 +151,7 @@ def random_insert_gates(circuit: Circuit,
         >>> origin = Circuit().rx('theta', 0).rz('beta', 1, 0).barrier().measure(0)
         >>> print(origin)
               ┏━━━━━━━━━━━┓                ┍━━━━━━┑
-        q0: ──┨ RX(theta) ┠───────■──────▓─┤ ⊾ q0 ├───
+        q0: ──┨ RX(theta) ┠───────■──────▓─┤ M q0 ├───
               ┗━━━━━━━━━━━┛       ┃      ▓ ┕━━━━━━┙
                             ┏━━━━━┻━━━━┓ ▓
         q1: ────────────────┨ RZ(beta) ┠─▓────────────
@@ -154,15 +159,15 @@ def random_insert_gates(circuit: Circuit,
         >>> circs = list(random_insert_gates(origin, [BitFlipChannel(p=1), PhaseFlipChannel(p=1)], [2, 1]))
         >>> print(circs[0])
               ┏━━━━━━━━━━━┓ ╔══════════╗ ╔══════════╗                             ┍━━━━━━┑
-        q0: ──┨ RX(theta) ┠─╢ BFC(p=1) ╟─╢ PFC(p=1) ╟───────■───────────────────▓─┤ ⊾ q0 ├───
+        q0: ──┨ RX(theta) ┠─╢ BFC(p=1) ╟─╢ PFC(p=1) ╟───────■───────────────────▓─┤ M q0 ├───
               ┗━━━━━━━━━━━┛ ╚══════════╝ ╚══════════╝       ┃                   ▓ ┕━━━━━━┙
                                                       ┏━━━━━┻━━━━┓ ╔══════════╗ ▓
         q1: ──────────────────────────────────────────┨ RZ(beta) ┠─╢ BFC(p=1) ╟─▓────────────
                                                       ┗━━━━━━━━━━┛ ╚══════════╝
     """
     # pylint: disable=import-outside-toplevel,cyclic-import
+
     from ..core.gates import BarrierGate, Measure
-    from collections.abc import Iterable
 
     if seed is not None:
         _check_seed(seed)
@@ -175,7 +180,7 @@ def random_insert_gates(circuit: Circuit,
     for gate in gates:
         _check_gate_type(gate)
         if gate.n_qubits > 1 or len(gate.obj_qubits + gate.ctrl_qubits) > 1:
-            raise ValueError(f"Only single-qubit gates can be inserted.")
+            raise ValueError(f"Only single-qubit gates can be inserted, but get {gate}")
 
     if not isinstance(nums, Iterable):
         nums = [nums]
@@ -221,8 +226,10 @@ def random_insert_gates(circuit: Circuit,
                             qubits = gate.obj_qubits
                         sample = list(set(qubits) & set(focus))
                         if not sample:
-                            raise ValueError("gate cannot be inserted, because its qubits are not covered "
-                                             "by the focus_on. Please resample or modify the settings.")
+                            raise ValueError(
+                                "gate cannot be inserted, because its qubits are not covered "
+                                "by the focus_on. Please resample or modify the settings."
+                            )
                         qubit = np.random.choice(sample)
                         circ += gates[j].on(int(qubit))
         yield circ

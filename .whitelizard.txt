@@ -28,6 +28,7 @@ mindquantum/io/qasm/openqasm.py:__init__
 mindquantum/algorithm/compiler/rules/basic_decompose.py:decom_basic_gate
 mindquantum/algorithm/nisq/chem/reference_state.py:get_reference_circuit
 mindquantum/io/display/circuit_text_drawer.py:rich_circuit
+mindquantum/utils/f.py:random_insert_gates
 
 ccsrc/include/simulator/vector/vector_state.tpp:mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti
 ccsrc/include/ops/gates.h:mindquantum::GetGateByName
