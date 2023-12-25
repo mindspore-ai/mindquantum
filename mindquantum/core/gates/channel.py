@@ -56,10 +56,10 @@ class GroupedPauliChannel(NoiseGate, SelfHermitianGate):
         >>> circ = Circuit([GroupedPauliChannel(probs).on([0, 1])]).measure_all()
         >>> circ
               ╭ ╔═══Grouped Pauli Channel     ╮ ┍━━━━━━┑
-        q0: ──┤─╢ PC(px=1, py=0, pz=0) ╟──────├─┤ ⊾ q0 ├───
+        q0: ──┤─╢ PC(px=1, py=0, pz=0) ╟──────├─┤ M q0 ├───
               │ ╚══════════════════════╝      │ ┕━━━━━━┙
               │ ╔═════════════════════════╗   │ ┍━━━━━━┑
-        q1: ──┤─╢ PC(px=0, py=3/10, pz=0) ╟───├─┤ ⊾ q1 ├───
+        q1: ──┤─╢ PC(px=0, py=3/10, pz=0) ╟───├─┤ M q1 ├───
               ╰ ╚═════════════════════════╝   ╯ ┕━━━━━━┙
         >>> Simulator('mqvector', circ.n_qubits).sampling(circ, shots=1000, seed=42)
         shots: 1000
@@ -153,7 +153,7 @@ class PauliChannel(NoiseGate, SelfHermitianGate):
         >>> circ.measure_all()
         >>> print(circ)
               ╔══════════════════════════════╗ ┍━━━━━━┑
-        q0: ──╢ PC(px=4/5, py=1/10, pz=1/10) ╟─┤ ⊾ q0 ├───
+        q0: ──╢ PC(px=4/5, py=1/10, pz=1/10) ╟─┤ M q0 ├───
               ╚══════════════════════════════╝ ┕━━━━━━┙
         >>> from mindquantum.simulator import Simulator
         >>> sim = Simulator('mqvector', 1)

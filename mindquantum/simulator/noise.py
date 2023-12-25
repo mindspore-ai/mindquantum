@@ -98,10 +98,10 @@ class NoiseBackend(NoiseBackendImpl):
         >>> circ = Circuit().h(0).x(1, 0).measure_all()
         >>> circ
               ┏━━━┓       ┍━━━━━━┑
-        q0: ──┨ H ┠───■───┤ ⊾ q0 ├───
+        q0: ──┨ H ┠───■───┤ M q0 ├───
               ┗━━━┛   ┃   ┕━━━━━━┙
                     ┏━┻━┓ ┍━━━━━━┑
-        q1: ────────┨╺╋╸┠─┤ ⊾ q1 ├───
+        q1: ────────┨╺╋╸┠─┤ M q1 ├───
                     ┗━━━┛ ┕━━━━━━┙
         >>> adder = MixerAdder([
         ...     MeasureAccepter(),
@@ -109,10 +109,10 @@ class NoiseBackend(NoiseBackendImpl):
         ... ], add_after=False)
         >>> adder(circ)
               ┏━━━┓       ╔════════════╗ ┍━━━━━━┑
-        q0: ──┨ H ┠───■───╢ BFC(p=1/5) ╟─┤ ⊾ q0 ├───
+        q0: ──┨ H ┠───■───╢ BFC(p=1/5) ╟─┤ M q0 ├───
               ┗━━━┛   ┃   ╚════════════╝ ┕━━━━━━┙
                     ┏━┻━┓ ╔════════════╗ ┍━━━━━━┑
-        q1: ────────┨╺╋╸┠─╢ BFC(p=1/5) ╟─┤ ⊾ q1 ├───
+        q1: ────────┨╺╋╸┠─╢ BFC(p=1/5) ╟─┤ M q1 ├───
                     ┗━━━┛ ╚════════════╝ ┕━━━━━━┙
         >>> noise_sim = Simulator(NoiseBackend('mqvector', 2, adder=adder))
         >>> noise_sim.sampling(circ,seed=42, shots=5000)

@@ -365,7 +365,7 @@ class TextCircConfig:
     swap_symbol_style: str = "#0e36d6"
     barrier_style: str = '#ACACAC'
     barrier_symbol: str = "▓"
-    measurement_symbol: str = "⊾"
+    measurement_symbol: str = "M"
     measurement_box: str = "ud_heavy"
     noise_box: str = "double"
     parameterized_box: str = "regular_heavy"
