@@ -215,6 +215,8 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
         circ += random_circuit(3, 10)
     circ += G.U3('u3_theta', 'u3_phi', 'u3_lamda').on(0)
     circ += random_circuit(3, 10)
+    circ += G.U3('u3_theta_1', 'u3_phi_1', 1).on(0)
+    circ += random_circuit(3, 10)
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ, pr_shift=True)
