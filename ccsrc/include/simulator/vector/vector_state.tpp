@@ -1431,6 +1431,9 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                     for (int j = start; j < end; j++) {
                         VT<py_qs_data_t> intrin_grad_list(tmp_p_gate->prs_.size());
                         for (int k = 0; k < tmp_p_gate->prs_.size(); k++) {
+                            if (tmp_p_gate->prs_[k].IsConst()) {
+                                continue;
+                            }
                             tmp_p_gate->prs_[k] += -pr_shift;
                             if (gate->id_ == GateID::U3 || gate->id_ == GateID::FSim) {
                                 parameter::tn::Tensor coeff;
