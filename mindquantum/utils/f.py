@@ -15,21 +15,27 @@
 
 """Useful functions."""
 
+from __future__ import annotations
 import numbers
 from functools import lru_cache
+from typing import List, Union, Optional, TYPE_CHECKING
 
 import numpy as np
 
 from mindquantum.config.config import _GLOBAL_MAT_VALUE
-
 from .type_value_check import (
     _check_input_type,
     _check_int_type,
     _check_value_should_between_close_set,
     _check_value_should_not_less,
+    _check_seed,
+    _check_gate_type,
 )
 
-__all__ = ['random_circuit', 'mod', 'normalize', 'random_state']
+if TYPE_CHECKING:
+    from mindquantum.core import BasicGate, Circuit
+
+__all__ = ['random_circuit', 'random_insert_gates', 'mod', 'normalize', 'random_state']
 
 
 def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
@@ -53,7 +59,7 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
         q2: ────■──────────■───────┨ RZ(-2.42) ┠────────■──────────
                                    ┗━━━━━━━━━━━┛
     """
-    # pylint: disable=import-outside-toplevel,cyclic-import
+    # pylint: disable=import-outside-toplevel,cyclic-import,redefined-outer-name
     from ..core import gates
     from ..core.circuit import Circuit
 
@@ -105,6 +111,121 @@ def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
                 gate = np.random.choice(double['non_param'])
                 circuit += gate.on([q1, q2])
     return circuit
+
+
+def random_insert_gates(circuit: Circuit,
+                        gates: Union[BasicGate, List[BasicGate]],
+                        nums: Union[int, List[int]],
+                        focus_on: Optional[Union[int, List[int]]] = None,
+                        with_ctrl: bool = True,
+                        after_measure: bool = False,
+                        shots: int = 1,
+                        seed: Optional[int] = None):
+    """
+    Randomly insert given numbers of single-qubit gates into a quantum circuit.
+
+    Args:
+        circuit (Circuit): The circuit with gates to be inserted into.
+        gates (Union[BasicGate, List[BasicGate]]): The selected single-qubit gates to be inserted.
+        nums (Union[int, List[int]]):The number of each gate to be inserted.
+            Note that the length of the nums should be equal to that of the gates.
+        with_ctrl (bool): Whether insert gates for control qubits. Default: ``True``.
+        focus_on (Optional[Union[int, List[int]]]): only insert gates on ``focus_on`` qubits. If ``None``, insert to
+            all qubits of selected gates. Default: ``None``.
+        after_measure (bool): Whether insert gates after measure gates. Default: ``False``.
+        shots (int): How many shots you want to sampling this circuit. Default: ``1``.
+        seed (int): Random seed for random sampling. If ``None``, seed will be a random int number. Default: ``None``.
+
+    Returns:
+        A generator that can generate quantum circuits.
+
+    Examples:
+        >>> from mindquantum.core.gates import X, Z, BitFlipChannel, PhaseFlipChannel
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.utils import random_insert_gates
+        >>> origin = Circuit().rx('theta', 0).rz('beta', 1, 0).barrier().measure(0)
+        >>> print(origin)
+              ┏━━━━━━━━━━━┓                ┍━━━━━━┑
+        q0: ──┨ RX(theta) ┠───────■──────▓─┤ ⊾ q0 ├───
+              ┗━━━━━━━━━━━┛       ┃      ▓ ┕━━━━━━┙
+                            ┏━━━━━┻━━━━┓ ▓
+        q1: ────────────────┨ RZ(beta) ┠─▓────────────
+                            ┗━━━━━━━━━━┛
+        >>> circs = list(random_insert_gates(origin, [BitFlipChannel(p=1), PhaseFlipChannel(p=1)], [2, 1]))
+        >>> print(circs[0])
+              ┏━━━━━━━━━━━┓ ╔══════════╗ ╔══════════╗                             ┍━━━━━━┑
+        q0: ──┨ RX(theta) ┠─╢ BFC(p=1) ╟─╢ PFC(p=1) ╟───────■───────────────────▓─┤ ⊾ q0 ├───
+              ┗━━━━━━━━━━━┛ ╚══════════╝ ╚══════════╝       ┃                   ▓ ┕━━━━━━┙
+                                                      ┏━━━━━┻━━━━┓ ╔══════════╗ ▓
+        q1: ──────────────────────────────────────────┨ RZ(beta) ┠─╢ BFC(p=1) ╟─▓────────────
+                                                      ┗━━━━━━━━━━┛ ╚══════════╝
+    """
+    # pylint: disable=import-outside-toplevel,cyclic-import
+    from ..core.gates import BarrierGate, Measure
+    from collections.abc import Iterable
+
+    if seed is not None:
+        _check_seed(seed)
+    np.random.seed(seed)
+
+    if not isinstance(gates, Iterable):
+        gates = [gates]
+    for gate in gates:
+        _check_gate_type(gate)
+    for gate in gates:
+        _check_gate_type(gate)
+        if gate.n_qubits > 1 or len(gate.obj_qubits + gate.ctrl_qubits) > 1:
+            raise ValueError(f"Only single-qubit gates can be inserted.")
+
+    if not isinstance(nums, Iterable):
+        nums = [nums]
+    for num in nums:
+        _check_int_type(f"The number of quantum gates to insert requires a non-negative integer, but get {num}.", num)
+
+    if len(nums) != len(gates):
+        raise ValueError("The length of nums and the length of gates are not the same.")
+
+    focus = list(range(circuit.n_qubits))
+    if focus_on is not None:
+        if not isinstance(focus_on, Iterable):
+            focus = [focus_on]
+    for qubit in focus:
+        _check_int_type("focus_on", qubit)
+
+    _check_int_type("shots", shots)
+
+    available_indices = []
+    for i, gate in enumerate(circuit):
+        if isinstance(gate, BarrierGate):
+            continue
+        if not after_measure and isinstance(gate, Measure):
+            continue
+        available_indices.append(i)
+
+    # pylint: disable=too-many-nested-blocks
+    for _ in range(shots):
+        indices = []
+        for num in nums:
+            tem = sorted(np.random.choice(available_indices, size=num, replace=False))
+            indices.append(tem)
+
+        circ = Circuit()
+        for i, gate in enumerate(circuit):
+            circ += gate
+            for j, tem_indices in enumerate(indices):
+                for k in tem_indices:
+                    if k == i:
+                        if with_ctrl:
+                            qubits = gate.ctrl_qubits + gate.obj_qubits
+                        else:
+                            qubits = gate.obj_qubits
+                        sample = list(set(qubits) & set(focus))
+                        if not sample:
+                            raise ValueError("gate cannot be inserted, because its qubits are not covered "
+                                             "by the focus_on. Please resample or modify the settings.")
+                        qubit = np.random.choice(sample)
+                        circ += gates[j].on(int(qubit))
+        yield circ
 
 
 def _check_num_array(vec, name):
