@@ -11,8 +11,6 @@
 \usepackage{amsfonts}
 \usepackage{comment}
 \usepackage{dirtytalk}
-\usepackage[hidelinks]{hyperref}
-\usepackage{cleveref}
 \usepackage{url}
 \usepackage{bbold}
 \usepackage{realboxes}
@@ -23,6 +21,7 @@
 \usepackage{subcaption}
 \usepackage{caption}
 \usepackage{hyperref}
+\usepackage{cleveref}
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usepackage{xcolor}
@@ -112,40 +111,53 @@
 \title{MindSpore Quantum: XXXXXXXXX
 }
 
+\author{Xusheng Xu}
+\email{xuxusheng2@huawei.com}
+\affiliation{organization}
+\author{Junyuan Zhou}
+\affiliation{organization}
+\author{Zuoheng Zou}
+\affiliation{organization}
+\author{Xu Zhou}
+\affiliation{organization}
+\author{Runhong He}
+\affiliation{organization}
+\author{Wuxin Liu}
+\affiliation{organization}
+\author{Jiangyu Cui}
+\affiliation{organization}
+\author{Haiying Zhao}
+\affiliation{organization}
+\author{Yikang Zhu}
+\affiliation{organization}
+\author{Yanling Lin}
+\affiliation{organization}
+\author{Chufan Lyu}
+\affiliation{organization}
+\author{Jialiang Tang}
+\affiliation{organization}
+\author{Ruoqian Xu}
+\affiliation{organization}
+\author{Runqiu Shu}
+\affiliation{organization}
 \author{Qingyu Li}
 \affiliation{organization}
 \author{Qiang Zheng}
 \affiliation{organization}
 \author{Jiale Liu}
 \affiliation{organization}
-\author{Yanling Lin}
-\affiliation{organization}
-\author{Xusheng Xu}
-\affiliation{organization}
-\email{xuxusheng2@huawei.com}
-\author{Zuoheng Zou}
-\affiliation{organization}
-\email{zouzuoheng2@huawei.com}
-\author{Junyuan Zhou}
-\affiliation{organization}
-\email{zhoujunyuan1@huawei.com}
-\author{Xu Zhou}
-\affiliation{organization}
-\author{Jialiang Tang}
-\affiliation{organization}
-\author{Ruoqian Xu}
-\affiliation{organization}
-\author{Chufan Lyu}
-\affiliation{organization}
-\author{Runhong He}
-\affiliation{organization}
-\author{Runqiu Shu}
-\affiliation{organization}
 \author{Zidong Cui}
 \affiliation{organization}
-\author{Yikang Zhu}
-\affiliation{organization}
 \author{Xiaoting Wang}
+\affiliation{organization}
+\author{Kang Yang}
+\affiliation{organization}
+\author{Jiale Lu}
+\affiliation{organization}
+\author{Fan Yu}
+\affiliation{organization}
+\author{Man-Hong Yung}
+\email{yung.manhong@huawei.com}
 \affiliation{organization}
 
 \date{\today}
@@ -159,10 +171,11 @@
 \maketitle
 \tableofcontents
 \section{Introduction}
-Introduction of MindSpore Quantum.
+
 \input{1_Introduction}
 
 \section{Elements of MindSpore Quantum}
+\label{sec:elements}
 
 \subsection{Data Type}
 \input{2.1_Data_Type}
@@ -185,6 +198,7 @@ Introduction of MindSpore Quantum.
 
 
 \section{Circuit Simulation Backend}
+\label{sec:backend}
 
 \input{4.1_State_Vector_and_Density_Matrix_Simulator}
 
@@ -192,7 +206,7 @@ Introduction of MindSpore Quantum.
 \input{4.3_Channel_Based_Noise_Simulator}
 
 \section{ToolBox of MindSpore Quantum}
-
+\label{sec:toolbox}
 \subsection{Gradient of Variational Quantum Algorithm}
 \input{3.1_Gradient_of_Variational_Quantum_Algorithm}
 
@@ -227,6 +241,7 @@ Introduction of MindSpore Quantum.
 
 
 \section{QuPack: Acceleration Engine}
+\label{sec:qupack}
 \input{6_QuPack_Acceleration_Engine}
 
 \subsection{Variational Quantum Eigensolver}
@@ -248,7 +263,7 @@ Introduction of MindSpore Quantum.
 
 
 \section{Execution on Quantum Chip}
-
+\label{sec:chip}
 \subsection{Circuit Compilation and Optimization}
 \input{8.1_Circuit_Compilation_and_Optimization}
 
@@ -262,38 +277,40 @@ Introduction of MindSpore Quantum.
 % \input{8.4_Third-party_Quantum_Chip}
 
 \section{Summary}
+\label{sec:summary}
 We introduced \MindQuantum, a hybrid quantum-classical framework which focus on the design and implement of NISQ algorithm, especially Variational Quantum Algorithm. First, we showed the eDSL (embedded domain specific language) of how to manipulate quantum gate, quantum circuit and observable. \MindQuantum\ support arbitrary control qubits on any quantum gate, and based on JIT, high performance arbitrary costumed parameterized or non-parameterized gate is also supported. Then we showed how we implement state vector, density matrix and noisy quantum simulator and how we optimized the simulation with gate based optimization with SIMD, OpenMP, Kunpeng and GPU acceleration. Furthermore,we provide numerous application examples to help you quickly grasp the usage of \MindQuantum. These applications include VQE, QAOA and QNN. A acceleration engine call \QuPack\ was introduce, including how we speed up the simulation of VQE and QAOA algorithm. A benchmark on the performance compared with other quantum frameworks was demonstrated in Chapter ~\ref{sec:benchmark}, which showed advantages of \MindQuantum\ in several scenarios. Finally, we also showed the work that we have done about how to quickly compile and execute a quantum circuit on a real quantum chip.
 
 \section{Acknowledgement}
+\label{sec:acknowledgement}
 We sincerely thank the authors of this paper and their respective contributions, as follows:
 
 \begin{table}[ht]
     \begin{tabular}{|p{3cm}|p{3cm}|}
         \toprule
-        Author          & Section \\
+        Author        & Section                                        \\
         \midrule
-        Qingyu Li       & 2.1, 2.2, 5.3 \\
-        Qiang Zheng     & 2.3 \\
-        Jiale Liu       & 2.4 \\
-        Yanling Lin     & 2.5, 5.9 \\
-        Xusheng Xu      & 1, 2.6, 3.1, 3.2, 3.3, 4.1, 6.1, 7, 8.1, 9 \\
-        Zuoheng Zou     & 6.2, 6.3, 7 \\
-        Junyuan Zhou    & 3.3, 4.2, 4.3, 7 \\
-        Xu Zhou         & 5.1 \\
-        Jialiang Tang   & 5.2 \\
-        Ruoqian Xu      & 5.4 \\
-        Chufan Lyu      & 5.5 \\
-        Runhong He      & 5.6 \\
-        Runqiu Shu      & 5.7 \\
-        Zidong Cui      & 5.8, 6.4 \\
-        Yikang Zhu      & 8.2 \\
+        Qingyu Li     & 2.1, 2.2, 5.3                                  \\
+        Qiang Zheng   & 2.3                                            \\
+        Jiale Liu     & 2.4                                            \\
+        Yanling Lin   & 2.5, 5.9                                       \\
+        Xusheng Xu    & 1, 2.6, 3.1, 3.2, 3.3, 4.1, 6.1, 7, 8.1, 9, 10 \\
+        Zuoheng Zou   & 6.2, 6.3, 7                                    \\
+        Junyuan Zhou  & 3.3, 4.2, 4.3, 7                               \\
+        Xu Zhou       & 5.1                                            \\
+        Jialiang Tang & 5.2                                            \\
+        Ruoqian Xu    & 5.4                                            \\
+        Chufan Lyu    & 5.5                                            \\
+        Runhong He    & 5.6                                            \\
+        Runqiu Shu    & 5.7                                            \\
+        Zidong Cui    & 5.8, 6.4                                       \\
+        Yikang Zhu    & 8.2                                            \\
         \bottomrule
     \end{tabular}
     \caption{Contributions of authors}
     \label{tab:contributions}
 \end{table}
 
-We would like to thank all the contributors and users of \MindQuantum. It is the collective effort and attention of you that keeps this project going.
+We also thank Damien Ngyuen, Kai Zhang, Li Qin, Jinlin Zeng, Qi Yan, FangFang Yi, Youkun Ren, Hui Yang, Jiwei Xie, Ting Wang, Haoran Yang, YiXing Feng, Ting Wang, Han Yu, Xiaoling Huan, Jianing Luo and many other people for the contribution of continuous integration and documentation and Shenyu Huang, Xiaopeng Cui, Bowen Liu, Yao Wang for the contribution in promoting. We would like to thank all the contributors and users of \MindQuantum. It is the collective effort and attention of you that keeps this project going.
 This work is supported by the National Natural Science Foundation of China under the Grant No. XXXXXX.
 \bibliography{lib.bib}
 
