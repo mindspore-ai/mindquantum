@@ -149,7 +149,7 @@ mindquantum.device.QubitsTopology
             - **poi_x** (float) - 新的 x 轴坐标。
             - **poi_y** (float) - 新的 y 轴坐标。
 
-    .. py:method:: show(method:Optional[AVA_SHOW_METHOD]=None):
+    .. py:method:: show(method: Optional[AVA_SHOW_METHOD] = None):
 
         展示拓扑结构。
 
