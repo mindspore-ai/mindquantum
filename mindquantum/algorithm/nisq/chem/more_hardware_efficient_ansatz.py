@@ -309,7 +309,7 @@ class PCHeaXYZ1F(Ansatz, Initializer):
 
     For more information about this ansatz, please refer to `Physics-Constrained Hardware-Efficient
     Ansatz on Quantum Computers that is Universal, Systematically Improvable, and
-    Size-consistent <https://www.nature.com/articles/s41534-019-0240-1>`_.
+    Size-consistent <https://arxiv.org/abs/2307.03563>`_.
 
     Args:
         n_qubits (int): total qubits number of this ansatz.
@@ -390,7 +390,7 @@ class PCHeaXYZ2F(Ansatz, Initializer):
 
     For more information about this ansatz, please refer to `Physics-Constrained Hardware-Efficient
     Ansatz on Quantum Computers that is Universal, Systematically Improvable, and
-    Size-consistent <https://www.nature.com/articles/s41534-019-0240-1>`_.
+    Size-consistent <https://arxiv.org/abs/2307.03563>`_.
 
     Args:
         n_qubits (int): total qubits number of this ansatz.

@@ -8,7 +8,7 @@ mindquantum.algorithm.nisq.PCHeaXYZ2F
     .. image:: ./ansatz_images/PCHeaXYZ2F.png
         :height: 180px
 
-    请参考论文 `Physics-Constrained Hardware-Efficient Ansatz on Quantum Computers that is Universal, Systematically Improvable, and Size-consistent <https://www.nature.com/articles/s41534-019-0240-1>`_.
+    请参考论文 `Physics-Constrained Hardware-Efficient Ansatz on Quantum Computers that is Universal, Systematically Improvable, and Size-consistent <https://arxiv.org/abs/2307.03563>`_.
 
     参数：
         - **n_qubits** (int) - 量子线路的总比特数。
