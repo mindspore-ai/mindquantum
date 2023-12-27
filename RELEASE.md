@@ -6,60 +6,58 @@
 
 ### Major Feature and Improvements
 
-#### Data precision
-
-- [STABLE] [`Data Precision`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.dtype.html): MindQuantum now supports `float32`, `float64`, `complex64` and `complex128` four types of precision, and can set different precision types for operators, parameter resolvers and simulators.
-
 #### Gates
 
-- [STABLE] [`Quantum Gates`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#quantum-gate): Added multiple two-qubit Pauli rotation gate, including: [`Rxx`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxx.html#mindquantum.core.gates.Rxx), [`Rxy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxy.html#mindquantum.core.gates.Rxy), [`Rxz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rxz.html#mindquantum.core.gates.Rxz), [`Ryy`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Ryy.html#mindquantum.core.gates.Ryy), [`Ryz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Ryz.html#mindquantum.core.gates.Ryz) and [`Rzz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.Rzz.html#mindquantum.core.gates.Rzz).
-- [STABLE] [`Quantum Channel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.html#quantum-channel): Noise channels now support returning kraus operators via the `.matrix()` method.
-
-#### Operator
-
-- [STABLE] [`QubitOperator`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.operators.QubitOperator.html#mindquantum.core.operators.QubitOperator): Added [ `relabel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.operators.QubitOperator.html#mindquantum.core.operators.QubitOperator.relabel) interface, supports according to new qubit number to rearrange operators. [`FermionOperator`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.operators.FermionOperator.html#mindquantum.core.operators.FermionOperator.relabel) also supports this function.
-- [STABLE] [`Ground state calculation`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.operators.ground_state_of_sum_zz.html#mindquantum.core.operators.ground_state_of_sum_zz): New interface supports the calculation of the ground state energy of the Hamiltonian containing only the direct product of the Pauli-Z operator and the Pauli-Z operator.
-
-#### Ansatz
-
-- [STABLE] [`Ansatz`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.nisq.html#ansatz): Add 19 ansatz mentioned in Arxiv:[`1905.10876`](https://arxiv.org/abs/1905.10876), all have been implemented.
+- [STABLE] [`Arbitry axis rotation`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.Rn.html#mindquantum.core.gates.Rn): New single-qubit gates for arbitrary axis rotation on the Bloch sphere[`Rn`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.Rn.html#mindquantum.core.gates.Rn)。
+- [STABLE] [`matrix`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.Rxx.html#mindquantum.core.gates.Rxx.matrix): The quantum gate supports retrieving its complete matrix representation by using the interface and specifying the parameter `full=True`. This matrix representation is influenced by the target qubit and the control qubit, if applicable.
+- [STABLE] [`热弛豫信道`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.ThermalRelaxationChannel.html#mindquantum.core.gates.ThermalRelaxationChannel): Add ThermalRelaxationChannel.
+- [Alpha] [`量子测量`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.Measure.html#mindquantum.core.gates.Measure): The measurement gate now supports qubit reset functionality, allowing the measured quantum state to be reset to the |0⟩ state or the |1⟩ state. The execution speed of the measurement gate has been optimized for improved performance.
+- [STABLE] [`RotPauliString`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.RotPauliString.html#mindquantum.core.gates.RotPauliString): Add arbitrary pauli string rotation gate.
+- [STABLE] [`GroupedPauli`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.GroupedPauli.html#mindquantum.core.gates.GroupedPauli): Add Pauli combination gate. This gate allows for faster execution compared to individually applying single Pauli gates.
+- [STABLE] [`GroupedPauliChannel`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.GroupedPauliChannel.html#mindquantum.core.gates.GroupedPauliChannel): Add Pauli combination channel. This channel allows for faster execution compared to applying Pauli channels individually.
+- [STABLE] [`SX`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.RX.html#mindquantum.core.gates.RX): Add sqrt X gate.
+- [STABLE] [Givens]: Add Givens rotation gate.
 
 #### Circuit
 
-- [STABLE] [`ChannelAdder`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.circuit.html#channel-adder): Add `ChannelAdder` module, support customized adding various quantum channels into the quantum circuit to construct a noise model. For more details, please refer to: [`ChannelAdder`](https://mindspore.cn/mindquantum/docs/en/master/noise_simulator.html).
+- [STABLE] [`summary`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.summary): The summary information of the quantum circuit displayed through this interface will be presented in a table format, making it more visually appealing and straightforward.
+- [STABLE] [`svg`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.svg): 现在可以通过控制参数`scale`来对量子线路图进行缩放。
+- [STABLE] [`openqasm`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit): 量子线路直接支持转化为[`openqasm`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.to_openqasm)或者从[`openqasm`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.from_openqasm)转化为mindquantum线路。
 
-#### Simulator
+#### ParameterResolver
 
-- [STABLE] [`Density Matrix Simulator`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator): Add density matrix simulator, named `mqmatrix`. Support variational quantum algorithms, noise simulation, etc. Its functionality is basically aligned with the existing `mqvector` full-amplitude simulator.
-- [BETA] [`parameter shift`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad): The quantum simulator gradient operator now supports the parameter shift rule algorithm, which is closer to the experiment.
-- [STABLE] [`Expectation Calculation`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation): interface is basically aligned with [`get_expectation_with_grad`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad), but does not calculate the gradient, saving time.
+- [STABLE] [`PRGenerator`](https://www.mindspore.cn/mindquantum/docs/en/master/core/parameterresolver/mindquantum.core.parameterresolver.PRGenerator.html#mindquantum.core.parameterresolver.PRGenerator): [`new`](https://www.mindspore.cn/mindquantum/docs/en/master/core/parameterresolver/mindquantum.core.parameterresolver.PRGenerator.html#mindquantum.core.parameterresolver.PRGenerator.new)接口支持配置临时的前缀和后缀。
+
+#### Ansatz
+
+- [STABLE] [`硬件友好型量子线路`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/mindquantum.algorithm.nisq.html#ansatz): 新增多种硬件友好型量子线路，请参考论文[Physics-Constrained Hardware-Efficient Ansatz on Quantum Computers that is Universal, Systematically Improvable, and Size-consistent](https://arxiv.org/abs/2307.03563)。
 
 #### Device
 
-- [STABLE] [`QubitNode`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.device.QubitNode.html#mindquantum.device.QubitNode): Added the qubit node object in the qubit topology interface, which supports the configuration of qubit position, color and connectivity.
-- [STABLE] [`QubitsTopology`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.device.QubitsTopology.html#mindquantum.device.QubitsTopology): Qubit topology, supports custom topology. Also available with preset structures: linear qubit topology [`LinearQubits`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.device.LinearQubits.html#mindquantum.device.LinearQubits) and grid qubit topology [`GridQubits`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.device.GridQubits.html#mindquantum.device.GridQubits).
+- [STABLE] [`QubitsTopology`](https://www.mindspore.cn/mindquantum/docs/en/master/device/mindquantum.device.QubitsTopology.html#mindquantum.device.QubitsTopology): 支持通过[set_edge_color](https://www.mindspore.cn/mindquantum/docs/en/master/device/mindquantum.device.QubitsTopology.html#mindquantum.device.QubitsTopology.set_edge_color)设置不同边的颜色。支持通过`show`来直接展示拓扑结构图。
+
+#### Simulator
+
+- [STABLE] [`sampling`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.sampling): 加速量子模拟器在对不含噪声且测量门全部在线路末端的量子线路的采样。
+
+#### utils
+
+- [STABLE] [`进度条`](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.utils.html#progress-bar): 新增两个基于rich构建的简单易用的进度条，分别为支持单层循环的[`SingleLoopProgress`](https://www.mindspore.cn/mindquantum/docs/en/master/utils/mindquantum.utils.SingleLoopProgress.html#mindquantum.utils.SingleLoopProgress)和支持两层循环的[`TwoLoopsProgress`](https://www.mindspore.cn/mindquantum/docs/en/master/utils/mindquantum.utils.TwoLoopsProgress.html#mindquantum.utils.TwoLoopsProgress)。
+- [Alpha] [random_insert_gates]: 支持在量子线路中随机插入量子门。
 
 #### Algorithm
 
-- [STABLE] [`Bit Mapping`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.mapping.html): Added Bit mapping algorithm [`SABRE`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.mapping.SABRE.html#mindquantum.algorithm.mapping.SABRE), please refer to Arxiv [`1809.02573`](https://arxiv.org/abs/1809.02573).
-- [BETA] [`Error Mitigation`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.error_mitigation.zne.html): Added zero noise extrapolation algorithm for quantum error mitigation.
-- [STABLE] [`Circuit folding`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.error_mitigation.fold_at_random.html): The quantum circuit folding function is added to support the growth of quantum circuits while ensuring the equivalence of quantum circuits.
-- [BETA] [`Quantum circuit compilation`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.compiler.html): A new quantum circuit compilation module is added, which uses [`DAG`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.compiler.DAGCircuit.html) graphs to compile quantum circuits, and supports quantum compilation algorithms such as gate replacement, gate fusion, and gate decomposition.
-- [STABLE] [`ansatz_variance`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.nisq.ansatz_variance.html): Added an interface to calculate the variance of the gradient of a certain parameter in the variable quantum circuit, which can be used to verify the [`barren plateau`](https://www.nature.com/articles/s41467-018-07090-4) phenomenon of the variable quantum circuit.
+- [Alpha] [`MQSABRE`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/mapping/mindquantum.algorithm.mapping.MQSABRE.html#mindquantum.algorithm.mapping.MQSABRE): 新增支持设置量子门保真度的比特映射算法。
 
-#### Framework
+### Bug Fix
 
-- [STABLE] [`QRamVecLayer`](https://mindspore.cn/mindquantum/docs/en/master/layer/mindquantum.framework.QRamVecLayer.html): The QRam quantum encoding layer has been added to support direct encoding of classical data into full-amplitude quantum states. The corresponding operator is [`QRamVecOps`](https://mindspore.cn/mindquantum/docs/en/master/operations/mindquantum.framework.QRamVecOps.html#mindquantum.framework.QRamVecOps).
-
-#### IO
-
-- [STABLE] [`OpenQASM`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.OpenQASM.html): OpenQASM has added the [`from_string`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.io.OpenQASM.html#mindquantum.io.OpenQASM.from_string) interface, which supports converting OpenQASM from string format to quantum circuits in MindQuantum.
-
-### Bug fix
-
-- [`PR1757`](https://gitee.com/mindspore/mindquantum/pulls/1757): Fixed the bug of [`StronglyEntangling`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.algorithm.nisq.StronglyEntangling.html) when the depth is greater than 2.
-- [`PR1700`](https://gitee.com/mindspore/mindquantum/pulls/1700): Fixed matrix expression of [`CNOT`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.CNOTGate.html) gates and logic errors of [`AmplitudeDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.AmplitudeDampingChannel.html).
-- [`PR1523`](https://gitee.com/mindspore/mindquantum/pulls/1523): Fix logic errors of [`PhaseDampingChannel`](https://mindspore.cn/mindquantum/docs/en/master/mindquantum.core.gates.PhaseDampingChannel.html).
+- [`PR1971`](https://gitee.com/mindspore/mindquantum/pulls/1971): 修复[`amplitude_encoder`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/library/mindquantum.algorithm.library.amplitude_encoder.html#mindquantum.algorithm.library.amplitude_encoder)中符号错误问题。
+- [`PR2094`](https://gitee.com/mindspore/mindquantum/pulls/2094): 修复[`get_expectation_with_grad`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation_with_grad)在使用parameter shift规则时随机数种子单一性问题。
+- [`PR2164`](https://gitee.com/mindspore/mindquantum/pulls/2164): 修复windows系统下的构建脚本传入参数问题。
+- [`PR2171`](https://gitee.com/mindspore/mindquantum/pulls/2171): 修复密度矩阵模拟器在量子态复制时可能遇到的空指针问题。
+- [`PR2175`](https://gitee.com/mindspore/mindquantum/pulls/2175): 修复泡利信道的概率可以为负数的问题。
+- [`PR2176`](https://gitee.com/mindspore/mindquantum/pulls/2176): 修复parameter shift规则在处理含控制位量子门时的问题。
+- [`PR2210`](https://gitee.com/mindspore/mindquantum/pulls/2210): 修复parameter shift规则在处理多参数门且部分参数为常数时的问题。
 
 ### Contributor
 
