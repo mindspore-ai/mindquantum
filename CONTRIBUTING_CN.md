@@ -1,5 +1,7 @@
 # MindSpore Quantum贡献指南
 
+[View English](https://gitee.com/mindspore/mindquantum/blob/master/CONTRIBUTING.md)
+
 - [MindSpore Quantum贡献指南](#mindspore-quantum贡献指南)
     - [贡献者许可协议](#贡献者许可协议)
     - [量子计算简介](#量子计算简介)
