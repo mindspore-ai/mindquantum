@@ -21,11 +21,11 @@ Multistate contracted VQE: 这个算法使用无权重的Subspace search VQE算�
 Orthogonal State Reduction Variational Eigensolver: 这个算法使用ancilla 量子比特，以去除已得到的本征态在cost function中的权重，从而得到只存在激发态能量的effective cost function。优化这个cost function即可得到下一个本征态。同时也意味着，制备k个本征态需要k个ancilla qubit。
 
 
-## 训练
+## 训练:
 在算法演示中，使用的例子模型为海森堡模型。使用的所有变分电路为`mindquantum.algorithm.nisq.HardwareEfficientAnsatz`。本次用的是`scipy`里集成的`L-BFGS-B`优化器，使用的是默认的超参数，初始参数用`numpy.random.rand`函数随机生成。
 
 
 ## 参考论文:
-[1] [MindQuantum](https://gitee.com/mindspore/mindquantum/tree/master)
-[2] [Noisy intermediate-scale quantum (NISQ) algorithms](https://doi.org/10.1103/RevModPhys.94.015004)
-[3] [Orthogonal State Reduction Variational Eigensolver for the Excited-State Calculations on Quantum Computers](https://pubs.acs.org/doi/10.1021/acs.jctc.2c00159)
+[1] [MindQuantum](https://gitee.com/mindspore/mindquantum/tree/master)    
+[2] [Noisy intermediate-scale quantum (NISQ) algorithms](https://doi.org/10.1103/RevModPhys.94.015004)    
+[3] [Orthogonal State Reduction Variational Eigensolver for the Excited-State Calculations on Quantum Computers](https://pubs.acs.org/doi/10.1021/acs.jctc.2c00159)     
