@@ -491,7 +491,7 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
-                [0, 0, 0, 1j * np.exp(1j * phi)],
+                [0, 0, 0, -1j * np.exp(-1j * phi)],
             ]
         )
 
@@ -569,7 +569,7 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
 @pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
 def test_rn_expectation_with_grad(config):  # pylint: disable=R0914
     """
-    Description: test expectation and gradient of FSim gate
+    Description: test expectation and gradient of Rn gate
     Expectation: success.
     """
     virtual_qc, dtype = config

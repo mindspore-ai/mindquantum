@@ -39,7 +39,7 @@ tensor::Matrix U3Matrix(tensor::Tensor theta, tensor::Tensor phi, tensor::Tensor
 tensor::Matrix FSimMatrix(tensor::Tensor theta, tensor::Tensor phi) {
     auto b = tensor::ops::sin(theta) * std::complex<float>(0, -1);
     auto a = tensor::ops::cos(theta).astype(b.dtype);
-    auto c = tensor::ops::exp(phi * std::complex<float>(0, 1));
+    auto c = tensor::ops::exp(phi * std::complex<float>(0, -1));
     auto one = tensor::ops::ones(1, c.dtype);
     auto zero = tensor::ops::zeros(1, c.dtype);
     return tensor::Matrix(
@@ -135,7 +135,7 @@ tensor::Matrix U3DiffPhiMatrix(tensor::Tensor theta, tensor::Tensor phi, tensor:
 }
 
 tensor::Matrix FSimDiffPhiMatrix(tensor::Tensor phi) {
-    auto c = tensor::ops::exp((phi + M_PI_2) * std::complex<float>(0, 1));
+    auto c = tensor::ops::exp((phi + M_PI_2) * std::complex<float>(0, -1));
     auto out = tensor::Matrix(tensor::ops::zeros(16, c.dtype), 4, 4);
     tensor::ops::set(&out, c, 15);
     return out;

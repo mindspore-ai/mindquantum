@@ -1753,7 +1753,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const q
                     for (index_t col = 0; col < dim; col++) {
                         this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
                     }
-                    this_res *= IMAGE_I;
+                    this_res *= IMAGE_MI;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
                 })
@@ -1772,7 +1772,7 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffFSimPhi(const q
                         for (index_t col = 0; col < dim; col++) {
                             this_res += GetValue(qs, r3, col) * GetValue(ham_matrix, col, r3);
                         }
-                        this_res *= IMAGE_I;
+                        this_res *= IMAGE_MI;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
                     }

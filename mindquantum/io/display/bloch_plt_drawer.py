@@ -580,6 +580,6 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
 
 def plot_state_bloch(quantum_state):
     scene = BlochScene()
-    fig, ax = scene.create_scene()
+    _, ax = scene.create_scene()
     scene.add_state(ax, quantum_state)
     return scene

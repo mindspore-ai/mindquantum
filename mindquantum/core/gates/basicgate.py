@@ -2331,7 +2331,7 @@ class FSim(MultiParamsGate):
             1 & 0 & 0 & 0\\
             0 & \cos(\theta) & -i\sin(\theta) & 0\\
             0 & -i\sin(\theta) & \cos(\theta) & 0\\
-            0 & 0 & 0 & e^{i\phi}\\
+            0 & 0 & 0 & e^{-i\phi}\\
         \end{pmatrix}
 
     Args:
@@ -2437,7 +2437,7 @@ class FSim(MultiParamsGate):
         phi = phi.const
         ele_a = np.cos(theta)
         ele_b = -1j * np.sin(theta)
-        ele_c = np.exp(1j * phi)
+        ele_c = np.exp(-1j * phi)
         return np.array([[1, 0, 0, 0], [0, ele_a, ele_b, 0], [0, ele_b, ele_a, 0], [0, 0, 0, ele_c]])
 
     def get_cpp_obj(self):
