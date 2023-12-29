@@ -532,7 +532,7 @@ def test_multi_params_gate(config):
     virtual_qc, dtype = config
     sim = Simulator(virtual_qc, 2, dtype=dtype)
     circ = Circuit() + G.U3('a', 'b', 1.0).on(0) + G.U3('c', 'd', 2.0).on(1) + G.X.on(0, 1)
-    circ += G.FSim('e', 3.0).on([0, 1])
+    circ += G.FSim('e', -3.0).on([0, 1])
     p0 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     sim.apply_circuit(circ, pr=dict(zip(circ.params_name, p0)))
     qs_exp = np.array([0.06207773 + 0.0j, 0.12413139 + 0.44906334j, 0.10068061 - 0.05143708j, 0.65995413 + 0.57511569j])

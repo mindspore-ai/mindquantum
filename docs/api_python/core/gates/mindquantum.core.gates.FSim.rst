@@ -8,7 +8,7 @@ mindquantum.core.gates.FSim
     .. math::
 
         {\rm FSim}(\theta, \phi)=\begin{pmatrix}1&0&0&0\\0&\cos(\theta)&-i\sin(\theta)&0\\
-            0&-i\sin(\theta)&\cos(\theta)&0\\0&0&0&e^{i\phi}\end{pmatrix}
+            0&-i\sin(\theta)&\cos(\theta)&0\\0&0&0&e^{-i\phi}\end{pmatrix}
 
     参数：
         - **theta** (Union[numbers.Number, dict, ParameterResolver]) - FSim 门的第一个参数。

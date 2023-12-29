@@ -14,13 +14,10 @@
 # ============================================================================
 """Strongly entangling ansatz."""
 
-from mindquantum.core.circuit import Circuit, add_prefix
+from mindquantum.core.circuit import Circuit, add_prefix, add_suffix
 from mindquantum.core.gates import BasicGate
 from mindquantum.core.gates.basicgate import U3
-from mindquantum.utils.type_value_check import (
-    _check_int_type,
-    _check_value_should_not_less,
-)
+from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less, _check_input_type
 
 from .._ansatz import Ansatz
 
@@ -63,12 +60,14 @@ class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
               ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┗━━━┛
     """
 
-    def __init__(self, n_qubits: int, depth: int, entangle_gate: BasicGate):
+    def __init__(self, n_qubits: int, depth: int, entangle_gate: BasicGate, prefix: str = '', suffix: str = ''):
         """Initialize a strongly entangling ansatz."""
         _check_int_type('n_qubits', n_qubits)
         _check_int_type('depth', depth)
         _check_value_should_not_less('n_qubits', 2, n_qubits)
         _check_value_should_not_less('depth', 1, depth)
+        _check_input_type('prefix', str, prefix)
+        _check_input_type('suffix', str, suffix)
         if not isinstance(entangle_gate, BasicGate) or entangle_gate.parameterized:
             raise ValueError(f"entangle gate requires a non parameterized gate, but get {entangle_gate}")
         m_dim = entangle_gate.matrix().shape[0]
@@ -80,6 +79,8 @@ class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
             raise ValueError(
                 f"error gate, entangle_gate can only be one qubit or two qubits, but get dimension with {m_dim}"
             )
+        self.prefix = prefix
+        self.suffix = suffix
         super().__init__('Strongly Entangling', n_qubits, depth, entangle_gate)
 
     def _implement(self, depth, entangle_gate):  # pylint: disable=arguments-differ
@@ -97,3 +98,7 @@ class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
                 else:
                     circ += entangle_gate.on([(idx + current_depth + loop) % self.n_qubits, idx])
         self._circuit = circ
+        if self.prefix:
+            self._circuit = add_prefix(self._circuit, self.prefix)
+        if self.suffix:
+            self._circuit = add_suffix(self._circuit, self.suffix)

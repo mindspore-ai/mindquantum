@@ -18,12 +18,9 @@ import itertools
 
 import numpy as np
 
-from mindquantum.core.circuit import AP, A, Circuit
+from mindquantum.core.circuit import AP, A, Circuit, add_prefix, add_suffix
 from mindquantum.core.gates import BasicGate, X
-from mindquantum.utils.type_value_check import (
-    _check_int_type,
-    _check_value_should_not_less,
-)
+from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less, _check_input_type
 
 from .._ansatz import Ansatz
 
@@ -82,13 +79,26 @@ class HardwareEfficientAnsatz(Ansatz):
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1):
+    def __init__(
+        self,
+        n_qubits,
+        single_rot_gate_seq,
+        entangle_gate=X,
+        entangle_mapping='linear',
+        depth=1,
+        prefix: str = '',
+        suffix: str = '',
+    ):
         """Initialize a HardwareEfficientAnsatz object."""
         _check_single_rot_gate_seq(single_rot_gate_seq)
         _check_int_type('depth', depth)
         _check_value_should_not_less('depth', 1, depth)
+        _check_input_type('prefix', str, prefix)
+        _check_input_type('suffix', str, suffix)
         if not isinstance(entangle_gate, BasicGate) or entangle_gate.parameterized:
             raise ValueError(f"entangle gate requires a non parameterized gate, but get {entangle_gate}")
+        self.prefix = prefix
+        self.suffix = suffix
         super().__init__('Hardware Efficient', n_qubits, single_rot_gate_seq, entangle_gate, entangle_mapping, depth)
 
     # pylint: disable=arguments-differ,invalid-name
@@ -101,6 +111,10 @@ class HardwareEfficientAnsatz(Ansatz):
             circ += self._build_entangle(entangle_gate, entangle_mapping)
         circ += AP(self._build_single_rot(single_rot_gate_seq), f'd{d+1}')
         self._circuit = circ
+        if self.prefix:
+            self._circuit = add_prefix(self._circuit, self.prefix)
+        if self.suffix:
+            self._circuit = add_suffix(self._circuit, self.suffix)
 
     def _get_entangle_mapping(self, entangle_mapping):
         """Get entanglement mapping."""

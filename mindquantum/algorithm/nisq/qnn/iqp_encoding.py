@@ -17,7 +17,7 @@
 import numpy as np
 
 from mindquantum.algorithm.nisq._ansatz import Ansatz
-from mindquantum.core.circuit import UN, Circuit
+from mindquantum.core.circuit import UN, Circuit, add_prefix, add_suffix
 from mindquantum.core.gates import BARRIER, RZ, H, ParameterGate, X
 from mindquantum.utils.type_value_check import (
     _check_input_type,
@@ -71,7 +71,15 @@ class IQPEncoding(Ansatz):
                 0.31027229+0.16950252j,  0.31027229+0.16950252j])
     """
 
-    def __init__(self, n_feature, first_rotation_gate=RZ, second_rotation_gate=RZ, num_repeats=1):
+    def __init__(
+        self,
+        n_feature,
+        first_rotation_gate=RZ,
+        second_rotation_gate=RZ,
+        num_repeats=1,
+        prefix: str = '',
+        suffix: str = '',
+    ):
         """Initialize an IQPEncoding object."""
         _check_int_type("n_feature", n_feature)
         _check_value_should_not_less("n_feature", 1, n_feature)
@@ -79,11 +87,15 @@ class IQPEncoding(Ansatz):
         _check_value_should_not_less("num_repeats", 1, num_repeats)
         _check_intrinsconeparagate("first_rotation_gate", first_rotation_gate)
         _check_intrinsconeparagate("second_rotation_gate", second_rotation_gate)
+        _check_input_type('prefix', str, prefix)
+        _check_input_type('suffix', str, suffix)
 
         self.n_feature = n_feature
         self.first_rotation_gate = first_rotation_gate
         self.second_rotation_gate = second_rotation_gate
         self.num_repeats = num_repeats
+        self.prefix = prefix
+        self.suffix = suffix
         super().__init__("IQPEncoding", n_feature)
 
     def _implement(self):  # pylint: disable=arguments-differ
@@ -98,6 +110,10 @@ class IQPEncoding(Ansatz):
             repeat_unit += X.on(i, i - 1)
         repeat_unit += BARRIER
         self._circuit += repeat_unit * self.num_repeats
+        if self.prefix:
+            self._circuit = add_prefix(self._circuit, self.prefix)
+        if self.suffix:
+            self._circuit = add_suffix(self._circuit, self.suffix)
 
     def data_preparation(self, data):
         r"""

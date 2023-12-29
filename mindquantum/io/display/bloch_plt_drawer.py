@@ -577,3 +577,9 @@ class BlochScene:  # pylint: disable=too-many-instance-attributes
                 self.update(objs, new_amps[i])
 
         return animation.FuncAnimation(fig, func, new_amps.shape[0], interval=interval, **kwargs)
+
+def plot_state_bloch(quantum_state):
+    scene = BlochScene()
+    _, ax = scene.create_scene()
+    scene.add_state(ax, quantum_state)
+    return scene
