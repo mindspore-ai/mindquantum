@@ -24,6 +24,7 @@ class PRGenerator:
     Generate parameters one by one.
 
     Args:
+        name (str): The main name of parameters. Default: ``'p'``.
         prefix (str): The prefix of parameters. Default: ``''``.
         suffix (str): The suffix of parameters. Default: ``''``.
         dtype (mindquantum.dtype): the data type of this parameter resolver. If ``None``,
@@ -43,12 +44,13 @@ class PRGenerator:
         1
     """
 
-    def __init__(self, prefix: str = '', suffix: str = '', dtype=None):
+    def __init__(self, name='p', prefix: str = '', suffix: str = '', dtype=None):
         """Initialize a pr generator."""
         if dtype is None:
             self.dtype = mq.float64
         else:
             self.dtype = dtype
+        self.name = name
         self.prefix = prefix
         self.suffix = suffix
         if prefix:
@@ -81,7 +83,9 @@ class PRGenerator:
             prefix += '_'
         if suffix:
             suffix = '_' + suffix
-        out = ParameterResolver(f'{prefix}{self.prefix}p{self.current_idx}{self.suffix}{suffix}', dtype=self.dtype)
+        out = ParameterResolver(
+            f'{prefix}{self.prefix}{self.name}{self.current_idx}{self.suffix}{suffix}', dtype=self.dtype
+        )
         self.all_pr.append(out)
         self.current_idx += 1
         return out
