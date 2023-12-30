@@ -110,4 +110,4 @@ class Initializer:
         _check_input_type('suffix', str, suffix)
         self.n_qubits = n_qubits
         self.depth = depth
-        self.pr_gen = PRGenerator(prefix, suffix)
+        self.pr_gen = PRGenerator(prefix=prefix, suffix=suffix)
