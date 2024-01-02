@@ -15,7 +15,7 @@
 
 """Utils."""
 
-from .f import mod, normalize, random_circuit, random_state
+from .f import mod, normalize, random_circuit, random_insert_gates, random_state
 from .fdopen import fdopen
 from .progress import SingleLoopProgress, TwoLoopsProgress
 from .string_utils import ket_string
@@ -25,6 +25,7 @@ __all__ = [
     'mod',
     'normalize',
     'random_state',
+    'random_insert_gates',
     'ket_string',
     'random_circuit',
     'TwoLoopsProgress',
