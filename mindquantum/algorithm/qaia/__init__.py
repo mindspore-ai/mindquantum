@@ -18,11 +18,13 @@ from .CAC import CAC
 from .CFC import CFC
 from .LQA import LQA
 from .NMFA import NMFA
+from .QAIA import QAIA
 from .SB import aSB, bSB, dSB
 from .SFC import SFC
 from .SimCIM import SimCIM
 
 __all__ = [
+    "QAIA",
     "CAC",
     "CFC",
     "LQA",
