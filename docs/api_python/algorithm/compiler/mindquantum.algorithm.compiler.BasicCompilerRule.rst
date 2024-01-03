@@ -12,6 +12,7 @@ mindquantum.algorithm.compiler.BasicCompilerRule
         - **log_level** (int) - 展示log信息的级别。如果为 ``0``，log信息不会被展示。如果为 ``1``，log信息展示较为简洁。如果为 ``2``，log信息展示较为丰富。默认值： ``0``。
 
     .. py:method:: do(dag_circuit: DAGCircuit)
+        :abstractmethod:
 
         原位的将该编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 

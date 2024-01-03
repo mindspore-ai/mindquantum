@@ -1,7 +1,7 @@
 mindquantum.core.gates.ThermalRelaxationChannel
 ================================================
 
-.. py:class:: mindquantum.core.gates.ThermalRelaxationChannel(self, t1: float, t2: float, gate_time: float, **kwargs)
+.. py:class:: mindquantum.core.gates.ThermalRelaxationChannel(t1: float, t2: float, gate_time: float, **kwargs)
 
     热弛豫信道。
 

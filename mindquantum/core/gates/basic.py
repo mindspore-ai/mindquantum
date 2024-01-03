@@ -370,8 +370,10 @@ class MatrixGate(QuantumGate):
         Matrix of parameterized gate.
 
         Args:
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -541,8 +543,10 @@ class NoneParamNonHermMat(NoneParameterGate, MatrixGate, NonHermitianGate):
         Matrix of parameterized gate.
 
         Args:
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -640,8 +644,10 @@ class RotSelfHermMat(ParameterOppsGate):
         Args:
             pr (Union[ParameterResolver, dict]): The parameter of this gate. Default: None.
             frac (numbers.Number): The multiple of the coefficient. Default: ``0.5``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -708,7 +714,8 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
 
         Args:
             pr (Union[dict, ParameterResolver]): Parameters of this gate.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
 
         Returns:
             numpy.ndarray, Return the numpy array of the matrix.
@@ -724,6 +731,7 @@ class ParamNonHerm(ParameterGate, NonHermitianGate):
             array([[0.36+0.j  , 0.  -0.93j],
                    [0.  -0.93j, 0.36+0.j  ]])
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit

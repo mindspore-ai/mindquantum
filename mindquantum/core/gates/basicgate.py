@@ -183,11 +183,13 @@ class GroupedPauli(NoneParameterGate, SelfHermitianGate):
         Matrix of this gate.
 
         Args:
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -644,11 +646,13 @@ class Givens(ParameterOppsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -875,11 +879,13 @@ class SWAPalpha(ParameterOppsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -978,11 +984,14 @@ class Rzz(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
+            kwargs (dict): Other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1065,11 +1074,14 @@ class Rxx(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
+            kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1152,11 +1164,14 @@ class Ryy(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
+            kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1231,11 +1246,14 @@ class Rxy(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
+            kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1308,11 +1326,14 @@ class Rxz(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
+            kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1385,11 +1406,14 @@ class Ryz(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: None.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
+            kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1502,12 +1526,14 @@ class GlobalPhase(RotSelfHermMat):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
             kwargs (dict): other key arguments.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1546,7 +1572,7 @@ class RotPauliString(ParameterOppsGate):
         U(\theta)=e^{-i\theta P/2}, P=\otimes_i\sigma_i, \text{where } \sigma \in \{X, Y, Z\}
 
     Args:
-        pauli_string (str): The pauli string. Each element should be in ``['x', 'y', 'z', 'X', 'Y', 'Z']``.
+        pauli_string (str): The pauli string. Each element should be in ``['i', 'x', 'y', 'z', 'I', 'X', 'Y', 'Z']``.
         pr (Union[int, float, str, dict, ParameterResolver]): the parameters of parameterized gate.
 
     Examples:
@@ -1591,11 +1617,13 @@ class RotPauliString(ParameterOppsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -1673,11 +1701,13 @@ class PhaseShift(ParameterOppsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter value for parameterized gate. Default: ``None``.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
 
         Returns:
             numpy.ndarray, the matrix of this gate.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -2140,8 +2170,10 @@ class Rn(MultiParamsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter for Rn gate.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -2275,8 +2307,10 @@ class U3(MultiParamsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter for U3 gate.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit
@@ -2415,8 +2449,10 @@ class FSim(MultiParamsGate):
 
         Args:
             pr (Union[ParameterResolver, dict]): The parameter of fSim gate. Default: None.
-            full (bool): Whether to get the full matrix of this gte. Default: ``False``.
+            full (bool): Whether to get the full matrix of this gate (the gate
+                should be acted on some qubits). Default: ``False``.
         """
+        _check_input_type('full', bool, full)
         if full:
             # pylint: disable=import-outside-toplevel
             from mindquantum.core.circuit import Circuit

@@ -20,6 +20,7 @@ mindquantum.core.gates.Rn
         - **gamma** (Union[numbers.Number, dict, ParameterResolver]) - Rn 门的第三个参数。
 
     .. py:method:: alpha()
+        :property:
 
         获取 Rn 门的参数 alpha。
 
@@ -27,6 +28,7 @@ mindquantum.core.gates.Rn
             ParameterResolver，参数 alpha。
 
     .. py:method:: beta()
+        :property:
 
         获取 Rn 门的参数 beta。
 
@@ -34,6 +36,7 @@ mindquantum.core.gates.Rn
             ParameterResolver，参数 beta。
 
     .. py:method:: gamma()
+        :property:
 
         获取 Rn 门的参数 gamma。
 

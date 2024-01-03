@@ -21,6 +21,7 @@ mindquantum.core.gates.BasicGate
         定义对应的 `projectq` 中的量子门。
 
     .. py:method:: get_cpp_obj()
+        :abstractmethod:
 
         获取底层c++对象。
 
