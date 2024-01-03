@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Quantum algorithms."""
+"""Quantum Annealing-Inspired Algorithms."""
 
-from . import compiler, error_mitigation, library, mapping, nisq, qaia
-from .error_mitigation import *
-from .library import *
-from .mapping import *
-from .nisq import *
+from .CAC import CAC
+from .CFC import CFC
+from .LQA import LQA
+from .NMFA import NMFA
+from .SB import aSB, bSB, dSB
+from .SFC import SFC
+from .SimCIM import SimCIM
 
-__all__ = []
-__all__.extend(library.__all__)
-__all__.extend(nisq.__all__)
-__all__.extend(error_mitigation.__all__)
-__all__.extend(mapping.__all__)
-__all__.sort()
+__all__ = [
+    "CAC",
+    "CFC",
+    "LQA",
+    "NMFA",
+    "aSB",
+    "bSB",
+    "dSB",
+    "SFC",
+    "SimCIM",
+]
