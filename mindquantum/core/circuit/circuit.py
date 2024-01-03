@@ -1094,11 +1094,6 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 will return the string. Otherwise, we will save to given file.
                 Default: ``None``.
             version (str): The OpenQASM version you want to use. Default: ``'2.0'``.
-
-        Raises:
-            TypeError: if `version` is not a str.
-            NotImplementedError: if OpenQASM version not implement.
-            ValueError: if gate not implement in this version.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
@@ -1117,11 +1112,6 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 will return the string. Otherwise, we will save to given file.
                 Default: ``None``.
             version (str): The HiQASM version you want to use. Default: ``'0.1'``.
-
-        Raises:
-            TypeError: if `version` is not a str.
-            NotImplementedError: if HiQASM version not implement.
-            ValueError: if gate not implement in this version.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import HiQASM
@@ -1341,13 +1331,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     @staticmethod
     def from_openqasm(openqasm_str: str):
         """
-        Converit an OpenQASM string or an OpenQASM file to MindQuantum circuit.
+        Convert an OpenQASM string or an OpenQASM file to MindQuantum circuit.
 
         Args:
             openqasm_str (str): String format of OpenQASM or an OpenQASM file name.
 
         Returns:
-            Circuit, The MindQuantum circuit converited from OpenQASM.
+            :class:`~.core.circuit.Circuit`, The MindQuantum circuit converted from OpenQASM.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
@@ -1359,13 +1349,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     @staticmethod
     def from_hiqasm(hiqasm_str: str):
         """
-        Converit a HiQASM string or a HiQASM file to MindQuantum circuit.
+        Convert a HiQASM string or a HiQASM file to MindQuantum circuit.
 
         Args:
             hiqasm_str (str): String format of HiQASM or a HiQASM file name.
 
         Returns:
-            Circuit, The MindQuantum circuit converited from HiQASM.
+            :class:`~.core.circuit.Circuit`, The MindQuantum circuit converted from HiQASM.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import HiQASM

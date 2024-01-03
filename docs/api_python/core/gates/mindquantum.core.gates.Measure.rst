@@ -1,7 +1,7 @@
 mindquantum.core.gates.Measure
 ===============================
 
-.. py:class:: mindquantum.core.gates.Measure(name='')
+.. py:class:: mindquantum.core.gates.Measure(name='', reset_to=None)
 
     测量量子比特的测量门。
 

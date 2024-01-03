@@ -32,13 +32,14 @@ mindquantum.core.gates.Rzz
 
         返回该门的c++对象。
 
-    .. py:method:: matrix(pr=None, full=False)
+    .. py:method:: matrix(pr=None, full=False, **kwargs)
 
         返回该参数化量子门的矩阵。
 
         参数：
             - **pr** (Union[ParameterResolver, dict]) - 该参数化量子门的参数值。默认值： ``None``。
             - **full** (bool) - 是否获取完整的矩阵（受控制比特和作用比特影响）。默认值： ``False``。
+            - **kwargs** (dict) - 其他关键字参数。
 
         返回：
             numpy.ndarray，该量子门的矩阵形式。

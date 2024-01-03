@@ -31,6 +31,7 @@ mindquantum.core.gates.FSim
             - **full** (bool) - 是否获取完整的矩阵（受控制比特和作用比特影响）。默认值： ``False``。
 
     .. py:method:: phi()
+        :property:
 
         获取 FSim 门的参数 phi。
 
@@ -38,6 +39,7 @@ mindquantum.core.gates.FSim
             ParameterResolver，参数 phi。
 
     .. py:method:: theta()
+        :property:
 
         获取 FSim 门的参数 theta。
 

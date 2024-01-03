@@ -201,6 +201,16 @@ def test_hadamard():
     )
 
 
+def test_sx():
+    """
+    Description: Test SX gate
+    Expectation:
+    """
+    m = np.array([[1 + 1j, 1 - 1j], [1 - 1j, 1 + 1j]]) / 2
+    assert np.allclose(m, G.SX.matrix())
+    assert np.allclose(np.conj(m.T), G.SX.hermitian().matrix())
+
+
 def test_power_ops():
     """
     Description: Test power

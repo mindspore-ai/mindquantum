@@ -15,9 +15,9 @@ mindquantum.core.parameterresolver.PRGenerator
 
         生成下一个新的参数。
 
-    参数：
-        - **prefix** (str) - 生成此参数时的额外前缀。默认值： ``''``。
-        - **suffix** (str) - 生成此参数时的额外后缀。默认值： ``''``。
+        参数：
+            - **prefix** (str) - 生成此参数时的额外前缀。默认值： ``''``。
+            - **suffix** (str) - 生成此参数时的额外后缀。默认值： ``''``。
 
     .. py:method:: reset()
 

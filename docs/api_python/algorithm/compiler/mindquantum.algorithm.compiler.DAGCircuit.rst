@@ -35,6 +35,7 @@ mindquantum.algorithm.compiler.DAGCircuit
             List[:class:`~.core.circuit.Circuit`]，分层后的量子线路列表。
 
     .. py:method:: replace_node_with_dag_circuit(node: DAGNode, coming: "DAGCircuit")
+        :abstractmethod:
 
         用一个 DAG 图来替换给定的节点。
 

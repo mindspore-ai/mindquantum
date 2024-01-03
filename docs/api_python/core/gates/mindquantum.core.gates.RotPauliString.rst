@@ -11,7 +11,7 @@ mindquantum.core.gates.RotPauliString
 
 
     参数：
-        - **pauli_string** (str) - 泡利串。泡利串中的元素只能是 ``['x', 'y', 'z', 'X', 'Y', 'Z']``。
+        - **pauli_string** (str) - 泡利串。泡利串中的元素只能是 ``['i', 'x', 'y', 'z', 'I', 'X', 'Y', 'Z']``。
         - **pr** (Union[int, float, str, dict, ParameterResolver]) - 参数化门的参数。
 
     .. py:method:: diff_matrix(pr=None, about_what=None)
