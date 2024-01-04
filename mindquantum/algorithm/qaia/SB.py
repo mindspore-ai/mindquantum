@@ -74,7 +74,7 @@ class SB(QAIA):
         self.y = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
 
 
-class aSB(SB):  # noqa: N801
+class ASB(SB):  # noqa: N801
     r"""
     Adiabatic SB algorithm.
 
@@ -104,7 +104,7 @@ class aSB(SB):  # noqa: N801
         xi=None,
         M=2,
     ):
-        """Construct aSB algorithm."""
+        """Construct ASB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         # positive Kerr coefficient
         self.K = 1
@@ -125,7 +125,7 @@ class aSB(SB):  # noqa: N801
                 self.y += self.xi * self.dt * (self.J.dot(self.x) + self.h)
 
 
-class bSB(SB):  # noqa: N801
+class BSB(SB):  # noqa: N801
     r"""
     Ballistic SB algorithm.
 
@@ -153,7 +153,7 @@ class bSB(SB):  # noqa: N801
         dt=1,
         xi=None,
     ):
-        """Construct bSB algorithm."""
+        """Construct BSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         self.initialize()
 
@@ -172,7 +172,7 @@ class bSB(SB):  # noqa: N801
             self.y = np.where(cond, np.zeros_like(self.x), self.y)
 
 
-class dSB(SB):  # noqa: N801
+class DSB(SB):  # noqa: N801
     r"""
     Discrete SB algorithm.
 
@@ -200,7 +200,7 @@ class dSB(SB):  # noqa: N801
         dt=1,
         xi=None,
     ):
-        """Construct dSB algorithm."""
+        """Construct DSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         self.initialize()
 

@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from mindquantum.algorithm.qaia import CAC, CFC, LQA, SFC, aSB, bSB, dSB
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC
 from mindquantum.utils.fdopen import fdopen
 
 
@@ -67,14 +67,14 @@ G = read_gset(str(Path(__file__).parent.parent.parent / 'G1.txt'))
 
 def test_aSB():
     """
-    Description: Test aSB
+    Description: Test ASB
     Expectation: success
     """
     N = G.shape[0]
     np.random.seed(666)
     x = 0.01 * (np.random.rand(N, 1) - 0.5)
     y = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = aSB(G, n_iter=1)
+    solver = ASB(G, n_iter=1)
     solver.x = x.copy()
     solver.y = y.copy()
     solver.update()
@@ -86,14 +86,14 @@ def test_aSB():
 
 def test_bSB():
     """
-    Description: Test bSB
+    Description: Test BSB
     Expectation: success
     """
     N = G.shape[0]
     np.random.seed(666)
     x = 0.01 * (np.random.rand(N, 1) - 0.5)
     y = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = bSB(G, n_iter=1)
+    solver = BSB(G, n_iter=1)
     solver.x = x.copy()
     solver.y = y.copy()
     solver.update()
@@ -105,14 +105,14 @@ def test_bSB():
 
 def test_dSB():
     """
-    Description: Test dSB
+    Description: Test DSB
     Expectation: success
     """
     N = G.shape[0]
     np.random.seed(666)
     x = 0.01 * (np.random.rand(N, 1) - 0.5)
     y = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = dSB(G, n_iter=1)
+    solver = DSB(G, n_iter=1)
     solver.x = x.copy()
     solver.y = y.copy()
     solver.update()

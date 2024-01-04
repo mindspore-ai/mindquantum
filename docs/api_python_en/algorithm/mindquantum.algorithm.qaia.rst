@@ -13,8 +13,8 @@ mindquantum.algorithm.qaia
     mindquantum.algorithm.qaia.CFC
     mindquantum.algorithm.qaia.LQA
     mindquantum.algorithm.qaia.NMFA
-    mindquantum.algorithm.qaia.aSB
-    mindquantum.algorithm.qaia.bSB
-    mindquantum.algorithm.qaia.dSB
+    mindquantum.algorithm.qaia.ASB
+    mindquantum.algorithm.qaia.BSB
+    mindquantum.algorithm.qaia.DSB
     mindquantum.algorithm.qaia.SFC
     mindquantum.algorithm.qaia.SimCIM
