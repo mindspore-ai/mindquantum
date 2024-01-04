@@ -10,6 +10,7 @@ mindquantum.algorithm.qaia
     :nosignatures:
     :template: classtemplate.rst
 
+    mindquantum.algorithm.qaia.QAIA
     mindquantum.algorithm.qaia.CAC
     mindquantum.algorithm.qaia.CFC
     mindquantum.algorithm.qaia.LQA
