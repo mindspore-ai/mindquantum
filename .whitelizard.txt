@@ -52,7 +52,6 @@ ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_swap_
 ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp:mindquantum::sim::densitymatrix::detail::CPUDensityMatrixPolicyBase<derived_,calc_type_>::ExpectDiffTwoQubitsMatrix
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
-mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::LeftSizeGradOneMulti
 mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::ApplyGate
 mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti

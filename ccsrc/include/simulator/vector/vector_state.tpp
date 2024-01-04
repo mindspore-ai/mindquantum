@@ -48,6 +48,7 @@
 #include "ops/gate_id.h"
 #include "ops/gates.h"
 #include "ops/hamiltonian.h"
+#include "simulator/vector/gradient.h"
 #include "simulator/vector/vector_state.h"
 
 namespace mindquantum::sim::vector::detail {
@@ -968,310 +969,26 @@ auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const pa
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                             const circuit_t& herm_circ,
-                                                             const parameter::ParameterResolver& pr,
-                                                             const MST<size_t>& p_map) const -> VT<py_qs_data_t> {
-    // auto timer = Timer();
-    // timer.Start("First part");
-    VT<py_qs_data_t> f_and_g(1 + p_map.size(), 0);
-    VectorState<qs_policy_t> sim_l = *this;
-    sim_l.ApplyCircuit(circ, pr);
-    VectorState<qs_policy_t> sim_r = sim_l;
-    sim_r.ApplyHamiltonian(ham);
-    f_and_g[0] = qs_policy_t::Vdot(sim_l.qs, sim_r.qs, dim);
-    // timer.EndAndStartOther("First part", "Second part");
-    for (const auto& g : herm_circ) {
-        sim_l.ApplyGate(g, pr);
-        if (g->GradRequired()) {
-            auto p_gate = static_cast<Parameterizable*>(g.get());
-            auto jacobi = p_gate->GetJacobi();
-            if (const auto& [title, jac] = jacobi; title.size() != 0) {
-                auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_r.qs, g, pr, dim);
-                auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
-                for (const auto& [name, idx] : title) {
-                    f_and_g[1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
-                }
-            }
-        }
-        sim_r.ApplyGate(g, pr);
-    }
-    // timer.End("Second part");
-    // timer.Analyze();
-    return f_and_g;
-}
-
-template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradOneMulti(
-    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
-    const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
-    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread,
-    const derived_t& simulator_left) const -> VVT<py_qs_data_t> {
-    auto n_hams = hams.size();
-
-    VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
-    derived_t sim_left = simulator_left;
-    derived_t sim_right = *this;
-    sim_left.ApplyCircuit(left_circ, pr);
-    sim_right.ApplyCircuit(right_circ, pr);
-    auto f_g1 = LeftSizeGradOneMulti(hams, herm_left_circ, pr, p_map, n_thread, sim_left, sim_right);
-    auto f_g2 = LeftSizeGradOneMulti(herm_hams, herm_right_circ, pr, p_map, n_thread, sim_right, sim_left);
-    for (size_t i = 0; i < f_g2.size(); i++) {
-        for (size_t j = 1; j < f_g2[i].size(); j++) {
-            f_g1[i][j] += std::conj(f_g2[i][j]);
-        }
-    }
-    return f_g1;
-}
-
-template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::LeftSizeGradOneMulti(const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-                                                     const circuit_t& herm_left_circ,
-                                                     const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
-                                                     int n_thread, const derived_t& simulator_left,
-                                                     const derived_t& simulator_right) const -> VVT<py_qs_data_t> {
-    auto n_hams = hams.size();
-    int max_thread = 15;
-    if (n_thread == 0) {
-        throw std::runtime_error("n_thread cannot be zero.");
-    }
-
-    if (n_thread > max_thread) {
-        n_thread = max_thread;
-    }
-
-    if (n_thread > static_cast<int>(n_hams)) {
-        n_thread = n_hams;
-    }
-
-    VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
-
-    int n_group = n_hams / n_thread;
-    if (n_hams % n_thread) {
-        n_group += 1;
-    }
-    for (int i = 0; i < n_group; i++) {
-        int start = i * n_thread;
-        int end = (i + 1) * n_thread;
-        if (end > static_cast<int>(n_hams)) {
-            end = n_hams;
-        }
-        std::vector<VectorState<qs_policy_t>> sim_rs(end - start);
-        auto sim_l = simulator_left;
-        for (int j = start; j < end; j++) {
-            sim_rs[j - start] = simulator_right;
-            sim_rs[j - start].ApplyHamiltonian(*hams[j]);
-            f_and_g[j][0] = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
-        }
-        for (const auto& g : herm_left_circ) {
-            sim_l.ApplyGate(g, pr);
-            if (g->GradRequired()) {
-                auto p_gate = static_cast<Parameterizable*>(g.get());
-                auto jacobi = p_gate->GetJacobi();
-                if (const auto& [title, jac] = jacobi; title.size() != 0) {
-                    for (int j = start; j < end; j++) {
-                        auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += p_grad[0][idx];
-                        }
-                    }
-                }
-            }
-            for (int j = start; j < end; j++) {
-                sim_rs[j - start].ApplyGate(g, pr);
-            }
-        }
-    }
-    return f_and_g;
-}
-
-template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti(
-    const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
-    const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread) const -> VVT<py_qs_data_t> {
-    auto n_hams = hams.size();
-    int max_thread = 15;
-    if (n_thread == 0) {
-        throw std::runtime_error("n_thread cannot be zero.");
-    }
-    if (n_thread > max_thread) {
-        n_thread = max_thread;
-    }
-    if (n_thread > static_cast<int>(n_hams)) {
-        n_thread = n_hams;
-    }
-    VVT<py_qs_data_t> f_and_g(n_hams, VT<py_qs_data_t>((1 + p_map.size()), 0));
-    VectorState<qs_policy_t> sim = *this;
-    sim.ApplyCircuit(circ, pr);
-    int n_group = n_hams / n_thread;
-    if (n_hams % n_thread) {
-        n_group += 1;
-    }
-    for (int i = 0; i < n_group; i++) {
-        int start = i * n_thread;
-        int end = (i + 1) * n_thread;
-        if (end > static_cast<int>(n_hams)) {
-            end = n_hams;
-        }
-        std::vector<VectorState<qs_policy_t>> sim_rs(end - start);
-        auto sim_l = sim;
-        for (int j = start; j < end; j++) {
-            sim_rs[j - start] = sim_l;
-            sim_rs[j - start].ApplyHamiltonian(*hams[j]);
-            f_and_g[j][0] = qs_policy_t::Vdot(sim_l.qs, sim_rs[j - start].qs, dim);
-        }
-        for (const auto& g : herm_circ) {
-            sim_l.ApplyGate(g, pr);
-            if (g->GradRequired()) {
-                auto p_gate = static_cast<Parameterizable*>(g.get());
-                auto jacobi = p_gate->GetJacobi();
-                if (const auto& [title, jac] = jacobi; title.size() != 0) {
-                    for (int j = start; j < end; j++) {
-                        auto intrin_grad = ExpectDiffGate(sim_l.qs, sim_rs[j - start].qs, g, pr, dim);
-                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += 2 * std::real(p_grad[0][idx]);
-                        }
-                    }
-                }
-            }
-            for (int j = start; j < end; j++) {
-                sim_rs[j - start].ApplyGate(g, pr);
-            }
-        }
-    }
-    return f_and_g;
-}
-
-template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectationNonHermitianWithGradMultiMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
     const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
     const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
     const derived_t& simulator_left, size_t batch_threads, size_t mea_threads) const -> VT<VVT<py_qs_data_t>> {
-    auto n_hams = hams.size();
-    auto n_prs = enc_data.size();
-    auto n_params = enc_name.size() + ans_name.size();
-    VT<VVT<py_qs_data_t>> output;
-    for (size_t i = 0; i < n_prs; i++) {
-        output.push_back({});
-        for (size_t j = 0; j < n_hams; j++) {
-            output[i].push_back({});
-            for (size_t k = 0; k < n_params + 1; k++) {
-                output[i][j].push_back({0, 0});
-            }
-        }
-    }
-    MST<size_t> p_map;
-    for (size_t i = 0; i < enc_name.size(); i++) {
-        p_map[enc_name[i]] = i;
-    }
-    for (size_t i = 0; i < ans_name.size(); i++) {
-        p_map[ans_name[i]] = i + enc_name.size();
-    }
-    if (n_prs == 1) {
-        parameter::ParameterResolver pr = parameter::ParameterResolver();
-        pr.SetItems(enc_name, enc_data[0]);
-        pr.SetItems(ans_name, ans_data);
-        output[0] = GetExpectationNonHermitianWithGradOneMulti(hams, herm_hams, left_circ, herm_left_circ, right_circ,
-                                                               herm_right_circ, pr, p_map, mea_threads, simulator_left);
-    } else {
-        if (batch_threads == 0) {
-            throw std::runtime_error("batch_threads cannot be zero.");
-        }
-        std::vector<std::thread> tasks;
-        tasks.reserve(batch_threads);
-        size_t end = 0;
-        size_t offset = n_prs / batch_threads;
-        size_t left = n_prs % batch_threads;
-        for (size_t i = 0; i < batch_threads; ++i) {
-            size_t start = end;
-            end = start + offset;
-            if (i < left) {
-                end += 1;
-            }
-            auto task = [&, start, end]() {
-                for (size_t n = start; n < end; n++) {
-                    parameter::ParameterResolver pr = parameter::ParameterResolver();
-                    pr.SetItems(enc_name, enc_data[n]);
-                    pr.SetItems(ans_name, ans_data);
-                    auto f_g = GetExpectationNonHermitianWithGradOneMulti(hams, herm_hams, left_circ, herm_left_circ,
-                                                                          right_circ, herm_right_circ, pr, p_map,
-                                                                          mea_threads, simulator_left);
-                    output[n] = f_g;
-                }
-            };
-            tasks.emplace_back(task);
-        }
-        for (auto& t : tasks) {
-            t.join();
-        }
-    }
-    return output;
+    using gradient_helper = GradientHelper<VectorStateAdjoint<derived_t>>;
+    return gradient_helper::NonHermitianAdjointGradient(&simulator_left, this, left_circ, herm_left_circ, right_circ,
+                                                        herm_right_circ, hams, herm_hams, enc_data, ans_data, enc_name,
+                                                        ans_name, batch_threads, mea_threads);
 }
+
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::QramExpectationWithGrad(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
     const VVT<py_qs_data_t>& init_states, const VT<calc_type>& ans_data, const VS& ans_name, size_t batch_threads,
     size_t mea_threads) const -> VT<VVT<py_qs_data_t>> {
-    auto n_hams = hams.size();
-    auto n_prs = init_states.size();
-    auto n_params = ans_name.size();
-    VT<VVT<py_qs_data_t>> output;
-    for (size_t i = 0; i < n_prs; i++) {
-        output.push_back({});
-        for (size_t j = 0; j < n_hams; j++) {
-            output[i].push_back({});
-            for (size_t k = 0; k < n_params + 1; k++) {
-                output[i][j].push_back({0, 0});
-            }
-        }
-    }
-    MST<size_t> p_map;
-    for (size_t i = 0; i < ans_name.size(); i++) {
-        p_map[ans_name[i]] = i;
-    }
-    if (n_prs == 1) {
-        parameter::ParameterResolver pr = parameter::ParameterResolver();
-        pr.SetItems(ans_name, ans_data);
-        auto sim = VectorState<qs_policy_t_>(this->n_qubits, this->seed);
-        sim.SetQS(init_states[0]);
-        output[0] = sim.GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
-    } else {
-        if (batch_threads == 0) {
-            throw std::runtime_error("batch_threads cannot be zero.");
-        }
-        std::vector<std::thread> tasks;
-        tasks.reserve(batch_threads);
-        size_t end = 0;
-        size_t offset = n_prs / batch_threads;
-        size_t left = n_prs % batch_threads;
-        for (size_t i = 0; i < batch_threads; ++i) {
-            size_t start = end;
-            end = start + offset;
-            if (i < left) {
-                end += 1;
-            }
-            auto task = [&, start, end]() {
-                auto sim = VectorState<qs_policy_t_>(this->n_qubits, this->seed);
-                for (size_t n = start; n < end; n++) {
-                    parameter::ParameterResolver pr = parameter::ParameterResolver();
-                    pr.SetItems(ans_name, ans_data);
-                    sim.SetQS(init_states[n]);
-                    auto f_g = sim.GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
-                    output[n] = f_g;
-                }
-            };
-            tasks.emplace_back(task);
-        }
-        for (auto& t : tasks) {
-            t.join();
-        }
-    }
-    return output;
+    using gradient_helper = GradientHelper<VectorStateAdjoint<derived_t>>;
+    return gradient_helper::QramHermitianAdjointGradient(this, init_states, circ, herm_circ, hams, ans_data, ans_name,
+                                                         batch_threads, mea_threads);
 }
 
 template <typename qs_policy_t_>
@@ -1279,63 +996,11 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
     const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ, const circuit_t& herm_circ,
     const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
     size_t batch_threads, size_t mea_threads) const -> VT<VVT<py_qs_data_t>> {
-    auto n_hams = hams.size();
-    auto n_prs = enc_data.size();
-    auto n_params = enc_name.size() + ans_name.size();
-    VT<VVT<py_qs_data_t>> output;
-    for (size_t i = 0; i < n_prs; i++) {
-        output.push_back({});
-        for (size_t j = 0; j < n_hams; j++) {
-            output[i].push_back({});
-            for (size_t k = 0; k < n_params + 1; k++) {
-                output[i][j].push_back({0, 0});
-            }
-        }
-    }
-    MST<size_t> p_map;
-    for (size_t i = 0; i < enc_name.size(); i++) {
-        p_map[enc_name[i]] = i;
-    }
-    for (size_t i = 0; i < ans_name.size(); i++) {
-        p_map[ans_name[i]] = i + enc_name.size();
-    }
-    if (n_prs == 1) {
-        parameter::ParameterResolver pr = parameter::ParameterResolver();
-        pr.SetItems(enc_name, enc_data[0]);
-        pr.SetItems(ans_name, ans_data);
-        output[0] = GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
-    } else {
-        if (batch_threads == 0) {
-            throw std::runtime_error("batch_threads cannot be zero.");
-        }
-        std::vector<std::thread> tasks;
-        tasks.reserve(batch_threads);
-        size_t end = 0;
-        size_t offset = n_prs / batch_threads;
-        size_t left = n_prs % batch_threads;
-        for (size_t i = 0; i < batch_threads; ++i) {
-            size_t start = end;
-            end = start + offset;
-            if (i < left) {
-                end += 1;
-            }
-            auto task = [&, start, end]() {
-                for (size_t n = start; n < end; n++) {
-                    parameter::ParameterResolver pr = parameter::ParameterResolver();
-                    pr.SetItems(enc_name, enc_data[n]);
-                    pr.SetItems(ans_name, ans_data);
-                    auto f_g = GetExpectationWithGradOneMulti(hams, circ, herm_circ, pr, p_map, mea_threads);
-                    output[n] = f_g;
-                }
-            };
-            tasks.emplace_back(task);
-        }
-        for (auto& t : tasks) {
-            t.join();
-        }
-    }
-    return output;
+    using gradient_helper = GradientHelper<VectorStateAdjoint<derived_t>>;
+    return gradient_helper::HermitianAdjointGradient(this, circ, herm_circ, hams, enc_data, ans_data, enc_name,
+                                                     ans_name, batch_threads, mea_threads);
 }
+
 #define CONVERT_GATE(g_t, gate) std::static_pointer_cast<BasicGate>(std::make_shared<g_t>(*static_cast<g_t*>(gate)))
 
 template <typename qs_policy_t_>

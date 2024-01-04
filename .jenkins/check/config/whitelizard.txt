@@ -50,7 +50,6 @@ mindquantum/ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::Heurist
 mindquantum/ccsrc/lib/device/mapping.cpp:mindquantum::mapping::MQ_SABRE::MQ_SABRE
 TEST_CASE
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::ApplyGate
-mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradOneMulti
 mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::LeftSizeGradOneMulti
 mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::ApplyGate
 mindquantum::sim::densitymatrix::detail::DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti
