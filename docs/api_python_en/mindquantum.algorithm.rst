@@ -11,3 +11,4 @@ mindquantum.algorithm
    mindquantum.algorithm.nisq
    mindquantum.algorithm.error_mitigation
    mindquantum.algorithm.mapping
+   mindquantum.algorithm.qaia

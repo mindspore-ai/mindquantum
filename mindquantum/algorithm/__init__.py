@@ -14,7 +14,7 @@
 # ============================================================================
 """Quantum algorithms."""
 
-from . import compiler, error_mitigation, library, mapping, nisq
+from . import compiler, error_mitigation, library, mapping, nisq, qaia
 from .error_mitigation import *
 from .library import *
 from .mapping import *

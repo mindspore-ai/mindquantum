@@ -2,7 +2,7 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindQuantum 0.9.0 Release Notes
+## MindQuantum 0.9.11 Release Notes
 
 ### Major Feature and Improvements
 
@@ -15,7 +15,7 @@
 - [STABLE] [`RotPauliString`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.RotPauliString.html#mindquantum.core.gates.RotPauliString): Add arbitrary pauli string rotation gate.
 - [STABLE] [`GroupedPauli`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.GroupedPauli.html#mindquantum.core.gates.GroupedPauli): Add Pauli combination gate. This gate allows for faster execution compared to individually applying single Pauli gates.
 - [STABLE] [`GroupedPauliChannel`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.GroupedPauliChannel.html#mindquantum.core.gates.GroupedPauliChannel): Add Pauli combination channel. This channel allows for faster execution compared to applying Pauli channels individually.
-- [STABLE] [`SX`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.RX.html#mindquantum.core.gates.RX): Add sqrt X gate.
+- [STABLE] [`SX`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.SXGate.html#mindquantum.core.gates.SXGate): Add sqrt X gate.
 - [STABLE] [Givens]: Add Givens rotation gate.
 
 #### Circuit
