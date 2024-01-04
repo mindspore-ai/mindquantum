@@ -1,11 +1,11 @@
-mindquantum.algorithm.qaia.bSB
+mindquantum.algorithm.qaia.ASB
 ===============================
 
-.. py:class:: mindquantum.algorithm.qaia.bSB(J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None)
+.. py:class:: mindquantum.algorithm.qaia.ASB(J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, M=2)
 
-    弹道模拟分叉算法。
+    绝热模拟分叉算法。
 
-    参考文献：`High-performance combinatorial optimization based on classical mechanics <https://www.science.org/doi/10.1126/sciadv.abe7953>`_。
+    参考文献：`Combinatorial optimization by simulating adiabatic bifurcations in nonlinear Hamiltonian systems <https://www.science.org/doi/10.1126/sciadv.aav2372>`_。
 
     参数：
         - **J** (Union[numpy.array, csr_matrix]) - 耦合矩阵，维度为 :math:`(N x N)`。
@@ -15,6 +15,7 @@ mindquantum.algorithm.qaia.bSB
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.1``。
         - **xi** (float) - 频率维数，正的常数。默认值： ``None``。
+        - **M** (int) - 不含平均场项的迭代次数。默认值： ``2``。
 
     .. py:method:: update()
 

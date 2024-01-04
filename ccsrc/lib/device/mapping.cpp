@@ -60,14 +60,15 @@ std::pair<qbit_t, VT<Gate>> GateToAbstractGate(const VT<std::shared_ptr<BasicGat
     qbit_t max_qubit = 0;
     for (size_t i = 0; i < gates.size(); i++) {
         auto gate = gates[i];
-        if (gate->obj_qubits_.size() + gate->ctrl_qubits_.size() > 2) {
+        auto all_qubit = gate->GetObjQubits();
+        auto ctrl_qubits = gate->GetCtrlQubits();
+        if (all_qubit.size() + ctrl_qubits.size() > 2) {
             throw std::runtime_error("Only works for gate with less than two qubits (control qubits included).");
         }
-        if (gate->obj_qubits_.size() < 1) {
+        if (all_qubit.size() < 1) {
             throw std::runtime_error("Gate should be act on some qubits first.");
         }
-        auto all_qubit = gate->obj_qubits_;
-        all_qubit.insert(all_qubit.end(), gate->ctrl_qubits_.begin(), gate->ctrl_qubits_.end());
+        all_qubit.insert(all_qubit.end(), ctrl_qubits.begin(), ctrl_qubits.end());
         auto local_max = *std::max_element(all_qubit.begin(), all_qubit.end());
         max_qubit = std::max(local_max, max_qubit);
         int q1 = all_qubit[0], q2;
@@ -89,7 +90,7 @@ std::pair<qbit_t, VT<Gate>> GateToAbstractGate(const VT<std::shared_ptr<BasicGat
 // -----------------------------------------------------------------------------
 int MQ_SABRE::CalGraphCenter(const VT<VT<int>>& graph) {
     int n = graph.size();
-    int center_qubit;
+    int center_qubit = 0;
     int tempmin = INT16_MAX;
     for (int i = 0; i < n; i++) {
         int temp_sum = 0;
@@ -182,7 +183,6 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
                              return true;
                          return false;
                      });
-                int num = SubTree.size();
                 // find nearest physical qubits and its number equal with SubTree.size
                 for (int i = 0; i < SubTree.size(); i++) {
                     for (int j = 1; j < tempCandidatePysicalQubits.size(); j++) {

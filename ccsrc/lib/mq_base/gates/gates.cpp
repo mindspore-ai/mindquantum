@@ -154,7 +154,7 @@ U3::U3(const parameter::ParameterResolver& theta, const parameter::ParameterReso
     , theta(theta)
     , phi(phi)
     , lambda(lambda) {
-    if (!this->parameterized_) {
+    if (!this->Parameterized()) {
         this->base_matrix_ = U3Matrix(theta.const_value, phi.const_value, lambda.const_value);
     }
 }
@@ -165,7 +165,7 @@ Rn::Rn(const parameter::ParameterResolver& alpha, const parameter::ParameterReso
     , alpha(alpha)
     , beta(beta)
     , gamma(gamma) {
-    if (!this->parameterized_) {
+    if (!this->Parameterized()) {
         this->base_matrix_ = RnMatrix(alpha.const_value, beta.const_value, gamma.const_value);
     }
 }
@@ -173,7 +173,7 @@ Rn::Rn(const parameter::ParameterResolver& alpha, const parameter::ParameterReso
 FSim::FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
            const qbits_t& obj_qubits, const qbits_t& ctrl_qubits)
     : Parameterizable(GateID::FSim, {theta, phi}, obj_qubits, ctrl_qubits), theta(theta), phi(phi) {
-    if (!this->parameterized_) {
+    if (!this->Parameterized()) {
         this->base_matrix_ = FSimMatrix(theta.const_value, phi.const_value);
     }
 }

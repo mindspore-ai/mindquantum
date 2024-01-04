@@ -70,30 +70,72 @@ tensor::Matrix RnDiffBetaMatrix(tensor::Tensor alpha, tensor::Tensor beta, tenso
 
 tensor::Matrix RnDiffGammaMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tensor gamma);
 
-struct U3 : public Parameterizable {
+class U3 : public Parameterizable {
+ public:
+    U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
+       const parameter::ParameterResolver& lambda, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
+    const tensor::Matrix& GetBaseMatrix() {
+        return base_matrix_;
+    }
+    parameter::ParameterResolver GetTheta() const {
+        return theta;
+    }
+    parameter::ParameterResolver GetPhi() const {
+        return phi;
+    }
+    parameter::ParameterResolver GetLambda() const {
+        return lambda;
+    }
+
+ private:
     parameter::ParameterResolver theta;
     parameter::ParameterResolver phi;
     parameter::ParameterResolver lambda;
     tensor::Matrix base_matrix_;
-    U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
-       const parameter::ParameterResolver& lambda, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
 };
 
-struct FSim : public Parameterizable {
+class FSim : public Parameterizable {
+ public:
+    FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi, const qbits_t& obj_qubits,
+         const qbits_t& ctrl_qubits);
+    const tensor::Matrix& GetBaseMatrix() {
+        return base_matrix_;
+    }
+    parameter::ParameterResolver GetTheta() const {
+        return theta;
+    }
+    parameter::ParameterResolver GetPhi() const {
+        return phi;
+    }
+
+ private:
     parameter::ParameterResolver theta;
     parameter::ParameterResolver phi;
     tensor::Matrix base_matrix_;
-    FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi, const qbits_t& obj_qubits,
-         const qbits_t& ctrl_qubits);
 };
 
-struct Rn : public Parameterizable {
+class Rn : public Parameterizable {
+ public:
+    Rn(const parameter::ParameterResolver& alpha, const parameter::ParameterResolver& beta,
+       const parameter::ParameterResolver& gamma, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
+    const tensor::Matrix& GetBaseMatrix() {
+        return base_matrix_;
+    }
+    parameter::ParameterResolver GetAlpha() const {
+        return alpha;
+    }
+    parameter::ParameterResolver GetBeta() const {
+        return beta;
+    }
+    parameter::ParameterResolver GetGamma() const {
+        return gamma;
+    }
+
+ private:
     parameter::ParameterResolver alpha;
     parameter::ParameterResolver beta;
     parameter::ParameterResolver gamma;
     tensor::Matrix base_matrix_;
-    Rn(const parameter::ParameterResolver& alpha, const parameter::ParameterResolver& beta,
-       const parameter::ParameterResolver& gamma, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
 };
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_GATES_HPP_
