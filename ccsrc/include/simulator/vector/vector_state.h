@@ -33,6 +33,7 @@
 #include <string_view>
 #include <thread>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "core/mq_base_types.h"
@@ -47,10 +48,13 @@
 namespace mindquantum::sim::vector::detail {
 template <typename qs_policy_t_>
 struct BLAS;
+template <typename sim_t>
+struct VectorStateAdjoint;
 
 template <typename qs_policy_t_>
 class VectorState {
     friend struct BLAS<qs_policy_t_>;
+    friend struct VectorStateAdjoint<VectorState<qs_policy_t_>>;
 
  public:
     using qs_policy_t = qs_policy_t_;
@@ -166,20 +170,6 @@ class VectorState {
                                         const parameter::ParameterResolver& pr) const;
 
     //! Get the expectation of hamiltonian
-    //! Here a single hamiltonian and single parameter data are needed
-    virtual VT<py_qs_data_t> GetExpectationWithGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                          const circuit_t& herm_circ,
-                                                          const parameter::ParameterResolver& pr,
-                                                          const MST<size_t>& p_map) const;
-
-    //! Get the expectation of hamiltonian
-    //! Here multiple hamiltonian and single parameter data are needed
-    virtual VVT<py_qs_data_t> GetExpectationWithGradOneMulti(
-        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const circuit_t& herm_circ, const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
-        int n_thread) const;
-
-    //! Get the expectation of hamiltonian
     //! Here multiple hamiltonian and multiple parameters are needed
     virtual VT<VVT<py_qs_data_t>> GetExpectationWithGradMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
@@ -190,19 +180,6 @@ class VectorState {
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
         const circuit_t& herm_circ, const VVT<py_qs_data_t>& init_states, const VT<calc_type>& ans_data,
         const VS& ans_name, size_t batch_threads, size_t mea_threads) const;
-
-    virtual VVT<py_qs_data_t> GetExpectationNonHermitianWithGradOneMulti(
-        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& herm_hams, const circuit_t& left_circ,
-        const circuit_t& herm_left_circ, const circuit_t& right_circ, const circuit_t& herm_right_circ,
-        const parameter::ParameterResolver& pr, const MST<size_t>& p_map, int n_thread,
-        const derived_t& simulator_left) const;
-
-    virtual VVT<py_qs_data_t> LeftSizeGradOneMulti(const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
-                                                   const circuit_t& herm_left_circ,
-                                                   const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
-                                                   int n_thread, const derived_t& simulator_left,
-                                                   const derived_t& simulator_right) const;
 
     virtual VT<VVT<py_qs_data_t>> GetExpectationNonHermitianWithGradMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
@@ -238,6 +215,56 @@ class VectorState {
     unsigned seed = 0;
     RndEngine rnd_eng_;
     std::function<double()> rng_;
+};
+
+template <typename sim_t_>
+struct VectorStateAdjoint {
+    using sim_t = sim_t_;
+    using calc_type = typename sim_t::calc_type;
+    using circuit_t = typename sim_t::circuit_t;
+    using gate_t = std::shared_ptr<BasicGate>;
+    using ham_t = Hamiltonian<calc_type>;
+    using py_qs_data_t = typename sim_t::py_qs_data_t;
+    using qs_policy_t = typename sim_t::qs_policy_t;
+    // -----------------------------------------------------------------------------
+
+    static std::shared_ptr<sim_t> CopySimToSharedPtr(const sim_t* sim) {
+        return std::make_shared<sim_t>(*sim);
+    }
+    static std::shared_ptr<sim_t> SimilarSim(const sim_t* sim, const VT<py_qs_data_t>& init_state) {
+        std::shared_ptr<sim_t> out = std::make_shared<sim_t>(sim->n_qubits, sim->seed);
+        out->SetQS(init_state);
+        return out;
+    }
+    static void ApplyCircuit(sim_t* sim, const circuit_t& circ, const parameter::ParameterResolver& pr) {
+        sim->ApplyCircuit(circ, pr);
+    }
+    static void ApplyHamiltonian(sim_t* sim, const std::shared_ptr<ham_t>& ham) {
+        sim->ApplyHamiltonian(*ham.get());
+    }
+    static py_qs_data_t Vdot(sim_t* psi_l, sim_t* psi_r) {
+        if (psi_l->dim != psi_r->dim) {
+            throw std::runtime_error("Vdot need same dimension quantum state.");
+        }
+        return qs_policy_t::Vdot(psi_l->qs, psi_r->qs, psi_l->dim);
+    }
+    static void ApplyGate(sim_t* sim, const gate_t& g, const parameter::ParameterResolver& pr) {
+        sim->ApplyGate(g, pr);
+    }
+    static bool GateRequiresGrad(const gate_t& g) {
+        return g->GradRequired();
+    }
+    static std::pair<MST<size_t>, tensor::Matrix> GetJacobi(const gate_t& g) {
+        auto p_gate = static_cast<Parameterizable*>(g.get());
+        return p_gate->GetJacobi();
+    }
+    static tensor::Matrix ExpectDiffGate(sim_t* psi_l, sim_t* psi_r, const gate_t& g,
+                                         const parameter::ParameterResolver& pr) {
+        if (psi_l->dim != psi_r->dim) {
+            throw std::runtime_error("ExpectDiffGate need same dimension quantum state.");
+        }
+        return psi_l->ExpectDiffGate(psi_l->qs, psi_r->qs, g, pr, psi_l->dim);
+    }
 };
 }  // namespace mindquantum::sim::vector::detail
 
