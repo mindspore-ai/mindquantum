@@ -36,10 +36,12 @@ def get_task_file(task: str):
             all_path.append(full_path)
     return all_path
 
+
 def get_qreg(obj, qregs):
     if isinstance(obj, int):
         return qregs[obj]
     return tuple([qregs[i] for i in obj])
+
 
 def convert_back_to_projectq_circ(str_circ, qregs):
     """Convert str gate back to projectq circuit."""
@@ -49,95 +51,97 @@ def convert_back_to_projectq_circ(str_circ, qregs):
         obj = str_g["obj"]
         ctrl = str_g["ctrl"]
         val = str_g.get("val", 0)
-        if name == 'rzz':
+        if name == "rzz":
             if not ctrl:
                 out.append([ops.Rzz(val), get_qreg(obj, qregs)])
                 continue
-        if name == 'y':
+        if name == "y":
             if not ctrl:
                 out.append([ops.Y, get_qreg(obj, qregs)])
                 continue
-        if name == 'ps':
+        if name == "ps":
             if not ctrl:
                 out.append([ops.Ph(val), get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
-                out.append([ops.C(ops.Ph(val)), get_qreg(ctrl+obj, qregs)])
+                out.append([ops.C(ops.Ph(val)), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'ryy':
+        if name == "ryy":
             if not ctrl:
                 out.append([ops.Ryy(val), get_qreg(obj, qregs)])
                 continue
-        if name == 'rxx':
+        if name == "rxx":
             if not ctrl:
                 out.append([ops.Rxx(val), get_qreg(obj, qregs)])
                 continue
-        if name == 'rx':
+        if name == "rx":
             if not ctrl:
                 out.append([ops.Rx(val), get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
                 out.append([ops.C(ops.Rx(val)), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'rz':
+        if name == "rz":
             if not ctrl:
                 out.append([ops.Rz(val), get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
                 out.append([ops.C(ops.Rz(val)), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'ry':
+        if name == "ry":
             if not ctrl:
                 out.append([ops.Ry(val), get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
                 out.append([ops.C(ops.Ry(val)), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'z':
+        if name == "z":
             if not ctrl:
                 out.append([ops.Z, get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
                 out.append([ops.C(ops.Z), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'h':
+        if name == "h":
             if not ctrl:
                 out.append([ops.H, get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
                 out.append([ops.C(ops.H), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'x':
+        if name == "x":
             if not ctrl:
                 out.append([ops.X, get_qreg(obj, qregs)])
                 continue
             if len(ctrl) == 1:
                 out.append([ops.CNOT, get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'y':
+        if name == "y":
             if len(ctrl) == 1:
                 out.append([ops.C(ops.Y), get_qreg(ctrl + obj, qregs)])
                 continue
-        if name == 'swap':
+        if name == "swap":
             if not ctrl:
                 out.append([ops.Swap, get_qreg(obj, qregs)])
                 continue
-        if name in ['s', 'sdag']:
+        if name in ["s", "sdag"]:
             if not ctrl:
-                out.append([ops.S if name == 's' else ops.Sdag, get_qreg(obj, qregs)])
+                out.append([ops.S if name == "s" else ops.Sdag, get_qreg(obj, qregs)])
                 continue
-        if name in ['t', 'tdag']:
+        if name in ["t", "tdag"]:
             if not ctrl:
-                out.append([ops.T if name == 't' else ops.Tdag, get_qreg(obj, qregs)])
+                out.append([ops.T if name == "t" else ops.Tdag, get_qreg(obj, qregs)])
                 continue
         raise ValueError(f"gate not implement: {name}({obj}, {ctrl})")
     return out
+
 
 def run_circ(circs, eng, qregs):
     for i, j in circs:
         i | j
     ops.All(ops.Measure) | qregs
     eng.flush()
+
 
 # Section One
 # Benchmark random circuit
@@ -146,6 +150,7 @@ def run_circ(circs, eng, qregs):
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
 random_circuit_data_path = random_circuit_data_path[:5]
+
 
 @pytest.mark.random_circuit
 @pytest.mark.projectq
@@ -158,6 +163,7 @@ def test_projectq_random_circuit(benchmark, file_name):
     qregs = eng.allocate_qureg(n_qubits)
     circs = convert_back_to_projectq_circ(str_circ, qregs)
     benchmark(run_circ, circs, eng, qregs)
+
 
 # Section Two
 # Benchmark simple gate set circuit
