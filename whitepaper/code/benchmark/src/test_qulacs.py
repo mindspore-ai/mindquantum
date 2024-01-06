@@ -179,7 +179,7 @@ simple_circuit_data_path = simple_circuit_data_path[:5]
 @pytest.mark.simple_circuit
 @pytest.mark.qulacs
 @pytest.mark.parametrize("file_name", simple_circuit_data_path)
-def test_qulacs_random_circuit(benchmark, file_name):
+def test_qulacs_simple_circuit(benchmark, file_name):
     n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
     with open(file_name, "r", encoding="utf-8") as f:
         str_circ = json.load(f)
