@@ -36,6 +36,7 @@ def get_task_file(task: str):
             all_path.append(full_path)
     return all_path
 
+
 def convert_back_to_qiskit_circ(str_circ, n_qubits):
     """Convert str gate back to Qiskit circuit."""
     circ = QuantumCircuit(n_qubits)
@@ -44,37 +45,38 @@ def convert_back_to_qiskit_circ(str_circ, n_qubits):
         obj = str_g["obj"]
         ctrl = str_g["ctrl"]
         val = str_g.get("val", 0)
-        if name in ['y', 'x', 'z', 'h']:
+        if name in ["y", "x", "z", "h"]:
             if not ctrl:
                 getattr(circ, name)(obj[0])
                 continue
             if len(ctrl) == 1:
                 getattr(circ, f"c{name}")(ctrl[0], obj[0])
                 continue
-        if name == 'ps':
+        if name == "ps":
             if not ctrl:
                 circ.p(val, obj[0])
                 continue
             if len(ctrl) == 1:
-                circ.append(G.CPhaseGate(val), ctrl+obj)
+                circ.append(G.CPhaseGate(val), ctrl + obj)
                 continue
-        if name in ['rx', 'ry', 'rz']:
+        if name in ["rx", "ry", "rz"]:
             if not ctrl:
                 getattr(circ, name)(val, obj[0])
                 continue
             if len(ctrl) == 1:
-                circ.append(getattr(G, f'C{name.upper()}Gate')(val), ctrl+obj)
+                circ.append(getattr(G, f"C{name.upper()}Gate")(val), ctrl + obj)
                 continue
-        if name == 'swap':
+        if name == "swap":
             if not ctrl:
                 circ.swap(obj[0], obj[1])
                 continue
-        if name in ['rxx', 'ryy', 'rzz']:
+        if name in ["rxx", "ryy", "rzz"]:
             if not ctrl:
                 getattr(circ, name)(val, obj[0], obj[1])
                 continue
         raise ValueError(f"gate not implement: {name}({obj}, {ctrl})")
     return circ
+
 
 # Section One
 # Benchmark random circuit
@@ -83,6 +85,7 @@ def convert_back_to_qiskit_circ(str_circ, n_qubits):
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
 random_circuit_data_path = random_circuit_data_path[:5]
+
 
 @pytest.mark.random_circuit
 @pytest.mark.qiskit
@@ -96,6 +99,7 @@ def test_qiskit_random_circuit(benchmark, file_name):
     sim = AerSimulator(method="statevector", device="CPU")
     benchmark(sim.run, circ)
 
+
 # Section Two
 # Benchmark simple gate set circuit
 # Available pytest mark: simple_circuit, qiskit
@@ -103,6 +107,7 @@ def test_qiskit_random_circuit(benchmark, file_name):
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
 simple_circuit_data_path = simple_circuit_data_path[:5]
+
 
 @pytest.mark.simple_circuit
 @pytest.mark.qiskit

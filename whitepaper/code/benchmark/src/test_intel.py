@@ -71,83 +71,97 @@ class Simulator:
 
             if name == "ryy":
                 if not ctrl:
-                    self.circ.append(partial(self.qs.ApplyRotationX, obj[0], np.pi/2))
-                    self.circ.append(partial(self.qs.ApplyRotationX, obj[1], np.pi/2))
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[0], np.pi / 2))
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[1], np.pi / 2))
                     self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
                     self.circ.append(partial(self.qs.ApplyRotationZ, obj[0], val))
                     self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
-                    self.circ.append(partial(self.qs.ApplyRotationX, obj[0], -np.pi/2))
-                    self.circ.append(partial(self.qs.ApplyRotationX, obj[1], -np.pi/2))
+                    self.circ.append(
+                        partial(self.qs.ApplyRotationX, obj[0], -np.pi / 2)
+                    )
+                    self.circ.append(
+                        partial(self.qs.ApplyRotationX, obj[1], -np.pi / 2)
+                    )
                     continue
-            if name == 'x':
+            if name == "x":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplyPauliX, obj[0]))
                     continue
                 if len(ctrl) == 1:
                     self.circ.append(partial(self.qs.ApplyCPauliX, ctrl[0], obj[0]))
                     continue
-            if name == 'y':
+            if name == "y":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplyPauliY, obj[0]))
                     continue
                 if len(ctrl) == 1:
                     self.circ.append(partial(self.qs.ApplyCPauliY, ctrl[0], obj[0]))
                     continue
-            if name == 'z':
+            if name == "z":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplyPauliZ, obj[0]))
                     continue
                 if len(ctrl) == 1:
                     self.circ.append(partial(self.qs.ApplyCPauliZ, ctrl[0], obj[0]))
                     continue
-            if name == 'ps':
+            if name == "ps":
                 if not ctrl:
-                    m = np.array([[1,0], [0,np.exp(1j*val)]], dtype=np.complex128)
+                    m = np.array([[1, 0], [0, np.exp(1j * val)]], dtype=np.complex128)
                     self.circ.append(partial(self.qs.Apply1QubitGate, obj[0], m))
                     continue
                 if len(ctrl) == 1:
-                    m = np.array([[1,0], [0,np.exp(1j*val)]], dtype=np.complex128)
-                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    m = np.array([[1, 0], [0, np.exp(1j * val)]], dtype=np.complex128)
+                    self.circ.append(
+                        partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m)
+                    )
                     continue
-            if name == 'rx':
+            if name == "rx":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplyRotationX, obj[0], val))
                     continue
                 if len(ctrl) == 1:
-                    a, b = np.cos(val/2), -1j*np.sin(val/2)
+                    a, b = np.cos(val / 2), -1j * np.sin(val / 2)
                     m = np.array([[a, b], [b, a]], dtype=np.complex128)
-                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    self.circ.append(
+                        partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m)
+                    )
                     continue
-            if name == 'rz':
+            if name == "rz":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplyRotationZ, obj[0], val))
                     continue
                 if len(ctrl) == 1:
-                    a = np.exp(-1j*val/2)
+                    a = np.exp(-1j * val / 2)
                     m = np.array([[a, 0], [0, np.conj(a)]], dtype=np.complex128)
-                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    self.circ.append(
+                        partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m)
+                    )
                     continue
-            if name == 'ry':
+            if name == "ry":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplyRotationY, obj[0], val))
                     continue
                 if len(ctrl) == 1:
-                    a, b = np.cos(val/2), -np.sin(val/2)
+                    a, b = np.cos(val / 2), -np.sin(val / 2)
                     m = np.array([[a, b], [-b, a]], dtype=np.complex128)
-                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    self.circ.append(
+                        partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m)
+                    )
                     continue
-            if name == 'swap':
+            if name == "swap":
                 if not ctrl:
                     self.circ.append(partial(self.qs.ApplySwap, obj[0], obj[1]))
                     continue
-            if name in ['sdag', 's']:
+            if name in ["sdag", "s"]:
                 if not ctrl:
-                    m = np.array([[1, 0], [0, 1j if name == 's' else -1j]])
+                    m = np.array([[1, 0], [0, 1j if name == "s" else -1j]])
                     self.circ.append(partial(self.qs.Apply1QubitGate, obj[0], m))
                     continue
-            if name in ['tdag', 't']:
+            if name in ["tdag", "t"]:
                 if not ctrl:
-                    m = np.array([[1, 0], [0, (1 + (1j if name == 't' else -1j))/np.sqrt(2)]])
+                    m = np.array(
+                        [[1, 0], [0, (1 + (1j if name == "t" else -1j)) / np.sqrt(2)]]
+                    )
                     self.circ.append(partial(self.qs.Apply1QubitGate, obj[0], m))
                     continue
             self.gate_not_implement(name, obj, ctrl)
@@ -187,6 +201,7 @@ def test_intel_random_circuit(benchmark, file_name):
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
 simple_circuit_data_path = simple_circuit_data_path[:5]
+
 
 @pytest.mark.simple_circuit
 @pytest.mark.intel
