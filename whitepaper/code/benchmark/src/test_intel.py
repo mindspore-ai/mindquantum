@@ -35,11 +35,6 @@ def get_task_file(task: str):
     return all_path
 
 
-# Section One
-# Benchmark random circuit
-# Available pytest mark: random_circuit, intel
-
-
 class Simulator:
     def __init__(self, n_qubits: int, str_circ: str):
         self.qs = iqs.QubitRegister(n_qubits, "base", 0, 0)
@@ -52,19 +47,108 @@ class Simulator:
             val = str_g.get("val", 0)
             if name == "h":
                 if len(ctrl) == 1:
-                    self.circ.append(partial(self.apply_ch, obj[0], ctrl[0]))
+                    self.circ.append(partial(self.qs.ApplyCHadamard, ctrl[0], obj[0]))
                     continue
-                self.circ.append(partial(self.apply_h, obj[0]))
+                self.circ.append(partial(self.qs.ApplyHadamard, obj[0]))
                 continue
             if name == "rzz":
                 if not ctrl:
-                    self.circ.append(partial(self.apply_cnot, obj[0], obj[1]))
-                    self.circ.append(partial(self.apply_rz, obj[0], val))
-                    self.circ.append(partial(self.apply_cnot, obj[0], obj[1]))
+                    self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
+                    self.circ.append(partial(self.qs.ApplyRotationZ, obj[0], val))
+                    self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
+                    continue
+
+            if name == "rxx":
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyHadamard, obj[0]))
+                    self.circ.append(partial(self.qs.ApplyHadamard, obj[1]))
+                    self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
+                    self.circ.append(partial(self.qs.ApplyRotationZ, obj[0], val))
+                    self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
+                    self.circ.append(partial(self.qs.ApplyHadamard, obj[0]))
+                    self.circ.append(partial(self.qs.ApplyHadamard, obj[1]))
+                    continue
+
+            if name == "ryy":
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[0], np.pi/2))
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[1], np.pi/2))
+                    self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
+                    self.circ.append(partial(self.qs.ApplyRotationZ, obj[0], val))
+                    self.circ.append(partial(self.qs.ApplyCPauliX, obj[1], obj[0]))
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[0], -np.pi/2))
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[1], -np.pi/2))
+                    continue
+            if name == 'x':
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyPauliX, obj[0]))
+                    continue
+                if len(ctrl) == 1:
+                    self.circ.append(partial(self.qs.ApplyCPauliX, ctrl[0], obj[0]))
                     continue
             if name == 'y':
                 if not ctrl:
-                    self.circ.append(partial(self.apply_y, obj[0]))
+                    self.circ.append(partial(self.qs.ApplyPauliY, obj[0]))
+                    continue
+                if len(ctrl) == 1:
+                    self.circ.append(partial(self.qs.ApplyCPauliY, ctrl[0], obj[0]))
+                    continue
+            if name == 'z':
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyPauliZ, obj[0]))
+                    continue
+                if len(ctrl) == 1:
+                    self.circ.append(partial(self.qs.ApplyCPauliZ, ctrl[0], obj[0]))
+                    continue
+            if name == 'ps':
+                if not ctrl:
+                    m = np.array([[1,0], [0,np.exp(1j*val)]], dtype=np.complex128)
+                    self.circ.append(partial(self.qs.Apply1QubitGate, obj[0], m))
+                    continue
+                if len(ctrl) == 1:
+                    m = np.array([[1,0], [0,np.exp(1j*val)]], dtype=np.complex128)
+                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    continue
+            if name == 'rx':
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyRotationX, obj[0], val))
+                    continue
+                if len(ctrl) == 1:
+                    a, b = np.cos(val/2), -1j*np.sin(val/2)
+                    m = np.array([[a, b], [b, a]], dtype=np.complex128)
+                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    continue
+            if name == 'rz':
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyRotationZ, obj[0], val))
+                    continue
+                if len(ctrl) == 1:
+                    a = np.exp(-1j*val/2)
+                    m = np.array([[a, 0], [0, np.conj(a)]], dtype=np.complex128)
+                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    continue
+            if name == 'ry':
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplyRotationY, obj[0], val))
+                    continue
+                if len(ctrl) == 1:
+                    a, b = np.cos(val/2), -np.sin(val/2)
+                    m = np.array([[a, b], [-b, a]], dtype=np.complex128)
+                    self.circ.append(partial(self.qs.ApplyControlled1QubitGate, ctrl[0], obj[0], m))
+                    continue
+            if name == 'swap':
+                if not ctrl:
+                    self.circ.append(partial(self.qs.ApplySwap, obj[0], obj[1]))
+                    continue
+            if name in ['sdag', 's']:
+                if not ctrl:
+                    m = np.array([[1, 0], [0, 1j if name == 's' else -1j]])
+                    self.circ.append(partial(self.qs.Apply1QubitGate, obj[0], m))
+                    continue
+            if name in ['tdag', 't']:
+                if not ctrl:
+                    m = np.array([[1, 0], [0, (1 + (1j if name == 't' else -1j))/np.sqrt(2)]])
+                    self.circ.append(partial(self.qs.Apply1QubitGate, obj[0], m))
                     continue
             self.gate_not_implement(name, obj, ctrl)
 
@@ -75,37 +159,41 @@ class Simulator:
     def gate_not_implement(self, gate, obj, ctrl):
         raise ValueError(f"gate not implement: {gate}({obj}, {ctrl})")
 
-    def apply_rz(self, q, v):
-        self.qs.ApplyPauliZ(q, v)
 
-    def apply_y(self, q):
-        self.qs.ApplyPauliY(q)
-
-    def apply_x(self, q):
-        self.qs.ApplyPauliX(q)
-
-    def apply_cnot(self, q, c):
-        self.qs.ApplyCPauliX(c, q)
-
-    def apply_h(self, q):
-        self.qs.ApplyHadamard(q)
-
-    def apply_ch(self, q, c):
-        self.qs.ApplyCHadamard(c, q)
-
+# Section One
+# Benchmark random circuit
+# Available pytest mark: random_circuit, intel
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
 random_circuit_data_path = random_circuit_data_path[:5]
 
 
-# @pytest.mark.random_circuit
-# @pytest.mark.intel
-# @pytest.mark.parametrize("file_name", random_circuit_data_path)
-# def test_qulacs_random_circuit(benchmark, file_name):
-file_name = random_circuit_data_path[0]
-n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
-with open(file_name, "r", encoding="utf-8") as f:
-    str_circ = json.load(f)
-sim = Simulator(n_qubits, str_circ)
-# benchmark(sim.run)
+@pytest.mark.random_circuit
+@pytest.mark.intel
+@pytest.mark.parametrize("file_name", random_circuit_data_path)
+def test_intel_random_circuit(benchmark, file_name):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        str_circ = json.load(f)
+    sim = Simulator(n_qubits, str_circ)
+    benchmark(sim.run)
+
+
+# Section Two
+# Benchmark simple gate set circuit
+# Available pytest mark: simple_circuit, intel
+
+simple_circuit_data_path = get_task_file("simple_circuit")
+simple_circuit_data_path.sort()
+simple_circuit_data_path = simple_circuit_data_path[:5]
+
+@pytest.mark.simple_circuit
+@pytest.mark.intel
+@pytest.mark.parametrize("file_name", simple_circuit_data_path)
+def test_intel_simple_circuit(benchmark, file_name):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        str_circ = json.load(f)
+    sim = Simulator(n_qubits, str_circ)
+    benchmark(sim.run)
