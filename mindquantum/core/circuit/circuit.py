@@ -648,7 +648,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         return 0
 
     def summary(self, show=True):
-        """
+        r"""
         Print a summary of the current circuit.
 
         Print the information about current circuit, including block number,
@@ -678,6 +678,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             │ 2 ansatz parameters  │ a, b  │
             ╰──────────────────────┴───────╯
         """
+        _check_input_type('show', bool, show)
         num_non_para_gate = 0
         num_para_gate = 0
         barrier = 0
