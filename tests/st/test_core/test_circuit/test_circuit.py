@@ -15,6 +15,7 @@
 
 # pylint: disable=invalid-name
 """Test circuit."""
+import platform
 from contextlib import redirect_stdout
 from io import StringIO
 
@@ -163,7 +164,7 @@ def test_circuit_summary():
         circuit.summary()
 
     output_str = output.getvalue()
-    assert output_str == (
+    info = (
         '        Circuit Summary         \n'
         '╭──────────────────────┬───────╮\n'
         '│ Info                 │ value │\n'
@@ -179,3 +180,23 @@ def test_circuit_summary():
         '│ 2 ansatz parameters  │ a, b  │\n'
         '╰──────────────────────┴───────╯\n'
     )
+    info_win = (
+        '        Circuit Summary         \n'
+        '┌──────────────────────┬───────┐\n'
+        '│ Info                 │ value │\n'
+        '├──────────────────────┼───────┤\n'
+        '│ Number of qubit      │ 2     │\n'
+        '├──────────────────────┼───────┤\n'
+        '│ Total number of gate │ 3     │\n'
+        '│ Barrier              │ 0     │\n'
+        '│ Noise Channel        │ 0     │\n'
+        '│ Measurement          │ 0     │\n'
+        '├──────────────────────┼───────┤\n'
+        '│ Parameter gate       │ 2     │\n'
+        '│ 2 ansatz parameters  │ a, b  │\n'
+        '└──────────────────────┴───────┘\n'
+    )
+    if platform.system() == 'Windows':
+        assert output_str == info_win
+    else:
+        assert output_str == info
