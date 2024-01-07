@@ -15,6 +15,9 @@
 
 # pylint: disable=invalid-name
 """Test circuit."""
+from contextlib import redirect_stdout
+from io import StringIO
+
 import numpy as np
 import pytest
 
@@ -145,3 +148,34 @@ def test_circuit_operator():
         circ_exp += G.RX(f'l{i}_a').on(i + 1)
         circ_exp += G.X.on(i + 1, i)
     assert circ == circ_exp
+
+
+def test_circuit_summary():
+    """
+    test
+    Description: Test circuit summary information.
+    Expectation: success.
+    """
+    circuit = Circuit([G.RX('a').on(1), G.H.on(1), G.RX('b').on(0)])
+
+    output = StringIO()
+    with redirect_stdout(output):
+        circuit.summary()
+
+    output_str = output.getvalue()
+    assert output_str == (
+        '        Circuit Summary         \n'
+        '╭──────────────────────┬───────╮\n'
+        '│ Info                 │ value │\n'
+        '├──────────────────────┼───────┤\n'
+        '│ Number of qubit      │ 2     │\n'
+        '├──────────────────────┼───────┤\n'
+        '│ Total number of gate │ 3     │\n'
+        '│ Barrier              │ 0     │\n'
+        '│ Noise Channel        │ 0     │\n'
+        '│ Measurement          │ 0     │\n'
+        '├──────────────────────┼───────┤\n'
+        '│ Parameter gate       │ 2     │\n'
+        '│ 2 ansatz parameters  │ a, b  │\n'
+        '╰──────────────────────┴───────╯\n'
+    )
