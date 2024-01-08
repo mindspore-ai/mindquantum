@@ -772,6 +772,26 @@ class ThermalRelaxationChannel(NoiseGate, NonHermitianGate):
     The thermal relaxation channel describes the thermal decoherence and dephasing of qubit
     when a quantum gate is applied, and is determined by T1, T2 and gate time.
 
+    The Choi-matrix representation of this channel is as below:
+
+    .. math::
+
+        \begin{gather*}
+            \epsilon(\rho) = \text{tr}_1 \left[ \Lambda \left( \rho^T \otimes I \right) \right],
+            \Lambda=\begin{pmatrix}
+                \epsilon_{T_1} & 0 & 0 & \epsilon_{T_2} \\
+                0 & 1-\epsilon_{T_1} & 0 & 0            \\
+                0 & 0 & 0 & 0                           \\
+                \epsilon_{T_2} & 0 & 0 & 1
+            \end{pmatrix}
+            \\
+            \text{where}\ \epsilon_{T_1}=e^{-T_g/T_1}, \epsilon_{T_2}=e^{-T_g/T_2}
+        \end{gather*}
+
+    Where :math:`\rho` is quantum state as density matrix type; :math:`\Lambda` is Choi matrix,
+    :math:`T_1` is thermal relaxation time of qubit, :math:`T_2` is dephasing time of qubit,
+    :math:`T_g` is gate time.
+
     Args:
         t1 (int, float): T1 of the qubit.
         t2 (int, float): T2 of the qubit.
