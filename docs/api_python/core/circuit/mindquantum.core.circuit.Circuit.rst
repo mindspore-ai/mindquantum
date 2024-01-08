@@ -449,7 +449,7 @@ mindquantum.core.circuit.Circuit
             - **ctrl_qubits** (Union[int, list[int]]) - `T` 门的控制量子比特。默认值： ``None``。
             - **hermitian** (bool) - 是否添加 `T` 门的轭米形式。默认值： ``False``。
 
-    .. py:method:: to_hiqasm(file_name: Optional[str] = None, version: str = '0.1') -> str
+    .. py:method:: to_hiqasm(file_name: Optional[str] = None, version: str = '0.1')
 
         将 MindQuantum 中的量子线路转化为 HiQASM 字符串或者文件。
 
@@ -457,7 +457,7 @@ mindquantum.core.circuit.Circuit
             - **file_name** (str) - 保存成 HiQASM 文件的文件名。如果为 ``None``，则直接输出 OpenQASM 字符串，否者将保存为文件。默认值： ``None``。
             - **version** (str) - HiQASM 版本。默认值： ``0.1``。
 
-    .. py:method:: to_openqasm(file_name: Optional[str] = None, version: str = '2.0') -> str
+    .. py:method:: to_openqasm(file_name: Optional[str] = None, version: str = '2.0')
 
         将 MindQuantum 中的量子线路转化为 OpenQASM 字符串或者文件。
 

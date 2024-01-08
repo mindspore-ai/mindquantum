@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Test topology of device."""
+import pytest
 
 from mindquantum.device import GridQubits, LinearQubits, QubitNode, QubitsTopology
 
@@ -111,3 +112,16 @@ def test_grid_qubits():
     topology.remove_isolate_node()
     assert topology.size() == 19
     assert topology.n_edges() == 28
+
+
+def test_set_edge_color():
+    """
+    Description: Test set color of topology edge.
+    Expectation: success
+    """
+    topology = LinearQubits(4)
+    _ = topology[1] > topology[2]
+    with pytest.raises(ValueError, match="qubit 1 is not connected with qubit 2"):
+        topology.set_edge_color(1, 2, '#ababab')
+    topology.set_edge_color(0, 1, '#121212')
+    assert topology.get_edge_color(1, 0) == '#121212'
