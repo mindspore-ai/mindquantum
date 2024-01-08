@@ -43,7 +43,7 @@ Install projectq 0.8.0
 pip3 install projectq==0.8.0
 ```
 
-Install pennylane 0.33.1
+Install pennylane 0.33.0
 
 ```bash
 pip3 install pennylane==0.33.0
