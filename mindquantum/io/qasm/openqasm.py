@@ -406,7 +406,7 @@ def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
     from mindquantum.core.circuit import Circuit
 
     if version != '2.0':
-        raise ValueError(f"Only support qasm version {version}")
+        raise ValueError("Only support qasm version 2.0")
     if circ.is_noise_circuit:
         raise ValueError("Cannot convert noise circuit to qasm.")
     cmds = ['OPENQASM 2.0;', 'include "qelib1.inc";', f'qreg q[{circ.n_qubits}];']
