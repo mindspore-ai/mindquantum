@@ -528,7 +528,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             if isinstance(gates, mq_gates.Measure):
                 self.all_measures.collect_only_one(gates, f'measure key {gates.key} already exist.')
         elif isinstance(gates, Iterable):
-            for gate in gates[::-1]:
+            for gate in gates[::-1] if index > 0 else gates:
                 self.insert(index, gate)
                 self.all_qubits.collect(gate.obj_qubits)
                 self.all_qubits.collect(gate.ctrl_qubits)
