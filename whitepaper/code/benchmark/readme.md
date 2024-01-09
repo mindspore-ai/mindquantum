@@ -47,6 +47,7 @@ Install pennylane 0.33.0
 
 ```bash
 pip3 install pennylane==0.33.0
+pip3 install pennylane-qiskit==0.33.1
 ```
 
 Clone and build quest v3.7.0
@@ -83,12 +84,6 @@ Install pyqpanda 3.8.0
 pip3 install pyqpanda==3.8.0
 ```
 
-Install paddle quantum 2.4.0
-
-```bash
-pip3 install paddle-quantum==2.4.0
-```
-
 Install tensorcircuit 0.11.0
 
 ```bash
@@ -106,6 +101,13 @@ Install other packages.
 
 ```bash
 pip3 install networkx
+pip3 install protobuf==3.20.1
+```
+
+Force use CPU
+
+```bash
+export CUDA_VISIBLE_DEVICES=""
 ```
 
 ## Generate dataset
