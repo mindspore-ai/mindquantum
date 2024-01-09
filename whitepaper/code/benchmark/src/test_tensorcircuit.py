@@ -15,6 +15,7 @@
 """Benchmark Tensorcircuit."""
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import re
 import pytest
 import json
