@@ -7,15 +7,15 @@
 |Python|3.9.5|
 |OS|Linux x86_64|
 |Memory|16.62 GB|
-|CPU Max Thread|16|
+|GPU|RTX 2060|
 
 ## Install package
 
 Create isolated conda environment.
 
 ```bash
-conda create -n benchmark python=3.9.5
-conda activate benchmark
+conda create -n benchmark_gpu python=3.9.5
+conda activate benchmark_gpu
 pip3 install pytest pytest-benchmark
 ```
 
@@ -25,57 +25,25 @@ Install mindquantum 0.9.0
 pip3 install mindquantum==0.9.0
 ```
 
-Install qulacs 0.6.2:
+Install qulacs 0.3.1:
 
 ```bash
-pip3 install qulacs==0.6.2
+pip3 install qulacs==0.3.1
 ```
 
-Install qiskit-aer 0.13.0
+Install qiskit-aer-gpu 0.12.2
 
 ```bash
-pip3 install qiskit-aer==0.13.0
-```
-
-Install projectq 0.8.0
-
-```bash
-pip3 install projectq==0.8.0
+pip3 install qiskit-aer-gpu==0.12.2
 ```
 
 Install pennylane 0.33.0
 
 ```bash
-pip3 install pennylane==0.33.0
+pip3 install pennylane-lightning-gpu==0.33.0
 pip3 install pennylane-qiskit==0.33.1
-```
-
-Clone and build quest v3.7.0
-
-```bash
-CUR_DIR=`pwd`
-git clone --branch v3.7.0 --single-branch https://github.com/QuEST-Kit/QuEST.git
-cd QuEST
-mkdir -p build
-cd build
-cmake ..
-make -j8
-cd $CUR_DIR
-```
-
-Clone and build intel master
-
-```bash
-CUR_DIR=`pwd`
-pip3 install pybind11
-git clone https://github.com/intel/intel-qs.git
-cd intel-qs
-mkdir -p build
-cd build
-cmake -DIqsPython=ON ..
-make -j8
-cp ./lib/intelqs_py*.so `python -c "import site;print(site.getsitepackages()[0])"`
-cd $CUR_DIR
+site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+export LD_LIBRARY_PATH=$site_packages/cuquantum/lib:$site_packages/nvidia/cuda_runtime/lib:$LD_LIBRARY_PATH
 ```
 
 Install pyqpanda 3.8.0
@@ -102,12 +70,6 @@ Install other packages.
 ```bash
 pip3 install networkx
 pip3 install protobuf==3.20.1
-```
-
-Force use CPU
-
-```bash
-export CUDA_VISIBLE_DEVICES=""
 ```
 
 ## Generate dataset
