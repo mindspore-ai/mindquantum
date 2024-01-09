@@ -40,7 +40,7 @@ class SB(QAIA):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        J,  # noqa: N803
+        J,
         h=None,
         x=None,
         n_iter=1000,
@@ -95,7 +95,7 @@ class ASB(SB):  # noqa: N801
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        J,  # noqa: N803
+        J,
         h=None,
         x=None,
         n_iter=1000,
@@ -145,7 +145,7 @@ class BSB(SB):  # noqa: N801
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        J,  # noqa: N803
+        J,
         h=None,
         x=None,
         n_iter=1000,
@@ -192,7 +192,7 @@ class DSB(SB):  # noqa: N801
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        J,  # noqa: N803
+        J,
         h=None,
         x=None,
         n_iter=1000,

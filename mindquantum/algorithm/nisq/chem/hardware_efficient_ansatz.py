@@ -20,7 +20,11 @@ import numpy as np
 
 from mindquantum.core.circuit import AP, A, Circuit, add_prefix, add_suffix
 from mindquantum.core.gates import BasicGate, X
-from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less, _check_input_type
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_not_less,
+)
 
 from .._ansatz import Ansatz
 
@@ -61,6 +65,8 @@ class HardwareEfficientAnsatz(Ansatz):
             qubits you want to do entanglement by setting the entangle_mapping to a list of two qubits
             tuple. Default: ``"linear"``.
         depth (int): The depth of ansatz. Default: ``1``.
+        prefix (str): The prefix of parameters. Default: ``''``.
+        suffix (str): The suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
