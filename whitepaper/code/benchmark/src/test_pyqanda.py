@@ -132,3 +132,63 @@ def test_pyqpanda_simple_circuit(benchmark, file_name):
     prog = convert_back_to_pyqpanda_circ(str_circ, qubits)
     benchmark(qvm.directly_run, prog)
 
+
+# Section Three
+# Benchmark four regular qaoa
+# Available pytest mark: regular_4, pyqpanda
+
+regular_4_data_path = get_task_file("regular_4")
+regular_4_data_path.sort()
+regular_4_data_path = regular_4_data_path[:5]
+
+
+def regular_4_fun(p, grad_ops):
+    f, g = grad_ops(p)
+    f = np.real(f)[0][0]
+    g = np.real(g)[0][0]
+    return f, g
+
+
+def benchmark_regular_4(grad_ops, p0):
+    res = minimize(regular_4_fun, p0, args=(grad_ops,), method="bfgs", jac=True)
+
+def generate_qaoa_ansatz(edges, qubits):
+    p0 = pq.var(
+        np.random.uniform(-1, 1, len(edges) + len(qubits)).astype(np.float64)[:, None], True
+    )
+    circ = pq.VariationalQuantumCircuit()
+    for i in qubits:
+        circ.insert(pq.VariationalQuantumGate_H(i))
+    for idx, (i, j) in enumerate(edges):
+        circ.insert(pq.VariationalQuantumGate_CNOT(qubits[i], qubits[j]))
+        circ.insert(pq.VariationalQuantumGate_RZ(qubits[j], p0[idx]))
+        circ.insert(pq.VariationalQuantumGate_CNOT(qubits[i], qubits[j]))
+    for i in range(len(qubits)):
+        circ.insert(pq.VariationalQuantumGate_RX(qubits[i], p0[idx + 1 + i]))
+    op = {}
+    for i, j in edges:
+        op[f"Z{i} Z{j}"] = 1
+    hp = pq.PauliOperator(op)
+    return p0, circ, hp
+
+@pytest.mark.regular_4
+@pytest.mark.pyqpanda
+@pytest.mark.parametrize("file_name", regular_4_data_path)
+def test_pyqpanda_regular_4(benchmark, file_name):
+    n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+    with open(file_name, "r", encoding="utf-8") as f:
+        edges = [tuple(i) for i in json.load(f)]
+    qvm = pq.CPUQVM()
+    qvm.init_qvm()
+    qubits = qvm.qAlloc_many(n_qubits)
+    p0, circ, hp = generate_qaoa_ansatz(edges, qubits)
+    loss = pq.qop(circ, hp, qvm, qubits)
+    optimizer = pq.MomentumOptimizer.minimize(loss, 0.01, 0.8)
+    leaves = optimizer.get_variables()
+    N_ITER = 10
+    def run():
+        for i in range(N_ITER):
+            optimizer.run(leaves, 0)
+            loss_value = optimizer.get_loss()
+        return loss_value
+    benchmark(run)
