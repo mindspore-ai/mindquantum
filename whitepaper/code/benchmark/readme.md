@@ -47,6 +47,7 @@ Install pennylane 0.33.0
 
 ```bash
 pip3 install pennylane==0.33.0
+pip3 install pennylane-qiskit-0.33.1
 ```
 
 Clone and build quest v3.7.0

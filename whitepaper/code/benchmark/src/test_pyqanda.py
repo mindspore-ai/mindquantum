@@ -142,16 +142,6 @@ regular_4_data_path.sort()
 regular_4_data_path = regular_4_data_path[:5]
 
 
-def regular_4_fun(p, grad_ops):
-    f, g = grad_ops(p)
-    f = np.real(f)[0][0]
-    g = np.real(g)[0][0]
-    return f, g
-
-
-def benchmark_regular_4(grad_ops, p0):
-    res = minimize(regular_4_fun, p0, args=(grad_ops,), method="bfgs", jac=True)
-
 def generate_qaoa_ansatz(edges, qubits):
     p0 = pq.var(
         np.random.uniform(-1, 1, len(edges) + len(qubits)).astype(np.float64)[:, None], True
