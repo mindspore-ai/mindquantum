@@ -3,6 +3,7 @@ mindquantum.algorithm.qaia
 
 .. py:module:: mindquantum.algorithm.qaia
 
+
 量子退火启发式算法。
 
 .. mscnautosummary::

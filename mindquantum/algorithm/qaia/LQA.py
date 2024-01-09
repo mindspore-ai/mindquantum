@@ -41,7 +41,7 @@ class LQA(QAIA):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        J,  # noqa: N803
+        J,
         h=None,
         x=None,
         n_iter=1000,
@@ -68,7 +68,14 @@ class LQA(QAIA):
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
 
     def update(self, beta1=0.9, beta2=0.999, epsilon=10e-8):
-        """Dynamical evolution with Adam."""
+        """
+        Dynamical evolution with Adam.
+
+        Args:
+            beta1 (float): Beta1 parameter. Default: ``0.9``.
+            beta2 (float): Beta2 parameter. Default: ``0.999``.
+            epsilon (float): Epsilon parameter. Default: ``10e-8``.
+        """
         m_dx = 0
         v_dx = 0
 

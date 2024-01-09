@@ -32,7 +32,7 @@ class QAIA:
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1):  # noqa: N803
+    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1):
         """Construct a QAIA algorithm."""
         self.J = J
         self.h = h

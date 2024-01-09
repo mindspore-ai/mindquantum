@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.HardwareEfficientAnsatz
 ===================================================
 
-.. py:class:: mindquantum.algorithm.nisq.HardwareEfficientAnsatz(n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1)
+.. py:class:: mindquantum.algorithm.nisq.HardwareEfficientAnsatz(n_qubits, single_rot_gate_seq, entangle_gate=X, entangle_mapping='linear', depth=1, prefix: str = '', suffix: str = '')
 
     HardwareEfficientAnsatz是一种可以很容易地在量子芯片上高效实现的ansatz。
 
@@ -14,3 +14,5 @@ mindquantum.algorithm.nisq.HardwareEfficientAnsatz
         - **entangle_gate** (BasicGate) - 非参数化纠缠门。如果它是单个量子比特门，则将使用控制版本。默认值： ``XGate``。
         - **entangle_mapping** (Union[str, list[tuple[int]]]) - 纠缠门的纠缠映射。 ``"linear"`` 表示纠缠门将作用于每个相邻的量子比特。 ``"all"`` 表示纠缠门将作用于任何两个两个量子比特。此外，可以通过将纠缠映射设置为两个量子比特元组的列表来指定要执行纠缠的两个量子比特。默认值： ``"linear"``。
         - **depth** (int) - ansatz的深度。默认值： ``1``。
+        - **prefix** (str) - 参数的前缀。默认值： ``''``。
+        - **suffix** (str) - 参数的后缀。默认值： ``''``。

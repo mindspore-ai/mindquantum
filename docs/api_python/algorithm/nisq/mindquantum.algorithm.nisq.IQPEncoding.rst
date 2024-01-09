@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.IQPEncoding
 =======================================
 
-.. py:class:: mindquantum.algorithm.nisq.IQPEncoding(n_feature, first_rotation_gate=RZ, second_rotation_gate=RZ, num_repeats=1)
+.. py:class:: mindquantum.algorithm.nisq.IQPEncoding(n_feature, first_rotation_gate=RZ, second_rotation_gate=RZ, num_repeats=1, prefix: str = '', suffix: str = '')
 
     通用IQP编码。
 
@@ -12,6 +12,8 @@ mindquantum.algorithm.nisq.IQPEncoding
         - **first_rotation_gate** (ParameterGate) - 旋转门RX、RY或RZ之一。
         - **second_rotation_gate** (ParameterGate) - 旋转门RX、RY或RZ之一。
         - **num_repeats** (int) - 编码迭代次数。
+        - **prefix** (str) - 参数的前缀。默认值： ``''``。
+        - **suffix** (str) - 参数的后缀。默认值： ``''``。
 
     .. py:method:: data_preparation(data)
 

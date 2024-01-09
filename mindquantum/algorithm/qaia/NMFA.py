@@ -40,7 +40,7 @@ class NMFA(QAIA):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        J,  # noqa: N803
+        J,
         h=None,
         x=None,
         n_iter=1000,

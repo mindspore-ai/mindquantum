@@ -17,13 +17,17 @@
 from mindquantum.core.circuit import Circuit, add_prefix, add_suffix
 from mindquantum.core.gates import BasicGate
 from mindquantum.core.gates.basicgate import U3
-from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less, _check_input_type
+from mindquantum.utils.type_value_check import (
+    _check_input_type,
+    _check_int_type,
+    _check_value_should_not_less,
+)
 
 from .._ansatz import Ansatz
 
 
 class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
-    """
+    r"""
     Strongly entangling ansatz.
 
     Please refers `Circuit-centric quantum classifiers <https://arxiv.org/pdf/1804.00633.pdf>`_.
@@ -34,6 +38,8 @@ class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
         entangle_gate (BasicGate): a quantum gate to generate entanglement. If a single
             qubit gate is given, a control qubit will add, if a two qubits gate is given,
             the two qubits gate will act on different qubits.
+        prefix (str): The prefix of parameters. Default: ``''``.
+        suffix (str): The suffix of parameters. Default: ``''``.
 
     Examples:
         >>> from mindquantum.core.gates import X
@@ -60,6 +66,7 @@ class StronglyEntangling(Ansatz):  # pylint: disable=too-few-public-methods
               ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┗━━━┛
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(self, n_qubits: int, depth: int, entangle_gate: BasicGate, prefix: str = '', suffix: str = ''):
         """Initialize a strongly entangling ansatz."""
         _check_int_type('n_qubits', n_qubits)
