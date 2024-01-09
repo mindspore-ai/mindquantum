@@ -1,16 +1,7 @@
-% \begin{lstlisting}
-% 底层实现原理
-
-% 不同硬件上的针对性加速：
-% 1. avx
-% 2. arm
-% 3. 鲲鹏
-% 4. GPU
-% \end{lstlisting}
 \subsection{State Vector Simulator}
 \label{sec_state_vec}
 \subsubsection{Policy Based Design pattern}
-In \MindQuantum, we use \Simulator to simulate quantum state. A \Simulator maintain a quantum state, as mentioned in section \ref{sec:sim_basic_usage}, methods start with `apply' will change this maintained quantum state, and methods start with `get' will not change anything but only extrude information from the quantum state.
+In \MindQuantum, we use \Simulator to simulate quantum states. A \Simulator maintains a quantum state, as mentioned in section \ref{sec:sim_basic_usage}, methods start with `apply' will change this maintained quantum state, and methods start with `get' will not change anything but only extrude information from the quantum state.
 
 Simulating quantum systems imposes high performance requirements on simulators. In \MindQuantum, we utilize C++ or CUDA as the underlying simulator implementation language, accelerating quantum simulations based on different hardware instruction sets. We adopt a policy-based development approach, optimizing the fundamental simulator interface for different instruction sets and encapsulating them into policy types. Building upon a unified quantum simulation framework, we generate different quantum simulators using various simulator policies, such as AVX-supported simulators, neon-supported simulators, and GPU-supported simulators.
 
@@ -18,15 +9,15 @@ Simulating quantum systems imposes high performance requirements on simulators. 
     \centering
     \includegraphics[scale=0.6]{./images/4_1_simulator_structure.pdf}
     \captionsetup{justification=raggedright,singlelinecheck=false}
-    \caption{\label{4_1_sim_str} The layer structure of simulator in. The simulate policy layer applies quantum gate to quantum state based on actual simulation hardware. The unified simulator layer use different policy to finish circuit simulation and expectation and gradient calculation. The hardware device layer shows we support CPU, GPU and Kunpeng platform.}
+    \caption{\label{4_1_sim_str} The layer structure of the simulator. The simulate policy layer applies quantum gates to quantum states based on the current simulation hardware. The unified simulator layer uses different policies to complete the circuit simulation and expectation and gradient calculation. The hardware device layer shows that we support CPU, GPU and Kunpeng platform.}
 \end{figure}
 
-Depending on the specific quantum system being simulated, we have the option to choose between a full amplitude quantum simulator or a density matrix simulator. In \MindQuantum, these two simulators are referred to as `mqvector' and `mqmatrix', respectively. In the current \version version, the `mqvector' simulator also supports GPU acceleration and is named `mqvector\_gpu'. Both `mqvector' and `mqmatrix' use same design pattern in Fig.~\ref{4_1_sim_str}. Based on these simulators, noise simulation is also supported with the help of quantum channel, which will talked in section ~\ref{sec:noise_simulation}.
+Depending on the specific quantum system being simulated, we have the option to choose between a full amplitude quantum simulator or a density matrix simulator. In \MindQuantum, these two simulators are referred to as \code{"mqvector"} and \code{"mqmatrix"}, respectively. In the current \version version, the \code{"mqvector"} simulator also supports GPU acceleration and is named \code{"mqvector_gpu"}. Both \code{"mqvector"} and \code{"mqmatrix"} use the same design pattern as in Fig.~\ref{4_1_sim_str}. Based on these simulators, noise simulation is also supported with the help of quantum channel, which will talked in section ~\ref{sec:noise_simulation}.
 
 \subsubsection{Gate optimization with SIMD}
-SIMD (Single Instruction Multiple Data) is a computer architecture and parallel processing technique designed to accelerate the execution of tasks that can be parallelized by applying a single operation to multiple data elements simultaneously. The fundamental building block of a quantum simulator is the interaction between quantum gate and quantum state, involving multiple parallel operations, so We can utilize SIMD to accelerate the speed of quantum simulations. In this section, we will show how to optimize gate evolution based on avx instruction with complex128 data type.
+SIMD (Single Instruction Multiple Data) is a computer architecture and parallel processing technique designed to accelerate the execution of tasks that can be parallelized by applying a single operation to multiple data elements simultaneously. The fundamental building block of a quantum simulator is the interaction between quantum gate and quantum state, involving multiple parallel operations, so we can utilize SIMD to accelerate the speed of quantum simulations. In this section, we will show how to optimize gate evolution based on AVX instruction with \code{complex128} data type.
 
-AVX instruction provide us a 256 bits width vector register, which can storage 4 numbers with double precision or two complex numbers with double precision. In Fig~\ref{fig:avx}, we take a two qubits full state vector for example, probability amplitude $a$ and $b$ can load to a 256 bits register simultaneously, and $c$ and $d$ the same.
+AVX instruction provide us with a 256-bit width vector register, which can store 4 numbers with double precision or two complex numbers with double precision. In Fig~\ref{fig:avx}, we take a two-qubit full state vector for example, probability amplitudes $a$ and $b$ can be loaded into a 256-bit register simultaneously, and $c$ and $d$ can do the same.
 \begin{figure}
     \begin{tikzpicture}[scale=0.5]
         \node[left] at (0,0.5) {256 bits reg};
@@ -65,18 +56,18 @@ AVX instruction provide us a 256 bits width vector register, which can storage 4
         \node[right] at (9.5, -2) {$c\ket{10}+$};
         \node[right] at (9.5, -3) {$d\ket{11}$};
     \end{tikzpicture}
-    \caption{Storage a 2 qubits quantum state into two 256 bits registers.}
+    \caption{Store a 2-qubit quantum state into two 256-bit registers.}
     \label{fig:avx}
 \end{figure}
 
-We split basic quantum gate into different type, such X-like, Z-like or matrix gate. For X-like gate, the elements are only in anti-diagonal:
+We split basic quantum gates into different types, such as X-like, Z-like or matrix gate. For X-like gate, the elements are only in anti-diagonal:
 \begin{equation}
     \begin{pmatrix}
         0 & a \\
         b & 0
     \end{pmatrix}.
 \end{equation}
-When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a*b_r, a*b_i)$ in a single avx register. And if this gate is act on other qubit, then we need to swap $b*\text{reg\_a}$ and $a*\text{reg\_b}$. For Z-like gate, the elements are only in diagonal:
+When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a*b_r, a*b_i)$ in a single avx register. And if this gate is act on other qubit, we need to swap $b*\text{reg\_a}$ and $a*\text{reg\_b}$. For Z-like gate, the elements are only in diagonal:
 \begin{equation}
     \begin{pmatrix}
         a & 0 \\
@@ -86,17 +77,17 @@ When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a
 In this situation, we just need to change $(a_r, a_i)$ to $(a*a_r, a*a_i)$ and $(b_r, b_i)$ to $(b*b_r, b*b_i)$ if the gate act on first qubit, or just multiply $a$ to reg a and multiply $b$ to reg b if acting on other qubit.
 
 \subsection{Density Matrix Simulator}
-Different from state vector simulator, density matrix simulator is more suitable for mix state or open quantum system simulation, but much more memory consuming. The density operator of a quantum system is described as:
+Different from the state vector simulator, density matrix simulator is more suitable for mixed states or open quantum system simulation, but much more memory consuming. The density operator of a quantum system is described as:
 \begin{equation}
     \rho=\sum_ip_i\ket{\psi_i}\bra{\psi_i},
 \end{equation}
-where $p_i$ is the probability of system in pure state $\ket{\psi_i}$. The evolution of a quantum gate $U$ on density operator is:
+where $p_i$ is the probability of the system in pure state $\ket{\psi_i}$. The evolution of a quantum gate $U$ on density operator is:
 \begin{equation}
     \rho'=U\rho U^\dagger.
 \end{equation}
-The expectation of a observable $H$ under $\rho$ is:
+The expectation of an observable $H$ under $\rho$ is:
 \begin{equation}
     \left<H\right> = \sum_ip_i\bra{\psi_i}H\ket{\psi_i}=\tr(\rho H)
 \end{equation}.
 
-The usage, developing strategy and optimization process is very similar with state vector simulator, please refers to section ~\ref{sec_state_vec}.
+The usage, developing strategy and optimization process are very similar with state vector simulator, please refer to section ~\ref{sec_state_vec}.

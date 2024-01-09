@@ -1,30 +1,30 @@
 \label{sec:noise_simulation}
 \subsubsection{Quantum Channel}
-Due to quantum decoherence and coupling with the environment, current quantum computers often occur errors during the calculation process. They occur in stages such as state preparation, quantum gate operation, and measurement. This is often called quantum noise. Quantum noise can be characterized by quantum channels. In quantum information theory, quantum channels refer to completely positive trace-preserving (CPTP) maps in operator space, which can also be regarded as a quantum operation. All quantum channels can be represented by Kraus operators
+Due to quantum decoherence and coupling with the environment, errors often occur in current quantum computers during the calculation process. They occur in stages such as state preparation, quantum gate operation, and measurement. This is often called quantum noise. Quantum noise can be characterized by quantum channels. In quantum information theory, quantum channels refer to completely positive trace-preserving (CPTP) maps in the operator space, which can also be regarded as a quantum operation. All quantum channels can be represented by Kraus operators
 
 \begin{equation}
     \Psi(\rho) = \sum_i K_i \rho K_i^\dagger
 \end{equation}
 
-where $\Psi$ is quantum channel, $\rho$ is density matrix, and $\{K_i\}$ is Kraus operators of $\Psi$. The Kraus operators satisfies the completeness condition
+where $\Psi$ is a quantum channel, $\rho$ is a density matrix, and $\{K_i\}$ are Kraus operators of $\Psi$. The Kraus operators satisfy the completeness condition
 
 \begin{equation}
     \sum_i K_i^\dagger K_i = I
 \end{equation}
 
-In MindQuantum's density matrix simulator "mqmatrix", we support the simulation of quantum channels based on the above mathematical form. In addition to the density matrix method, in the state vector simulator "mqvector" in \MindQuantum, we also support the Monte Carlo method to simulate quantum channels. The noise gate will affect the qubits with a certain probability. By sampling the circuit multiple times, we can get the noise-containing Simulation results of quantum circuits. This process is much closer to how a real quantum computer works.
+In density matrix simulator \code{"mqmatrix"}, we support the simulation of quantum channels based on the above mathematical form. In addition to the density matrix method, in the state vector simulator \code{"mqvector"} in \MindQuantum, we also support the Monte Carlo method to simulate quantum channels. The noise gate will affect the qubits with a certain probability. By sampling the circuit multiple times, we can get the noise-containing simulation results of quantum circuits. This process is much closer to how a real quantum computer works.
 
 The following quantum channels are implemented in \MindQuantum.
 
-$Pauli Channel$: Pauli channel can be seem as Pauli operators randomly apply on quantum state $\rho$ according to a probability distribution.
+\PauliChannel: Pauli channel can be seen as Pauli operators randomly apply to a quantum state $\rho$ with respect to a probability distribution.
 \begin{equation}
     \Psi(\rho) = (1-p_x-p_y-p_z) \rho + p_x X \rho X + p_y Y \rho Y + p_z Z \rho Z
 \end{equation}
-It becomes $BitFlipChannel$ if only $p_x$ are nonzero. Similarly, $PhaseFlipChannel$ has only one nonzero value $p_z$ and $BitPhaseFlipChannel$ is nonzero $p_y$. A special case is, all Pauli operators have same probabilities, which is called $DepolarizingChannel$. Depolarizing channel is widely used in the description of quantum noise. Here is formula in 1-qubit case:
+It becomes \BitFlipChannel\ if only $p_x$ is nonzero. Similarly, \PhaseFlipChannel\ has only one nonzero value $p_z$ and \BitPhaseFlipChannel\ is nonzero $p_y$. A special case is, all Pauli operators have same probabilities, which is called depolarizing channel. Depolarizing channel is widely used in the description of quantum noise. Here is the formula in 1-qubit case:
 \begin{equation}
     \Psi(\rho) =  (1-p) \rho + \frac{p}{4}(I\rho I+X\rho X+Y\rho Y+Z\rho Z)
 \end{equation}
-$Depolarzing Channel$ in \MindQuantum\ also supports multiple qubits case.
+\DepolarizingChannel\ in \MindQuantum\ also supports multiple qubits case.
 \begin{lstlisting}
 from mindquantum.core.gates import DepolarizingChannel
 from mindquantum.core.circuit import Circuit
@@ -32,26 +32,28 @@ circ = Circuit()
 circ += DepolarizingChannel(0.02).on(0)
 circ += DepolarizingChannel(0.01, 2).on([0, 1])
 \end{lstlisting}
-$Damping Channel$: Common damping channels include amplitude damping channel and phase damping channel. The amplitude damping channel can describe the dissipation of system energy, while the phase damping channel describes the loss of quantum information without exchanging energy with environment.
+
+Damping Channel: Common damping channels include \AmplitudeDampingChannel\ and \PhaseDampingChannel. The amplitude damping channel can describe the dissipation of system energy, while the phase damping channel describes the loss of quantum information without exchanging energy with environment.
 Amplitude damping channel applies noise as:
 \begin{gather*}
     \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
     \\
     \text{where}\ {E_0}=\begin{bmatrix}1 & 0               \\
-               0 & \sqrt{1-\gamma}\end{bmatrix},
+        0 & \sqrt{1-\gamma}\end{bmatrix},
     \ {E_1}=\begin{bmatrix}0 & \sqrt{\gamma} \\
-               0 & 0\end{bmatrix}
+        0 & 0\end{bmatrix}
 \end{gather*}
 Phase damping channel applies noise as:
 \begin{gather*}
     \epsilon(\rho) = E_0 \rho E_0^\dagger + E_1 \rho E_1^\dagger
     \\
     \text{where}\ {E_0}=\begin{bmatrix}1 & 0               \\
-               0 & \sqrt{1-\gamma}\end{bmatrix},
+        0 & \sqrt{1-\gamma}\end{bmatrix},
     \ {E_1}=\begin{bmatrix}0 & 0             \\
-               0 & \sqrt{\gamma}\end{bmatrix}
+        0 & \sqrt{\gamma}\end{bmatrix}
 \end{gather*}
-$Kraus Channel$: The custom single-bit quantum channel in \MindQuantum. It can be constructed by passing in the Kraus operators.
+
+\KrausChannel: The custom single-bit quantum channel in \MindQuantum. It can be constructed by passing in the Kraus operators.
 \begin{lstlisting}
 from mindquantum.core.gates import KrausChannel
 from mindquantum.core.circuit import Circuit
@@ -206,4 +208,4 @@ circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()
 noise_sim = Simulator(NoiseBackend('mqvector', 2, noise_model))
 noise_sim.sampling(circ, shots=10000)
 \end{lstlisting}
-Here we construct a noise simulator together with `mqvector' based \NoiseBackend and the noise model than we built previously.
+Here we construct a noise simulator together with \code{"mqvector"} based \NoiseBackend and the noise model than we built previously.
