@@ -32,7 +32,7 @@ def _check_intrinsconeparagate(msg, gate_type):
 
 
 class IQPEncoding(Ansatz):
-    """
+    r"""
     General IQP Encoding.
 
     For more information, please refer to `Supervised learning with quantum-enhanced feature
@@ -43,6 +43,8 @@ class IQPEncoding(Ansatz):
         first_rotation_gate (ParameterGate): One of the rotation gate RX, RY or RZ.
         second_rotation_gate (ParameterGate): One of the rotation gate RX, RY or RZ.
         num_repeats (int): Number of encoding iterations.
+        prefix (str): The prefix of parameters. Default: ``''``.
+        suffix (str): The suffix of parameters. Default: ``''``.
 
     Examples:
         >>> import numpy as np
@@ -71,6 +73,7 @@ class IQPEncoding(Ansatz):
                 0.31027229+0.16950252j,  0.31027229+0.16950252j])
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         n_feature,
