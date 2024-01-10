@@ -18,9 +18,9 @@ Quantum algorithms for SVD have been proposed in \cite{kerenidis2016quantum, reb
         \end{itemize}
     \item Enter a hybrid quantum-classical optimization loop to train the parameters $\theta$ and $\phi$ in the parameterized quantum circuits $U(\theta)$ and $V(\phi)$, compute the singular values of $M$: $m_j = \text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$. The goal is to maximum the designed loss $L(\theta, \phi)$:
     \begin{equation}
-        L(\theta, \phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}
+        L(\theta, \phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j},
     \end{equation}
-    Where weights are added to make the calculated singular values descending.
+    where weights are added to make the calculated singular values descending.
     \item Obtain optimal parameters $\alpha^ \star$ and $\beta^\star$ and compute $U(\alpha^\star)$ and $V(\beta^\star)$.
     \item Obtain approximate singular values ${m_1, \cdots, m_r}$ and  singular vectors $U(\alpha^\star)$ and $V(\beta^\star)$.
 \end{enumerate}

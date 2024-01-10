@@ -14,16 +14,16 @@ We assumed an environment has $N$ different states. And we act action $a_{i-1}$ 
 \begin{equation}
     \begin{split}
         &P(\tau|\pi_{\theta})=\\
-        &\rho(s_0)\prod_{k=0}^{k=T-1}P(s_{k+1}|s_{k},a_{k})\pi_{\theta}(a_{k}|s_{k})
+        &\rho(s_0)\prod_{k=0}^{k=T-1}P(s_{k+1}|s_{k},a_{k})\pi_{\theta}(a_{k}|s_{k}),
     \end{split}
 \end{equation}
 where $\rho$ is the initial state distribution. Then the expectation of $T$ steps trajectory's reward is:
 \begin{equation}
-    \eta(\pi_{\theta})=\int_{\tau}P(\tau|\pi_{\theta})R(\tau)d\tau
+    \eta(\pi_{\theta})=\int_{\tau}P(\tau|\pi_{\theta})R(\tau)d\tau.
 \end{equation}
 In order to get the optimal policy function $\pi_{\theta}$, the agent is trained to maximize the expectation $\eta$, which is:
 \begin{equation}
-    \pi_{\theta}^{opt}=\mathrm{argmax}_{\theta}\eta(\pi_{\theta})
+    \pi_{\theta}^{opt}=\mathrm{argmax}_{\theta}\eta(\pi_{\theta}).
 \end{equation}
 In following sections, we will demonstrate how to the agent in quantum devise.
 
@@ -31,7 +31,7 @@ In following sections, we will demonstrate how to the agent in quantum devise.
 \begin{equation}
 \begin{split}
     L(\theta_{j})=&E[R_{i+1}+\\
-    &\gamma \max_{\alpha^{'}}Q(s_{i+1},a^{'},\theta_{j}^{-})-Q(s_{i},a_{i},\theta_{i})^2]
+    &\gamma \max_{\alpha^{'}}Q(s_{i+1},a^{'},\theta_{j}^{-})-Q(s_{i},a_{i},\theta_{i})^2].
 \end{split}
 \label{loss func}
 \end{equation}
@@ -68,7 +68,7 @@ self.circuit = self.encoder + self.ansatz
 
 After the progress of the quantum circuit, we need to construct an observable Hamiltonian as a measurement basis. Here, we only measure the second and third qubits on $\sigma_y$ base. The Hamiltonian is as follows:
 \begin{equation}
-    H=I\otimes I\otimes\sigma_y\otimes\sigma_y
+    H=I\otimes I\otimes\sigma_y\otimes\sigma_y.
 \end{equation}
 We can construct the hamiltonian by \MindQuantum\ as follows:
 \begin{lstlisting}

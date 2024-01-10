@@ -1,21 +1,3 @@
-% \begin{lstlisting}
-% 介绍变分量子算法
-
-% 介绍梯度计算方法 Adjoint Differentiation
-
-% 如何优化线路：
-% 1. scipy
-% 2. mindspore
-
-% mq中如何实现：
-% 1. 如何用模拟器求解线路梯度（相应接口）
-% 2. 结合pr：
-%   a. 控制哪些参数需要求梯度
-%   b. 参数共享
-%   c. 支持哪些形式：1）左矢，2）右矢，3）内积
-
-% 介绍mq中的贫瘠高原接口
-% \end{lstlisting}
 View demo code of this section: \democode{03}{3.1}
 
 Owing to the principles of quantum superposition, quantum entanglement, and quantum parallelism, quantum algorithms have the capacity to efficiently address certain computational problems, such as Shor's algorithm \cite{shor1994algorithms}, Grover's algorithm \cite{grover1996fast,long2001grover} and Harrow–Hassidim–Lloyd algorithm \cite{harrow2009quantum}, achieving exponential or polynomial acceleration when compared to classical algorithms. Nevertheless, the present state of quantum devices is constrained by limited quantum qubit and significant noise, which is often referred to as Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018quantum}. It is worth noting that the quantum algorithms mentioned above do not exhibit quantum advantage under these conditions.
@@ -35,12 +17,12 @@ Figure~\ref{fig:vqa_work_flow} illustrates the primary workflow of the VQA. The 
 In VQA, we also require an observable operator denoted as $H$. The expectation value of this observable is calculated as follows:
 
 \begin{equation}
-  E(\alpha, \theta) = \bra{0}U_e^\dagger(\alpha)U_a^\dagger(\theta)HU_a(\theta)U_e(\alpha)\ket{0}
+  E(\alpha, \theta) = \bra{0}U_e^\dagger(\alpha)U_a^\dagger(\theta)HU_a(\theta)U_e(\alpha)\ket{0}.
 \end{equation}
 In quantum many-body simulation and quantum approximate optimization algorithm, we need to convert the problem into an observable and optimize the parameter $\theta$ to find the ground state of this observable (the encoder circuit $U_e$ is always identity in these problems). The task is described as:
 
 \begin{equation}
-  \min_\theta E(\theta)
+  \min_\theta E(\theta).
 \end{equation}
 On the other hand, we need to define a cost function when we treat VQA as a part of machine learning model:
 
@@ -58,13 +40,13 @@ In this sub-section, we will delve into the implementation of variational quantu
 Suppose we have a initial quantum state $\ket{\psi_0}=\ket{0}$, and we are going to find a single qubit unitary operator $U(\theta)$, which can rotate $\ket{\psi_0}$ to $\ket{\psi_f}$ so that to minimum $E_X(\theta) = \bra{\psi_f}X\ket{\psi}$:
 
 \begin{equation}
-  \min_\theta(\bra{0}U^\dagger(\theta)XU(\theta)\ket{0})
+  \min_\theta(\bra{0}U^\dagger(\theta)XU(\theta)\ket{0}).
 \end{equation}
 
 The first step of VQA is to build a ansatz. In this task, we choose arbitrary single qubit rotation gate \Uthree to work as ansatz and \Uthree can also decompose into:
 
 \begin{equation}
-  U_3(a, b, c) = RZ(b)RX(-\pi/2)RZ(a)RX(\pi/2)RZ(c)
+  U_3(a, b, c) = RZ(b)RX(-\pi/2)RZ(a)RX(\pi/2)RZ(c).
 \end{equation}
 
 \begin{lstlisting}
@@ -139,16 +121,16 @@ ansatz.matrix(pr=dict(zip(ansatz.params_name, res.x)))
 \end{lstlisting}
 \begin{align*}
   U_a=\frac{1}{\sqrt{2}}\begin{pmatrix}
-                          e^{-0.313i}  & e^{0.313i} \\
-                          -e^{-0.313i} & e^{0.313i}
-                        \end{pmatrix}
+    e^{-0.313i}  & e^{0.313i} \\
+    -e^{-0.313i} & e^{0.313i}
+  \end{pmatrix}.
 \end{align*}
 
 \subsubsection{Rotate three states}
 In previous example, the PQC only contains ansatz circuit, and in this example, we will show how to add encoder circuit into PQC in \MindQuantum. The problem is described as below: suppose we have three states $\ket{\psi_0}=\ket{0},\ket{\psi_1}=(\ket{0}+\ket{1})/\sqrt{2}$ and $\ket{\psi_2}=(\ket{0}+i\ket{1})/\sqrt{2}$, find a single qubit rotation gate $U_a(\theta)$, so that the sum of expectation of $Z$ over three states after rotation gate $U_a$ is maximum:
 
 \begin{equation}
-  \max_{\theta}\sum_i{\bra{\psi_i}U^\dagger(\theta)ZU(\theta)\ket{\psi_i}}
+  \max_{\theta}\sum_i{\bra{\psi_i}U^\dagger(\theta)ZU(\theta)\ket{\psi_i}}.
 \end{equation}
 
 Here, we use a encoder circuit $U_e(a, b) = RX(a)RY(b)$ to prepare state $\ket{\psi_i}=U_e(a, b)\ket{0}$
@@ -245,10 +227,10 @@ plt.show()
 \subsubsection{More useage}
 In \MindQuantum, except these two basic usages, \getexpectationwithgrad offers a broader range of application scenarios. The definition of equation that we actually calculate gradient is:
 \begin{equation}
-  E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
+  E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>.
 \end{equation}
 You can set $U_l$ to an empty circuit and $H$ to identity \QubitOperator, so that you can get the projection of the new state on $\ket{\varphi}$ and you can also set $\ket{\varphi}=\ket{\psi}$, $U_l = U_r$ and $H$ to a density matrix, such as $H = \ket{0}\bra{0}$, and the result will be
 \begin{equation}
-  E=\left|\bra{0}U_r\ket{\psi}\right|^2
+  E=\left|\bra{0}U_r\ket{\psi}\right|^2.
 \end{equation}
 You can also set the observable to a list of hamiltonian, so that \MindQuantum\ can calculate the expectation and gradient in parallel.

@@ -72,7 +72,7 @@ When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a
     \begin{pmatrix}
         a & 0 \\
         0 & b
-    \end{pmatrix}
+    \end{pmatrix}.
 \end{equation}
 In this situation, we just need to change $(a_r, a_i)$ to $(a*a_r, a*a_i)$ and $(b_r, b_i)$ to $(b*b_r, b*b_i)$ if the gate act on first qubit, or just multiply $a$ to reg a and multiply $b$ to reg b if acting on other qubit.
 
@@ -87,7 +87,7 @@ where $p_i$ is the probability of the system in pure state $\ket{\psi_i}$. The e
 \end{equation}
 The expectation of an observable $H$ under $\rho$ is:
 \begin{equation}
-    \left<H\right> = \sum_ip_i\bra{\psi_i}H\ket{\psi_i}=\tr(\rho H)
-\end{equation}.
+    \left<H\right> = \sum_ip_i\bra{\psi_i}H\ket{\psi_i}=\tr(\rho H).
+\end{equation}
 
 The usage, developing strategy and optimization process are very similar with state vector simulator, please refer to section ~\ref{sec_state_vec}.

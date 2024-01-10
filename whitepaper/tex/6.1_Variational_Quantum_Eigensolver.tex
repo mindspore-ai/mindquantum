@@ -1,12 +1,5 @@
-% \begin{lstlisting}
-% 设计原理：粒子数和自选数守恒
-
-% 性能与优势：
-% 1. 简单罗列数据，比mq快多少
-% 2. 强调对内存的压缩能力
-% \end{lstlisting}
 \subsubsection{Background}
-Simulating molecule system with high accuracy in VQE is both time and memory consuming task. The memory used to simulation hydrogen chain in different size is shown in table~\ref{tab:memory_h_chain}
+Simulating molecule system with high accuracy in VQE is both a time and memory consuming task. The memory used to simulate hydrogen chains in different sizes is shown in table~\ref{tab:memory_h_chain}
 
 \begin{table}[ht]
     \begin{tabular}{ccc}
@@ -20,22 +13,21 @@ Simulating molecule system with high accuracy in VQE is both time and memory con
         $H_{18}$       & 36           & 1TB                    \\
         \bottomrule
     \end{tabular}
-    \caption{Memory consuming for storage full amplitudes quantum state.}
+    \caption{Memory consumption for storing full amplitudes quantum state.}
     \label{tab:memory_h_chain}
 \end{table}
 
 Based on UCCSD (Unitary coupled-cluster with singles and doubles) theory, the ansatz is described as:
-
 \begin{equation}
-    U(\theta) = e^{(T-T^\dagger)}\ket{\psi_\text{HF}}
+    U(\theta) = e^{(T-T^\dagger)}\ket{\psi_\text{HF}},
 \end{equation}
 where $T$ is couple cluster operator, and $\ket{\psi_\text{HF}}$ is hartree-fork state. The couple cluster operator is written as:
 \begin{equation}
     T=\sum_{p\notin\text{occ},q\in\text{occ}}\theta_q^p a_p^\dagger a_q + \sum_{pq\notin\text{occ},rs\in\text{occ}}\theta_{rs}^{pq}a_p^\dagger a_q^\dagger a_r a_s,
 \end{equation}
-and under trotterization the ansatz can decompose to:
+and under trotterization the ansatz can be decomposed to:
 \begin{equation}
-    U(\theta)=\prod_ie^{(T_i-T_i^\dagger)}\ket{\psi_\text{HF}}
+    U(\theta)=\prod_ie^{(T_i-T_i^\dagger)}\ket{\psi_\text{HF}}.
 \end{equation}
 Taking hydrogen chain $H_4$ for example, we need 12 qubits to simulate this system and there are 6 electrons with 3 spin up and 3 spin down. Fig~\ref{6_1_h4_a} shows the hartree-fork state of $H_4$ and Fig~\ref{6_1_h4_b} shows the spin-orbital under excitation operator $T=a_{11}^\dagger a_{10}^\dagger a_5 a_4$.
 \begin{figure}
@@ -58,13 +50,13 @@ In \QuPack, we impose the constraint that the total number of electrons and the 
 \begin{equation}
     \binom{n_q/2}{n_e/2}^2=\left(\frac{(n_q/2)!}{(n_e/2)!(n_q/2-n_e/2)!}\right)^2.
 \end{equation}
-The memory consuming will reduce from 1TB to \~{}35GB.
+The memory consumption will reduce from 1TB to $\sim$35GB.
 
-Besides the memory reduction, we also optimized the evolution of coupled cluster operator. For a given coupled cluster operator $V(\theta)=e^{\theta(T-T^\dagger)}$, it is easy to prove that $(T-T^\dagger)^3 = - (T-T^\dagger)$ and $(T-T^\dagger)^4 = -(T-T^\dagger)^2$, after taylor expansion, we have:
+Besides the memory reduction, we also optimized the evolution of coupled cluster operator. For a given coupled cluster operator $V(\theta)=e^{\theta(T-T^\dagger)}$, it is easy to prove that $(T-T^\dagger)^3 = - (T-T^\dagger)$ and $(T-T^\dagger)^4 = -(T-T^\dagger)^2$. After taylor expansion, we have:
 \begin{equation}
     V(\theta) = \mathbb{I} + ( 1-\cos\theta)(T-T^\dagger)^2 + \sin\theta (T-T^\dagger).
 \end{equation}
-Choose a calculation base in reduced Hilbert space $\ket{i}$, so that $T\ket{i} = \ket{j}\neq0$, then we have $T^\dagger\ket{i}=0$ and $T^\dagger\ket{j}=\ket{i}$. The evolution of coupled cluster can simplified to:
+Choose a calculation base in reduced Hilbert space $\ket{i}$, so that $T\ket{i} = \ket{j}\neq0$, then we have $T^\dagger\ket{i}=0$ and $T^\dagger\ket{j}=\ket{i}$. The evolution of coupled cluster can be simplified to:
 \begin{equation}
     e^{\theta(T-T^\dagger)}\begin{pmatrix}
         \ket{i} \\\ket{j}
@@ -73,7 +65,7 @@ Choose a calculation base in reduced Hilbert space $\ket{i}$, so that $T\ket{i} 
         -\sin\theta & \cos\theta
     \end{pmatrix}\begin{pmatrix}
         \ket{i} \\\ket{j}
-    \end{pmatrix}
+    \end{pmatrix}.
 \end{equation}
 And for $e^{i\theta(T+T^\dagger)}$, we have
 \begin{equation}
@@ -84,10 +76,10 @@ And for $e^{i\theta(T+T^\dagger)}$, we have
         -i\sin\theta & \cos\theta
     \end{pmatrix}\begin{pmatrix}
         \ket{i} \\\ket{j}
-    \end{pmatrix}
+    \end{pmatrix}.
 \end{equation}
 
-When doing variation quantum algorithm on this system, we need to calculate the gradient of $V(\theta)$, which is given as:
+When doing variational quantum algorithm on this system, we need to calculate the gradient of $V(\theta)$, which is given as:
 \begin{equation}
     \frac{\partial V(\theta)}{\partial\theta}\begin{pmatrix}
         \ket{i} \\\ket{j}

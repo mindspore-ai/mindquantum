@@ -44,14 +44,14 @@ There are the following interfaces that can be called to implement various funct
 \begin{itemize}
     \item get\_expectation\_with\_grad(): Based on the given quantum gate parameters, obtain the expectation value of the final state of the circuit with respect to the Hamiltonian, along with the gradients of each parameter.
     \item get\_expectation(): Based on the given quantum gate parameters, obtain the expectation value of the evolved quantum state with respect to the Hamiltonian.
-evolution(): Run the circuit to evolve the quantum state based on the given quantum gate parameters.
+    \item evolution(): Run the circuit to evolve the quantum state based on the given quantum gate parameters.
     \item get\_qs(): Get the current quantum state of the simulator.
     \item set\_qs(): Set the current quantum state of the simulator.
 \end{itemize}
 
-The quantum gate parameters consist of two components: gamma and beta. Gamma represents the parameters for ZZ gates, while beta represents the parameters for RX gates. These parameters should be provided as one-dimensional lists or numpy.ndarrays. Each entry in the array corresponds to the parameters for all ZZ (or RX) gates in one layer of the ansatz circuit. Therefore, the lengths of gamma and beta should match the depth.
+The quantum gate parameters consist of two components: \textit{gamma} and \textit{beta}. \textit{Gamma} represents the parameters for Rzz gates, while \textit{beta} represents the parameters for RX gates. These parameters should be provided as one-dimensional lists or numpy.ndarrays. Each entry in the array corresponds to the parameters for all Rzz (or RX) gates in one layer of the ansatz circuit. Therefore, the lengths of \textit{gamma} and \textit{beta} should match the depth.
 
-Below, we will set all ZZ gate parameters to 1 and all RX gate parameters to 2, for the purpose of demonstrating these interfaces.
+Below, we will set all Rzz gate parameters to 1 and all RX gate parameters to 2, for the purpose of demonstrating these interfaces.
 
 \begin{lstlisting}
 gamma = [1] * depth
