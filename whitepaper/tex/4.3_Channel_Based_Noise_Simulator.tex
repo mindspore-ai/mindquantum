@@ -206,6 +206,6 @@ After we build a noise model, we are easy to simulate a quantum circuit with thi
 \begin{lstlisting}
 circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()
 noise_sim = Simulator(NoiseBackend('mqvector', 2, noise_model))
-noise_sim.sampling(circ, shots=10000)
+noise_sim.sampling(circ, pr={'a': 1, 'b': 2, 'c':3}, shots=10000)
 \end{lstlisting}
 Here we construct a noise simulator together with \code{"mqvector"} based \NoiseBackend and the noise model than we built previously.
