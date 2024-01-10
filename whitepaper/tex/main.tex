@@ -43,6 +43,8 @@
 
 \newcommand{\tr}{\text{tr}}
 
+\renewcommand\thesection{\arabic{section}}
+
 \usepackage{listings}
 \usepackage{xcolor}
 
@@ -50,6 +52,10 @@
 \usepackage{titlesec} %自定义多级标题格式的宏包
 \titleformat{\paragraph}[block]{\small\bfseries}{}{}{}[]
 % \titleformat{\paragraph}[block]{\small\bfseries}{}{1em}{}[]
+
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
 
 \definecolor{bkgd}{RGB}{240,242,246}
 \definecolor{ceruleanblue}{rgb}{0.16, 0.32, 0.75}
