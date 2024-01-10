@@ -9,7 +9,7 @@ Quantum gates play a pivotal role in the construction of quantum circuits. They 
 
 Depending on the number of qubits involved, quantum gates are classified as single-qubit gates or multi-qubit gates. Single-qubit gates operate on individual qubits and are responsible for modifying their states. Multi-qubit gates, on the other hand, perform operations that involve interactions between multiple qubits, enabling the creation of entanglement and more complex quantum operations.
 
-Furthermore, quantum gates can be categorized based on whether they require parameters for their operation. Gates that don't require parameters are known as Non-parameter Gates, while those that do are referred to as Parameter Gates. These gates with parameters provide additional flexibility in quantum algorithms and computations. In \MindQuantum, we can easily construct non-parameterized gate, such as \X, \Y, \Z and \H, and parameterized gate, such as \RX, \RY and \RZ, with the help or \ParameterResolver.
+Furthermore, quantum gates can be categorized based on whether they require parameters for their operation. Gates that don't require parameters are known as Non-parameter Gates, while those that do are referred to as Parameter Gates. These gates with parameters provide additional flexibility in quantum algorithms and computations. In \MindQuantum, we can easily construct non-parameterized gate, such as \X, \Y, \Z\ and \H, and parameterized gate, such as \RX, \RY\ and \RZ, with the help or \ParameterResolver.
 
 In essence, quantum gates are the building blocks of quantum computing, allowing for the manipulation, transformation, and interaction of qubits that underpin the unique and powerful computational capabilities of quantum computers.
 
@@ -31,7 +31,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         a \\
         b
-    \end{bmatrix}  \\
+    \end{bmatrix},  \\
     X\ket{\phi} & =
     \begin{bmatrix}
         0 &  & 1 \\
@@ -44,7 +44,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         b \\
         a
-    \end{bmatrix}  \\
+    \end{bmatrix},  \\
     Y\ket{\phi} & =
     \begin{bmatrix}
         0 &  & -i \\
@@ -57,7 +57,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         -bi \\
         ai
-    \end{bmatrix}  \\
+    \end{bmatrix},  \\
     Z\ket{\phi} & =
     \begin{bmatrix}
         1 &  & 0 \\
@@ -70,7 +70,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         a \\
         -b
-    \end{bmatrix}  \\
+    \end{bmatrix}, \\
     H\ket{\phi} & =
     \frac{1}{\sqrt{2}}
     \begin{bmatrix}
@@ -85,7 +85,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         a+b \\
         a-b
-    \end{bmatrix}
+    \end{bmatrix}.
 \end{align*}
 
 Here we will show you how to use these gates in \MindQuantum.
@@ -109,25 +109,25 @@ Pauli matrices are the most important matrices, and they form a set of bases for
 \begin{align*}
     Rx(\theta) & =
     e^{-\frac{i\theta X}{2}}=
-    \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}X                                  \\
+    \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}X \\
                & =\begin{bmatrix}
-                      \cos{\frac{\theta}{2}}   &  & -i\sin{\frac{\theta}{2}} \\
-                      -i\sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
-                  \end{bmatrix}    \\
+        \cos{\frac{\theta}{2}}   &  & -i\sin{\frac{\theta}{2}} \\
+        -i\sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
+    \end{bmatrix},        \\
     Ry(\theta) & =
     e^{-\frac{i\theta Y}{2}}=
-    \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Y                                  \\
+    \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Y \\
                & =    \begin{bmatrix}
-                          \cos{\frac{\theta}{2}} &  & -\sin{\frac{\theta}{2}} \\
-                          \sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
-                      \end{bmatrix} \\
+        \cos{\frac{\theta}{2}} &  & -\sin{\frac{\theta}{2}} \\
+        \sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
+    \end{bmatrix},    \\
     Rz(\theta) & =
     e^{-\frac{i\theta Z}{2}}=
-    \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Z                                  \\
+    \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Z \\
                & =    \begin{bmatrix}
-                          e^{\frac{-i\theta}{2}} &  & 0                     \\
-                          0                      &  & e^{\frac{i\theta}{2}}
-                      \end{bmatrix}
+        e^{\frac{-i\theta}{2}} &  & 0                     \\
+        0                      &  & e^{\frac{i\theta}{2}}
+    \end{bmatrix}.
 \end{align*}
 
 
