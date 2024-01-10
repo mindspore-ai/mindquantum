@@ -31,7 +31,11 @@ from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
 from mindquantum.dtype.dtype import str_dtype_map
 from mindquantum.mqbackend import EQ_TOLERANCE
 from mindquantum.third_party.interaction_operator import InteractionOperator
-from mindquantum.utils.type_value_check import _check_int_type, _require_package
+from mindquantum.utils.type_value_check import (
+    _check_and_generate_pr_type,
+    _check_int_type,
+    _require_package,
+)
 
 
 @lru_cache()
@@ -537,20 +541,27 @@ class FermionOperator(FermionOperator_):
         """
         return FermionOperator(FermionOperator_.hermitian_conjugated(self), internal=True)
 
-    def matrix(self, n_qubits: int = None):  # pylint: disable=too-many-branches
+    def matrix(self, n_qubits: int = None, pr=None):  # pylint: disable=too-many-branches
         """
         Convert this fermion operator to csr_matrix under jordan_wigner mapping.
 
         Args:
             n_qubits (int): The total qubit of final matrix. If None, the value will be
                 the maximum local qubit number. Default: None.
+            pr (ParameterResolver, dict, numpy.ndarray, list, numbers.Number): The parameter
+                resolver for parameterized FermionOperator. Default: None.
         """
-        if self.parameterized:
-            raise RuntimeError("Cannot convert a parameterized fermion operator to matrix.")
+        if pr is None:
+            pr = ParameterResolver()
+        pr = _check_and_generate_pr_type(pr, self.params_name)
         np_type = mq.to_np_type(self.dtype)
+        ops = self
+        if self.parameterized:
+            ops = copy.copy(self)
+            ops = ops.subs(pr)
         if not self.terms:
             raise ValueError("Cannot convert empty fermion operator to matrix")
-        n_qubits_local = self.count_qubits()
+        n_qubits_local = ops.count_qubits()
         if n_qubits_local == 0 and n_qubits is None:
             raise ValueError("You should specific n_qubits for converting a identity fermion operator.")
         if n_qubits is None:
@@ -561,7 +572,7 @@ class FermionOperator(FermionOperator_):
                 f"Given n_qubits {n_qubits} is small than qubit of fermion operator, which is {n_qubits_local}."
             )
         out = 0
-        for term, coeff in self.terms.items():
+        for term, coeff in ops.terms.items():
             coeff = coeff.const
             if not term:
                 out += csr_matrix(np.identity(2**n_qubits, dtype=np_type)) * coeff
@@ -582,6 +593,14 @@ class FermionOperator(FermionOperator_):
                             tmp *= _single_fermion_word(gate[0], gate[1], n_qubits, np_type)
                 out += tmp * coeff
         return out
+
+    @property
+    def params_name(self):
+        """Get all parameters of this operator."""
+        names = []
+        for pr in self.terms.values():
+            names.extend([i for i in pr.params_name if i not in names])
+        return names
 
     def normal_ordered(self) -> "FermionOperator":
         """

@@ -28,7 +28,11 @@ from mindquantum.core.operators._term_value import TermValue
 from mindquantum.core.parameterresolver import ParameterResolver, PRConvertible
 from mindquantum.dtype.dtype import str_dtype_map
 from mindquantum.mqbackend import EQ_TOLERANCE
-from mindquantum.utils.type_value_check import _check_int_type, _require_package
+from mindquantum.utils.type_value_check import (
+    _check_and_generate_pr_type,
+    _check_int_type,
+    _require_package,
+)
 
 
 # pylint: disable=too-many-public-methods
@@ -495,22 +499,39 @@ class QubitOperator(QubitOperator_):
         """
         return QubitOperator(QubitOperator_.hermitian_conjugated(self), internal=True)
 
-    def matrix(self, n_qubits: int = None):
+    def matrix(self, n_qubits: int = None, pr=None):
         """
         Convert this qubit operator to csr_matrix.
 
         Args:
             n_qubits (int): The total qubits of final matrix. If ``None``, the value will be
                 the maximum local qubit number. Default: ``None``.
+            pr (ParameterResolver, dict, numpy.ndarray, list, numbers.Number): The parameter
+                resolver for parameterized QubitOperator. Default: None.
         """
+        if pr is None:
+            pr = ParameterResolver()
+        pr = _check_and_generate_pr_type(pr, self.params_name)
+        ops = self
+        if self.parameterized:
+            ops = copy.copy(self)
+            ops = ops.subs(pr)
         if n_qubits is None:
             n_qubits = -1
         _check_int_type('n_qubits', n_qubits)
-        csr = QubitOperator_.sparsing(self, n_qubits)
+        csr = QubitOperator_.sparsing(ops, n_qubits)
         data = np.array(csr.data, copy=False)
         indptr = np.array(csr.get_indptr(), copy=False)
         indices = np.array(csr.get_indices(), copy=False)
         return csr_matrix((data, indices, indptr), (csr.n_row, csr.n_col))
+
+    @property
+    def params_name(self):
+        """Get all parameters of this operator."""
+        names = []
+        for pr in self.terms.values():
+            names.extend([i for i in pr.params_name if i not in names])
+        return names
 
     def relabel(self, logic_qubits: typing.List[int]) -> "QubitOperator":
         """

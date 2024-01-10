@@ -18,6 +18,7 @@
 import os
 import pickle
 
+import numpy as np
 import pytest
 
 from mindquantum.core.operators import FermionOperator
@@ -244,3 +245,16 @@ def test_relabel():
     f_op = FermionOperator('3^ 2 1 0')
     f_op = f_op.relabel([1, 3, 0, 2])
     assert f_op == -FermionOperator('3 2^ 1 0')
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_get_matrix():
+    """
+    Description: Test get matrix of fermion operator.
+    Expectation: success.
+    """
+    a = FermionOperator('0', 'a')
+    with pytest.raises(ValueError, match="Parameter a not in given parameter resolver."):
+        a.matrix()
+    assert np.allclose(a.matrix(pr={'a': 1}).toarray(), FermionOperator('0').matrix().toarray())

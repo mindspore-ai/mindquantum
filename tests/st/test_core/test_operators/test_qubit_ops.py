@@ -266,3 +266,16 @@ def test_relabel():
     q_op = QubitOperator('Z0 Y1 X2 Z3')
     q_op = q_op.relabel([1, 3, 0, 2])
     assert q_op == QubitOperator('X0 Z1 Z2 Y3')
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_get_matrix():
+    """
+    Description: Test get matrix of qubit operator.
+    Expectation: success.
+    """
+    a = QubitOperator('X0', 'a')
+    with pytest.raises(ValueError, match="Parameter a not in given parameter resolver."):
+        a.matrix()
+    assert np.allclose(a.matrix(pr={'a': 1}).toarray(), QubitOperator('X0').matrix().toarray())

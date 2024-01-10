@@ -130,12 +130,18 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，从字符串加载的QubitOperator。
 
-    .. py:method:: matrix(n_qubits: int = None)
+    .. py:method:: matrix(n_qubits: int = None, pr=None)
 
         将此玻色子算符转换为csr_matrix。
 
         参数：
             - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
+            - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参玻色子算符的参数。默认值： ``None``。
+
+    .. py:method:: params_name
+        :property:
+
+        获取玻色子算符的所有参数。
 
     .. py:method:: parameterized
         :property:
