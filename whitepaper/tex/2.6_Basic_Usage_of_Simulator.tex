@@ -1,17 +1,3 @@
-% \begin{lstlisting}
-% 可用的模拟器：
-% 1. 态矢量（强调 little endian）
-% 2. 密度矩阵
-% 3. 张量网络
-
-% 使用方法：
-% 1. apply_gate
-% 2. apply_circuit
-% 3. apply_hamiltonian（介绍mq中的Hamiltonian）
-% 4. get_expectation
-% 5. get_expectation_with_grad
-% 6. sampling
-% \end{lstlisting}
 View demo code of this section: \democode{02}{2.6}
 
 There are many methods to simulate a quantum system. For example, you can use a full state vector to simulate a pure quantum system and use a density matrix to simulate a mixed state quantum system. In \MindQuantum, both of these methods are supported.
@@ -53,7 +39,7 @@ Every simulator in \MindQuantum\ maintains a quantum state, and we can use metho
 
 \subsubsection{`apply' method}
 
-`apply' method is going to applying a operator on the maintained quantum state and change the state. We a apply a single gate or a quantum circuit on the quantum state, and we can also apply a hamiltonian on the quantum state. We should notice that after applying a hamiltonian, the quantum state will not be a will defined quantum state.
+`apply' method is going to applying a operator on the maintained quantum state and change the state. We can apply a single gate or a quantum circuit, as well as a Hamiltonian, to manipulate the quantum state. We should notice that after applying a hamiltonian, the quantum state will not be a will defined quantum state.
 
 \begin{lstlisting}
 from mindquantum.core.circuit import Circuit
