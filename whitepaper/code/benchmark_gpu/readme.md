@@ -25,10 +25,10 @@ Install mindquantum 0.9.0
 pip3 install mindquantum==0.9.0
 ```
 
-Install qulacs 0.3.1:
+Install qulacs-gpu 0.3.1:
 
 ```bash
-pip3 install qulacs==0.3.1
+pip3 install qulacs-gpu==0.3.1
 ```
 
 Install qiskit-aer-gpu 0.12.2
