@@ -31,7 +31,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         a \\
         b
-    \end{bmatrix}  \\
+    \end{bmatrix},  \\
     X\ket{\phi} & =
     \begin{bmatrix}
         0 &  & 1 \\
@@ -44,7 +44,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         b \\
         a
-    \end{bmatrix}  \\
+    \end{bmatrix},  \\
     Y\ket{\phi} & =
     \begin{bmatrix}
         0 &  & -i \\
@@ -57,7 +57,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         -bi \\
         ai
-    \end{bmatrix}  \\
+    \end{bmatrix},  \\
     Z\ket{\phi} & =
     \begin{bmatrix}
         1 &  & 0 \\
@@ -70,7 +70,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         a \\
         -b
-    \end{bmatrix} \\
+    \end{bmatrix}, \\
     H\ket{\phi} & =
     \frac{1}{\sqrt{2}}
     \begin{bmatrix}
@@ -85,7 +85,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     \begin{bmatrix}
         a+b \\
         a-b
-    \end{bmatrix}
+    \end{bmatrix}.
 \end{align*}
 
 Here we will show you how to use these gates in \MindQuantum.
@@ -113,21 +113,21 @@ Pauli matrices are the most important matrices, and they form a set of bases for
                & =\begin{bmatrix}
         \cos{\frac{\theta}{2}}   &  & -i\sin{\frac{\theta}{2}} \\
         -i\sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
-    \end{bmatrix}         \\
+    \end{bmatrix},        \\
     Ry(\theta) & =
     e^{-\frac{i\theta Y}{2}}=
     \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Y \\
                & =    \begin{bmatrix}
         \cos{\frac{\theta}{2}} &  & -\sin{\frac{\theta}{2}} \\
         \sin{\frac{\theta}{2}} &  & \cos{\frac{\theta}{2}}
-    \end{bmatrix}     \\
+    \end{bmatrix},    \\
     Rz(\theta) & =
     e^{-\frac{i\theta Z}{2}}=
     \cos{\frac{\theta}{2}}I-i\sin{\frac{\theta}{2}}Z \\
                & =    \begin{bmatrix}
         e^{\frac{-i\theta}{2}} &  & 0                     \\
         0                      &  & e^{\frac{i\theta}{2}}
-    \end{bmatrix}
+    \end{bmatrix}.
 \end{align*}
 
 
