@@ -12,9 +12,9 @@ circ = Circuit()
 
 There are several basic operations for adding a quantum gate into \Circuit
 \begin{itemize}
+    \item list: directly construct a quantum gate with gate list.
     \item +=: use '+=' to add a quantum gate to the circuit.
     \item Circuit.x: add an X gate to the circuit.
-    \item list: directly construct a quantum gate with gate list
 \end{itemize}
 \begin{lstlisting}
 from mindquantum.core.gates import H, Y, X, Z
@@ -54,7 +54,7 @@ Quantum Circuit is the basic element of quantum algorithm, \MindQuantum\ provide
 
 \subsubsection{Advanced operator on circuit}
 
-Constructing a large size quantum circuit is always not a straightforward thing for user. Here in \MindQuantum, we can use some pre-defined method to manipulate your \Circuit very easily. For example the origin quantum circuit is:
+Constructing a large size quantum circuit is always not a straightforward thing for users. Here in \MindQuantum, we provide some pre-defined methods to make manipulating \Circuit more easily. For example the origin quantum circuit is:
 
 \begin{lstlisting}
 from mindquantum.core.circuit import *

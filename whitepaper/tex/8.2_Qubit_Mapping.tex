@@ -54,7 +54,7 @@ The core idea of the algorithm is trivial. Similar to topological sorting, we ca
 The basic heuristic function is from the nearest neighbor cost function. For two physical qubit $Q_i$ and $Q_j$, $D[Q_i][Q_j]$ stands for the nearest distance in the physical connected graph. For a given front layer $F$ and current mapping $\pi$, the basic function is defined as 
 Eq.~\eqref{eq:qubit-mapping-h-basic}.
 \begin{equation} \label{eq:qubit-mapping-h-basic}
-	H_{\text{basic}} = \sum_{g \in F} D[\pi (g.q_1)][\pi (g.q_2)]
+	H_{\text{basic}} = \sum_{g \in F} D[\pi (g.q_1)][\pi (g.q_2)].
 \end{equation}
 
 $H_{\text{basic}}$ only considers the front layer. If we want to look ahead, we can add an extended set $E$, which contains some closet successors of the gates from $F$. The size of $E$ is flexible, depending on how much look-ahead ability we want. Also, the gates in $F$ should have a higher priority than $E$. So that a weight parameter $0 \leq W < 1$ is added.
@@ -65,7 +65,7 @@ Eq.~\eqref{eq:qubit-mapping-h}.
 	\begin{aligned}
 		H = & \max \left( decay(SWAP.q_1), decay(SWAP.q_2) \right)  \\
 		\times & \Big\lbrace \frac{1}{|F|} \sum_{g \in F} D[\pi(g.q_1)][\pi(g.q_2)] \\
-		+ & \frac{W}{|E|} \sum_{g \in E} D[\pi(g.q_1)][\pi(g.q_2)] \Big\rbrace
+		+ & \frac{W}{|E|} \sum_{g \in E} D[\pi(g.q_1)][\pi(g.q_2)] \Big\rbrace.
 	\end{aligned}
 \end{equation} 
 
