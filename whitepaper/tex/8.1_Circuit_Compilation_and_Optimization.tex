@@ -1,12 +1,3 @@
-% \begin{lstlisting}
-% mq中的编译框架：
-% 1. DAG图
-% 2. 如何通过小编译规则生成通用编译规则
-
-% 现有规则
-
-% 流程图
-% \end{lstlisting}
 When simulating quantum circuits on a \Simulator, it is generally unnecessary to consider whether the quantum circuit can actually be executed on a quantum chip. Our focus lies solely on investigating the feasibility of the algorithm. However, when accounting for real quantum chips, the set of quantum gates executable on the chip is finite. Moreover, due to the existence of quantum noise, it is desirable to minimize the depth of the quantum circuit. This necessitates the compilation and optimization of the quantum circuit. In this section, we will elucidate how \MindQuantum\ performs the compilation and optimization of quantum circuit.
 
 Here, we use DAG (Directed Acyclic Graph) as a tool to compile quantum circuit. As shown in Fig~\ref{fig:compiler}, a quantum circuit is converted to a DAG. Based on the DAG we can apply built-in compilation rules, such as \BasicDecompose, \FullyNeighborCanceler and \GateReplacer, in \MindQuantum\ to finish quantum compilation and optimization. Furthermore, we have two robust managers in place for organizing these compilation rules, which are \SequentialCompiler and \KroneckerSeqCompiler. The rules in \SequentialCompiler will perform one by one in single time, but the rules in \KroneckerSeqCompiler will be executed until they can not compile anymore.
