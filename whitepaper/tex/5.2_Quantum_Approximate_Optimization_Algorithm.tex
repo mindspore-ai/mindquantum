@@ -102,7 +102,7 @@ ansatz = build_ansatz(g, p)
 init_state_circ = UN(H, g.nodes)
 \end{lstlisting}
 
-The goal of QAOA is to find the optimal parameters that make the cost function or the expectation of hamitonian $\mathcal{E}=\langle \psi(\gamma^*, \beta^*)|\hat{H}|\psi(\gamma, \beta)\rangle$ minimize.
+The goal of QAOA is to find the optimal parameters that make the cost function or the expectation of hamitonian $\mathcal{E}=\langle \psi(\gamma, \beta)|\hat{H}|\psi(\gamma, \beta)\rangle$ minimize.
 This problem does not require a coding-layer quantum circuit, so we use \MQAnsatzOnlyLayer as a quantum neural network to be trained and the adam as the optimizer.
 \begin{lstlisting}
 import mindspore as ms
