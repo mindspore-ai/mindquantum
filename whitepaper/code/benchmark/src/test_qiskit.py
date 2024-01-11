@@ -13,14 +13,21 @@
 # limitations under the License.
 # ============================================================================
 """Benchmark qiskit."""
-from functools import partial
+from functools import partial, reduce
+from operator import xor, add
 import os
 import re
 import pytest
 import json
 import numpy as np
+from scipy.optimize import minimize
+
 from qiskit import QuantumCircuit
+from qiskit.circuit import ParameterVector
 from qiskit_aer import AerSimulator
+from qiskit.quantum_info import SparsePauliOp, Statevector
+from qiskit.opflow.gradients import Gradient
+from qiskit.opflow import I, X, Z, StateFn
 import qiskit.circuit.library as G
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -128,3 +135,54 @@ def test_qiskit_simple_circuit(benchmark, file_name):
     circ.save_statevector()
     sim = AerSimulator(method="statevector", device="CPU")
     benchmark(sim.run, circ)
+
+# Section Three
+# Benchmark four regular qaoa
+# Available pytest mark: regular_4, qiskit
+
+regular_4_data_path = get_task_file("regular_4")
+regular_4_data_path.sort()
+regular_4_data_path = regular_4_data_path[:5]
+
+
+def qaoa_circuit(n_qubits, edges):
+    circ = QuantumCircuit(n_qubits)
+    params = ParameterVector("theta", length=len(edges) + n_qubits)
+    for i in range(n_qubits):
+        circ.h(i)
+    for idx, (i, j) in enumerate(edges):
+        circ.rzz(params[idx], i, j)
+    for i in range(n_qubits):
+        circ.rx(params[i+len(edges)], i)
+    return circ, params
+
+# @pytest.mark.regular_4
+# @pytest.mark.qiskit
+# @pytest.mark.parametrize("file_name", regular_4_data_path)
+# def test_qiskit_regular_4(benchmark, file_name, dtype):
+file_name = regular_4_data_path[0]
+n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
+with open(file_name, "r", encoding="utf-8") as f:
+    edges = [tuple(i) for i in json.load(f)]
+
+
+
+hams = []
+for i, j in edges:
+    o = [I for i in range(n_qubits)]
+    o[i], o[j] = Z, Z
+    hams.append(reduce(xor, o))
+hams = reduce(add, hams)
+circ, params = qaoa_circuit(n_qubits, edges)
+op = ~StateFn(hams) @ StateFn(circ)
+grad = Gradient().convert(operator=op, params=params)
+weights = np.random.uniform(size=len(edges)+n_qubits)
+
+def fun_and_grad(weights, op, grad, params):
+    value_dict = {params: weights}
+    exp_result = op.assign_parameters(value_dict).eval()
+    grad_result = grad.assign_parameters(value_dict).eval()
+    print(exp_result)
+    return np.real(exp_result), np.real(grad_result)
+
+res = minimize(fun_and_grad, x0=weights, args=(op, grad, params), jac=True, method='bfgs')
