@@ -76,6 +76,14 @@ def convert_back_to_qiskit_circ(str_circ, n_qubits):
             if not ctrl:
                 getattr(circ, name)(val, obj[0], obj[1])
                 continue
+        if name in ['s', 't']:
+            if not ctrl:
+                circ.append(getattr(G, f"{name.upper()}Gate")(), obj)
+                continue
+        if name in ['sdag', 'tdag']:
+            if not ctrl:
+                circ.append(getattr(G, f"{name[0].upper()}dgGate")(), obj)
+                continue
         raise ValueError(f"gate not implement: {name}({obj}, {ctrl})")
     return circ
 
