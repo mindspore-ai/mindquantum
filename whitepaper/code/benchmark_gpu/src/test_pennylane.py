@@ -147,13 +147,13 @@ regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
 regular_4_data_path = regular_4_data_path[:5]
 
-def f_and_g(weights, circuit):
-    p = np.array(weights, requires_grad=True)
-    f, g = circuit(p), qml.gradients.param_shift(circuit)(p)
+def f_and_g(weights, circuit, vag):
+    f, g = circuit(weights), vag(weights)
     return f, numpy.array(g)
 
-def benchmark_regular_4(weights, circuit):
-    res = minimize(f_and_g, weights,args=(circuit, ), method='bfgs',jac=True)
+def benchmark_regular_4(weights, circuit, vag):
+    res = minimize(f_and_g, weights,args=(circuit, vag), method='bfgs',jac=True)
+    return res
 
 @pytest.mark.regular_4
 @pytest.mark.pennylane
@@ -176,4 +176,5 @@ def test_pennylane_regular_4(benchmark, file_name):
         for i in range(n_qubits):
             qml.RX(params[len(edges) + i], wires=i)
         return qml.expval(cost_h)
-    benchmark(benchmark_regular_4, weights, circuit)
+    vag = qml.grad(circuit, argnum=0)
+    benchmark(benchmark_regular_4, weights, circuit, vag)
