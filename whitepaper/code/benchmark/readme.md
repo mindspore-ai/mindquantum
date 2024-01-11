@@ -110,6 +110,11 @@ Force use CPU
 export CUDA_VISIBLE_DEVICES=""
 ```
 
+Total Thread 16
+
+```
+export OMP_NUM_THREADS=16
+```
 ## Generate dataset
 
 ```bash
