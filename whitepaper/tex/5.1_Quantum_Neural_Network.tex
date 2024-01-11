@@ -67,7 +67,7 @@ alpha = X[:, :3] * X[:, 1:]
 X = np.append(X, alpha, axis=1)
 \end{lstlisting}
 
-It can be found that each sample has 7 features at this time, the first four feature values are the original feature values, and the last three feature values are the ones calculated by the above preprocessing. The specific calculation formula is as follows:
+Constructing features is a common technique in data preprocessing. Therefore, it can be found that each sample has 7 features at this time, the first four feature values are the original feature values, and the last three feature values are the ones calculated by the above preprocessing. The specific calculation formula is as follows:
 
 \begin{eqnarray}\label{5.1dataprocessing}
     X_{i+4}^{j} = X_{i}^{j} * X_{i+1}^{j},
@@ -112,7 +112,7 @@ encoder.svg()
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.49\textwidth]{5.1_figures/encoder-circuit.eps}
-    \caption{Encoder}
+    \caption{IQP Encoder}
     \label{5.1encoder-circuit}
 \end{figure}
 
@@ -133,7 +133,7 @@ ansatz.svg()
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.49\textwidth]{5.1_figures/ansatz-circuit.eps}
-    \caption{Ansatz}
+    \caption{Hardware Efficient Ansatz}
     \label{5.1ansatz-circuit}
 \end{figure}
 
@@ -267,7 +267,7 @@ plt.show()
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.49\textwidth]{5.1_figures/Statistics_of_accuracy.pdf}
+    \includegraphics[width=0.4\textwidth]{5.1_figures/Statistics_of_accuracy.png}
     \caption{Statistics of accuracy}
     \label{5.1Statistics_of_accuracy}
 \end{figure}
