@@ -1,6 +1,6 @@
 View demo code of this section: \democode{03}{3.1}
 
-Owing to the principles of quantum superposition, quantum entanglement, and quantum parallelism, quantum algorithms have the capacity to efficiently address certain computational problems, such as Shor's algorithm \cite{shor1994algorithms}, Grover's algorithm \cite{grover1996fast,long2001grover} and Harrow–Hassidim–Lloyd algorithm \cite{harrow2009quantum}, achieving exponential or polynomial acceleration when compared to classical algorithms. Nevertheless, the current stage of quantum devices is constrained by limited quantum qubits and significant noise, which is often referred to as Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018quantum}. It is worth noting that the quantum algorithms mentioned above do not exhibit quantum advantage under NISQ era.
+Owing to the principles of quantum superposition, quantum entanglement, and quantum parallelism, quantum algorithms have the capacity to efficiently address certain computational problems, such as Shor's algorithm \cite{shor1994algorithms}, Grover's algorithm \cite{grover1996fast,long2001grover} and Harrow-Hassidim-Lloyd algorithm \cite{harrow2009quantum}, achieving exponential or polynomial acceleration when compared to classical algorithms. Nevertheless, the current stage of quantum devices is constrained by limited quantum qubits and significant noise, which is often referred to as Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018quantum}. It is worth noting that the quantum algorithms mentioned above do not exhibit quantum advantage under NISQ era.
 
 Variational Quantum Algorithms (VQA) \cite{cerezo2021variational,yuan2019theory,xu2021variational} are considered the most promising candidates for achieving quantum advantage in the NISQ era. VQA leverages optimization algorithms from classical machine learning to fine-tune parameterized quantum circuits (PQC). As a result, VQA is a hybrid quantum-classical algorithm. VQA has found extensive applications in various domains, including quantum many body simulations \cite{Peruzzo2014Peruzzo2014,kandala2017hardware,kokail2019self,lyu2023variational,Lyu2023symmetryenhanced,cao2022progress}, quantum approximate optimization algorithm \cite{farhi2014quantum,patti2022variational,chandarana2023digitized}, quantum machine learning \cite{benedetti2019parameterized,wei2022quantum,lloyd2018quantum,biamonte2017quantum,abbas2021power} and entanglement purification \cite{zhang2023variational}. In this section, we will provide a brief overview of the VQA algorithm's workflow and how it can be efficiently implemented in \MindQuantum. More examples of VQA algorithm applications will be present in chapter \ref{sec:applications}.
 
@@ -31,19 +31,19 @@ On the other hand, we need to define a cost function when we treat VQA as a part
 \end{equation}
 where $E_\text{target}$ is the target of the training model and $L$ is a cost function like mean absolute error loss or mean squared error loss.
 
-Optimization algorithms in VQA can be categorized into two types based on their reliance on gradients. The first category comprises gradient-based optimization algorithms such as Adam and BFGS. These algorithms are well-suited for implementation in quantum simulators. The second category consists of non-gradient optimization algorithms such as SPSA and Nelder-Mead. These algorithms find more practical utility in real-world quantum experiments. In \MindQuantum, we always focusing on gradient based optimizer and we will show more detail about how we speed up the calculation of gradient of PQC in section \ref{sec:benchmark}.
+Optimization algorithms in VQA can be categorized into two types based on their reliance on gradients. The first category comprises gradient-based optimization algorithms such as Adam and BFGS. These algorithms are well-suited for implementation in quantum simulators. The second category consists of non-gradient optimization algorithms such as SPSA and Nelder-Mead. These algorithms find more practical utility in real-world quantum experiments. In \MindQuantum, we are always focusing on gradient based optimizer, and we will show more detail about how we speed up the calculation of gradient of PQC in section \ref{sec:benchmark}.
 
 \subsubsection{Learning a rotation}
 
-In this sub-section, we will delve into the implementation of variational quantum algorithms in \MindQuantum\ by exploring a task of learning a rotation quantum gate.
+In this subsection, we will delve into the implementation of variational quantum algorithms in \MindQuantum\ by exploring a task of learning a rotation quantum gate.
 
-Suppose we have a initial quantum state $\ket{\psi_0}=\ket{0}$, and we are going to find a single qubit unitary operator $U(\theta)$, which can rotate $\ket{\psi_0}$ to $\ket{\psi_f}$ so that to minimum $E_X(\theta) = \bra{\psi_f}X\ket{\psi_f}$:
+Suppose we have an initial quantum state $\ket{\psi_0}=\ket{0}$, and we are going to find a single qubit unitary operator $U(\theta)$, which can rotate $\ket{\psi_0}$ to $\ket{\psi_f}$ so that to minimum $E_X(\theta) = \bra{\psi_f}X\ket{\psi_f}$:
 
 \begin{equation}
   \min_\theta(\bra{0}U^\dagger(\theta)XU(\theta)\ket{0}).
 \end{equation}
 
-The first step of VQA is to build a ansatz. In this task, we choose arbitrary single qubit rotation gate \Uthree to work as ansatz and \Uthree can also decompose into:
+The first step of VQA is to build an ansatz. In this task, we choose arbitrary single qubit rotation gate \Uthree to work as ansatz and \Uthree can also decompose into:
 
 \begin{equation}
   U_3(a, b, c) = RZ(b)RX(-\pi/2)RZ(a)RX(\pi/2)RZ(c).
@@ -66,7 +66,7 @@ ansatz.svg()
   \label{fig:u3_ansatz}
 \end{figure}
 
-The observable is implement as:
+The observable is implemented as:
 
 \begin{lstlisting}
 from mindquantum.core.operators import QubitOperator
@@ -94,7 +94,7 @@ And the output is:
 [[-0.04602095+0.j]] [[[-1.17340357e-17+0.j -3.47310364e-02+0.j -7.96875999e-01+0.j]]]
 \end{lstlisting}
 
-\getexpectationwithgrad receive observable hamiltonian and ansatz circuit and return a gradient operator. You can use this operator to calculate gradient in any ansatz parameters. The output of gradient operator is the expectation and its the gradient with respect to ansatz parameters. The dimension of expectation value is $[n_\text{batch}, n_\text{ham}]$, where $n_\text{batch}$ is the batch size of encoder data. In this task, we do not have encoder and we have only one observable, so $n_\text{batch}=1, n_\text{ham}=1$. The dimension of gradient of ansatz is $[n_\text{batch}, n_\text{ham}, n_\text{ansatz}]$, while $n_\text{ansatz} = 3$ is the number of parameters in ansatz circuit.
+\getexpectationwithgrad receives observable Hamiltonian and ansatz circuit and returns a gradient operator. You can use this operator to calculate gradient in any ansatz parameters. The output of gradient operator is the expectation and its gradient with respect to ansatz parameters. The dimension of expectation value is $[n_\text{batch}, n_\text{ham}]$, where $n_\text{batch}$ is the batch size of encoder data. In this task, we do not have encoder and we have only one observable, so $n_\text{batch}=1, n_\text{ham}=1$. The dimension of gradient of ansatz is $[n_\text{batch}, n_\text{ham}, n_\text{ansatz}]$, while $n_\text{ansatz} = 3$ is the number of parameters in ansatz circuit.
 
 The next step is to optimize the PQC with the help of gradient operator.
 \begin{lstlisting}
@@ -133,7 +133,7 @@ In previous example, the PQC only contains ansatz circuit, and in this example, 
   \max_{\theta}\sum_i{\bra{\psi_i}U^\dagger(\theta)ZU(\theta)\ket{\psi_i}}.
 \end{equation}
 
-Here, we use a encoder circuit $U_e(a, b) = RX(a)RY(b)$ to prepare state $\ket{\psi_i}=U_e(a, b)\ket{0}$
+Here, we use an encoder circuit $U_e(a, b) = RX(a)RY(b)$ to prepare state $\ket{\psi_i}=U_e(a, b)\ket{0}$
 \begin{lstlisting}
 import numpy as np
 from mindquantum.core.circuit import Circuit
@@ -225,7 +225,7 @@ plt.show()
   \caption{\label{3_1_vqa} Rotation of initial states. The red represent the initial quantum states, while the green represent the final quantum states.}
 \end{figure}
 
-\subsubsection{More useage}
+\subsubsection{More usage}
 In \MindQuantum, except these two basic usages, \getexpectationwithgrad offers a broader range of application scenarios. The definition of equation that we actually calculate gradient is:
 \begin{equation}
   E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>.
@@ -234,4 +234,4 @@ You can set $U_l$ to an empty circuit and $H$ to identity \QubitOperator, so tha
 \begin{equation}
   E=\left|\bra{0}U_r\ket{\psi}\right|^2.
 \end{equation}
-You can also set the observable to a list of hamiltonian, so that \MindQuantum\ can calculate the expectation and gradient in parallel.
+You can also set the observable to a list of Hamiltonian, so that \MindQuantum\ can calculate the expectation and gradient in parallel.

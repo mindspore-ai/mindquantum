@@ -76,7 +76,7 @@ The \ChannelAdder class consists of three main functions: \code{_accepter()}, \c
     \item \code{_handler(BasicGate)}: Takes a quantum gate as input and returns a quantum circuit representing a custom channel added after the input quantum gate.
 \end{itemize}
 
-Take \BitFlipAdder as a example. This adder will add a bit flip channel after every quantum gate.
+Take \BitFlipAdder as an example. This adder will add a bit flip channel after every quantum gate.
 \begin{lstlisting}
 from mindquantum.core.circuit import Circuit, BitFlipAdder
 
@@ -181,7 +181,7 @@ SequentialAdder<
   >
 >
 \end{lstlisting}
-A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excluder()} will be met. All the Channel Adder in \SequentialAdder will be execute one by one. From Fig~\ref{fig:complex_adder}, we can see that this noise model satisfied our requirement.
+A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excluder()} will be met. All the Channel Adder in \SequentialAdder will be executed one by one. From Fig~\ref{fig:complex_adder}, we can see that this noise model satisfied our requirement.
 
 % \begin{lstlisting}
 % circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()

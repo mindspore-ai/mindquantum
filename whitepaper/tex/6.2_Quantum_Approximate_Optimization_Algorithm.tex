@@ -24,7 +24,7 @@ graph = nx.complete_graph(n_qubits)
 graph = list(graph.edges)
 \end{lstlisting}
 
-Next, we construct the Hamiltonian corresponding to the problem. It's important to note that in the QAOA problem, the Hamiltonian is diagonalized, meaning the Pauli operators in the input QubitOperator should only include Z. If the QubitOperator contains X or Y, the QAOA simulator will produce an error report.
+Next, we construct the Hamiltonian corresponding to the problem. It's important to note that in the QAOA problem, the Hamiltonian is diagonalized, meaning the Pauli operators in the input \code{QubitOperator} should only include Z. If the \code{QubitOperator} contains X or Y, the QAOA simulator will produce an error report.
 
 \begin{lstlisting}
 from mindquantum.core.operators import QubitOperator
@@ -49,7 +49,7 @@ There are the following interfaces that can be called to implement various funct
     \item \code{set_qs()}: Set the current quantum state of the simulator.
 \end{itemize}
 
-The quantum gate parameters consist of two components: \textit{gamma} and \textit{beta}. \textit{Gamma} represents the parameters for Rzz gates, while \textit{beta} represents the parameters for RX gates. These parameters should be provided as one-dimensional lists or numpy.ndarrays. Each entry in the array corresponds to the parameters for all Rzz (or RX) gates in one layer of the ansatz circuit. Therefore, the lengths of \textit{gamma} and \textit{beta} should match the depth.
+The quantum gate parameters consist of two components: \textit{gamma} and \textit{beta}. \textit{Gamma} represents the parameters for Rzz gates, while \textit{beta} represents the parameters for RX gates. These parameters should be provided as one-dimensional lists or \code{numpy.ndarray}. Each entry in the array corresponds to the parameters for all Rzz (or RX) gates in one layer of the ansatz circuit. Therefore, the lengths of \textit{gamma} and \textit{beta} should match the depth.
 
 Below, we will set all Rzz gate parameters to 1 and all RX gate parameters to 2, for the purpose of demonstrating these interfaces.
 
