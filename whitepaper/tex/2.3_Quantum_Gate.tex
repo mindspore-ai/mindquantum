@@ -222,11 +222,16 @@ from mindquantum.algorithm.library import qft
 from mindquantum.core.circuit import controlled
 
 u1 = qft(range(2))
-u2 = controlled(u1)(2)
-u3 = controlled(u1)
-u4 = u3(2)
-u2.svg(),u3.svg()
+u2 = controlled(u1)
+u2 = u2(2)
+u2.svg()
 \end{lstlisting}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{2.3_figures/control.png}
+    \caption{Add control qubits}
+    \label{fig:controlled-method}
+\end{figure}
 By looking at the circuit diagram of u2 and u4, we can see that the results are the same.\\
 In addition, we can add control bits to quantum circuits in batches. For example, in the following example, we add control bits to q0 and q1 - q2 and q3, respectively:
 \begin{lstlisting}
@@ -234,11 +239,9 @@ u = controlled(qft)
 u = u([2, 3], [0, 1])
 u.svg()
 \end{lstlisting}
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.5\linewidth]{1.png} % 插入svg出了点问题
-%     \caption{1.svg}
-%     \label{fig:enter-label}
-% \end{figure}
-
-% \end{document}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{2.3_figures/batch_control.png}
+    \caption{Add control qubits in batches}
+    \label{fig:batch-control}
+\end{figure}

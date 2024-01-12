@@ -36,7 +36,7 @@ In following sections, we will demonstrate how to the agent in quantum devise.
 \label{loss func}
 \end{equation}
 
-\textit{Variational quantum circuit} -- The variational quantum circuit is a quantum circuit using adjustable parameters that can be changed by the external environment. Here, according to the architecture in ~\cite{Q_rl}, we construct the quantum circuit with the combination of encoder and ansatz. Here, we apply the Hardware Efficient circuit as the ansatz. The overall quantum circuit is illustrated in Figure~\ref{Agent_qc}.
+\textit{Variational quantum circuit} -- The variational quantum circuit is a quantum circuit using adjustable parameters that can be changed by the external environment. Here, according to the architecture in~\cite{Q_rl}, we construct the quantum circuit with the combination of encoder and ansatz. Here, we apply the Hardware Efficient circuit as the ansatz. The overall quantum circuit is illustrated in Figure~\ref{Agent_qc}.
 
 \begin{figure*}[ht]
   \centering
@@ -77,7 +77,7 @@ def __get_observable(self):
         for i in [2, 3]]
     return hams
 \end{lstlisting}
-Moreover, we can easily get the expectation and calculate the gradient of expectation by function $get\_expectation\_with\_grad$, which can be used to optimize parameters.
+Moreover, we can easily get the expectation and calculate the gradient of expectation by function \getexpectationwithgrad, which can be used to optimize parameters.
 
 Next, we need to realize the classical part, which is a three-layers fully connected neural network with activation function Relu.
 \begin{lstlisting}

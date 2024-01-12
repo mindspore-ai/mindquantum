@@ -1,5 +1,5 @@
 
-Due to some physical limitations in the realization of quantum hardware, today's quantum computers are qualified as noisy intermediate-scale quantum (NISQ) hardware. NISQ hardware is characterized by a few qubits (50 to a few hundred) and noisy operations. Moreover, current realizations of superconducting quantum chips do not have the ideal all-to-all connectivity between qubits, but rather at most a nearest-neighbor connectivity. Due to these constraints, most quantum algorithms cannot be able to directly executed on the NISQ devices. Dynamically remapping logical qubits to physical qubits is needed to enable the two-qubit gates in the algorithm. This is called the qubit mapping problem.
+Due to some physical limitations in the realization of quantum hardware, today's quantum computers are qualified as noisy intermediate-scale quantum (NISQ) hardware. NISQ hardware is characterized by a few of qubits (50 to a few hundred) and noisy operations. Moreover, current realizations of superconducting quantum chips do not have the ideal all-to-all connectivity between qubits, but rather at most a nearest-neighbor connectivity. Due to these constraints, most quantum algorithms cannot be able to directly executed on the NISQ devices. Dynamically remapping logical qubits to physical qubits is needed to enable the two-qubit gates in the algorithm. This is called the qubit mapping problem.
 
 The qubit mapping problem has been proved to be NP-Complete~\cite{siraichi2018qubit}. Considering the time-complexity, \MindQuantum\ chooses a swap-based bidirectional heuristic algorithm, named SABRE~\cite{li2019tackling}.
 
@@ -38,12 +38,12 @@ Firstly, we can generate a directed acyclic graph (DAG) to represent the constra
 	\begin{subfigure}{0.49\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{8.2_figures/dag_circuit}
-        \caption{Quantum circuit.}
+		\caption{Quantum circuit.}
 	\end{subfigure}
 	\begin{subfigure}{0.49\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{8.2_figures/dag_dag}
-        \caption{Generated DAG.}
+		\caption{Generated DAG.}
 	\end{subfigure}
 	\caption{An example of DAG generation.}
 	\label{fig:qubit-mapping-dag}
@@ -51,31 +51,31 @@ Firstly, we can generate a directed acyclic graph (DAG) to represent the constra
 
 The core idea of the algorithm is trivial. Similar to topological sorting, we can construct a front layer which need to be executed now. If a gate can be executed under the current mapping, execute it and update the front layer. When there is no gate that can be executed, calculate available SWAPs. At last, we choose the SWAP which has the minimal heuristic function value.
 
-The basic heuristic function is from the nearest neighbor cost function. For two physical qubit $Q_i$ and $Q_j$, $D[Q_i][Q_j]$ stands for the nearest distance in the physical connected graph. For a given front layer $F$ and current mapping $\pi$, the basic function is defined as 
+The basic heuristic function is from the nearest neighbor cost function. For two physical qubit $Q_i$ and $Q_j$, $D[Q_i][Q_j]$ stands for the nearest distance in the physical connected graph. For a given front layer $F$ and current mapping $\pi$, the basic function is defined as
 Eq.~\eqref{eq:qubit-mapping-h-basic}.
 \begin{equation} \label{eq:qubit-mapping-h-basic}
 	H_{\text{basic}} = \sum_{g \in F} D[\pi (g.q_1)][\pi (g.q_2)].
 \end{equation}
 
-$H_{\text{basic}}$ only considers the front layer. If we want to look ahead, we can add an extended set $E$, which contains some closet successors of the gates from $F$. The size of $E$ is flexible, depending on how much look-ahead ability we want. Also, the gates in $F$ should have a higher priority than $E$. So that a weight parameter $0 \leq W < 1$ is added.
+$H_{\text{basic}}$ only considers the front layer. If we want to look ahead, we can add an extended set $E$, which contains some closet successors of the gates from $F$. The size of $E$ is flexible, depending on how much look-ahead ability we want. Also, the gates in $F$ should have a higher priority than $E$. So a weight parameter $0 \leq W < 1$ is added.
 
 Up to now, the heuristic function tends to reduce the number of SWAP gates. We also want to reduce the depth of the circuit. There is a trade-off between them. We add a parameter $decay$ to each qubit. If a qubit already has many operations on it, it will have a bigger $decay$. Using $decay$, the algorithm will tend to choose those qubits that have fewer operations and increase the parallelism of the circuit. The fixed heuristic function is given by
 Eq.~\eqref{eq:qubit-mapping-h}.
 \begin{equation} \label{eq:qubit-mapping-h}
 	\begin{aligned}
-		H = & \max \left( decay(SWAP.q_1), decay(SWAP.q_2) \right)  \\
-		\times & \Big\lbrace \frac{1}{|F|} \sum_{g \in F} D[\pi(g.q_1)][\pi(g.q_2)] \\
-		+ & \frac{W}{|E|} \sum_{g \in E} D[\pi(g.q_1)][\pi(g.q_2)] \Big\rbrace.
+		H =    & \max \left( decay(SWAP.q_1), decay(SWAP.q_2) \right)                \\
+		\times & \Big\lbrace \frac{1}{|F|} \sum_{g \in F} D[\pi(g.q_1)][\pi(g.q_2)]  \\
+		+      & \frac{W}{|E|} \sum_{g \in E} D[\pi(g.q_1)][\pi(g.q_2)] \Big\rbrace.
 	\end{aligned}
-\end{equation} 
+\end{equation}
 
-Lastly, there is a problem about the initial mapping. It has been proved that initial mapping could have a huge impact on the final result. Here we use a method introduced in \cite{li2019tackling}.
+Lastly, there is a problem of the initial mapping. It has been proved that initial mapping could have a huge impact on the final result. Here we use a method introduced in \cite{li2019tackling}.
 Fig.~\ref{fig:qubit-mapping-initial-mapping}
 shows the procedure of updating the initial mapping.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.45\textwidth]{8.2_figures/initial_mapping.pdf}
+	\includegraphics[width=0.45\textwidth]{8.2_figures/initial_mapping.png}
 	\caption{Initial mapping update procedure.}
 	\label{fig:qubit-mapping-initial-mapping}
 \end{figure}
@@ -91,7 +91,7 @@ topology = QubitsTopology([QubitNode(i, poi_x=i) for i in range(n)])
 draw_topology(topology)
 \end{lstlisting}
 
-The above code defines a topology graph which contains 5 node. \code{QubitNode(i, poi_x=i)} defines a \code{QubitNode} whose id is \code{i} and x-axis coordinate is \code{i}. \code{draw_topology} is used to draw the svg Fig.~\ref{fig:qubit-mapping-topo1}.
+The above code defines a topology graph which contains 5 nodes. \code{QubitNode(i, poi_x=i)} defines a \code{QubitNode} whose id is \code{i} and x-axis coordinate is \code{i}. \code{draw_topology} is used to draw the svg Fig.~\ref{fig:qubit-mapping-topo1}.
 
 \begin{figure}
 	\centering
