@@ -81,7 +81,7 @@ def get_task_file(task: str):
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
-random_circuit_data_path = random_circuit_data_path[:5]
+random_circuit_data_path = random_circuit_data_path[:24]
 
 
 def benchmark_random_circuit(sim, circ):
@@ -107,7 +107,7 @@ def test_mindquantum_random_circuit(benchmark, file_name, dtype):
 
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
-simple_circuit_data_path = simple_circuit_data_path[:5]
+simple_circuit_data_path = simple_circuit_data_path[:24]
 
 
 @pytest.mark.simple_circuit
@@ -129,7 +129,7 @@ def test_mindquantum_simple_circuit(benchmark, file_name, dtype):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:5]
+regular_4_data_path = regular_4_data_path[:19]
 
 
 def regular_4_fun(p, grad_ops):
@@ -146,7 +146,7 @@ def benchmark_regular_4(grad_ops, p0):
 @pytest.mark.regular_4
 @pytest.mark.mindquantum
 @pytest.mark.parametrize("file_name", regular_4_data_path)
-@pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
+@pytest.mark.parametrize("dtype", [mq.complex128])
 def test_mindquantum_regular_4(benchmark, file_name, dtype):
     n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
     with open(file_name, "r", encoding="utf-8") as f:
