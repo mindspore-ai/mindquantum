@@ -11,7 +11,7 @@ A variational quantum algorithm is proposed for singular value decomposition (VQ
 \begin{enumerate}
     \item Prepare the input of VQSVD algorithm:
         \begin{itemize}
-            \item A decomposition of the matrix $M$ into a linear combination of $K$ unitaries of the form $M = \sum_{k=1}^K c_k A_k$ with real numbers $c_k$.
+            \item A decomposition of the matrix $M$ into a linear combination of $K$ unitary matrices of the form $M = \sum_{k=1}^K c_k A_k$ with real numbers $c_k$.
             \item Positive weights $q_1 > \cdots > q_r > 0$.
             \item Computational basis {$\ket{\psi_1}, \cdots, \ket{\psi_T}$}, where $T$ is the desired rank.
             \item Parameterized circuits $U(\theta)$, $V(\phi)$ with initial parameters of $\theta, \phi$.
@@ -91,7 +91,7 @@ class Ansatz:
             self.circ += X.on(0, n - 1)
 \end{lstlisting}
 
-Then define a quantum network using the given hamiltonian. The \setqs function of the simulator is used to set the state of the simulator to the given computational basis, so that we can obtain the measurement results under the basis, that is, the corresponding singular values. The \getexpectationwithgrad function is used to compute the gradient of the parameters in the circuit and the value of the following expression: $E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$. Then we can use \MQAnsatzOnlyLayer to build a quantum network layer based on a given basis, and its output is: $\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$.
+Then define a quantum network using the given Hamiltonian. The \setqs function of the simulator is used to set the state of the simulator to the given computational basis, so that we can obtain the measurement results under the basis, that is, the corresponding singular values. The \getexpectationwithgrad function is used to compute the gradient of the parameters in the circuit and the value of the following expression: $E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$. Then we can use \MQAnsatzOnlyLayer to build a quantum network layer based on a given basis, and its output is: $\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$.
 \begin{lstlisting}
 def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
     sim = Simulator('mqvector', qubits_num)
@@ -153,7 +153,7 @@ for itr in tqdm.tqdm(range(ITR)):
     loss_list.append(res.asnumpy().tolist())
 \end{lstlisting}
 
-Finally read the training results (the singular values) and compare them with the results of the classical singular value decomposition:
+Finally, read the training results (the singular values) and compare them with the results of the classical singular value decomposition:
 \begin{lstlisting}
 singular_value = list()
 for _, qnet in quantum_models.items():

@@ -8,7 +8,7 @@ View demo code of this section: \democode{05}{5.2}
 
 \subsubsection{Background}
 
-In this section, we present an introduction to the Quantum Approximate Optimization Algorithm (QAOA) and demonstrate its implementation using \MindQuantum. Additionally, we explore advanced applications in Section D, where we apply techniques STA to achieve improved convergence ansatz CD-QAOA \cite{PhysRevResearch.4.013141}.
+In this section, we present an introduction to the Quantum Approximate Optimization Algorithm (QAOA) and demonstrate its implementation using \MindQuantum. Additionally, we explore advanced applications in Section D, where we apply techniques STA to achieve improved convergence ansatz DC-QAOA \cite{PhysRevResearch.4.013141}.
 
 
 QAOA is a powerful quantum algorithm designed to address combinatorial optimization problems by harnessing the capabilities of quantum computers. It was first proposed by Farhi et al. in 2014 \cite{farhi2014quantum}, and since then, numerous variants have been developed to overcome the limitations of the original algorithm.
@@ -49,7 +49,7 @@ For this tutorial, we use QAOA algorithm to handle the Max-Cut problem,  which i
     \label{5.1_QAOA}
 \end{figure}
 
-Let us first generate a graph structure consisting of five vertices and six edges using NetworkX[cite].
+Let us first generate a graph structure consisting of five vertices and six edges using \textit{NetworkX} \cite{SciPyProceedings_11}.
 \begin{lstlisting}
 g = nx.Graph()
 nx.add_path(g, [0,1])
@@ -61,11 +61,11 @@ nx.add_path(g, [0,2])
 nx.draw(g,with_labels=True, font_weight='bold')
 \end{lstlisting}
 
-For QAOA algorithm, first we need to convert the Max-Cut problem into a Hamiltonian, it's ground state energy is solution of the problem. The problem hamitonian of the Max-Cut problem can be built as
+For QAOA algorithm, first we need to convert the Max-Cut problem into a Hamiltonian, it's ground state energy is solution of the problem. The problem Hamiltonian of the Max-Cut problem can be built as
 \begin{equation}
     \hat{H} = \sum_{i,j\in C}(\hat{Z}_i\hat{Z}_j-1)/2,
 \end{equation}
-where $C$ is the set of all edges. In the following function, \code{ build\_ham}, the corresponding Hamiltonian can be constructed by inputting the graph.
+where $C$ is the set of all edges. In the following function, \code{build\_ham}, the corresponding Hamiltonian can be constructed by inputting the graph.
 \begin{lstlisting}
 def build_ham(g):
     hc = QubitOperator()
@@ -73,7 +73,7 @@ def build_ham(g):
         hc += QubitOperator(f'Z{i[0]} Z{i[1]}')
     return hc
 \end{lstlisting}
-Next, construct the QAOA ansatz, in which function \code{build\_hc} and \code{build\_hb} construct the quantum circuit according to the problem Hamiltonian and the mixer Hamiltonian. The ansatz can be directly builded in function \code{build\_ansatz} by inputting the graph.
+Next, construct the QAOA ansatz, in which function \code{build\_hc} and \code{build\_hb} construct the quantum circuit according to the problem Hamiltonian and the mixer Hamiltonian. The ansatz can be directly built in function \code{build\_ansatz} by inputting the graph.
 
 \begin{lstlisting}
 def build_hc(g,para):
@@ -94,7 +94,7 @@ def build_ansatz(g, p):
     return c
 \end{lstlisting}
 
-In this example, p = 4 is selected, indicating that the four-layer QAOA quantum circuit is used.  And \code{init\_state\_circ} is a quantum circuit for preparing a initial state on a uniformly superposed state.
+In this example, p = 4 is selected, indicating that the four-layer QAOA quantum circuit is used.  And \code{init\_state\_circ} is a quantum circuit for preparing an initial state on a uniformly superposed state.
 \begin{lstlisting}
 p = 4
 ham = Hamiltonian(build_ham(g))
@@ -102,8 +102,8 @@ ansatz = build_ansatz(g, p)
 init_state_circ = UN(H, g.nodes)
 \end{lstlisting}
 
-The goal of QAOA is to find the optimal parameters that make the cost function or the expectation of hamitonian $\mathcal{E}=\langle \psi(\gamma, \beta)|\hat{H}|\psi(\gamma, \beta)\rangle$ minimize.
-This problem does not require a coding-layer quantum circuit, so we use \MQAnsatzOnlyLayer as a quantum neural network to be trained and the adam as the optimizer.
+The goal of QAOA is to find the optimal parameters that make the cost function or the expectation of Hamiltonian $\mathcal{E}=\langle \psi(\gamma, \beta)|\hat{H}|\psi(\gamma, \beta)\rangle$ minimize.
+This problem does not require a coding-layer quantum circuit, so we use \MQAnsatzOnlyLayer as a quantum neural network to be trained and the Adam as the optimizer.
 \begin{lstlisting}
 import mindspore as ms
 ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
@@ -144,7 +144,7 @@ train step: 190 , cut: [4.939257]
 
 According to the above training results, we found that the number of edge cuts corresponding to the ground state energy of the Hamiltonian of this problem approaches 5.
 
-In \MindQuantum, we can directly import the function \MaxCutAnsatz to build ansatz for the maxcut problem.
+In \MindQuantum, we can directly import the function \MaxCutAnsatz to build ansatz for the max-cut problem.
 \begin{lstlisting}
 import numpy as np
 from mindquantum.algorithm.nisq import MaxCutAnsatz
@@ -156,7 +156,7 @@ maxcut.circuit.svg()
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.49\textwidth]{5.2_figures/5.2_QAOA_ansatze}
-    \caption{Max-cut problem Ansatze}
+    \caption{Max-cut problem Ansatz}
     \label{5.1_QAOA_ansatz}
 \end{figure}
 At the same time, the Hamiltonian can also be obtained
@@ -169,7 +169,7 @@ print(maxcut.hamiltonian)
 -1/2 [Z1 Z2] +
 -1/2 [Z0 Z2]
 \end{lstlisting}
-The cutting scheme of the MaxCut problem and the number of cutting edges of the cutting scheme can be obtained through the function $get\_partition$ and $get\_cut\_value$. The cutting scheme is a list array consisting of two list arrays, and each list array contains the cut nodes.
+The cutting scheme of the Max-Cut problem and the number of cutting edges of the cutting scheme can be obtained through the function $get\_partition$ and $get\_cut\_value$. The cutting scheme is a list array consisting of two list arrays, and each list array contains the cut nodes.
 \begin{lstlisting}
 partitions = maxcut.get_partition(5, np.array([4, 1]))
 for i in partitions:

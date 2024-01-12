@@ -91,7 +91,7 @@ topology = QubitsTopology([QubitNode(i, poi_x=i) for i in range(n)])
 draw_topology(topology)
 \end{lstlisting}
 
-The above code defines a topology graph which contains 5 nodes. \code{QubitNode(i, poi_x=i)} defines a \code{QubitNode} whose id is \code{i} and x-axis coordinate is \code{i}. \code{draw_topology} is used to draw the svg Fig.~\ref{fig:qubit-mapping-topo1}.
+The above code defines a topology graph which contains 5 nodes. \code{QubitNode(i, poi_x=i)} defines a \code{QubitNode} whose ID is \code{i} and x-axis coordinate is \code{i}. \code{draw_topology} is used to draw the SVG Fig.~\ref{fig:qubit-mapping-topo1}.
 
 \begin{figure}
 	\centering
@@ -118,7 +118,7 @@ topology[i] << topology[i+1]
 draw_topology(topology)
 \end{lstlisting}
 
-\MindQuantum\ also defines some usefull structures. The following code defines a linear topology in Fig.~\ref{fig:qubit-mapping-linear} and a grid topology in Fig.~\ref{fig:qubit-mapping-grid1}.
+\MindQuantum\ also defines some useful structures. The following code defines a linear topology in Fig.~\ref{fig:qubit-mapping-linear} and a grid topology in Fig.~\ref{fig:qubit-mapping-grid1}.
 
 \begin{lstlisting}
 from mindquantum.device import LinearQubits, GridQubits
@@ -150,7 +150,7 @@ We can also modify existing graph. The following codes remove a node, isolate a 
 		\label{fig:qubit-mapping-grid2}
 	\end{subfigure}
 
-	\caption{Some usefull structures and modified graph.}
+	\caption{Some useful structures and modified graph.}
 \end{figure}
 
 \begin{lstlisting}

@@ -25,7 +25,7 @@ The real value assumed by a given sign $s$, biased exponent $e$ and fraction $\v
 
 Based on the different numbers of bits, IEEE 754 defined three types of floating-point formats single-, double- and quadruple-precision with 32, 64, and 128 bits, respectively.
 Among them, single- and double-precision is widely used in classical computers.
-In single-precision floating-point format (for short, denoted as Single as follow), sign $s$ consists of $1$ bit, $8$ bits in the exponent part $e$, and $23$ bits in the fraction part $\vec{b}$.
+In single-precision floating-point format (for short, denoted as Single as follows), sign $s$ consists of $1$ bit, $8$ bits in the exponent part $e$, and $23$ bits in the fraction part $\vec{b}$.
 In double-precision floating-point format (Double), sign $s$ still consists of $1$ bit, $11$ bits in the exponent part $e$, and $52$ bits in the fraction part $\vec{b}$.
 
 The value precision is determined by the number of bits in the fraction part.
@@ -72,7 +72,7 @@ The exponential wall is the main obstacle to simulating a quantum system in a cl
 As the size of the quantum system linearly increases, the required classical resources exponentially increase.
 A quantum state with $N$ qubits can be described by $2^N$ amplitudes, all of which are complex numbers.
 
-If we want to store a $N=20$ quantum state with $2^{20}$ amplitudes and all amplitudes are represented as single precision (Complex64), the classical memory is
+If we want to store an $N=20$ quantum state with $2^{20}$ amplitudes and all amplitudes are represented as single precision (Complex64), the classical memory is
 \begin{equation}
     G=2^{20}\times 64 bits = 8 Mb.
 \end{equation}

@@ -6,7 +6,7 @@ An overall reinforcement learning algorithm(RL) is composed of Agent, Environmen
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=0.4]{5.4.5_RL/RL.png}
-  \caption{\label{RL_frame} The demonstration of RL wroking process.}
+  \caption{\label{RL_frame} The demonstration of RL working process.}
 \end{figure}
 
 We assumed an environment has $N$ different states. And we act action $a_{i-1}$ on state $s_{i-1}$ with the result $s_{i}$. The transition probability function from state $s_{i-1}$ to state $s_{i}$ can be $P(s_{i+1}|s_{i},a_{i})$. Meanwhile, there is a reward $r_i$ in each state calculated by reward function $R_i=R(a_i,s_i,s_{i-1})$. In the progress of environmental change, the reward expectation is only determined by the latest $state$, which is called the Markov decision process. Therefore, each $T$ step trajectory will be chosen by the agent with probability:
@@ -27,7 +27,7 @@ In order to get the optimal policy function $\pi_{\theta}$, the agent is trained
 \end{equation}
 In following sections, we will demonstrate how to the agent in quantum devise.
 
-\subsubsection{Hybrid Deep Q-Network} -- Replace the neural network in the classical Deep Q-network's agent with the quantum variational circuit, we get the hybrid deep Q-network(HDQN)~\cite{Q_rl}. The architecture of HDQN is illustrated in FIG. We calculate the parameters $\theta$ by classical neural network and use them to construct the quantum variational circuit. Finally, the quantum part applies the action to the environment. Meanwhile, the environment responds with a reward $r_i$. We denote $e_i=(s_i,a_i,r_{i+1},s_{i+1})$ as a experience. In the training stage, we will use these experiences as training samples to adjust the parameters in both the classical part and quantum part according to loss function $L(\theta)$:
+\subsubsection{Hybrid Deep Q-Network} -- Replace the neural network in the classical Deep Q-network's agent with the quantum variational circuit, we get the hybrid deep Q-network(HDQN)~\cite{Q_rl}. The architecture of HDQN is illustrated in FIG. We calculate the parameters $\theta$ by classical neural network and use them to construct the quantum variational circuit. Finally, the quantum part applies the action to the environment. Meanwhile, the environment responds with a reward $r_i$. We denote $e_i=(s_i,a_i,r_{i+1},s_{i+1})$ as an experience. In the training stage, we will use these experiences as training samples to adjust the parameters in both the classical part and quantum part according to loss function $L(\theta)$:
 \begin{equation}
 \begin{split}
     L(\theta_{j})=&E[R_{i+1}+\\
@@ -70,7 +70,7 @@ After the progress of the quantum circuit, we need to construct an observable Ha
 \begin{equation}
     H=I\otimes I\otimes\sigma_y\otimes\sigma_y.
 \end{equation}
-We can construct the hamiltonian by \MindQuantum\ as follows:
+We can construct the Hamiltonian by \MindQuantum\ as follows:
 \begin{lstlisting}
 def __get_observable(self):
     hams=[Hamiltonian(QubitOperator(f'Y{i}'))\\
@@ -79,7 +79,7 @@ def __get_observable(self):
 \end{lstlisting}
 Moreover, we can easily get the expectation and calculate the gradient of expectation by function \getexpectationwithgrad, which can be used to optimize parameters.
 
-Next, we need to realize the classical part, which is a three-layers fully connected neural network with activation function Relu.
+Next, we need to realize the classical part, which is a three-layers fully connected neural network with activation function rule.
 \begin{lstlisting}
 class Critic(nn.Cell):
     def __init__(self):
@@ -96,7 +96,7 @@ class Critic(nn.Cell):
         return x
 \end{lstlisting}
 
-\textit{environment} -- Here, we focus on the problem of the gym game "CartPole-v0". It's a game that has an unbalanced cart on a track. This game has two inputs $0$ and $1$, which correspond to two directions left and right respectively. Users should control the trace moving toward these two directions and keep the cart balanced as long as possible.
+\textit{Environment} -- Here, we focus on the problem of the gym game "CartPole-v0". It's a game that has an unbalanced cart on a track. This game has two inputs $0$ and $1$, which correspond to two directions left and right respectively. Users should control the trace moving toward these two directions and keep the cart balanced as long as possible.
 
 The first step is to create the environment by gym.
 \begin{lstlisting}
@@ -109,7 +109,8 @@ class Memory(object):
     ......
 \end{lstlisting}
 
-\subsubsection{Training}The final step is model training. At first, we initialize HDQN with random parameters and let the actor interact with the environment. Next, we store the interaction result in the memory buffer as training samples. Finally, we sample from the memory buffer and adjust the parameters both in the classical part and quantum part with loss function (\ref{loss func}). Because of the space limitation, we will not provide the detailed code here.
+\subsubsection{Training}
+The final step is model training. At first, we initialize HDQN with random parameters and let the actor interact with the environment. Next, we store the interaction result in the memory buffer as training samples. Finally, we sample from the memory buffer and adjust the parameters both in the classical part and quantum part with loss function (\ref{loss func}). Because of the space limitation, we will not provide the detailed code here.
 
 \textit{Result of numerical simulation} -- In order to evaluate the result of the HDQN. We do some experiments to evaluate the performance. As shown in Figure ~\ref{stochastic} We compare the average results from multiple experiments with randomized strategy experiments. The results show that reinforcement learning using quantum circuits as the agent has indeed learned the strategy.
 \begin{figure}[ht]

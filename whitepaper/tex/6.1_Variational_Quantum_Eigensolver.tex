@@ -21,7 +21,7 @@ Based on UCCSD (Unitary coupled-cluster with singles and doubles) theory, the an
 \begin{equation}
     U(\theta) = e^{(T-T^\dagger)}\ket{\psi_\text{HF}},
 \end{equation}
-where $T$ is couple cluster operator, and $\ket{\psi_\text{HF}}$ is hartree-fork state. The couple cluster operator is written as:
+where $T$ is couple cluster operator, and $\ket{\psi_\text{HF}}$ is Hartree-Fork state. The couple cluster operator is written as:
 \begin{equation}
     T=\sum_{p\notin\text{occ},q\in\text{occ}}\theta_q^p a_p^\dagger a_q + \sum_{pq\notin\text{occ},rs\in\text{occ}}\theta_{rs}^{pq}a_p^\dagger a_q^\dagger a_r a_s,
 \end{equation}
@@ -29,13 +29,13 @@ and under trotterization the ansatz can be decomposed to:
 \begin{equation}
     U(\theta)=\prod_ie^{(T_i-T_i^\dagger)}\ket{\psi_\text{HF}}.
 \end{equation}
-Taking hydrogen chain $H_4$ for example, we need 12 qubits to simulate this system and there are 6 electrons with 3 spin up and 3 spin down. Fig~\ref{6_1_h4_a} shows the hartree-fork state of $H_4$ and Fig~\ref{6_1_h4_b} shows the spin-orbital under excitation operator $T=a_{11}^\dagger a_{10}^\dagger a_5 a_4$.
+Taking hydrogen chain $H_4$ for example, we need 12 qubits to simulate this system and there are 6 electrons with 3 spin up and 3 spin down. Fig~\ref{6_1_h4_a} shows the Hartree-Fork state of $H_4$ and Fig~\ref{6_1_h4_b} shows the spin-orbital under excitation operator $T=a_{11}^\dagger a_{10}^\dagger a_5 a_4$.
 \begin{figure}
     \centering
     \begin{subfigure}{0.3\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/6_1_h4_a.pdf}
-        \caption{Hartree-fork state of $H_4$.}
+        \caption{Hartree-Fork state of $H_4$.}
         \label{6_1_h4_a}
     \end{subfigure}
     \begin{subfigure}{0.3\textwidth}
@@ -52,7 +52,7 @@ In \QuPack, we impose the constraint that the total number of electrons and the 
 \end{equation}
 The memory consumption will reduce from 1TB to $\sim$35GB.
 
-Besides the memory reduction, we also optimized the evolution of coupled cluster operator. For a given coupled cluster operator $V(\theta)=e^{\theta(T-T^\dagger)}$, it is easy to prove that $(T-T^\dagger)^3 = - (T-T^\dagger)$ and $(T-T^\dagger)^4 = -(T-T^\dagger)^2$. After taylor expansion, we have:
+Besides the memory reduction, we also optimized the evolution of coupled cluster operator. For a given coupled cluster operator $V(\theta)=e^{\theta(T-T^\dagger)}$, it is easy to prove that $(T-T^\dagger)^3 = - (T-T^\dagger)$ and $(T-T^\dagger)^4 = -(T-T^\dagger)^2$. After Taylor expansion, we have:
 \begin{equation}
     V(\theta) = \mathbb{I} + ( 1-\cos\theta)(T-T^\dagger)^2 + \sin\theta (T-T^\dagger).
 \end{equation}

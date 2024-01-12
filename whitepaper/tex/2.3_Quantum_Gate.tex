@@ -200,7 +200,7 @@ test2 = TestGate('a').on(0)
 \end{lstlisting}
 
 \subsubsection{On Method}
-In quantum circuits, controlled operation is very common. Let U be any single qubit unitary operation, then the controlled U operation is a double qubit operation. One is the control bit and one is the target bit. In \MindQuantum, we can implement this function through the on method. This method takes two parameters. One is the target bit and the other is the control bit, both of which can be single qubit or multi-qubits.It is worth emphasizing that any gate can add arbitrary control operations.
+In quantum circuits, controlled operation is very common. Let U be any single qubit unitary operation, then the controlled U operation is a double qubit operation. One is the control bit and one is the target bit. In \MindQuantum, we can implement this function through the on method. This method takes two parameters. One is the target bit and the other is the control bit, both of which can be single qubit or multi-qubits. It is worth emphasizing that any gate can add arbitrary control operations.
 
 Example:
 \begin{lstlisting}
@@ -216,7 +216,7 @@ Target qubit:[0],Control qubits:[1, 2]
 
 % TODO(xusheng): move this section to quantum circuit.
 \subsubsection{Controlled Method}
-In addition to the \code{on} method, we can also add control bits via the Control method.The controlled method is used to add control qubits (which can be multiple) to any quantum circuit or quantum operator. For example, we build a quantum circuit containing only two qubits and add a control qubit - q2 to it by controlled method:
+In addition to the \code{on} method, we can also add control bits via the Control method. The controlled method is used to add control qubits (which can be multiple) to any quantum circuit or quantum operator. For example, we build a quantum circuit containing only two qubits and add a control qubit - q2 to it by controlled method:
 \begin{lstlisting}
 from mindquantum.algorithm.library import qft
 from mindquantum.core.circuit import controlled
