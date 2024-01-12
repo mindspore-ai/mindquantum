@@ -101,7 +101,7 @@ def get_task_file(task: str):
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
-random_circuit_data_path = random_circuit_data_path[:5]
+random_circuit_data_path = random_circuit_data_path[:22]
 
 
 def benchmark_random_circuit(circ, op):
@@ -127,7 +127,7 @@ def test_tensorflow_quantum_random_circuit(benchmark, file_name):
 
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
-simple_circuit_data_path = simple_circuit_data_path[:5]
+simple_circuit_data_path = simple_circuit_data_path[:22]
 
 
 @pytest.mark.simple_circuit
@@ -149,7 +149,7 @@ def test_tensorflow_quantum_simple_circuit(benchmark, file_name):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:5]
+regular_4_data_path = regular_4_data_path[:7]
 
 
 def benchmark_regular_4(energy_function, p0):

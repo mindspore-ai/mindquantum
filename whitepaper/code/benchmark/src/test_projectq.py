@@ -149,7 +149,7 @@ def run_circ(circs, eng, qregs):
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
-random_circuit_data_path = random_circuit_data_path[:5]
+random_circuit_data_path = random_circuit_data_path[:23]
 
 
 @pytest.mark.random_circuit
@@ -171,7 +171,7 @@ def test_projectq_random_circuit(benchmark, file_name):
 
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
-simple_circuit_data_path = simple_circuit_data_path[:5]
+simple_circuit_data_path = simple_circuit_data_path[:23]
 
 
 @pytest.mark.simple_circuit
