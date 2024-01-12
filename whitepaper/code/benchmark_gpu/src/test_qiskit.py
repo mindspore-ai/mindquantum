@@ -85,6 +85,8 @@ def convert_back_to_qiskit_circ(str_circ, n_qubits):
         raise ValueError(f"gate not implement: {name}({obj}, {ctrl})")
     return circ
 
+def run_sim(sim, circ):
+    sim.run(circ).result().get_statevector()
 
 # Section One
 # Benchmark random circuit
@@ -92,7 +94,7 @@ def convert_back_to_qiskit_circ(str_circ, n_qubits):
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
-random_circuit_data_path = random_circuit_data_path[:5]
+random_circuit_data_path = random_circuit_data_path[:24]
 
 
 @pytest.mark.random_circuit
@@ -104,8 +106,8 @@ def test_qiskit_random_circuit(benchmark, file_name):
         str_circ = json.load(f)
     circ = convert_back_to_qiskit_circ(str_circ, n_qubits)
     circ.save_statevector()
-    sim = AerSimulator(method="statevector", device="GPU")
-    benchmark(sim.run, circ)
+    sim = AerSimulator(method="statevector", device="GPU", fusion_enable=False)
+    benchmark(run_sim, sim, circ)
 
 
 # Section Two
@@ -114,7 +116,7 @@ def test_qiskit_random_circuit(benchmark, file_name):
 
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
-simple_circuit_data_path = simple_circuit_data_path[:5]
+simple_circuit_data_path = simple_circuit_data_path[:24]
 
 
 @pytest.mark.simple_circuit
@@ -126,5 +128,5 @@ def test_qiskit_simple_circuit(benchmark, file_name):
         str_circ = json.load(f)
     circ = convert_back_to_qiskit_circ(str_circ, n_qubits)
     circ.save_statevector()
-    sim = AerSimulator(method="statevector", device="GPU")
-    benchmark(sim.run, circ)
+    sim = AerSimulator(method="statevector", device="GPU", fusion_enable=False)
+    benchmark(run_sim, sim, circ)
