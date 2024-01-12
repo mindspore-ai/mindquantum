@@ -104,7 +104,7 @@ def test_qiskit_random_circuit(benchmark, file_name):
         str_circ = json.load(f)
     circ = convert_back_to_qiskit_circ(str_circ, n_qubits)
     circ.save_statevector()
-    sim = AerSimulator(method="statevector", device="GPU")
+    sim = AerSimulator(method="statevector", device="GPU", fusion_enable=False)
     benchmark(sim.run, circ)
 
 
@@ -126,5 +126,5 @@ def test_qiskit_simple_circuit(benchmark, file_name):
         str_circ = json.load(f)
     circ = convert_back_to_qiskit_circ(str_circ, n_qubits)
     circ.save_statevector()
-    sim = AerSimulator(method="statevector", device="GPU")
+    sim = AerSimulator(method="statevector", device="GPU", fusion_enable=False)
     benchmark(sim.run, circ)
