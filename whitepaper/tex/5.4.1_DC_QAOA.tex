@@ -23,7 +23,7 @@ It combines ideas from both AQC and the Quantum Approximate Optimization Algorit
 where $\alpha, \beta, \gamma$ represents the digitized parameters, $F$ is cost function and $U$ is evolution operator.
 The CD term acts as an extra component in the Hamiltonian and is carefully designed based on the instantaneous eigenstates and eigenenergies of the evolving Hamiltonian.  The counterdiabatic term effectively suppresses errors and reduces the required evolution time, leading to enhanced efficiency and reliability in quantum computations.
 
-To derive the precise form of the counterdiabatic term, various techniques, such as Lewis-Riesenfeld invariants and transitionless quantum driving, have been applied. The implementation of the CD term is tailored to the specific problem and dynamics of the quantum system, utilizing available control techniques. In cases where obtaining exact CD terms becomes challenging, an approximate CD driving approach is proposed, utilizing the nested commutator method\cite{Chandarana_2023} with the adiabatic gauge potential:
+To derive the precise form of the counterdiabatic term, various techniques, such as Lewis-Riesenfeld invariants and transitionless quantum driving, have been applied. The implementation of the CD term is tailored to the specific problem and dynamics of the quantum system, utilizing available control techniques. In cases where obtaining exact CD terms becomes challenging, an approximate CD driving approach is proposed, utilizing the nested commutator method \cite{Chandarana_2023} with the adiabatic gauge potential:
 
 \begin{equation}
     A_{\lambda}^{(l)} = i\sum_{k=1}^{l}\alpha_{k}(t)[H_{a},[H_{a},...[H_{a}, \partial_{\lambda}H_{a}]]].
@@ -128,7 +128,7 @@ def fun(x0, grad_ops, energys):
     return f, g
 \end{lstlisting}
 
-In this tutorial, we will optimize the gradient using BFGS optimizer\cite{chandarana2022meta}, which will have good enough results. The results of mean energy are shown as Fig.~\ref{fig:dc}. Here, the green line is the exact eigenvalue of $H_{prob}$, the blue line is the mean value during the optimizing process, and the orange line is QAOA with three layers. We can notice that DC-QAOA has converged to the exact value in 70 steps within 0.5s. Comparing these two algorithm from the ability of estimating the ground state, DC-QAOA has advantage over QAOA.
+In this tutorial, we will optimize the gradient using BFGS optimizer \cite{chandarana2022meta}, which will have good enough results. The results of mean energy are shown as Fig.~\ref{fig:dc}. Here, the green line is the exact eigenvalue of $H_{prob}$, the blue line is the mean value during the optimizing process, and the orange line is QAOA with three layers. We can notice that DC-QAOA has converged to the exact value in 70 steps within 0.5s. Comparing these two algorithm from the ability of estimating the ground state, DC-QAOA has advantage over QAOA.
 \begin{figure}
     \centering
     \includegraphics[width = 1 \linewidth]{5.4.1_figure/DC-WHITE.png}
