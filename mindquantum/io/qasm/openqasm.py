@@ -91,7 +91,7 @@ def h_related(gate):
 
 def i_related(gate):
     """Convert mindquantum gate to qasm."""
-    return f"id {gate.obj_qubits[0]};"
+    return f"id q[{gate.obj_qubits[0]}];"
 
 
 def phase_related(gate):
