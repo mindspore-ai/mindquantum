@@ -46,7 +46,7 @@ result=MQmeseolve(H,psi0,t_list,col_ops=[])
 \end{lstlisting}
 \textit{Non-unitary evolution} -- In more cases, we always have to consider the effect of the environment on an open quantum system. The effect from the bath will cause the energy leakage to a higher energy level or some uncertainty in the phase difference between states of the system. Therefore, we have to describe the state in such quantum systems in terms of density matrix. The density matrix is used to describe a probability distribution of a quantum state $\ket{\psi}$, which is $\rho=\sum_{k}p_{k}\ket{\psi_{k}}\bra{\psi_{k}}$. Here, $p_k$ is the probability of the state $\psi_k$.
 
-A typical approach to describe an open quantum system is often the Lindblad Master equation \ref{lindblad1976generators}. It is derived from the von Neumann equation which expands the scope of the system to include the environment.
+A typical approach to describe an open quantum system is often the Lindblad Master equation \cite{lindblad1976generators}. It is derived from the von Neumann equation which expands the scope of the system to include the environment.
 \begin{equation}
     \dot{\rho}_{tot}(t)=-\frac{i}{\hbar}\left[H_{tot},\rho_{tot}(t)\right],
     \label{sysAndBath}
@@ -77,7 +77,7 @@ For the non-unitary evolution of a quantum system, i.e., evolution that includes
 result=MQmesolve(H,psi0,t_list,col_ops=cl_ops)
 \end{lstlisting}
 
-\textit{Quantum optimal control} -- In addition to quantum evolution, \MindQuantum\ can also do tasks about quantum optimal control. There are three algorithms in \MindQuantum\ that can be chosen: (1)grape \ref{GRAPE_0, GRAPE_2}, (2)crab \ref{CRAB_0, CRAB_1}, and (3)goat. The task of optimal control is always to minimize or maximize some functions that define how well a control pulse drives a quantum system to target in closed or open system. In the following sections.
+\textit{Quantum optimal control} -- In addition to quantum evolution, \MindQuantum\ can also do tasks about quantum optimal control. There are three algorithms in \MindQuantum\ that can be chosen: (1)grape \cite{GRAPE_0, GRAPE_2}, (2)crab \cite{CRAB_0, CRAB_1}, and (3)goat. The task of optimal control is always to minimize or maximize some functions that define how well a control pulse drives a quantum system to target in closed or open system. In the following sections.
 
 \textit{closed quantum system} -- We denote $U_{targ}$ as the target and $U_{T}$ as the actual unitary evolution operator. What we want to do is to maximize the overlap:
 \begin{equation}
@@ -91,7 +91,7 @@ Consider two following functionals:
     \end{split}
     \label{close}
 \end{equation}
-If ${\ket{n}}$ is a set of eignstates, $J_{T,sm}$ can be simply defined as $\left|\text{Tr}(\hat{U}_{targ}^{\dagger}\hat{U}(T))\right|^{2}$ and $J_{T,re}$ as $\text{Re}[\text{Tr}(\hat{U}^{\dagger}_{targ}\hat{U}(T))]$. Thus, $J_{T,sm}$ gets minimum when $\hat{U}(T)\ket{n}=e^{i\phi}\hat{U}_{targ}\ket{n}$ for all vectors $\ket{n}$ with arbitrary phase $\phi$. However, $J_{T,re}$ only gets minimal value when $\phi=0$. The functionals can be used in many scenarios, including gate optimization \ref{He_2024}, state preparation \ref{He_2021, refId0}, and optimal control for batch of state evolution.
+If ${\ket{n}}$ is a set of eignstates, $J_{T,sm}$ can be simply defined as $\left|\text{Tr}(\hat{U}_{targ}^{\dagger}\hat{U}(T))\right|^{2}$ and $J_{T,re}$ as $\text{Re}[\text{Tr}(\hat{U}^{\dagger}_{targ}\hat{U}(T))]$. Thus, $J_{T,sm}$ gets minimum when $\hat{U}(T)\ket{n}=e^{i\phi}\hat{U}_{targ}\ket{n}$ for all vectors $\ket{n}$ with arbitrary phase $\phi$. However, $J_{T,re}$ only gets minimal value when $\phi=0$. The functionals can be used in many scenarios, including gate optimization \cite{He_2024}, state preparation \cite{He_2021, refId0}, and optimal control for batch of state evolution.
 
 \textit{open quantum system} -- In an open quantum system, we have to use a mixed state because of the uncertainty caused by the bath environment. We have to adjust the Eq. (\ref{close}) to let it be able to characterize an evolution to a mixed state also. In this case, the function can be
 \begin{equation}

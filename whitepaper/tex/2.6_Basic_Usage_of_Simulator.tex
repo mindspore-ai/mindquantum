@@ -19,7 +19,7 @@ Current quantum state:
 √2/2¦01>
 \end{lstlisting}
 
-In the above demo, we initialized a full state vector simulator named `mqvector', which is a full state quantum simulator. Up to version 0.9.0, all simulator that \MindQuantum\ supported is shown as below:
+In the above demo, we initialized a full state vector simulator named \code{"mqvector"}, which is a full state quantum simulator. Up to version 0.9.0, all simulator that \MindQuantum\ supported is shown as below:
 \begin{table}[ht]
     \begin{tabular}{ccccc}
         \toprule
@@ -93,15 +93,23 @@ from mindquantum.core.operators import Hamiltonian, QubitOperator
 
 # Get expectation
 psi = Simulator('mqvector', 2)
-H = Hamiltonian(QubitOperator('Z0 Z1'))
+H = Hamiltonian(QubitOperator("Z0 Z1"))
 U_r = Circuit().rx(2.5, 0)
-psi.get_expectation(H, U_r)
+print("Expectation:", psi.get_expectation(H, U_r))
 
 # Get inner product
-phi = Simulator('mqvector', 2)
-H = Hamiltonian(QubitOperator(''))
+phi = Simulator("mqvector", 2)
+H = Hamiltonian(QubitOperator(""))
 U_l = Circuit().ry(1.5, 0)
-psi.get_expectation(H, U_r, U_l, phi)
+print("Inner product:")
+print(psi.get_expectation(H, U_r, U_l, phi))
+\end{lstlisting}
+The output is:
+
+\begin{lstlisting}
+Expectation: (-0.8011436155469336+0j)
+Inner product:
+(0.23071786267161518-0.6468646992187576j)
 \end{lstlisting}
 
 \subsubsection{sampling}
