@@ -27,7 +27,7 @@ import numpy as np
 psi0=np.zeros((1,2**qubit_num),dtype=complex)
 psi0[0][0]=1+0j
 \end{lstlisting}
-Given a Hamiltonian, we can calculate the unitary (non-dissipative) time-evolution of an arbitrary initial state vector $\ket{\psi_{0}}$ using the \MindQuantum\ function MQsesolve and we can get the result state in each time slot.
+Given a Hamiltonian, we can calculate the unitary (non-dissipative) time-evolution of an arbitrary initial state vector $\ket{\psi_{0}}$ using the \MindQuantum\ function MQsesolve, and we can get the result state in each time slot.
 \begin{lstlisting}
 t_list=np.linspace(0.0,10.0,100)
 H=[[H_d]]
@@ -79,7 +79,7 @@ result=MQmesolve(H,psi0,t_list,col_ops=cl_ops)
 
 \textit{Quantum optimal control} -- In addition to quantum evolution, \MindQuantum\ can also do tasks about quantum optimal control. There are three algorithms in \MindQuantum\ that can be chosen: (1)grape \cite{GRAPE_0, GRAPE_2}, (2)crab \cite{CRAB_0, CRAB_1}, and (3)goat. The task of optimal control is always to minimize or maximize some functions that define how well a control pulse drives a quantum system to target in closed or open system. In the following sections.
 
-\textit{closed quantum system} -- We denote $U_{targ}$ as the target and $U_{T}$ as the actual unitary evolution operator. What we want to do is to maximize the overlap:
+\textit{Closed quantum system} -- We denote $U_{targ}$ as the target and $U_{T}$ as the actual unitary evolution operator. What we want to do is to maximize the overlap:
 \begin{equation}
     \tau_{n}=\bra{n}\hat{U}_{targ}^{\dagger}\hat{U}(T)\ket{n}.
 \end{equation}
@@ -93,7 +93,7 @@ Consider two following functionals:
 \end{equation}
 If ${\ket{n}}$ is a set of eignstates, $J_{T,sm}$ can be simply defined as $\left|\text{Tr}(\hat{U}_{targ}^{\dagger}\hat{U}(T))\right|^{2}$ and $J_{T,re}$ as $\text{Re}[\text{Tr}(\hat{U}^{\dagger}_{targ}\hat{U}(T))]$. Thus, $J_{T,sm}$ gets minimum when $\hat{U}(T)\ket{n}=e^{i\phi}\hat{U}_{targ}\ket{n}$ for all vectors $\ket{n}$ with arbitrary phase $\phi$. However, $J_{T,re}$ only gets minimal value when $\phi=0$. The functionals can be used in many scenarios, including gate optimization \cite{He_2024}, state preparation \cite{He_2021, refId0}, and optimal control for batch of state evolution.
 
-\textit{open quantum system} -- In an open quantum system, we have to use a mixed state because of the uncertainty caused by the bath environment. We have to adjust the Eq. (\ref{close}) to let it be able to characterize an evolution to a mixed state also. In this case, the function can be
+\textit{Open quantum system} -- In an open quantum system, we have to use a mixed state because of the uncertainty caused by the bath environment. We have to adjust the Eq. (\ref{close}) to let it be able to characterize an evolution to a mixed state also. In this case, the function can be
 \begin{equation}
     \begin{split}
         &J_{T,hs}=\frac{1}{2N}\sum_{n=1}^{N}\text{Tr}\left[(\hat{\rho}_{n,targ}-\hat{\rho}_{n}(T))^{2}\right]\\
@@ -150,7 +150,7 @@ Here, the gradient is still available for vector $\bra{\hat{\rho}_{n,targ}+\hat{
 \begin{equation}
     \hat{U}_{m}=\mathrm{exp}\left[-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)\right],
 \end{equation}
-where $c_{k}=c_{k}(t)$ is the constant coefficient in $m$'th slot for $k$'th control Hamiltonian. What we want is to adjust the parameter $c_{k}$ to find the optimal result of the control pulse and we can rewrite the Eq.~(\ref{overlap}) as follows:
+where $c_{k}=c_{k}(t)$ is the constant coefficient in $m$'th slot for $k$'th control Hamiltonian. What we want is to adjust the parameter $c_{k}$ to find the optimal result of the control pulse, and we can rewrite the Eq.~(\ref{overlap}) as follows:
 \begin{equation}
     \begin{aligned}
          & \frac{\partial}{\partial c_{k}^{m}}\braket{\psi_{T}|\psi(t_M)}                                                                             \\
@@ -285,7 +285,7 @@ with initial value $\partial_{a}\psi(0)=0$. In this package, we use a modified v
 \begin{equation}
     i\hbar\frac{d}{dt}\ket{\partial_{\vec{a}}\psi(t)}=\hat{H}(t)\ket{\partial_{\vec{a}}\psi(t)}+\partial_{\vec{a}}\hat{H}(t)\ket{\psi(t)}.
 \end{equation}
-These two parts can be calculated in the size of Schrödinger equation rather than twice the lager size. This form avoids background propagation but needs forward propagation for each element in parameter vector $\ket{a}$. So far, we only realized the GOAT method in the closed system and we can implement as following:
+These two parts can be calculated in the size of Schrödinger equation rather than twice the lager size. This form avoids background propagation but needs forward propagation for each element in parameter vector $\ket{a}$. So far, we only realized the GOAT method in the closed system, and we can implement as following:
 \begin{lstlisting}
 result_unitary = MQ_opt_unitary_goat(
     drift=drift,

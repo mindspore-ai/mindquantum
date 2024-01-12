@@ -8,7 +8,7 @@ Data classification is not only an important application of classical neural net
 The key to achieving accurate data classification lies in capturing the nonlinear features of the data. Many approaches carefully design quantum circuits to introduce this capability, such as the strategies inspired in artificial neural networks or kernel methods that widely used in classical machine learning \cite{PhysRevLett.122.040504, 2019Supervised_nature, Wan_2017_npjqi, hur2022quantum, chalumuri2021hybrid, oh2020tutorial, farhi2018classification, wrobel2021application}. Among them, the schemes that require fewer resources such as the number of qubits and quantum operations have received widespread attention during the current NISQ devices era.
 Therefore, a natural motivation is to explore the minimum resources required to construct an effective quantum classifier.
 
-It has been shown in Ref.~\cite{PerezSalinas2020datareuploading} that a single qubit, with the assistance of a classical subroutine, can provide sufficient computational capabilities to perform multi-classification tasks for multi-dimensional input data, similar to a single hidden-layered neural network. This may sound surprising, especially considering that a single qubit provides only a superposition of two sample states and operations on it merely involve rotations around the Bloch sphere.
+It has been shown in Ref.~\cite{PerezSalinas2020datareuploading} that a single qubit, with the assistance of a classical subroutine, can provide sufficient computational capabilities to perform multi-classification tasks for multidimensional input data, similar to a single hidden-layered neural network. This may sound surprising, especially considering that a single qubit provides only a superposition of two sample states and operations on it merely involve rotations around the Bloch sphere.
 The pivotal point of this scheme is to combine the data uploading unit and information processing unit and repeat them many times, i.e., \textit{Data re-uploading} to introduce the non-linearity necessary for a supervised classification task.
 
 \begin{figure}
@@ -25,7 +25,7 @@ The pivotal point of this scheme is to combine the data uploading unit and infor
 	\end{subfigure}
     \captionsetup{justification=raggedright,singlelinecheck=false}
     \caption{Simplified workflows of (a) a single-hidden-layered classical neural network and (b) a single-qubit quantum classifier with structure of data re-uploading.
-    In the classical neural network, each neuron receives all input data. Conversely, the qubit receives both the input data and the result of previous operations.  It processes the combined information, and the final output is a quantum state that encodes multiple repetitions of input uploads and processing parameters.}
+    In the classical neural network, each neuron receives all input data. Conversely, the qubit receives both the input data and the result of previous operations. It processes the combined information, and the final output is a quantum state that encodes multiple repetitions of input uploads and processing parameters.}
     \label{diagram_data_reuploading}
 \end{figure}
 
@@ -34,9 +34,9 @@ The authors proved in their work that the equivalence between the data re-upload
 
 
 We precede the construction of the single-qubit classifier with an insight into the workflow of a classical single-layer neural network.
-As it is shown in Fig~\ref{diagram_data_reuploading} (a), the  original data is fed into and processed by each neuron, or in other words, the original data is re-uploaded multiple times. And then in conjunction with the activation function, this feed-forward neural network captures nonlinearity.
+As it is shown in Fig~\ref{diagram_data_reuploading} (a), the original data is fed into and processed by each neuron, or in other words, the original data is re-uploaded multiple times. And then in conjunction with the activation function, this feed-forward neural network captures non-linearity.
 
-In order to introduce this capacity to the single-qubit classifier, we have also to re-upload the data into the qubit repeatedly, and without violating the principle of quantum no-cloning theorem. The data re-uploading scheme \cite{PerezSalinas2020datareuploading} is specifically designed to address this problem, and its workflow is depicted in Fig~\ref{diagram_data_reuploading} (b). In a similar manner to the classical neural network, data points are introduced simultaneously into each processing unit, represented by a unitary rotation, of single-qubit quantum classifier.
+In order to introduce this capacity to the single-qubit classifier, we have also to re-upload the data into the qubit repeatedly, and without violating the principle of quantum no-cloning theorem. The data re-uploading scheme \cite{PerezSalinas2020datareuploading} is specifically designed to address this problem, and its workflow is depicted in Fig~\ref{diagram_data_reuploading} (b). Similarly to the classical neural network, data points are introduced simultaneously into each processing unit, represented by a unitary rotation, of single-qubit quantum classifier.
 However, the processing units are not only affected by the input data but also by the previous processing units.
 The resulting output is a quantum state that will be measured to extract the classification result.
 
@@ -51,7 +51,7 @@ The resulting output is a quantum state that will be measured to extract the cla
 \end{figure}
 
 The explicit form of this single-qubit classifier is
-shown in Fig~\ref{data_reuploading_circuit}. Classical data is repeatedly re-uploaded in a sequential manner, with processing units interspersed between them. The introduced data can be represented as qubit rotations.  A data point from 3-dimensional space, $\overrightarrow{x}$, can be re-uploaded by a rotation of the qubit $U(\overrightarrow{x})$. Subsequent processing units are also rotations, whose angles will be optimized as trainable parameters to minimize the cost value $C(F)$ for performance improvement. The fidelity $F$ quantifies the closeness between the final state of the circuit and the target state corresponding to the label.
+shown in Fig~\ref{data_reuploading_circuit}. Classical data is repeatedly re-uploaded sequentially, with processing units interspersed between them. The introduced data can be represented as qubit rotations. A data point from 3-dimensional space, $\overrightarrow{x}$, can be re-uploaded by a rotation of the qubit $U(\overrightarrow{x})$. Subsequent processing units are also rotations, whose angles will be optimized as trainable parameters to minimize the cost value $C(F)$ for performance improvement. The fidelity $F$ quantifies the closeness between the final state of the circuit and the target state corresponding to the label.
 
 Then, the overall function of this quantum circuit is
 $$\mathcal{U}(\overrightarrow{\phi},\overrightarrow{x})=U(\overrightarrow{\phi}_N)U(\overrightarrow{x})\cdots U(\overrightarrow{\phi}_1)U(\overrightarrow{x}),$$
@@ -78,7 +78,7 @@ Constructing and training a single-qubit data re-uploading quantum circuit to cl
 
 In this example, we focus on a typical classification task: identifying points in different areas of a plane, and implement it based on \MindQuantum.
 
-We create a dataset comprising numerous points with coordinates $\overrightarrow{x}=(x_1, x_2)$  randomly distributed on a unit area plane ($x\in[-1,1]$).
+We create a dataset comprising numerous points with coordinates $\overrightarrow{x}=(x_1, x_2)$ randomly distributed on a unit area plane ($x\in[-1,1]$).
 The task of the classifier is to determine, based on the coordinates of these data points, whether they fall within a circle of radius $r$, i.e., $x_1^2+x_2^2<r^2$.
 And the radius of the circle is intentionally set to $r=\sqrt{\frac{2}{\pi}}$ to ensure an equal probability of points being inside (labeled `0' and corresponding to the target quantum state $|0\rangle$) or outside (labeled `1' and corresponding to the target quantum state $|1\rangle$) the circle.
 
@@ -106,11 +106,11 @@ test_data, test_labels = data_gen(5000)
 
 The training set, validation set, and test set we created consist of 1000, 500, and 5000 random samples, respectively.
 
-To encode the data onto the qubit, we use angles of rotation around the $x$ and $z$ axes to represent the coordinate information of the samples, i.e. $U(\overrightarrow{x})=U(x_1,x_2,0)=RZ(x_2)RX(x_1)$.  Since our samples to be classified are only 2-dimensional, here we have padded 0.
+To encode the data onto the qubit, we use angles of rotation around the $x$ and $z$ axes to represent the coordinate information of the samples, i.e. $U(\overrightarrow{x})=U(x_1,x_2,0)=RZ(x_2)RX(x_1)$. Since our samples to be classified are only 2-dimensional, here we have padded 0.
 Input data ($[x_1, x_2, x_3, \cdots x_{N-2}, x_{N-1},x_{N}]$) with $N$ dimensions can be split into multiple sets of three-dimensional components for encoding $U(\overrightarrow{x})=U(x_{N-2},x_{N-1},x_{N})\cdots U(x_1,x_2,x_3)$.
 
-Next, we construct the circuit for a single-qubit classifier. We begin by applying a $H$ gate to the initial quantum state to generate a superposition state $(|0\rangle+|1\rangle)/\sqrt{2}$.
-Afterwards, we add $RZ(x_1)$ and $RX(x_2)$ gates to upload the sample's  coordinates $x_1$ and $x_2$ onto the qubit.
+Next, we construct the circuit for a single-qubit classifier. We begin by applying an $H$ gate to the initial quantum state to generate a superposition state $(|0\rangle+|1\rangle)/\sqrt{2}$.
+Afterwards, we add $RZ(x_1)$ and $RX(x_2)$ gates to upload the sample's coordinates $x_1$ and $x_2$ onto the qubit.
 The subsequent processing unit is represented by a $U3$ gate with three independent trainable parameters to act as an arbitrary rotation.
 These two sub-circuits are also named as ``encoder" and ``ansatz" respectively to indicate the parameters of the rotation gates will be directly fed into or gradually updated during training.
 The encoder and ansatz together form a layer, and multiple such layers can be repeated to achieve the functionality of multiple data re-uploading and processing, thereby enabling points classification.
@@ -142,10 +142,10 @@ $H$ gate to generate a uniform superposition state, along with an encoding and i
 \end{figure}
 
 The overall quantum circuit will transform the quantum state from $|0\rangle$ to $\varphi$, which requires to be measured.
-As mentioned before, the classification result `0' (inside the circle) or `1' (outside the circle) can be determined according to the final measurement of the single qubit, e.g., a sampled point can be classified into `0' if the output probabilities $P(|0\rangle)>P(|1\rangle)$ and into  `1' otherwise.
-This approach can also be represented by the energy expectation of the final quantum state along the $Z$ direction , i.e., classifies the sampled point into `0’ if $E(|\varphi\rangle)>0$ and else into `1'. Hence, the loss function can be defined as $Loss=[E(|\varphi\rangle)-(1-2\cdot\mathrm{label})]^2$.
+As mentioned before, the classification result `0' (inside the circle) or `1' (outside the circle) can be determined according to the final measurement of the single qubit, e.g., a sampled point can be classified into `0' if the output probabilities $P(|0\rangle)>P(|1\rangle)$ and into `1' otherwise.
+This approach can also be represented by the energy expectation of the final quantum state along the $Z$ direction, i.e., classifies the sampled point into `0' if $E(|\varphi\rangle)>0$ and else into `1'. Hence, the loss function can be defined as $Loss=[E(|\varphi\rangle)-(1-2\cdot\mathrm{label})]^2$.
 
-In the following code, we utilize the Adam optimizer with a learning rate of 0.1 as a classical subroutine to train the trainable parameters in the quantum circuit. The performance of classification will be enhanced  by minimizing the loss function.
+In the following code, we utilize the Adam optimizer with a learning rate of 0.1 as a classical subroutine to train the trainable parameters in the quantum circuit. The performance of classification will be enhanced by minimizing the loss function.
 
 
 \begin{lstlisting}
@@ -175,9 +175,9 @@ opti = Adam(qnet.trainable_params(), learning_rate=0.02)
 model = TrainOneStepCell(WithLossCell(qnet, loss), opti)
 
 \end{lstlisting}
-If the task to be solved  with this single-qubit classifier involves many classes, one possible strategy consists on comparing the probability $P(|0\rangle)$  with several thresholds. For example, for a 4-categorized task, the determination of the classification result can be based on the interval in which the probability $P(|0\rangle)$ lies: $0\leqslant\lambda_1\leqslant\lambda_2\leqslant\lambda_3\leqslant1$.
+If the task to be solved with this single-qubit classifier involves many classes, one possible strategy consists on comparing the probability $P(|0\rangle)$ with several thresholds. For example, for a 4-categorized task, the determination of the classification result can be based on the interval in which the probability $P(|0\rangle)$ lies: $0\leqslant\lambda_1\leqslant\lambda_2\leqslant\lambda_3\leqslant1$.
 
-Next, we train the parameters in the ansatzs  for 5000 iterations, recording and saving the highest validation accuracy achieved along with the corresponding trainable parameters. The batch size for training is 4.
+Next, we train the parameters in the ansatz for 5000 iterations, recording and saving the highest validation accuracy achieved along with the corresponding trainable parameters. The batch size for training is 4.
 
 \begin{lstlisting}
 def eval(ansatz_params, eval_data, eval_labels):

@@ -85,7 +85,7 @@ Then, similar to the classical neural network construction, each layer of the ne
         return out
 \end{lstlisting}
 
-The parameters of the quantum circuits are optimized according to the designed cost function. The generator needs to generate a probability distribution as real as possible, and the discriminator needs to distinguish between the real distribution and the generated distribution as much as possible. Their cost functions are designed separately as follow.
+The parameters of the quantum circuits are optimized according to the designed cost function. The generator needs to generate a probability distribution as real as possible, and the discriminator needs to distinguish between the real distribution and the generated distribution as much as possible. Their cost functions are designed separately as follows.
 \begin{equation}
   {L_G} =  - {{\rm E}_{x\sim{p_f}(x)}}\left[ {\log D(x)} \right],
 \end{equation}

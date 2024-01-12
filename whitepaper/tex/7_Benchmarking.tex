@@ -21,13 +21,13 @@ The hardware platform used for the benchmark test is Intel® Xeon® CPU E5-2690 
 
 \subsection{Running Random Circuit Task}
 
-To optimize testing time, we employ the formula $40 \times (4−n)+1000$ to determine the number of gates in circuit, where $n$ represents the number of qubits. We use random circuit sampling with 4-24 qubit scales to evaluate the performance of circuit evolution. The random circuit comprises single-qubit gates X, Y, Z, H, S, T, two-qubit gates CX, CY, CZ, single-qubit parameterized gates RX, RY, RZ, and two-qubit parameterized gates Rxx, Ryy, Rzz. To minimize accidental errors, the final result is obtained by averaging multiple samples.
+To optimize testing time, we employ the formula $40 \times (4-n)+1000$ to determine the number of gates in circuit, where $n$ represents the number of qubits. We use random circuit sampling with 4-24 qubit scales to evaluate the performance of circuit evolution. The random circuit comprises single-qubit gates X, Y, Z, H, S, T, two-qubit gates CX, CY, CZ, single-qubit parameterized gates RX, RY, RZ, and two-qubit parameterized gates Rxx, Ryy, Rzz. To minimize accidental errors, the final result is obtained by averaging multiple samples.
 
 \begin{figure*}[htbp]
     \begin{center}
         \includegraphics[width=0.7\linewidth]{7_figures/random_circuit_CPU.png}
     \end{center}
-    \caption{random circuit CPU}
+    \caption{Random circuit CPU}
 \end{figure*}
 
 In general, the simulation time increases exponentially with the circuit scale. However, when the number of qubits is small, \MindQuantum, Qulacs and Qpanda have a clear advantage in terms of time compared to other frameworks, which is due to small overhead. It is worth noting that there is a slight dip at the 13-qubit position because \MindQuantum\ uses 13 qubits as a threshold, and when the number of qubits is greater than 13, it enables OpenMP to perform multi-threaded parallel computing. This is because we found that multi-threaded computing would reduce the running speed when the number of qubits is small. As the circuit scale continues to increase, \MindQuantum\ and Qulacs maintain a good speed advantage, which can be judged that the two frameworks have been optimized to near the limit at the low-level implementation. However, Tensorflow Quantum eventually surpassed them. We analyzed that the reason may be that Tensorflow’s parallel computing strategy is more advanced, which makes it more advantageous in simulating large-scale quantum systems.

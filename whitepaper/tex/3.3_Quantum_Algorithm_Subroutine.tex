@@ -6,7 +6,7 @@ In the \library module of \MindQuantum, we implement some common components of q
 
     \item \bitphaseflipoperator: Generate a circuit that can flip the sign of any calculation bases.
 
-    \item \generalghzstate: Circuit that prepare a general GHZ state based on zero state. The GHZ state is defined as the equality superposition of three zeros state and three ones state:
+    \item \generalghzstate: Circuit that prepare a general GHZ state based on zero state. The GHZ state is defined as the equality superposition of three zero states and three one states:
 
           \begin{equation}
               \left|\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}.
@@ -15,8 +15,7 @@ In the \library module of \MindQuantum, we implement some common components of q
           Here in this API, we can create a general GHZ state on arbitrary sub qubits of any total qubits.
 
     \item \generalwstate: General W state. The W state is defined as the equality superposition of bases that only one qubit is in $|1\rangle$
-          while others qubits are in $|0\rangle$
-          . For example, a three qubits W state is defined as:
+          while others qubits are in $|0\rangle$. For example, a three qubits W state is defined as:
 
           \begin{equation}
               \left|\rm W\right> = (\left|001\right> + \left|010\right> + \left|100\right>)/\sqrt{3}.
