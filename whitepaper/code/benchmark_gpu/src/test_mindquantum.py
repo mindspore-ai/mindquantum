@@ -146,7 +146,7 @@ def benchmark_regular_4(grad_ops, p0):
 @pytest.mark.regular_4
 @pytest.mark.mindquantum
 @pytest.mark.parametrize("file_name", regular_4_data_path)
-@pytest.mark.parametrize("dtype", [mq.complex128])
+@pytest.mark.parametrize("dtype", [mq.complex128, mq.complex64])
 def test_mindquantum_regular_4(benchmark, file_name, dtype):
     n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
     with open(file_name, "r", encoding="utf-8") as f:
