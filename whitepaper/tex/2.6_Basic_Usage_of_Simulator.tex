@@ -33,13 +33,13 @@ In the above demo, we initialized a full state vector simulator named \code{"mqv
     \caption{Supported quantum simulator.}
     \label{tab:simulator_supported}
 \end{table}
-After applying a hadamard gate, we gate a quantum state $\left(\ket{00}+\ket{01}\right)/\sqrt{2}$. What we need to emphasize is that in the whole framework, we use little endian notation, that is, for base $\ket{01}$, the first qubit is in state $\ket{1}$ end the second qubit is in state $\ket{0}$.
+After applying a Hadamard gate, we gate a quantum state $\left(\ket{00}+\ket{01}\right)/\sqrt{2}$. What we need to emphasize is that in the whole framework, we use little endian notation, that is, for base $\ket{01}$, the first qubit is in state $\ket{1}$ end the second qubit is in state $\ket{0}$.
 
 Every simulator in \MindQuantum\ maintains a quantum state, and we can use methods start with `apply' to change the quantum state and use methods start with `get' to extracting information from the quantum state.
 
 \subsubsection{`apply' method}
 
-`apply' method is going to applying a operator on the maintained quantum state and change the state. We can apply a single gate or a quantum circuit, as well as a Hamiltonian, to manipulate the quantum state. We should notice that after applying a hamiltonian, the quantum state will not be a will defined quantum state.
+`apply' method is going to apply an operator on the maintained quantum state and change the state. We can apply a single gate or a quantum circuit, as well as a Hamiltonian, to manipulate the quantum state. We should notice that after applying a Hamiltonian, the quantum state will not be a will defined quantum state.
 
 \begin{lstlisting}
 from mindquantum.core.circuit import Circuit
@@ -66,7 +66,7 @@ Current quantum state:
 
 1. \getqs
 
-You can get the quantum matrix or a ket string expression (with arg \code{ket=True}) from a simulator with this method.
+You can get the quantum matrix or a ket string expression (with argument \code{ket=True}) from a simulator with this method.
 \begin{lstlisting}
 from mindquantum.algorithm.library import qft
 from mindquantum.simulator import Simulator

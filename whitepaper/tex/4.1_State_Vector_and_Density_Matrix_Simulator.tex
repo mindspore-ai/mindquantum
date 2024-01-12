@@ -9,7 +9,7 @@ Simulating quantum systems imposes high performance requirements on simulators. 
     \centering
     \includegraphics[scale=0.6]{./images/4_1_simulator_structure.pdf}
     \captionsetup{justification=raggedright,singlelinecheck=false}
-    \caption{\label{4_1_sim_str} The layer structure of the simulator. The simulate policy layer applies quantum gates to quantum states based on the current simulation hardware. The unified simulator layer uses different policies to complete the circuit simulation and expectation and gradient calculation. The hardware device layer shows that we support CPU, GPU and Kunpeng platform.}
+    \caption{\label{4_1_sim_str} The layer structure of the simulator. The \textit{simulate policy} layer applies quantum gates to quantum states based on the current simulation hardware. The \textit{unified simulator} layer uses different policies to complete the circuit simulation and expectation and gradient calculation. The \textit{hardware device} layer shows that we support CPU, GPU and Kunpeng platform.}
 \end{figure}
 
 Depending on the specific quantum system being simulated, we have the option to choose between a full amplitude quantum simulator or a density matrix simulator. In \MindQuantum, these two simulators are referred to as \code{"mqvector"} and \code{"mqmatrix"}, respectively. In the current \version version, the \code{"mqvector"} simulator also supports GPU acceleration and is named \code{"mqvector_gpu"}. Both \code{"mqvector"} and \code{"mqmatrix"} use the same design pattern as in Fig.~\ref{4_1_sim_str}. Based on these simulators, noise simulation is also supported with the help of quantum channel, which will talked in section ~\ref{sec:noise_simulation}.
@@ -67,7 +67,7 @@ We split basic quantum gates into different types, such as X-like, Z-like or mat
         b & 0
     \end{pmatrix}.
 \end{equation}
-When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a*b_r, a*b_i)$ in a single avx register. And if this gate is act on other qubit, we need to swap $b*\text{reg\_a}$ and $a*\text{reg\_b}$. For Z-like gate, the elements are only in diagonal:
+When X-like gate is act on first qubit, we need to swap $(b*a_r, b*a_i)$ and $(a*b_r, a*b_i)$ in a single AVX register. And if this gate is act on other qubit, we need to swap $b*\text{reg\_a}$ and $a*\text{reg\_b}$. For Z-like gate, the elements are only in diagonal:
 \begin{equation}
     \begin{pmatrix}
         a & 0 \\
