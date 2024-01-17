@@ -1,0 +1,7 @@
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'mindquantum'
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'qulacs'
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'pennylane'
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'pyqpanda'
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'tensorcircuit'
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'tensorflow_quantum'
+export CUDA_VISIBLE_DEVICE=3; pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'qiskit'
