@@ -100,6 +100,7 @@ random_circuit_data_path = random_circuit_data_path[:24]
 @pytest.mark.random_circuit
 @pytest.mark.qiskit
 @pytest.mark.parametrize("file_name", random_circuit_data_path)
+@pytest.mark.skip("Gate not supported.")
 def test_qiskit_random_circuit(benchmark, file_name):
     n_qubits = int(re.search(r"qubit_\d+", file_name).group().split("_")[-1])
     with open(file_name, "r", encoding="utf-8") as f:
