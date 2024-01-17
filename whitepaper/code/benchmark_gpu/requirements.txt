@@ -3,7 +3,7 @@ wheel
 pytest
 pytest-benchmark==4.0.0
 mindquantum==0.9.0
-qiskit-aer-gpu==0.12.2
+qiskit-aer-gpu-cu11==0.12.2
 pennylane-lightning-gpu==0.33.0
 pennylane-qiskit==0.33.1
 pyqpanda==3.8.0
