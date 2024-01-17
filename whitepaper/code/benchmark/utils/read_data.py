@@ -18,6 +18,19 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 
+framework_color_mark = {
+    'mindquantum_complex128':['#f00909', 'o'],
+    'mindquantum_complex64':['#f00909', '*'],
+    'qiskit':['#5a5a5a', '>'],
+    'pennylane':['#5a5a5a', '<'],
+    'pyqpanda':['#5a5a5a', '.'],
+    'qulacs':['#5a5a5a', '4'],
+    'tensorcircuit_complex128':['#5a5a5a', 'v'],
+    'tensorcircuit_complex64':['#5a5a5a', '^'],
+    'tensorflow_quantum':['#5a5a5a', 'p'],
+    'intel':['#5a5a5a', 'H'],
+}
+
 def load_file(file_path):
     with open(file_path) as f:
         data = json.load(f)
@@ -99,14 +112,17 @@ def get_task(task_name, data):
             out[i[0]] = d
     return {i:np.array(j) for i, j in out.items()}
 
-def show_task(task_name, data):
+def show_task(task_name, data, log=False):
     data = get_task(task_name, data)
     for framework, j in data.items():
         n_qubits = j[:, 0].astype(int)
         mean_time = j[:, 1]
         stddev = j[:, 2]
-        plt.plot(n_qubits, mean_time, "--", label=framework)
-        plt.plot(n_qubits, mean_time, 'o')
+        color, mark = framework_color_mark.get(framework[:-4], ['#5a5a5a', 'D'])
+        plt.plot(n_qubits, mean_time, "--", color=color)
+        plt.plot(n_qubits, mean_time, mark, color=color, label=framework)
+    if log:
+        plt.yscale('log')
     plt.legend()
     plt.show()
 
