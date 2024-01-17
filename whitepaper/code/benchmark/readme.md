@@ -16,52 +16,28 @@ Create isolated conda environment.
 ```bash
 conda create -n benchmark python=3.9.5
 conda activate benchmark
-pip3 install pytest pytest-benchmark
 ```
 
-Install mindquantum 0.9.0
+### Install Requirements
 
 ```bash
-pip3 install mindquantum==0.9.0
+pip3 install -r requirements.txt
+pip3 install protobuf==3.20.1
 ```
 
-Install qulacs 0.6.2:
-
-```bash
-pip3 install qulacs==0.6.2
-```
-
-Install qiskit-aer 0.13.0
-
-```bash
-pip3 install qiskit-aer==0.13.0
-```
-
-Install projectq 0.8.0
-
-```bash
-pip3 install projectq==0.8.0
-```
-
-Install pennylane 0.33.0
-
-```bash
-pip3 install pennylane==0.33.0
-pip3 install pennylane-qiskit==0.33.1
-```
-
-Clone and build quest v3.7.0
+### Install Qulacs
 
 ```bash
 CUR_DIR=`pwd`
-git clone --branch v3.7.0 --single-branch https://github.com/QuEST-Kit/QuEST.git
-cd QuEST
-mkdir -p build
-cd build
-cmake ..
-make -j8
+wget https://files.pythonhosted.org/packages/23/a2/6fca76d22de5f85ed3707cfeb47b09cc5b4a5edaf7af930b32f17257fa95/Qulacs-GPU-0.3.1.tar.gz
+tar -xvf Qulacs-GPU-0.3.1.tar.gz
+cd Qulacs-GPU-0.3.1
+sed -i '17c\set(DEFAULT_USE_TEST No)' CMakeLists.txt
+python3 setup.py install
 cd $CUR_DIR
 ```
+
+### Install Intel
 
 Clone and build intel master
 
@@ -78,32 +54,6 @@ cp ./lib/intelqs_py*.so `python -c "import site;print(site.getsitepackages()[0])
 cd $CUR_DIR
 ```
 
-Install pyqpanda 3.8.0
-
-```bash
-pip3 install pyqpanda==3.8.0
-```
-
-Install tensorcircuit 0.11.0
-
-```bash
-pip3 install tensorcircuit==0.11.0
-```
-
-Install tensorflow quantum 0.7.2
-
-```bash
-pip3 install tensorflow==2.7
-pip3 install tensorflow-quantum==0.7.2
-```
-
-Install other packages.
-
-```bash
-pip3 install networkx
-pip3 install protobuf==3.20.1
-```
-
 Force use CPU
 
 ```bash
@@ -115,6 +65,7 @@ Total Thread 16
 ```
 export OMP_NUM_THREADS=16
 ```
+
 ## Generate dataset
 
 ```bash
@@ -137,6 +88,12 @@ Or only benchmark one frame with one task, for example
 
 ```bash
 pytest -v --benchmark-save=mindquantum --benchmark-warmup=on --benchmark-warmup-iterations=1 -m 'random_circuit and mindquantum'
+```
+
+Or run with a script
+
+```bash
+. ./run.sh
 ```
 
 Take a look at the previous result.
