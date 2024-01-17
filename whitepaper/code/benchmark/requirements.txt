@@ -1,0 +1,12 @@
+pytest
+pytest-benchmark
+mindquantum==0.9.0
+qiskit-aer==0.13.0
+projectq==0.8.0
+pennylane==0.33.0
+pennylane-qiskit==0.33.1
+pyqpanda==3.8.0
+tensorcircuit==0.11.0
+tensorflow==2.7
+tensorflow-quantum==0.7.2
+networkx
