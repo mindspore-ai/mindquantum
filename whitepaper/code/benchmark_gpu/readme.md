@@ -37,6 +37,18 @@ python3 setup.py install
 cd $CUR_DIR
 ```
 
+### Install PyQpanda
+
+```bash
+CUR_DIR=`pwd`
+git clone https://gitee.com/donghufeng/QPanda-2
+cd QPanda-2
+sed -i '4c\cmake -DFIND_CUDA=ON -DUSE_CHEMIQ=OFF -DUSE_PYQPANDA=ON ..' build.sh
+sed -i '5c\make -j16' build.sh
+bash build.sh
+export PYTHONPATH=`pwd`/pyQPanda:$PYTHONPATH
+```
+
 ## Set Environment
 
 ```bash
