@@ -180,7 +180,7 @@ class Simulator:
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
-random_circuit_data_path = random_circuit_data_path[:20]
+random_circuit_data_path = random_circuit_data_path[:24]
 
 
 @pytest.mark.random_circuit
@@ -200,7 +200,7 @@ def test_intel_random_circuit(benchmark, file_name):
 
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
-simple_circuit_data_path = simple_circuit_data_path[:20]
+simple_circuit_data_path = simple_circuit_data_path[:24]
 
 
 @pytest.mark.simple_circuit
