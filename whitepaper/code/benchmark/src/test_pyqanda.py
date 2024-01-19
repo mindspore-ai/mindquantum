@@ -139,7 +139,7 @@ def test_pyqpanda_simple_circuit(benchmark, file_name):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:9]
+regular_4_data_path = regular_4_data_path[:10]
 
 
 def generate_qaoa_ansatz(edges, qubits):

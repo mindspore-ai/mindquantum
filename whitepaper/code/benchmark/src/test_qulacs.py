@@ -195,7 +195,7 @@ def test_qulacs_simple_circuit(benchmark, file_name):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:15]
+regular_4_data_path = regular_4_data_path[:19]
 
 
 def regular_4_fun(p, circ, op, n_qubits):

@@ -145,7 +145,7 @@ def test_pennylane_simple_circuit(benchmark, file_name):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:10]
+regular_4_data_path = regular_4_data_path[:16]
 
 def f_and_g(weights, circuit, vag):
     f, g = circuit(weights), vag(weights)
