@@ -94,7 +94,7 @@ def convert_back_to_qiskit_circ(str_circ, n_qubits):
 
 random_circuit_data_path = get_task_file("random_circuit")
 random_circuit_data_path.sort()
-random_circuit_data_path = random_circuit_data_path[:19]
+random_circuit_data_path = random_circuit_data_path[:24]
 
 
 @pytest.mark.random_circuit
@@ -120,7 +120,7 @@ def test_pennylane_random_circuit(benchmark, file_name):
 
 simple_circuit_data_path = get_task_file("simple_circuit")
 simple_circuit_data_path.sort()
-simple_circuit_data_path = simple_circuit_data_path[:19]
+simple_circuit_data_path = simple_circuit_data_path[:24]
 
 
 @pytest.mark.simple_circuit
@@ -145,7 +145,7 @@ def test_pennylane_simple_circuit(benchmark, file_name):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:10]
+regular_4_data_path = regular_4_data_path[:16]
 
 def f_and_g(weights, circuit, vag):
     f, g = circuit(weights), vag(weights)
