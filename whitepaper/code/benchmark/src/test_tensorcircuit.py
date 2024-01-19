@@ -156,7 +156,7 @@ def test_tensorcircuit_simple_circuit(benchmark, file_name, dtype):
 
 regular_4_data_path = get_task_file("regular_4")
 regular_4_data_path.sort()
-regular_4_data_path = regular_4_data_path[:6]
+regular_4_data_path = regular_4_data_path[:15]
 
 K = tc.set_backend("tensorflow")
 
