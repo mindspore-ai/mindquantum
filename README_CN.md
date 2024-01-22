@@ -122,8 +122,8 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
     - [变分量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/parameterized_quantum_circuit.html)
     - [量子模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/quantum_simulator.html)
-    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advancecd/initial_experience_of_quantum_neural_network.html)
-    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advancecd/get_gradient_of_PQC_with_mindquantum.html)
+    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/initial_experience_of_quantum_neural_network.html)
+    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/get_gradient_of_PQC_with_mindquantum.html)
     - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/advanced_operations_of_quantum_circuit.html)
     - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/quantum_measurement.html)
     - [含噪声量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/middle_level/noise.html)
@@ -137,7 +137,7 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
     - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/quantum_approximate_optimization_algorithm.html)
     - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/qnn_for_nlp.html)
     - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/vqe_for_quantum_chemistry.html)
-    - [含参量子线路的等价性检查](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advancecd/equivalence_checking_of_PQC.html)
+    - [含参量子线路的等价性检查](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/equivalence_checking_of_PQC.html)
 
 3. 通用量子算法
 
@@ -235,7 +235,7 @@ export OMP_NUM_THREADS=4
 
 对于大型服务器，请根据模型规模合理设置并行内核数以达到最优效果。
 
-更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/master/tutorials/0.frequently_asked_questions.ipynb)。
+更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/r0.8/tutorials/0.frequently_asked_questions.ipynb)。
 
 ## 构建二进制whl包
 
