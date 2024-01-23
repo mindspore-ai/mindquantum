@@ -103,7 +103,12 @@ class LongBits {
 #undef REG_OPERATOR
 
 // -----------------------------------------------------------------------------
-
+void PrintStrings(const std::vector<std::string>& a) {
+    for (auto& i : a) {
+        std::cout << i << std::endl;
+    }
+    printf("\n");
+}
 class StabilizerTableau {
  public:
     explicit StabilizerTableau(size_t n_qubits) : n_qubits(n_qubits) {
@@ -114,11 +119,11 @@ class StabilizerTableau {
         }
     }
 
-    std::string TableauToString() {
+    std::string TableauToString() const {
         std::string out = "";
         for (size_t i = 0; i < 2 * n_qubits; ++i) {
             for (size_t j = 0; j < 2 * n_qubits; ++j) {
-                out += (table[j].GetBit(i) == 0 ? "0 " : "1 ");
+                out += (GetElement(i, j) == 0 ? "0 " : "1 ");
                 if (j + 1 == n_qubits) {
                     out += "| ";
                 }
@@ -137,12 +142,12 @@ class StabilizerTableau {
         return out;
     }
 
-    std::string StabilizerToString() {
+    std::string StabilizerToString() const {
         std::string out = "destabilizer:\n";
         for (size_t i = 0; i < n_qubits * 2; i++) {
             out += phase.GetBit(i) == 0 ? "+" : "-";
             for (size_t j = 0; j < n_qubits; j++) {
-                switch ((table[j].GetBit(i) << 1) + table[j + n_qubits].GetBit(i)) {
+                switch ((GetElement(i, j) << 1) + GetElement(i, j + n_qubits)) {
                     case 0:
                         out += "I";
                         break;
@@ -165,6 +170,10 @@ class StabilizerTableau {
             }
         }
         return out;
+    }
+
+    size_t GetElement(size_t row, size_t col) const {
+        return table[col].GetBit(row);
     }
 
     void ApplyX(size_t idx) {
@@ -222,14 +231,14 @@ class StabilizerTableau {
         std::vector<std::string> out;
         auto cpy = *this;
         for (size_t i = 0; i < n_qubits; ++i) {
-            auto flag_aii_true = table[i].GetBit(i);
+            auto flag_aii_true = GetElement(i, i);
             for (size_t j = i + 1; j < n_qubits; ++j) {
                 if (flag_aii_true) {
                     break;
                 }
-                if (cpy.table[i].GetBit(j)) {
+                if (cpy.GetElement(i, j)) {
                     cpy.ApplyCNOT(i, j);
-                    out.push_back("CNOT " + std::to_string(i) + ", " + std::to_string(j));
+                    out.push_back("CNOT " + std::to_string(i) + " " + std::to_string(j));
                     flag_aii_true = 1;
                 }
             }
@@ -237,63 +246,80 @@ class StabilizerTableau {
                 if (flag_aii_true) {
                     break;
                 }
-                if (cpy.table[i].GetBit(j + n_qubits)) {
+                if (cpy.GetElement(i, j + n_qubits)) {
                     cpy.ApplyH(j);
                     out.push_back("H " + std::to_string(j));
                     if (j != i) {
                         cpy.ApplyCNOT(i, j);
-                        out.push_back("CNOT " + std::to_string(i) + ", " + std::to_string(j));
-                        flag_aii_true = 1;
+                        out.push_back("CNOT " + std::to_string(i) + " " + std::to_string(j));
                     }
+                    flag_aii_true = 1;
                 }
             }
             for (size_t j = i + 1; j < n_qubits; j++) {
-                if (cpy.table[i].GetBit(j)) {
+                if (cpy.GetElement(i, j)) {
                     cpy.ApplyCNOT(j, i);
-                    out.push_back("CNOT " + std::to_string(j) + ", " + std::to_string(i));
+                    out.push_back("CNOT " + std::to_string(j) + " " + std::to_string(i));
                 }
             }
-            if (cpy.table[i].Any(i + n_qubits)) {
-                if (!cpy.table[i].GetBit(i + n_qubits)) {
+            if (std::any_of(cpy.table.begin() + i + n_qubits, cpy.table.end(),
+                            [&](const LongBits& b) { return b.GetBit(i) == 1; })) {
+                if (!cpy.GetElement(i, i + n_qubits)) {
                     cpy.ApplyS(i);
-                    out.push_back("S " + std::to_string(i));
+                    if (!out.empty() and out.back() == "S " + std::to_string(i)) {
+                        out.pop_back();
+                    } else {
+                        out.push_back("S " + std::to_string(i));
+                    }
                 }
                 for (size_t j = i + 1; j < n_qubits; j++) {
-                    if (cpy.table[i].GetBit(j + n_qubits)) {
+                    if (cpy.GetElement(i, j + n_qubits)) {
                         cpy.ApplyCNOT(i, j);
-                        out.push_back("CNOT " + std::to_string(i) + ", " + std::to_string(j));
+                        out.push_back("CNOT " + std::to_string(i) + " " + std::to_string(j));
                     }
                 }
                 cpy.ApplyS(i);
-                out.push_back("S " + std::to_string(i));
+                if (!out.empty() and out.back() == "S " + std::to_string(i)) {
+                    out.pop_back();
+                } else {
+                    out.push_back("S " + std::to_string(i));
+                }
             }
 
-            // ######  step04: make D a lower triangular  ######
-            if (i + 1 < n_qubits and cpy.table[i + n_qubits].Any(i + n_qubits + 1)) {
+            if (i + 1 < n_qubits
+                and std::any_of(cpy.table.begin() + i + n_qubits + 1, cpy.table.end(),
+                                [&](const LongBits& b) { return b.GetBit(i + n_qubits) == 1; })) {
                 for (size_t j = i + 1; j < n_qubits; j++) {
-                    if (cpy.table[i + n_qubits].GetBit(j + n_qubits)) {
+                    if (cpy.GetElement(i + n_qubits, j + n_qubits)) {
                         cpy.ApplyCNOT(i, j);
-                        out.push_back("CNOT " + std::to_string(i) + ", " + std::to_string(j));
+                        out.push_back("CNOT " + std::to_string(i) + " " + std::to_string(j));
                     }
                 }
             }
-
-            // ######  step05: make C a lower triangular  ######
-            if (cpy.table[i + n_qubits].Any(i + 1)) {
+            if (std::any_of(cpy.table.begin() + i + 1, cpy.table.end(),
+                            [&](const LongBits& b) { return b.GetBit(i + n_qubits) == 1; })) {
                 cpy.ApplyH(i);
-                out.push_back("H " + std::to_string(i));
+                if (!out.empty() and out.back() == "H " + std::to_string(i)) {
+                    out.pop_back();
+                } else {
+                    out.push_back("H " + std::to_string(i));
+                }
                 for (int j = i + 1; j < n_qubits; j++) {
-                    if (cpy.table[i + n_qubits].GetBit(j)) {
+                    if (cpy.GetElement(i + n_qubits, j)) {
                         cpy.ApplyCNOT(j, i);
-                        out.push_back("CNOT " + std::to_string(j) + ", " + std::to_string(i));
+                        out.push_back("CNOT " + std::to_string(j) + " " + std::to_string(i));
                     }
                 }
-                if (cpy.table[i + n_qubits].GetBit(i + n_qubits)) {
+                if (cpy.GetElement(i + n_qubits, i + n_qubits)) {
                     cpy.ApplyS(i);
                     out.push_back("S " + std::to_string(i));
                 }
                 cpy.ApplyH(i);
-                out.push_back("H " + std::to_string(i));
+                if (!out.empty() and out.back() == "H " + std::to_string(i)) {
+                    out.pop_back();
+                } else {
+                    out.push_back("H " + std::to_string(i));
+                }
             }
         }
         for (size_t i = 0; i < n_qubits; ++i) {
@@ -304,6 +330,7 @@ class StabilizerTableau {
                 out.push_back("X " + std::to_string(i));
             }
         }
+        std::reverse(out.begin(), out.end());
         return out;
     }
 
@@ -319,9 +346,10 @@ int main() {
     auto stab = StabilizerTableau(3);
     stab.ApplyH(0);
     stab.ApplyCNOT(1, 0);
-    std::cout << stab.TableauToString() << std::endl;
-    std::cout << stab.StabilizerToString() << std::endl;
-    for (auto s : stab.Decompose()) {
-        std::cout << s << std::endl;
-    }
+    PrintStrings(stab.Decompose());
+    // std::cout << stab.TableauToString() << std::endl;
+    // std::cout << stab.StabilizerToString() << std::endl;
+    // for (auto s : stab.Decompose()) {
+    //     std::cout << s << std::endl;
+    // }
 }

@@ -57,6 +57,7 @@ class Clifford(StabilizerTableau):
                         break
                     if cli_copy._table[i, j]:
                         cli_copy.CNOT(j, i)
+                        print("cnot 1")
                         circuit_str.append(('C', j, i))
                         flag_Aii_true = 1
                 # if all X_ij=0, find X_i(j+n)=1 and use Hadamard(j)+CNOT(j,i)
@@ -68,6 +69,7 @@ class Clifford(StabilizerTableau):
                         circuit_str.append(('H', j))
                         if j != i:
                             cli_copy.CNOT(j, i)
+                            print("cnot 2")
                             circuit_str.append(('C', j, i))
                         flag_Aii_true = 1
 
@@ -75,16 +77,19 @@ class Clifford(StabilizerTableau):
                 for j in range(i + 1, n):
                     if cli_copy._table[i, j]:
                         cli_copy.CNOT(i, j)
+                        print("cnot 3")
                         circuit_str.append(('C', i, j))
 
                 ######  step03: make B a lower triangular  ######
                 if np.any(cli_copy._table[i, (i + n) :]):
+                    print("aaa")
                     if not cli_copy._table[i, i + n]:
                         cli_copy.PhaseGate(i)
                         circuit_str.append(('P', i))
                     for j in range(i + 1, n):
                         if cli_copy._table[i, j + n]:
                             cli_copy.CNOT(j, i)
+                            print("cnot 4")
                             circuit_str.append(('C', j, i))
                     cli_copy.PhaseGate(i)
                     circuit_str.append(('P', i))
@@ -94,15 +99,21 @@ class Clifford(StabilizerTableau):
                     for j in range(i + 1, n):
                         if cli_copy._table[i + n, j + n]:
                             cli_copy.CNOT(j, i)
+                            print("cnot 5")
                             circuit_str.append(('C', j, i))
 
                 ######  step05: make C a lower triangular  ######
+                cli_copy.print_tableau()
                 if np.any(cli_copy._table[i + n, (i + 1) :]):
                     cli_copy.Hadamard(i)
                     circuit_str.append(('H', i))
+                    cli_copy.print_tableau()
+                    print(i)
                     for j in range(i + 1, n):
                         if cli_copy._table[i + n, j]:
                             cli_copy.CNOT(i, j)
+                            cli_copy.print_tableau()
+                            print('cnot 6')
                             circuit_str.append(('C', i, j))
                     if cli_copy._table[i + n, i + n]:
                         cli_copy.PhaseGate(i)
@@ -214,25 +225,29 @@ def get_initial_id(num_qubits=2):
 
 if __name__ == "__main__":
     C = Clifford(num_qubits=3)
-    Cp = C.copy()
-
-    C.Hadamard(1)
-    C.CNOT(1, 2)
     C.Hadamard(0)
     C.CNOT(0, 1)
-    C.Hadamard(0)
-    C.print_tableau()
+    a = C.clifford_decomposition()
+    print(a)
+    # Cp = C.copy()
 
-    circuit = C.clifford_decomposition()
-    C.print_tableau()
+    # C.Hadamard(1)
+    # C.CNOT(1, 2)
+    # C.Hadamard(0)
+    # C.CNOT(0, 1)
+    # C.Hadamard(0)
+    # C.print_tableau()
 
-    C2 = Clifford(num_qubits=3)
-    C3 = C * C2
-    print(C2 == C3)
+    # circuit = C.clifford_decomposition()
+    # C.print_tableau()
 
-    print(C3.clifford_decomposition())
-    mq_cir = C3.to_circuit(interface='mindquantum')
-    mq_cir.summary()
+    # C2 = Clifford(num_qubits=3)
+    # C3 = C * C2
+    # print(C2 == C3)
 
-    C3p = circuit_to_clifford(mq_cir)
-    C3p.print_tableau()
+    # print(C3.clifford_decomposition())
+    # mq_cir = C3.to_circuit(interface='mindquantum')
+    # mq_cir.summary()
+
+    # C3p = circuit_to_clifford(mq_cir)
+    # C3p.print_tableau()

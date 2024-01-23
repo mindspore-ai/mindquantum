@@ -274,6 +274,7 @@ class StabilizerTableau:
                 table_str += '| '
                 table_str += str(int(self._phase[i])) + ' '
             print(table_str)
+        print("\n")
 
     def print_stabilizer(self):
         """
