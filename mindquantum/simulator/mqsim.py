@@ -120,7 +120,7 @@ class MQSim(BackendBase):
             else:
                 pr = ParameterResolver()
             if isinstance(gate, Measure):
-                return self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
+                return self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
             self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
         return None
 
