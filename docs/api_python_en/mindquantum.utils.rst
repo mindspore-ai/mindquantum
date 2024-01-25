@@ -17,6 +17,7 @@ Function
     mindquantum.utils.normalize
     mindquantum.utils.random_circuit
     mindquantum.utils.random_state
+    mindquantum.utils.random_insert_gates
 
 Progress bar
 ------------

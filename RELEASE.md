@@ -43,7 +43,7 @@
 #### utils
 
 - [STABLE] [`Progress bar`](https://www.mindspore.cn/mindquantum/docs/en/master/mindquantum.utils.html#progress-bar): Add two easily used progress bar based on rich, which are [`SingleLoopProgress`](https://www.mindspore.cn/mindquantum/docs/en/master/utils/mindquantum.utils.SingleLoopProgress.html#mindquantum.utils.SingleLoopProgress) and [`TwoLoopsProgress`](https://www.mindspore.cn/mindquantum/docs/en/master/utils/mindquantum.utils.TwoLoopsProgress.html#mindquantum.utils.TwoLoopsProgress)。
-- [Alpha] [`random_insert_gates`](https://www.mindspore.cn/mindquantum/docs/en/master/utils/mindquantum.utils.random_insert_gates.html): Enable to randomly insert quantum gate into a quantum circuit.
+- [Alpha] [random_insert_gates]: Enable to randomly insert quantum gate into a quantum circuit.
 
 #### Algorithm
 
