@@ -39,6 +39,10 @@ class LongBits {
     REG_OPERATOR(^=, ^);
     REG_OPERATOR(&=, &);
 
+    bool operator==(const LongBits& other) const {
+        return n_bits == other.n_bits && data == other.data;
+    }
+
     void SetBit(size_t poi, bool val) {
         if (poi > n_bits - 1) {
             throw std::runtime_error("poi out of range.");
@@ -211,7 +215,14 @@ class StabilizerTableau {
         phase ^= tmp;
         table[idx + n_qubits] ^= table[idx];
     }
-
+    void ApplyV(size_t idx) {
+        ApplySdag(idx);
+        ApplyH(idx);
+    }
+    void ApplyW(size_t idx) {
+        ApplyH(idx);
+        ApplyS(idx);
+    }
     void ApplyH(size_t idx) {
         if (idx + 1 > n_qubits) {
             throw std::runtime_error("qubit out of range.");
@@ -339,6 +350,9 @@ class StabilizerTableau {
         std::reverse(out.begin(), out.end());
         return out;
     }
+    bool operator==(const StabilizerTableau& other) const {
+        return n_qubits == other.n_qubits && phase == other.phase && table == other.table;
+    }
 
  private:
     size_t n_qubits;
@@ -400,7 +414,222 @@ StabilizerTableau QuerySingleQubitCliffordEle(size_t idx) {
     return stab;
 }
 
+std::pair<size_t, size_t> DetermineClass(size_t i) {
+    if (i < 576) {
+        return {0, i};
+    }
+    if (i < 5760) {
+        return {1, i - 576};
+    }
+    if (i < 10944) {
+        return {2, i - 5760};
+    }
+    return {3, i - 10944};
+}
+void EvoClass1(StabilizerTableau* stab, size_t idx) {
+    std::vector<size_t> num{2, 2, 3, 3, 4, 4};
+    std::vector<size_t> idxs;
+    for (auto i : num) {
+        idxs.push_back(idx % i);
+        idx /= i;
+    }
+    if (idxs[0] == 1) {
+        stab->ApplyH(0);
+    }
+    if (idxs[1] == 1) {
+        stab->ApplyH(1);
+    }
+    if (idxs[2] == 1) {
+        stab->ApplyV(0);
+    } else if (idxs[2] == 2) {
+        stab->ApplyW(0);
+    }
+    if (idxs[3] == 1) {
+        stab->ApplyV(1);
+    } else if (idxs[3] == 2) {
+        stab->ApplyW(1);
+    }
+    if (idxs[4] == 1) {
+        stab->ApplyX(0);
+    } else if (idxs[4] == 2) {
+        stab->ApplyY(0);
+    } else if (idxs[4] == 3) {
+        stab->ApplyZ(0);
+    }
+    if (idxs[5] == 1) {
+        stab->ApplyX(1);
+    } else if (idxs[5] == 2) {
+        stab->ApplyY(1);
+    } else if (idxs[5] == 3) {
+        stab->ApplyZ(1);
+    }
+}
+void EvoClass2(StabilizerTableau* stab, size_t idx) {
+    std::vector<size_t> num{2, 2, 3, 3, 3, 3, 4, 4};
+    std::vector<size_t> idxs;
+    for (auto i : num) {
+        idxs.push_back(idx % i);
+        idx /= i;
+    }
+    if (idxs[0] == 1) {
+        stab->ApplyH(0);
+    }
+    if (idxs[1] == 1) {
+        stab->ApplyH(1);
+    }
+    if (idxs[2] == 1) {
+        stab->ApplyV(0);
+    } else if (idxs[2] == 2) {
+        stab->ApplyW(0);
+    }
+    if (idxs[3] == 1) {
+        stab->ApplyV(1);
+    } else if (idxs[3] == 2) {
+        stab->ApplyW(1);
+    }
+    stab->ApplyCNOT(1, 0);
+    if (idxs[4] == 1) {
+        stab->ApplyV(0);
+    } else if (idxs[4] == 2) {
+        stab->ApplyW(0);
+    }
+    if (idxs[5] == 1) {
+        stab->ApplyV(1);
+    } else if (idxs[5] == 2) {
+        stab->ApplyW(1);
+    }
+    if (idxs[6] == 1) {
+        stab->ApplyX(0);
+    } else if (idxs[6] == 2) {
+        stab->ApplyY(0);
+    } else if (idxs[6] == 3) {
+        stab->ApplyZ(0);
+    }
+    if (idxs[7] == 1) {
+        stab->ApplyX(1);
+    } else if (idxs[7] == 2) {
+        stab->ApplyY(1);
+    } else if (idxs[7] == 3) {
+        stab->ApplyZ(1);
+    }
+}
+void EvoClass3(StabilizerTableau* stab, size_t idx) {
+    std::vector<size_t> num{2, 2, 3, 3, 3, 3, 4, 4};
+    std::vector<size_t> idxs;
+    for (auto i : num) {
+        idxs.push_back(idx % i);
+        idx /= i;
+    }
+    if (idxs[0] == 1) {
+        stab->ApplyH(0);
+    }
+    if (idxs[1] == 1) {
+        stab->ApplyH(1);
+    }
+    if (idxs[2] == 1) {
+        stab->ApplyV(0);
+    } else if (idxs[2] == 2) {
+        stab->ApplyW(0);
+    }
+    if (idxs[3] == 1) {
+        stab->ApplyV(1);
+    } else if (idxs[3] == 2) {
+        stab->ApplyW(1);
+    }
+    stab->ApplyCNOT(1, 0);
+    stab->ApplyCNOT(0, 1);
+    if (idxs[4] == 1) {
+        stab->ApplyV(0);
+    } else if (idxs[4] == 2) {
+        stab->ApplyW(0);
+    }
+    if (idxs[5] == 1) {
+        stab->ApplyV(1);
+    } else if (idxs[5] == 2) {
+        stab->ApplyW(1);
+    }
+    if (idxs[6] == 1) {
+        stab->ApplyX(0);
+    } else if (idxs[6] == 2) {
+        stab->ApplyY(0);
+    } else if (idxs[6] == 3) {
+        stab->ApplyZ(0);
+    }
+    if (idxs[7] == 1) {
+        stab->ApplyX(1);
+    } else if (idxs[7] == 2) {
+        stab->ApplyY(1);
+    } else if (idxs[7] == 3) {
+        stab->ApplyZ(1);
+    }
+}
+void EvoClass4(StabilizerTableau* stab, size_t idx) {
+    std::vector<size_t> num{2, 2, 3, 3, 4, 4};
+    std::vector<size_t> idxs;
+    for (auto i : num) {
+        idxs.push_back(idx % i);
+        idx /= i;
+    }
+    if (idxs[0] == 1) {
+        stab->ApplyH(0);
+    }
+    if (idxs[1] == 1) {
+        stab->ApplyH(1);
+    }
+    if (idxs[2] == 1) {
+        stab->ApplyV(0);
+    } else if (idxs[2] == 2) {
+        stab->ApplyW(0);
+    }
+    if (idxs[3] == 1) {
+        stab->ApplyV(1);
+    } else if (idxs[3] == 2) {
+        stab->ApplyW(1);
+    }
+    stab->ApplyCNOT(1, 0);
+    stab->ApplyCNOT(0, 1);
+    stab->ApplyCNOT(1, 0);
+    if (idxs[4] == 1) {
+        stab->ApplyX(0);
+    } else if (idxs[4] == 2) {
+        stab->ApplyY(0);
+    } else if (idxs[4] == 3) {
+        stab->ApplyZ(0);
+    }
+    if (idxs[5] == 1) {
+        stab->ApplyX(1);
+    } else if (idxs[5] == 2) {
+        stab->ApplyY(1);
+    } else if (idxs[5] == 3) {
+        stab->ApplyZ(1);
+    }
+}
+
+StabilizerTableau QueryDoubleQubitsCliffordEle(size_t idx) {
+    StabilizerTableau stab(2);
+    auto [cls, i] = DetermineClass(idx);
+    switch (cls) {
+        case 0: {
+            EvoClass1(&stab, i);
+            break;
+        }
+        case 1: {
+            EvoClass2(&stab, i);
+            break;
+        }
+        case 2: {
+            EvoClass3(&stab, i);
+            break;
+        }
+        default: {
+            EvoClass4(&stab, i);
+            break;
+        }
+    }
+    return stab;
+}
 }  // namespace mindquantum::sim::stabilizer
+
 void ShowCirc(const std::vector<std::string>& a) {
     for (auto& i : a) {
         std::cout << i << ", ";
@@ -410,7 +639,18 @@ void ShowCirc(const std::vector<std::string>& a) {
 
 int main() {
     using namespace mindquantum::sim::stabilizer;
-    for (size_t i = 0; i < 24; i++) {
-        ShowCirc(QuerySingleQubitCliffordEle(i).Decompose());
-    }
+    // for (size_t i = 0; i < 24; i++) {
+    //     ShowCirc(QuerySingleQubitCliffordEle(i).Decompose());
+    // }
+    // for (size_t i = 0; i < 11520; i += 1000) {
+    //     ShowCirc(QueryDoubleQubitsCliffordEle(i).Decompose());
+    // }
+    // std::cout << (QueryDoubleQubitsCliffordEle(1) == QueryDoubleQubitsCliffordEle(1)) << std::endl;
+    // for (size_t i = 0; i < 11520; i++) {
+    //     for (size_t j = i + 1; j < 11520; j++) {
+    //         if (QueryDoubleQubitsCliffordEle(i) == QueryDoubleQubitsCliffordEle(j)) {
+    //             throw std::runtime_error("Algorithm failed.");
+    //         }
+    //     }
+    // }
 }
