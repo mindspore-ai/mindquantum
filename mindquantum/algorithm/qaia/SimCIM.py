@@ -88,5 +88,5 @@ class SimCIM(QAIA):
                 )
             # gradient + momentum
             self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
-            ind = (np.abs(self.x + self.dx) < 1.0).astype(np.int)
+            ind = (np.abs(self.x + self.dx) < 1.0).astype(np.int64)
             self.x += self.dx * ind
