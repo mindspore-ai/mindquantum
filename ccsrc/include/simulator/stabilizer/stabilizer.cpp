@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -146,7 +147,7 @@ class StabilizerTableau {
         std::string out = "destabilizer:\n";
         for (size_t i = 0; i < n_qubits * 2; i++) {
             out += phase.GetBit(i) == 0 ? "+" : "-";
-            for (size_t j = 0; j < n_qubits; j++) {
+            for (int j = n_qubits - 1; j >= 0; --j) {
                 switch ((GetElement(i, j) << 1) + GetElement(i, j + n_qubits)) {
                     case 0:
                         out += "I";
@@ -181,6 +182,12 @@ class StabilizerTableau {
             throw std::runtime_error("qubit out of range.");
         }
         phase ^= table[idx + n_qubits];
+    }
+    void ApplyY(size_t idx) {
+        if (idx + 1 > n_qubits) {
+            throw std::runtime_error("qubit out of range.");
+        }
+        phase ^= (table[idx + n_qubits] ^ table[idx]);
     }
     void ApplyZ(size_t idx) {
         if (idx + 1 > n_qubits) {
@@ -227,7 +234,6 @@ class StabilizerTableau {
         table[ctrl + n_qubits] ^= table[obj + n_qubits];
     }
     std::vector<std::string> Decompose() const {
-        printf("run decompose\n");
         std::vector<std::string> out;
         auto cpy = *this;
         for (size_t i = 0; i < n_qubits; ++i) {
@@ -339,17 +345,72 @@ class StabilizerTableau {
     std::vector<LongBits> table;
     LongBits phase;
 };
+
+StabilizerTableau QuerySingleQubitCliffordEle(size_t idx) {
+    if (idx >= 24) {
+        throw std::runtime_error("idx should be less than 24.");
+    }
+    auto idx_a = idx / 4;
+    auto idx_b = idx % 4;
+    StabilizerTableau stab(1);
+    switch (idx_a) {
+        case 1: {
+            stab.ApplyH(0);
+            break;
+        }
+        case 2: {
+            stab.ApplyS(0);
+            break;
+        }
+        case 3: {
+            stab.ApplyH(0);
+            stab.ApplyS(0);
+            break;
+        }
+        case 4: {
+            stab.ApplyS(0);
+            stab.ApplyH(0);
+            break;
+        }
+        case 5: {
+            stab.ApplyH(0);
+            stab.ApplyS(0);
+            stab.ApplyH(0);
+            break;
+        }
+        default:
+            break;
+    }
+    switch (idx_b) {
+        case 1: {
+            stab.ApplyX(0);
+            break;
+        }
+        case 2: {
+            stab.ApplyY(0);
+            break;
+        }
+        case 3: {
+            stab.ApplyZ(0);
+            break;
+        }
+        default:
+            break;
+    }
+    return stab;
+}
+
 }  // namespace mindquantum::sim::stabilizer
+void ShowCirc(const std::vector<std::string>& a) {
+    for (auto& i : a) {
+        std::cout << i << ", ";
+    }
+    std::cout << std::endl;
+}
 
 int main() {
     using namespace mindquantum::sim::stabilizer;
-    auto stab = StabilizerTableau(3);
-    stab.ApplyH(0);
-    stab.ApplyCNOT(1, 0);
-    PrintStrings(stab.Decompose());
-    // std::cout << stab.TableauToString() << std::endl;
-    // std::cout << stab.StabilizerToString() << std::endl;
-    // for (auto s : stab.Decompose()) {
-    //     std::cout << s << std::endl;
-    // }
+    for (size_t i = 0; i < 24; i++) {
+        ShowCirc(QuerySingleQubitCliffordEle(i).Decompose());
+    }
 }
