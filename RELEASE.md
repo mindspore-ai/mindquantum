@@ -16,7 +16,7 @@
 - [STABLE] [`GroupedPauli`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.GroupedPauli.html#mindquantum.core.gates.GroupedPauli): Add Pauli combination gate. This gate allows for faster execution compared to individually applying single Pauli gates.
 - [STABLE] [`GroupedPauliChannel`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.GroupedPauliChannel.html#mindquantum.core.gates.GroupedPauliChannel): Add Pauli combination channel. This channel allows for faster execution compared to applying Pauli channels individually.
 - [STABLE] [`SX`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.SXGate.html#mindquantum.core.gates.SXGate): Add sqrt X gate.
-- [STABLE] [Givens]: Add Givens rotation gate.
+- [STABLE] [`Givens`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.Givens.html): Add Givens rotation gate.
 
 #### Circuit
 

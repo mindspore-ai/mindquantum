@@ -29,7 +29,7 @@ def test_measure_svg():
     res = sim.sampling(circ, shots=100, seed=42)
     text = res.svg()._repr_svg_().split('bar')  # pylint: disable=protected-access
     text = "bar".join([text[0]] + ['"'.join(i.split('"')[1:]) for i in text[1:]])
-    len_text_exp = 9257
+    len_text_exp = 9258
     assert len(text) == len_text_exp
 
 

@@ -835,7 +835,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 high[idx] += 1
             if isinstance(gate, mq_gates.Measure):
                 m_idx = gate.obj_qubits[0]
-                if high[m_idx] != self.all_qubits.map[m_idx]:
+                if high[m_idx] != circ.all_qubits.map[m_idx]:
                     return False
         return True
 
