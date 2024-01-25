@@ -17,7 +17,7 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from .QAIA import QAIA
+from .QAIA import QAIA, OverflowException
 
 
 class SFC(QAIA):
@@ -85,3 +85,6 @@ class SFC(QAIA):
             f = np.tanh(self.c[i] * z)
             self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
             self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+
+            if np.isnan(self.x).any():
+                raise OverflowException("Value is too large to handle due to large dt or xi.")

@@ -25,7 +25,7 @@ class QAIA:
 
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
-        h (numpy.array): The external field with shape :math:`(N, )`.
+        h (numpy.array): The external field with shape :math:`(N x 1)`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
@@ -35,6 +35,8 @@ class QAIA:
     def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1):
         """Construct a QAIA algorithm."""
         self.J = J
+        if h is not None and len(h.shape) < 2:
+            h = h[:, np.newaxis]
         self.h = h
         self.x = x
         # The number of spins
@@ -76,4 +78,17 @@ class QAIA:
 
         if self.h is None:
             return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0)
-        return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.dot(sign)
+        return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.T.dot(sign)
+
+
+class OverflowException(Exception):
+    r"""
+    Custom exception class for handling overflow errors in numerical calculations.
+
+    Args:
+        message: Exception message string, defaults to "Overflow error".
+    """
+
+    def __init__(self, message="Overflow error"):
+        self.message = message
+        super().__init__(self.message)
