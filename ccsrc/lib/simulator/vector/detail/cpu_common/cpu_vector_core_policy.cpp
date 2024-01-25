@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 #include <cstddef>
+#include <cstdlib>
+#include <execution>
 #include <limits>
+#include <numeric>
 #include <stdexcept>
 
 #include "config/details/macros.h"
 #include "config/openmp.h"
 #include "config/type_promotion.h"
+#include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
@@ -279,6 +283,56 @@ auto CPUVectorPolicyBase<derived_, calc_type>::GroundStateOfZZs(const std::map<i
                          result = std::min(result, ith_energy);
                      });
     return result;
+}
+
+template <typename T>
+void ShowVec(const std::vector<T>& a) {
+    for (auto i : a) {
+        std::cout << i << ", ";
+    }
+    std::cout << std::endl;
+}
+
+template <typename derived_, typename calc_type>
+VT<calc_type> CPUVectorPolicyBase<derived_, calc_type>::GetCumulativeProbs(const qs_data_p_t& qs_out, index_t dim) {
+    auto qs = qs_out;
+    bool will_free = false;
+    if (qs == nullptr) {
+        qs = derived_::InitState(dim);
+        will_free = true;
+    }
+    VT<calc_type> prob(dim);
+    // Can be optimized by parallel prefix sum algorithm.
+    prob[0] = qs[0].real() * qs[0].real() + qs[0].imag() * qs[0].imag();
+    for (size_t i = 1; i < dim; ++i) {
+        prob[i] = qs[i].real() * qs[i].real() + qs[i].imag() * qs[i].imag() + prob[i - 1];
+    }
+
+    prob[dim - 1] = 1.0;
+    if (will_free) {
+        free(qs);
+    }
+    return prob;
+}
+
+template <typename derived_, typename calc_type>
+VT<unsigned> CPUVectorPolicyBase<derived_, calc_type>::LowerBound(const VT<calc_type>& cum_prob,
+                                                                  const VT<calc_type>& sampled_probs) {
+    size_t samp_size = sampled_probs.size();
+    VT<unsigned> out(samp_size);
+    size_t samp_idx = 0, dist_idx = 0;
+    while (true) {
+        if (samp_idx >= samp_size) {
+            break;
+        }
+        if (sampled_probs[samp_idx] < cum_prob[dist_idx]) {
+            out[samp_idx] = dist_idx;
+            samp_idx += 1;
+        } else {
+            dist_idx += 1;
+        }
+    }
+    return out;
 }
 
 #ifdef __x86_64__

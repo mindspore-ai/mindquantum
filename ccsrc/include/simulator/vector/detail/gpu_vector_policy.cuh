@@ -86,6 +86,8 @@ struct GPUVectorPolicyBase {
     static py_qs_data_t ExpectationOfCsr(const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& a,
                                          const std::shared_ptr<sparse::CsrHdMatrix<calc_type>>& b,
                                          const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim);
+    static VT<calc_type> GetCumulativeProbs(const qs_data_p_t& qs_p, index_t dim);
+    static VT<unsigned> LowerBound(const VT<calc_type>& cum_prob, const VT<calc_type>& sampled_probs);
     // X like operator
     // ========================================================================================================
 

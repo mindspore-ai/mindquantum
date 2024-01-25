@@ -931,7 +931,6 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGivens(const qs_data_p
     auto obj_rev_high_mask = mask.obj_rev_high_mask;
     auto obj_low_mask = mask.obj_low_mask;
     auto obj_rev_low_mask = mask.obj_rev_low_mask;
-    auto obj_mask = mask.obj_mask;
     auto obj_min_mask = mask.obj_min_mask;
     auto obj_max_mask = mask.obj_max_mask;
     auto ctrl_mask = mask.ctrl_mask;
