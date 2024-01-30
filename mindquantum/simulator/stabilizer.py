@@ -56,6 +56,7 @@ class Stabilizer(BackendBase):
         """Return a string representation of the object."""
         return self.__str__()
 
+    # pylint: disable=arguments-differ
     def apply_circuit(self, circuit: Circuit, *args, **kwargs):
         """Apply a quantum circuit."""
         _check_input_type('circuit', Circuit, circuit)
@@ -80,10 +81,12 @@ class Stabilizer(BackendBase):
         _check_input_type('other', Stabilizer, other)
         return _mq_vector.stabilizer.StabilizerTableau.__eq__(self.sim, other.sim)
 
+    # pylint: disable=arguments-differ
     def get_qs(self, *args, **kwargs):
         """Return the tableau of stabilizer."""
         return np.array(self.sim.tableau_to_vector())
 
+    # pylint: disable=arguments-differ
     def sampling(self, circuit: Circuit, shots: int = 1, seed: int = None, *args, **kwargs):
         """Sample the quantum state."""
         if not circuit.all_measures.map:
