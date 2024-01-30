@@ -14,6 +14,7 @@
 # ============================================================================
 """Mindquantum Clifford Stabilizer Simulator."""
 # pylint:disable=abstract-method,keyword-arg-before-vararg,no-member,unused-argument
+# pylint:disable=redefined-outer-name
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

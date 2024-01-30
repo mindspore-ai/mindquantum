@@ -61,7 +61,7 @@ def random_clifford_circuit(n_qubits: int, gate_num: int, seed: int = None) -> C
         >>> np.allclose(np.abs(rand_clifford.get_qs()), np.abs(decomposed_clifford.get_qs()))
         True
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel,redefined-outer-name
     from ..core.circuit import Circuit
     from ..core.gates import CNOTGate, H, S, X, Y, Z
 
