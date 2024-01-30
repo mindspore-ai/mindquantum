@@ -29,7 +29,7 @@ try:
     from mindquantum.simulator import Simulator
     from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
+    AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
     ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
 except ImportError:

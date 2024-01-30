@@ -40,6 +40,54 @@ if TYPE_CHECKING:
 __all__ = ['random_circuit', 'random_insert_gates', 'mod', 'normalize', 'random_state']
 
 
+# pylint:disable=too-many-locals
+def random_clifford_circuit(n_qubits: int, gate_num: int, seed: int = None) -> Circuit:
+    """
+    Generate a random clifford circuit that only have CNOT, S, H, X, Y and Z gate.
+
+    Args:
+        n_qubits (int): Number of qubits of random circuit.
+        gate_num (int): Number of gates in random circuit.
+        seed (int): Random seed to generate random circuit.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.utils import random_clifford_circuit
+        >>> from mindquantum.simulator import Simulator, decompose_stabilizer
+        >>> rand_clifford = random_clifford_circuit(10, 100, 42)
+        >>> sim = Simulator('stabilizer', rand_clifford.n_qubits)
+        >>> sim.apply_circuit(rand_clifford)
+        >>> decomposed_clifford = decompose_stabilizer(sim)
+        >>> np.allclose(np.abs(rand_clifford.get_qs()), np.abs(decomposed_clifford.get_qs()))
+        True
+    """
+    # pylint: disable=import-outside-toplevel
+    from ..core.circuit import Circuit
+    from ..core.gates import CNOTGate, H, S, X, Y, Z
+
+    _check_int_type('n_qubits', n_qubits)
+    _check_int_type('gate_num', gate_num)
+    if seed is None:
+        seed = np.random.randint(1, 2**23)
+    _check_int_type('seed', seed)
+    _check_value_should_not_less('n_qubits', 1, n_qubits)
+    _check_value_should_not_less('gate_num', 1, gate_num)
+    _check_value_should_between_close_set('seed', 0, 2**32 - 1, seed)
+    clifford_gates = [X, Y, Z, H, S, CNOTGate]
+    rng = np.random.default_rng(seed)
+    circ = Circuit()
+    all_gates = rng.choice(clifford_gates[: (4 + n_qubits)], size=gate_num)
+    for gate in all_gates:
+        qubits = list(range(n_qubits))
+        rng.shuffle(qubits)
+        if gate is CNOTGate:
+            circ.x(qubits[0], qubits[1])
+        else:
+            circ += gate.on(qubits[0])
+
+    return circ
+
+
 def random_circuit(n_qubits, gate_num, sd_rate=0.5, ctrl_rate=0.2, seed=None):
     """
     Generate a random circuit.

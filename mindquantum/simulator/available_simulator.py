@@ -43,6 +43,7 @@ class _AvailableSimulator:
         self.base_module = {
             'mqvector': _mq_vector,
             'mqmatrix': _mq_matrix,
+            'stabilizer': _mq_vector,
         }
         self.sims = {
             'mqvector': {
@@ -53,6 +54,7 @@ class _AvailableSimulator:
                 complex64: _mq_matrix.float,
                 complex128: _mq_matrix.double,
             },
+            'stabilizer': _mq_vector.stabilizer,
         }
         if MQVECTOR_GPU_SUPPORTED:
             self.base_module['mqvector_gpu'] = _mq_vector_gpu
@@ -64,6 +66,8 @@ class _AvailableSimulator:
     def is_available(self, sim: typing.Union[str, BackendBase], dtype) -> bool:
         """Check a simulator with given data type is available or not."""
         if isinstance(sim, BackendBase):
+            return True
+        if sim == 'stabilizer':
             return True
         if sim in self.sims and dtype in self.sims[sim]:
             return True
@@ -87,14 +91,22 @@ class _AvailableSimulator:
                 from mindquantum.simulator.mqsim import MQSim
 
                 return MQSim
+            if sim == 'stabilizer':
+                # pylint: disable=import-outside-toplevel
+                from mindquantum.simulator.stabilizer import Stabilizer
+
+                return Stabilizer
             raise SimNotAvailableError(sim)
         raise SimNotAvailableError(sim)
 
     def __iter__(self):
         """List available simulator with data type."""
         for k, v in self.sims.items():
-            for dtype in v:
-                yield [k, dtype]
+            if not isinstance(v, dict):
+                yield k
+            else:
+                for dtype in v:
+                    yield [k, dtype]
 
 
 SUPPORTED_SIMULATOR = _AvailableSimulator()

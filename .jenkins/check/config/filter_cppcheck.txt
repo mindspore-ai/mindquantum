@@ -80,3 +80,4 @@
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_dot_like.cpp"                     "syntaxError"
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_expect.cpp"                  "syntaxError"
 "mindquantum/ccsrc/python/mqbackend/lib/binding.cc"                                                         "syntaxError"
+"mindquantum/ccsrc/include/simulator/stabilizer/stabilizer.h"                                               "unusedStructMember"

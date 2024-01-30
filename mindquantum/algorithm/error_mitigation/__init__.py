@@ -15,8 +15,18 @@
 """Error mitigation module."""
 from .folding_circuit import fold_at_random
 from .mitigation import zne
+from .random_benchmarking import (
+    generate_double_qubits_rb_circ,
+    generate_single_qubit_rb_circ,
+    query_double_qubits_clifford_elem,
+    query_single_qubit_clifford_elem,
+)
 
 __all__ = [
     'fold_at_random',
     'zne',
+    'query_single_qubit_clifford_elem',
+    'query_double_qubits_clifford_elem',
+    'generate_single_qubit_rb_circ',
+    'generate_double_qubits_rb_circ',
 ]

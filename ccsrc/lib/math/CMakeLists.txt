@@ -26,3 +26,4 @@ target_link_libraries(mq_math PUBLIC ${MQ_OPENMP_TARGET} include_lib cmake_confi
 add_subdirectory(tensor)
 add_subdirectory(pr)
 add_subdirectory(operators)
+add_subdirectory(longbits)

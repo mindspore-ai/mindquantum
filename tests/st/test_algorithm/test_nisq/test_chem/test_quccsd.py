@@ -23,7 +23,7 @@ from mindquantum.core.operators import TimeEvolution, count_qubits
 from mindquantum.core.operators._term_value import TermValue
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
+AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
 
 @pytest.mark.level0
@@ -36,7 +36,7 @@ def test_quccsd(config):
     Description: Test quccsd
     Expectation:
     """
-    _, dtype = config
+    _, _ = config
     h2_quccsd = quccsd_generator(4, 2)
     h2_quccsd_terms = set(h2_quccsd.terms)
     h2_quccsd_terms_check = {

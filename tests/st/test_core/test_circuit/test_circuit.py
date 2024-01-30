@@ -39,7 +39,7 @@ try:
 except ImportError:
     _HAS_NUMBA = False
 
-AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
+AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
 
 def test_circuit_qubits_grad():

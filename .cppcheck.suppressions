@@ -66,3 +66,5 @@ useStlAlgorithm:ccsrc/include/ops/gates/terms_operator_base.tpp
 useInitializationList:ccsrc/include/simulator/cintrin.h
 
 ctuOneDefinitionRuleViolation:tests/core/test_circuit_block.cpp
+
+unusedStructMember:ccsrc/include/simulator/stabilizer/stabilizer.h
