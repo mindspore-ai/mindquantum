@@ -15,7 +15,14 @@
 
 """Utils."""
 
-from .f import mod, normalize, random_circuit, random_insert_gates, random_state
+from .f import (
+    mod,
+    normalize,
+    random_circuit,
+    random_clifford_circuit,
+    random_insert_gates,
+    random_state,
+)
 from .fdopen import fdopen
 from .progress import SingleLoopProgress, TwoLoopsProgress
 from .string_utils import ket_string
@@ -30,5 +37,6 @@ __all__ = [
     'random_circuit',
     'TwoLoopsProgress',
     'SingleLoopProgress',
+    'random_clifford_circuit',
 ]
 __all__.sort()

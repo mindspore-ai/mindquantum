@@ -26,7 +26,7 @@ from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils.error import DeviceNotSupportedError
 
 _HAS_OPENFERMION = True
-AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
+AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 try:
     from openfermion import QubitOperator as OFQubitOperator
 except (ImportError, AttributeError):

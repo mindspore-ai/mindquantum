@@ -1303,8 +1303,8 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
     auto sim = derived_t(n_qubits, static_cast<unsigned>(rng()), qs);
 
     VT<int> already_measured(this->n_qubits, 0);
-    circuit_t mea_circ;
-
+    VT<int> m_qids;
+    circuit_t other_circ;
     for (auto& g : circ) {
         if (g->GetID() == GateID::M) {
             auto m_qid = g->GetObjQubits()[0];
@@ -1312,12 +1312,28 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
                 throw std::runtime_error("Quantum circuit is not a measurement ending circuit.");
             }
             already_measured[m_qid] = 1;
-            mea_circ.push_back(g);
+            m_qids.push_back(m_qid);
         } else {
-            sim.ApplyGate(g, pr, false);
+            other_circ.push_back(g);
         }
     }
-    return sim.Sampling(mea_circ, pr, shots, key_map, seed);
+    sim.ApplyCircuit(other_circ, pr);
+
+    auto cum_prob = qs_policy_t_::GetCumulativeProbs(sim.qs, dim);
+    VT<calc_type> sampled_probs(shots);
+    for (size_t i = 0; i < shots; ++i) {
+        sampled_probs[i] = static_cast<calc_type>(sim.rng_());
+    }
+    std::sort(sampled_probs.begin(), sampled_probs.end());
+    auto res = qs_policy_t_::LowerBound(cum_prob, sampled_probs);
+    VT<unsigned> out;
+    // Measure all qubits and filter actually measurement qubit.
+    for (auto r : res) {
+        for (auto i : m_qids) {
+            out.push_back((r >> i) & 1);
+        }
+    }
+    return out;
 }
 }  // namespace mindquantum::sim::vector::detail
 

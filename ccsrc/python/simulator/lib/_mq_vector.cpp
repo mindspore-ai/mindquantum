@@ -16,6 +16,9 @@
 
 #include <pybind11/pybind11.h>
 
+#include "simulator/stabilizer/stabilizer.h"
+#include "simulator/utils.h"
+
 #ifdef __CUDACC__
 #    include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #    include "simulator/vector/detail/gpu_vector_float_policy.cuh"
@@ -29,6 +32,8 @@
 #    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
 #    include "simulator/vector/detail/cpu_vector_policy.h"
 #endif
+
+#include "simulator/stabilizer/random_benchmarking.h"
 
 #include "python/vector/bind_vec_state.h"
 
@@ -82,4 +87,26 @@ PYBIND11_MODULE(_mq_vector, module) {
     BindBlas<double_vec_sim>(double_blas);
 
     module.def("ground_state_of_zs", &double_policy_t::GroundStateOfZZs, "masks_value"_a, "n_qubits"_a);
+    pybind11::module stabilizer = module.def_submodule("stabilizer", "MindQuantum stabilizer simulator.");
+#ifndef __CUDACC__
+    using namespace mindquantum::stabilizer;  // NOLINT
+    pybind11::class_<StabilizerTableau>(stabilizer, "StabilizerTableau")
+        .def(pybind11::init<size_t>())
+        .def("copy", [](const StabilizerTableau& s) { return s; })
+        .def("tableau_to_string", &StabilizerTableau::TableauToString)
+        .def("stabilizer_to_string", &StabilizerTableau::StabilizerToString)
+        .def("apply_circuit", &StabilizerTableau::ApplyCircuit)
+        .def("decompose", &StabilizerTableau::Decompose)
+        .def("apply_gate", &StabilizerTableau::ApplyGate)
+        .def("tableau_to_vector", &StabilizerTableau::TableauToVector)
+        .def("reset", &StabilizerTableau::Reset)
+        .def("sampling", &StabilizerTableau::Sampling)
+        .def("sampling_measure_ending_without_noise", &StabilizerTableau::SamplingMeasurementEndingWithoutNoise)
+        .def("__eq__", [](const StabilizerTableau& lhs, const StabilizerTableau& rhs) { return lhs == rhs; });
+    stabilizer.def("query_single_qubit_clifford_elem", &QuerySingleQubitCliffordElem, "idx"_a);
+    stabilizer.def("query_double_qubits_clifford_elem", &QueryDoubleQubitsCliffordElem, "idx"_a);
+    stabilizer.def("generate_single_qubit_rb_circ", &SingleQubitRBCircuit, "len"_a, "seed"_a);
+    stabilizer.def("generate_double_qubits_rb_circ", &DoubleQubitsRBCircuit, "len"_a, "seed"_a);
+    stabilizer.def("verify", &Verification);
+#endif
 }

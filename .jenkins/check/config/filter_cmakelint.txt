@@ -2,3 +2,4 @@
 "mindquantum/cmake"                                                                    "whitespace/indent"
 "mindquantum/cmake/Modules"                                                            "whitespace/indent"
 "mindquantum/cmake/Modules/apple"                                                      "whitespace/indent"
+"mindquantum/ccsrc/lib/simulator/stabilizer/CMakeLists.txt"                            "whitespace/indent"

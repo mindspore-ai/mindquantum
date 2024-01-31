@@ -30,7 +30,7 @@ with warnings.catch_warnings():
     from mindquantum.algorithm.library import amplitude_encoder
     from mindquantum.simulator import Simulator
 
-AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
+AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
 
 @pytest.mark.level0

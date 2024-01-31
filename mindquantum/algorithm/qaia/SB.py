@@ -17,7 +17,7 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from .QAIA import QAIA
+from .QAIA import QAIA, OverflowException
 
 
 class SB(QAIA):
@@ -123,6 +123,9 @@ class ASB(SB):  # noqa: N801
                 self.y += self.xi * self.dt * self.J.dot(self.x)
             else:
                 self.y += self.xi * self.dt * (self.J.dot(self.x) + self.h)
+
+            if np.isnan(self.x).any():
+                raise OverflowException("Value is too large to handle due to large dt or xi.")
 
 
 class BSB(SB):  # noqa: N801

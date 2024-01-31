@@ -16,6 +16,7 @@
 #include <limits>
 #include <stdexcept>
 
+#include <thrust/host_vector.h>
 #include <thrust/transform_reduce.h>
 
 #include "config/openmp.h"
@@ -333,6 +334,54 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::Copy(const qs_data_p_t& qs, inde
     }
     return out;
 };
+
+template <typename derived_, typename calc_type>
+VT<calc_type> GPUVectorPolicyBase<derived_, calc_type>::GetCumulativeProbs(const qs_data_p_t& qs_out, index_t dim) {
+    auto qs = qs_out;
+    bool will_free = false;
+    if (qs == nullptr) {
+        qs = derived_::InitState(dim);
+        will_free = true;
+    }
+    calc_type* prob;
+    auto state = cudaMalloc((void**) &prob, sizeof(calc_type) * dim);  // NOLINT
+    if (state != cudaSuccess) {
+        throw std::runtime_error("Malloc GPU memory failed: " + std::string(cudaGetErrorName(state)) + ", "
+                                 + cudaGetErrorString(state));
+    }
+    thrust::counting_iterator<index_t> i(0);
+    thrust::for_each(
+        i, i + dim, [=] __device__(index_t i) { prob[i] = qs[i].real() * qs[i].real() + qs[i].imag() * qs[i].imag(); });
+    thrust::device_ptr<calc_type> prob_ptr(prob);
+    thrust::inclusive_scan(thrust::device, prob, prob + dim, prob);
+    if (will_free) {
+        derived::FreeState(&qs);
+    }
+    VT<calc_type> out(dim);
+    thrust::copy(prob_ptr, prob_ptr + dim, out.begin());
+    cudaFree(prob);
+    return out;
+}
+
+template <typename derived_, typename calc_type>
+VT<unsigned> GPUVectorPolicyBase<derived_, calc_type>::LowerBound(const VT<calc_type>& cum_prob,
+                                                                  const VT<calc_type>& sampled_probs) {
+    size_t samp_size = sampled_probs.size();
+    VT<unsigned> out(samp_size);
+    size_t samp_idx = 0, dist_idx = 0;
+    while (true) {
+        if (samp_idx >= samp_size) {
+            break;
+        }
+        if (sampled_probs[samp_idx] < cum_prob[dist_idx]) {
+            out[samp_idx] = dist_idx;
+            samp_idx += 1;
+        } else {
+            dist_idx += 1;
+        }
+    }
+    return out;
+}
 
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;

@@ -28,7 +28,7 @@ from mindquantum.core.parameterresolver import ParameterResolver as PR
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-AVAILABLE_BACKEND = list(SUPPORTED_SIMULATOR)
+AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
 
 @pytest.mark.level0

@@ -120,7 +120,7 @@ class MQSim(BackendBase):
             else:
                 pr = ParameterResolver()
             if isinstance(gate, Measure):
-                return self.sim.apply_gate(gate.get_cpp_obj(), pr.get_cpp_obj(), diff)
+                return self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
             self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
         return None
 
@@ -446,7 +446,7 @@ class MQSim(BackendBase):
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
         if circuit.is_measure_end and not circuit.is_noise_circuit:
-            sampler = self.sim.sampling_measure_ending_without_nosise
+            sampler = self.sim.sampling_measure_ending_without_noise
         else:
             sampler = self.sim.sampling
         samples = np.array(sampler(circuit.get_cpp_obj(), pr, shots, res.keys_map, seed)).reshape((shots, -1))

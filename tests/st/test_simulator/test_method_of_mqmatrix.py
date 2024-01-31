@@ -122,7 +122,7 @@ def test_get_pure_state_vector(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_apply_hamiltonian(config):
     """
     Description: test apply hamiltonian
@@ -150,7 +150,7 @@ def test_apply_hamiltonian(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_sampling(config):
     """
     Description: test sampling
@@ -178,7 +178,7 @@ def test_sampling(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_get_expectation(config):
     """
     Description: test get expectation
@@ -205,7 +205,7 @@ def test_get_expectation(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_get_expectation_with_grad(config):
     """
     Description: test get expectation with gradient
@@ -332,7 +332,7 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_entropy(config):
     """
     Description: test entropy
@@ -356,8 +356,8 @@ def test_entropy(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config1", list(SUPPORTED_SIMULATOR))
-@pytest.mark.parametrize("config2", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config1", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+@pytest.mark.parametrize("config2", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_fidelity(config1, config2):
     """
     Description: test fidelity of two quantum states

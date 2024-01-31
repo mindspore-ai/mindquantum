@@ -82,7 +82,7 @@ def _check_input_type(arg_msg, require_type, arg):
 
 def _check_int_type(args_msg, arg):
     """Check int type."""
-    if not isinstance(arg, (int, np.int64)) or isinstance(arg, bool):
+    if not isinstance(arg, (int, np.int64, np.int32)) or isinstance(arg, bool):
         raise TypeError(f"{args_msg} requires an int, but get {type(arg)}")
 
 
