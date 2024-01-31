@@ -26,7 +26,7 @@ from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_barren_plateau(config):
     """
     Description: Test barren plateau

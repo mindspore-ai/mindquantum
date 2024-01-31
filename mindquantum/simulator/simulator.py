@@ -458,7 +458,7 @@ class Simulator:
                               │
             {'000': 18, '011': 9, '100': 49, '111': 24}
         """
-        return self.backend.sampling(circuit, pr, shots, seed)
+        return self.backend.sampling(circuit=circuit, pr=pr, shots=shots, seed=seed)
 
     def set_qs(self, quantum_state):
         """

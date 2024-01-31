@@ -70,7 +70,7 @@ multi_parameter_gate = [
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.parametrize("gate", none_parameter_gate)
 def test_none_parameter_gate(config, gate):
     """
@@ -108,7 +108,7 @@ def test_none_parameter_gate(config, gate):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.parametrize("gate", single_parameter_gate + multi_parameter_gate)
 def test_parameter_gate(config, gate):  # pylint: disable=too-many-locals
     """
@@ -148,7 +148,7 @@ def test_parameter_gate(config, gate):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.parametrize("gate", single_parameter_gate)
 def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: disable=R0914
     """
@@ -219,7 +219,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_custom_gate(config):  # pylint: disable=too-many-locals
     """
     Description: test custom gate
@@ -271,7 +271,7 @@ except ImportError:
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_expectation_with_grad(config):  # pylint: disable=too-many-locals
     """
@@ -414,7 +414,7 @@ def test_custom_gate_expectation_with_grad(config):  # pylint: disable=too-many-
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_u3_expectation_with_grad(config):  # pylint: disable=R0914
     """
     Description: test expectation and gradient of U3 gate
@@ -465,7 +465,7 @@ def test_u3_expectation_with_grad(config):  # pylint: disable=R0914
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
     """
     Description: test expectation and gradient of FSim gate
@@ -566,7 +566,7 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_rn_expectation_with_grad(config):  # pylint: disable=R0914
     """
     Description: test expectation and gradient of Rn gate
@@ -603,7 +603,7 @@ def test_rn_expectation_with_grad(config):  # pylint: disable=R0914
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_pauli_string_gate(config):  # pylint: disable=too-many-locals
     """
     Description: test pauli string gate
@@ -657,7 +657,7 @@ def test_pauli_string_gate(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_rot_pauli_string_gate(config):  # pylint: disable=too-many-locals
     """
     Description: test pauli string gate
@@ -702,7 +702,7 @@ def test_rot_pauli_string_gate(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_rot_pauli_string_gate_gradient(config):  # pylint: disable=too-many-locals
     """
     Description: test pauli string gate

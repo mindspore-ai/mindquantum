@@ -16,6 +16,7 @@
 
 import numpy as np
 
+from mindquantum.simulator import Simulator, decompose_stabilizer
 from mindquantum.utils import f
 
 
@@ -36,3 +37,18 @@ def test_normalize():
 def test_random_state():
     """Test random state"""
     assert round(np.real(f.random_state((2, 4), seed=55)[0, 0]), 5) == round(0.16926417, 5)
+
+
+def test_random_clifford_circuit():
+    """
+    Description: Test random clifford circuit.
+    Expectation:
+    """
+    for _ in range(10):
+        n_qubits = np.random.randint(5, 10)
+        gate_num = np.random.randint(50, 150)
+        rand_clifford = f.random_clifford_circuit(n_qubits, gate_num)
+        sim = Simulator('stabilizer', rand_clifford.n_qubits)
+        sim.apply_circuit(rand_clifford)
+        decomposed_clifford = decompose_stabilizer(sim)
+        assert np.allclose(np.abs(rand_clifford.get_qs()), np.abs(decomposed_clifford.get_qs()))

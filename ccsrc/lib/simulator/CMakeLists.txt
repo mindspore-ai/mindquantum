@@ -65,3 +65,11 @@ target_link_libraries(mqsim_densitymatrix_cpu PUBLIC mqsim_common mq_math intrin
 force_at_least_cxx17_workaround(mqsim_densitymatrix_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_densitymatrix_cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/densitymatrix/detail)
+
+# ==============================================================================
+
+add_library(mqsim_stabilizer STATIC)
+target_link_libraries(mqsim_stabilizer PUBLIC mqsim_common mq_math intrin_flag_CXX)
+force_at_least_cxx17_workaround(mqsim_stabilizer)
+append_to_property(mq_install_targets GLOBAL mqsim_stabilizer)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/stabilizer)

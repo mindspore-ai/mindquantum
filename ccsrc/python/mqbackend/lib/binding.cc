@@ -311,7 +311,11 @@ PYBIND11_MODULE(mqbackend, m) {
     m.attr("EQ_TOLERANCE") = py::float_(1.e-8);
 
     py::module gate = m.def_submodule("gate", "MindQuantum-C++ gate");
-    py::class_<mindquantum::BasicGate, std::shared_ptr<mindquantum::BasicGate>>(gate, "BasicGate").def(py::init<>());
+    py::class_<mindquantum::BasicGate, std::shared_ptr<mindquantum::BasicGate>>(gate, "BasicGate")
+        .def(py::init<mindquantum::GateID, const mindquantum::qbits_t &, const mindquantum::qbits_t &>())
+        .def("get_id", &mindquantum::BasicGate::GetID)
+        .def("get_obj_qubits", &mindquantum::BasicGate::GetObjQubits)
+        .def("get_ctrl_qubits", &mindquantum::BasicGate::GetCtrlQubits);
     mindquantum::python::BindTypeIndependentGate(gate);
     mindquantum::python::BindTypeDependentGate(gate);
 

@@ -94,7 +94,7 @@ def test_gpu(dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_init_reset(config):
     """
     test
@@ -121,7 +121,7 @@ def test_init_reset(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_apply_circuit_and_hermitian(config):
     """
     test
@@ -171,7 +171,7 @@ def test_apply_circuit_and_hermitian(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_set_and_get(config):
     """
     test
@@ -200,7 +200,7 @@ def test_set_and_get(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_non_hermitian_grad_ops1(config):
     """
     test
@@ -265,7 +265,7 @@ def generate_test_circuit():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
     """
@@ -314,7 +314,7 @@ def test_all_gate_with_simulator(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.skipif(not _HAS_MINDSPORE, reason='MindSpore is not installed')
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-locals
@@ -362,7 +362,7 @@ def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-loca
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_fid(config):
     """
     Description:
@@ -386,7 +386,7 @@ def test_fid(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_non_hermitian_grad_ops2(config):
     """
     Description: test non hermitian grad ops
@@ -410,7 +410,7 @@ def test_non_hermitian_grad_ops2(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_csr_ham(config):
     """
     Description: test csr matrix hamiltonian
@@ -445,7 +445,7 @@ def test_csr_ham(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_inner_product(config):
     """
     Description: test inner product of two simulator
@@ -467,7 +467,7 @@ def test_inner_product(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_copy(config):
     """
     Description: test copy a simulator
@@ -491,7 +491,7 @@ def test_copy(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_univ_order(config):
     """
     Description: test order of univ math gate.
@@ -523,7 +523,7 @@ def test_univ_order(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_multi_params_gate(config):
     """
     Description: test multi params gate
@@ -566,7 +566,7 @@ def test_multi_params_gate(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_gate_in_parallel(config):
     """
@@ -592,7 +592,7 @@ def test_custom_gate_in_parallel(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_cd_term(config):
     """
     Description:
@@ -653,7 +653,7 @@ def custom_diff_matrix(x):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_mul_qubit_gate(config):
     """
@@ -710,7 +710,7 @@ def test_non_hermitian_expectation(virtual_qc, dtype):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_noise_simulator(config):
     """
     Description: Test noise simulator.
@@ -737,7 +737,7 @@ def test_noise_simulator(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", list(SUPPORTED_SIMULATOR))
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_measurement_reset(config):
     """
     Description: Test measurement_reset.
