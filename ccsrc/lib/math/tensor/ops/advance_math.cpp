@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "config/libc_compat.h"
 #include "math/tensor/ops_cpu/advance_math.h"
 #include "math/tensor/tensor.h"
 #include "math/tensor/traits.h"
