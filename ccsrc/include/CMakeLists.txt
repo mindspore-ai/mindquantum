@@ -21,6 +21,7 @@
 set(MQ_BASE_HEADERS
     config/popcnt.h
     config/config.h
+    config/libc_compat.h
     config/type_traits.h
     core/sparse/algo.h
     core/sparse/csrhdmatrix.h
