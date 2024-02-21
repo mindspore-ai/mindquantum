@@ -182,12 +182,13 @@ def random_insert_gates(
         gates (Union[BasicGate, List[BasicGate]]): The selected single-qubit gates to be inserted.
         nums (Union[int, List[int]]):The number of each gate to be inserted.
             Note that the length of the nums should be equal to that of the gates.
-        with_ctrl (bool): Whether insert gates for control qubits. Default: ``True``.
-        focus_on (Optional[Union[int, List[int]]]): only insert gates on ``focus_on`` qubits. If ``None``, insert to
+        with_ctrl (bool, optional): Whether insert gates for control qubits. Default: ``True``.
+        focus_on (Union[int, List[int]], optional): only insert gates on ``focus_on`` qubits. If ``None``, insert to
             all qubits of selected gates. Default: ``None``.
-        after_measure (bool): Whether insert gates after measure gates. Default: ``False``.
-        shots (int): How many shots you want to sampling this circuit. Default: ``1``.
-        seed (int): Random seed for random sampling. If ``None``, seed will be a random int number. Default: ``None``.
+        after_measure (bool, optional): Whether insert gates after measure gates. Default: ``False``.
+        shots (int, optional): How many shots you want to sampling this circuit. Default: ``1``.
+        seed (int, optional): Random seed for random sampling.
+            If ``None``, seed will be a random int number. Default: ``None``.
 
     Returns:
         A generator that can generate quantum circuits.
