@@ -138,15 +138,15 @@ mindquantum.core.operators.QubitOperator
             - **n_qubits** (int) - 结果矩阵的量子比特数目。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
             - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参玻色子算符的参数。默认值： ``None``。
 
-    .. py:method:: params_name
-        :property:
-
-        获取玻色子算符的所有参数。
-
     .. py:method:: parameterized
         :property:
 
         检查当前玻色子是否是参数化的。
+
+    .. py:method:: params_name
+        :property:
+
+        获取玻色子算符的所有参数。
 
     .. py:method:: real
         :property:

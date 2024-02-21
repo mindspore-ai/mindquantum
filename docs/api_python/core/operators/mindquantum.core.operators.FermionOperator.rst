@@ -134,11 +134,6 @@ mindquantum.core.operators.FermionOperator
             - **n_qubits** (int) - 结果矩阵的总量子比特数。如果是None，则该值将是最大局域量子比特数。默认值： ``None``。
             - **pr** (ParameterResolver, dict, numpy.ndarray, list, numbers.Number) - 含参费米子算符的参数。默认值： ``None``。
 
-    .. py:method:: params_name
-        :property:
-
-        获取费米子算符的所有参数。
-
     .. py:method:: normal_ordered()
 
         返回FermionOperator的规范有序形式。
@@ -150,6 +145,11 @@ mindquantum.core.operators.FermionOperator
         :property:
 
         检查当前费米子是否是参数化的。
+
+    .. py:method:: params_name
+        :property:
+
+        获取费米子算符的所有参数。
 
     .. py:method:: real
         :property:
