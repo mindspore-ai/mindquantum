@@ -80,6 +80,23 @@ Based on the above discussion, here we announce a new hybrid quantum-classical p
             \end{minipage}
         };
         \path[fill=white,rounded corners=0.6879cm] (22.3573, 22.8865) rectangle (28.3633, 18.6796);
+        \node at (3.92905, 20.78305) {\includegraphics[scale=0.4]{images/1_1_1.pdf}};
+        \node at (11.07285, 20.78305) {\includegraphics[scale=0.35]{images/1_1_2.pdf}};
+        \node at (18.21665, 21.18305){\begin{lstlisting}[numbers=none, backgroundcolor=]
+a, b = np.pi, 0.5
+ParameterResolver({
+ 'a': a, 'b': b
+})\end{lstlisting}};
+
+        \node[align=center] at (18.21665, 19.68305) {\textcolor{blue}{$\pi * a+ 1 / 2 * b$}};
+        \node at (25.36045, 21.18305-0.2){\begin{lstlisting}[numbers=none, backgroundcolor=]
+o = QubitOperator(
+ 'X0 Y1', 'a'
+) + QubitOperator(
+ 'Z2', np.sqrt(2)
+)
+        \end{lstlisting}};
+        \node[align=center] at (25.36045, 19.68305-0.2) {\textcolor{blue}{$aX_0Y_1 + \sqrt{2}Z_2$}};
 
         % NISQ
         \path[draw=black,line width=0.0794cm] (0.0397, 17.608) rectangle (14.4595, 10.2791);
@@ -98,6 +115,7 @@ Based on the above discussion, here we announce a new hybrid quantum-classical p
 
         \path[fill=cffc46d, draw] (7.62, 11.8269) rectangle (14.0758, 10.504);
         \node[align=center] at (10.8479, 11.16545) {QNN};
+        \node at (3.7306, 12.58205) {\includegraphics[scale=0.065]{images/1_1_4.jpeg}};
 
 
         % Compiler
@@ -109,6 +127,7 @@ Based on the above discussion, here we announce a new hybrid quantum-classical p
 
         \path[fill=cffc46d,draw] (19.7379, 12.4883) rectangle (28.3633, 11.1654);
         \node[align=center] at (24.0506, 11.82685) {Qubit Mapping};
+        \node at (17.2506, 13.22915) {\includegraphics[scale=0.5]{images/1_1_3.pdf}};
 
         % simulator
         \path[draw=black,line width=0.0794cm] (0.0397, 9.8822) rectangle (14.4595, 3.2941);
