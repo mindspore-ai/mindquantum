@@ -63,7 +63,7 @@ Up to now, the heuristic function tends to reduce the number of SWAP gates. We a
 Eq.~\eqref{eq:qubit-mapping-h}.
 \begin{equation} \label{eq:qubit-mapping-h}
 	\begin{aligned}
-		H =    & \max \left( decay(SWAP.q_1), decay(SWAP.q_2) \right)                \\
+		H =    & \max \left( \rm{decay}(\rm{SWAP.q_1}), \rm{decay}(\rm{SWAP.q_2}) \right)                \\
 		\times & \Big\lbrace \frac{1}{|F|} \sum_{g \in F} D[\pi(g.q_1)][\pi(g.q_2)]  \\
 		+      & \frac{W}{|E|} \sum_{g \in E} D[\pi(g.q_1)][\pi(g.q_2)] \Big\rbrace.
 	\end{aligned}

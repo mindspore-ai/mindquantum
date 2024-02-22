@@ -12,7 +12,7 @@ Variational Quantum Algorithms (VQA) \cite{cerezo2021variational,yuan2019theory,
   \label{fig:vqa_work_flow}
 \end{figure}
 
-Figure~\ref{fig:vqa_work_flow} illustrates the primary workflow of the VQA. The central component of VQA is the PQC, which comprises both non-parameterized gates such as Hadamard and Pauli gates, and parameterized gates like the rotation gates around the $x$, $y$, or $z$ axes of the Bloch sphere. Depending on the specific task, the PQC can be divided into two parts: the encoder circuit, responsible for encoding classical data into a quantum state denoted as $U_e(\alpha)$, and the ansatz circuit, serving as the trainable component of VQA, denoted as $U_a(\theta)$.
+Fig.~\ref{fig:vqa_work_flow} illustrates the primary workflow of the VQA. The central component of VQA is the PQC, which comprises both non-parameterized gates such as Hadamard and Pauli gates, and parameterized gates like the rotation gates around the $x$, $y$, or $z$ axes of the Bloch sphere. Depending on the specific task, the PQC can be divided into two parts: the encoder circuit, responsible for encoding classical data into a quantum state denoted as $U_e(\alpha)$, and the ansatz circuit, serving as the trainable component of VQA, denoted as $U_a(\theta)$.
 
 In VQA, we also require an observable operator denoted as $H$. The expectation value of this observable is calculated as follows:
 

@@ -17,7 +17,7 @@ Depending on the specific quantum system being simulated, we have the option to 
 \subsubsection{Gate optimization with SIMD}
 SIMD (Single Instruction Multiple Data) is a computer architecture and parallel processing technique designed to accelerate the execution of tasks that can be parallelized by applying a single operation to multiple data elements simultaneously. The fundamental building block of a quantum simulator is the interaction between quantum gate and quantum state, involving multiple parallel operations, so we can utilize SIMD to accelerate the speed of quantum simulations. In this section, we will show how to optimize gate evolution based on AVX instruction with \code{complex128} data type.
 
-AVX instruction provide us with a 256-bit width vector register, which can store 4 numbers with double precision or two complex numbers with double precision. In Fig~\ref{fig:avx}, we take a two-qubit full state vector for example, probability amplitudes $a$ and $b$ can be loaded into a 256-bit register simultaneously, and $c$ and $d$ can do the same.
+AVX instruction provide us with a 256-bit width vector register, which can store 4 numbers with double precision or two complex numbers with double precision. In Fig.~\ref{fig:avx}, we take a two-qubit full state vector for example, probability amplitudes $a$ and $b$ can be loaded into a 256-bit register simultaneously, and $c$ and $d$ can do the same.
 \begin{figure}
     \begin{tikzpicture}[scale=0.5]
         \node[left] at (0,0.5) {256 bits reg};

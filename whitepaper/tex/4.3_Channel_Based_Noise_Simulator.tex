@@ -89,7 +89,7 @@ The output is:
 \begin{lstlisting}
 BitFlipAdder<flip_rate=0.3, with_ctrl=False>
 \end{lstlisting}
-After applying the noise model to a circuit, a bit flip channel will add to each quantum gate, see Fig~\ref{fig:bit_flip_adder}.
+After applying the noise model to a circuit, a bit flip channel will add to each quantum gate, see Fig.~\ref{fig:bit_flip_adder}.
 \begin{figure}
     \centering
     \begin{subfigure}{0.2\textwidth}
@@ -181,7 +181,7 @@ SequentialAdder<
   >
 >
 \end{lstlisting}
-A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excluder()} will be met. All the Channel Adder in \SequentialAdder will be executed one by one. From Fig~\ref{fig:complex_adder}, we can see that this noise model satisfied our requirement.
+A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excluder()} will be met. All the Channel Adder in \SequentialAdder will be executed one by one. From Fig.~\ref{fig:complex_adder}, we can see that this noise model satisfied our requirement.
 
 % \begin{lstlisting}
 % circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()

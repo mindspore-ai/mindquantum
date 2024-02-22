@@ -64,9 +64,7 @@ Current quantum state:
 
 `get' method will not change the maintained quantum state but extract useful information.
 
-1. \getqs
-
-You can get the quantum matrix or a ket string expression (with argument \code{ket=True}) from a simulator with this method.
+- \getqs: You can get the quantum matrix or a ket string expression (with argument \code{ket=True}) from a simulator with this method.
 \begin{lstlisting}
 from mindquantum.algorithm.library import qft
 from mindquantum.simulator import Simulator
@@ -77,9 +75,7 @@ qs = sim.get_qs()
 print(sim.get_qs(ket=True))
 \end{lstlisting}
 
-2. \getexpectation
-
-Calculating the expectation of a given observable is a very common requirement. In \MindQuantum, we expand the definition of observable to below:
+- \getexpectation: Calculating the expectation of a given observable is a very common requirement. In \MindQuantum, we expand the definition of observable to below:
 
 \begin{equation}
     E = \bra{\varphi}U_l^\dagger H U_r \ket{\psi}.
