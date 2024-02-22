@@ -29,7 +29,15 @@ In following sections, we will demonstrate how to train the agent in quantum dev
 
 \subsubsection{Hybrid Deep Q-Network}
 
-Replace the neural network in the classical Deep Q-network's agent with the quantum variational circuit, we get the hybrid deep Q-network(HDQN)~\cite{Q_rl}. The architecture of HDQN is illustrated in FIG. We calculate the parameters $\theta$ by classical neural network and use them to construct the quantum variational circuit. Finally, the quantum part applies the action to the environment. Meanwhile, the environment responds with a reward $r_i$. We denote $e_i=(s_i,a_i,r_{i+1},s_{i+1})$ as an experience. In the training stage, we will use these experiences as training samples to adjust the parameters in both the classical part and quantum part according to loss function $L(\theta)$:
+Replace the neural network in the classical Deep Q-network's agent with the quantum variational circuit, we get the hybrid deep Q-network(HDQN)~\cite{Q_rl}. The architecture of HDQN is illustrated in FIG.~\ref{HDQN}.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[scale=0.5]{5.4.5_RL/HDQN.png}
+    \caption{\label{HDQN} The architecture of HDQN.}
+  \end{figure*}
+
+We calculate the parameters $\theta$ by classical neural network and use them to construct the quantum variational circuit. Finally, the quantum part applies the action to the environment. Meanwhile, the environment responds with a reward $r_i$. We denote $e_i=(s_i,a_i,r_{i+1},s_{i+1})$ as an experience. In the training stage, we will use these experiences as training samples to adjust the parameters in both the classical part and quantum part according to loss function $L(\theta)$:
 \begin{equation}
 \begin{split}
     L(\theta_{j})=&E[R_{i+1}+\\

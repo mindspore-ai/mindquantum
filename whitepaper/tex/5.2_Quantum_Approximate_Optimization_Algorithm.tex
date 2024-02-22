@@ -63,7 +63,7 @@ nx.draw(g,with_labels=True, font_weight='bold')
 
 For QAOA algorithm, first we need to convert the Max-Cut problem into a Hamiltonian, it's ground state energy is solution of the problem. The problem Hamiltonian of the Max-Cut problem can be built as
 \begin{equation}
-    \hat{H} = \sum_{i,j\in C}(\hat{Z}_i\hat{Z}_j-1)/2,
+    \hat{H} = \sum_{(i,j)\in C}(\hat{Z}_i\hat{Z}_j-1)/2,
 \end{equation}
 where $C$ is the set of all edges. In the following function, \code{build\_ham}, the corresponding Hamiltonian can be constructed by inputting the graph.
 \begin{lstlisting}
