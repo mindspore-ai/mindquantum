@@ -94,7 +94,7 @@ And the output is:
 [[-0.04602095+0.j]] [[[-1.17340357e-17+0.j -3.47310364e-02+0.j -7.96875999e-01+0.j]]]
 \end{lstlisting}
 
-\getexpectationwithgrad receives observable Hamiltonian and ansatz circuit and returns a gradient operator. You can use this operator to calculate gradient in any ansatz parameters. The output of gradient operator is the expectation and its gradient with respect to ansatz parameters. The dimension of expectation value is $[n_\text{batch}, n_\text{ham}]$, where $n_\text{batch}$ is the batch size of encoder data. In this task, we do not have encoder and we have only one observable, so $n_\text{batch}=1, n_\text{ham}=1$. The dimension of gradient of ansatz is $[n_\text{batch}, n_\text{ham}, n_\text{ansatz}]$, while $n_\text{ansatz} = 3$ is the number of parameters in ansatz circuit.
+\getexpectationwithgrad receives observable Hamiltonian and ansatz circuit and returns a gradient operator. You can use this operator to calculate gradient in any ansatz parameters. The output of gradient operator is the expectation and its gradient with respect to ansatz parameters. The dimension of expectation value is $[n_\text{batch}, n_\text{ham}]$, where $n_\text{batch}$ is the batch size of encoder data and $n_\text{ham}$ is the number of Hamiltonian. In this task, we do not have encoder and we have only one observable, so $n_\text{batch}=1, n_\text{ham}=1$. The dimension of gradient of ansatz is $[n_\text{batch}, n_\text{ham}, n_\text{ansatz}]$, while $n_\text{ansatz} = 3$ is the number of parameters in ansatz circuit.
 
 The next step is to optimize the PQC with the help of gradient operator.
 \begin{lstlisting}
