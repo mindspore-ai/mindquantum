@@ -2,10 +2,9 @@ View demo code of this section: \democode{02}{2.1}
 
 In this section, we will introduce the basic data types supported by \MindQuantum. When we simulate quantum evolution in \MindQuantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
 Before we discuss the supported data types in \MindQuantum, we first briefly review the definition of the floating-point number in modern computers which helps us to understand the difference among these data types.
-The first unified technical standard of floating-point arithmetic (IEEE 754) was established in 1985 and is widely supported by much hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
+The first unified technical standard of floating-point arithmetic (IEEE 754) \cite{8766229} was established in 1985 and is widely supported by much hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
 
-% TODO(xusheng): Add figure
-In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.
+In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.~\ref{fig:ieee}.
 
 \begin{figure}[h]
     \centering
@@ -19,7 +18,7 @@ The exponent part $e$ is an m-bit unsigned integer, which determines the Maximum
 
 The real value assumed by a given sign $s$, biased exponent $e$ and fraction $\vec{b}$ as
 \begin{equation}
-    value = (-1)^{s}\times 2^{e}\times (1+\sum_{i=1}^nb_{23-i}2^{-i}).
+    \mathrm{value} = (-1)^{s}\times 2^{e}\times (1+\sum_{i=1}^nb_{23-i}2^{-i}).
 \label[equation]{float-format}
 \end{equation}
 
@@ -74,7 +73,7 @@ A quantum state with $N$ qubits can be described by $2^N$ amplitudes, all of whi
 
 If we want to store an $N=20$ quantum state with $2^{20}$ amplitudes and all amplitudes are represented as single precision (Complex64), the classical memory is
 \begin{equation}
-    G=2^{20}\times 64 bits = 8 Mb.
+    G=2^{20}\times 64 \mathrm{bits} = 8 \mathrm{Mb}.
 \end{equation}
 
 If we use complex double to represent the amplitude, the memory requirement is $G=2^{20}\times 128 bits=16 Mb$. Here we give a table that shows the memory consuming for storage full amplitudes quantum state with different data accuracy.

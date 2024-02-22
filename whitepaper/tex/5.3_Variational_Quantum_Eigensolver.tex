@@ -4,6 +4,9 @@
 %variational method and optimization
 %classical optimization methods
 % an example for simulating the ground energy of a Molecule
+
+\subsubsection{Background}
+
 In quantum computing, the variational quantum eigensolver (VQE) is a flagship algorithm for solving eigenproblems on near-term quantum computers, which was originally developed by Peruzzo et al, ant its theoretical framework was extended and formalized by McClean et al.
 VQE is widely used to compute the energetic properties of molecules and materials, for example, the study of electronic structures which is a critical application for quantum chemistry and condensed matter physics.
 Conventional computational chemistry provides efficient methods to approximate such properties for small systems, but it becomes intractable and expensive for very accurate calculations on increasingly large systems. In addition, the interactions between electrons formally require computation that scales exponentially in the size of the system, rendering exact quantum chemistry methods in general intractable with conventional computing.
@@ -36,7 +39,7 @@ By optimizing the value of $\vec{\theta}$ by a classical optimizer to minimize t
 
 VQE starts with an initialized qubit state. A parameterized quantum circuit is then applied to this state to model the physics and entanglement of the electronic wavefunction.
 
-The VQE pipeline
+The VQE pipeline contains
 \begin{itemize}
     \item Hamiltonian construction and representation: fermionic space to spin space transformations, encoding of operators
     \item Ansatz selection and state preparation: Hardware efficient, QubitUCCAnsatz, UCCAnsatz, Hartreefock state
@@ -45,6 +48,7 @@ The VQE pipeline
           %\item Error mitigation
 \end{itemize}
 
+\subsubsection{Implementation}
 
 Before studying any physical model or molecule by VQE, we must transform them into a qubit Hamiltonian considering the present leading quantum platforms as a qubit basis.
 Here, we show how \MindQuantum\ simulates a quantum chemistry example $LiH$ by step and step.

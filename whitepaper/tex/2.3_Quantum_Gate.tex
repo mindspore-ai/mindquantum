@@ -152,11 +152,9 @@ mat_rx4 = rx4.matrix(pr={'a': 1, 'b': 2})
 Please notice that in the above demo, \code{rx1} is actually a non-parameterized gate, since we already give the rotation angle $\theta = 0.5$.
 
 \subsubsection{Custom Quantum Gate}
-Since it is difficult to construct arbitrary quantum gates by using general gates in practical applications, two methods for constructing custom quantum gates are provided in \MindQuantum. They are quantum gates without parameters and quantum gates with parameters.
+Since it is difficult to construct arbitrary quantum gates by using general gates in practical applications, two methods for constructing custom quantum gates are provided in \MindQuantum. They are quantum gates without and with parameters.
 
-\textbf{1. Universal Math Gate}
-
-If the matrix representation of a gate is known, it is convenient to construct the gate in \MindQuantum. Two parameters are required to initialize \UnivMathGate, which are the gate name and the matrix value. If the matrix is not unitary, the result cannot be normalized.
+\textit{Universal Math Gate} -- If the matrix representation of a gate is known, it is convenient to construct the gate in \MindQuantum. Two parameters are required to initialize \UnivMathGate, which are the gate name and the matrix value. If the matrix is not unitary, the result cannot be normalized.
 Example:
 \begin{lstlisting}
 from mindquantum.core.gates import UnivMathGate
@@ -171,24 +169,19 @@ Output:
 custom_X(0 <-: 1)
 \end{lstlisting}
 
-\textbf{2. Universal Parameterized Gate}
-
-Sometimes we need to construct a parameterized gate in which the parameter is self-defined. In \MindQuantum, we can easily construct a customized parameterized gate by \geneunivparameterizedgate, and its usage is basically as same as that of \RX gate. Two parameters are required to initialize such a gate. One is a function or method to use only one parameter (similar to theta in \RX) to generate a unitary matrix, noting that no error is reported if the resulting matrix is not unitary. The other is the function or method that produces the derivative of this matrix, which is used to calculate the gradient. This method supports the generation of arbitrary qubit operators and can accelerate the performance by numba.JIT.
+\textit{Universal Parameterized Gate} -- Sometimes we need to construct a parameterized gate in which the parameter is self-defined. In \MindQuantum, we can easily construct a customized parameterized gate by \geneunivparameterizedgate, and its usage is basically as same as that of \RX gate. Two parameters are required to initialize such a gate. One is a function or method to use only one parameter (similar to theta in \RX) to generate a unitary matrix, noting that no error is reported if the resulting matrix is not unitary. The other is the function or method that produces the derivative of this matrix, which is used to calculate the gradient. This method supports the generation of arbitrary qubit operators and can accelerate the performance by numba.JIT.
 
 Example:
 \begin{lstlisting}
 from mindquantum.core.gates import gene_univ_parameterized_gate
 
-
 def matrix(theta):
     return np.array([[np.exp(1j * theta), 0],
                      [0, np.exp(-1j * theta)]])
 
-
 def diff_matrix(theta):
     return 1j * np.array([[np.exp(1j * theta), 0],
                           [0, -np.exp(-1j * theta)]])
-
 
 TestGate = gene_univ_parameterized_gate('Test', matrix, diff_matrix)
 
