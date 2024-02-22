@@ -23,9 +23,9 @@ mindquantum.algorithm.qaia.LQA
 
     .. py:method:: update(beta1=0.9, beta2=0.999, epsilon=10e-8)
 
+        Adam动力学演化。
+
         参数：
             - **beta1** (float) - Beta1参数。默认值： ``0.9``。
             - **beta2** (float) - Beta2参数。默认值： ``0.999``。
             - **epsilon** (float) - Epsilon参数。默认值： ``10e-8``。
-
-        Adam动力学演化。

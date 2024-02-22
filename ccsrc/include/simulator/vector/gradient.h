@@ -259,8 +259,6 @@ class GradientHelper {
             std::shared_ptr<sim_t> psi_r2 = policy::CopySimToSharedPtr(psi_r.get());
             f_g2 = RightSizeGrad(psi_l2.get(), psi_r2.get(), herm_right_circ, herm_hams, pr, p_map);
         }
-        std::cout << f_g1[0][1] << std::endl;
-        std::cout << f_g2[0][1] << std::endl;
         for (int i = 0; i < hams.size(); i++) {
             for (int j = 1; j < p_map.size() + 1; j++) {
                 f_g1[i][j] += f_g2[i][j];
