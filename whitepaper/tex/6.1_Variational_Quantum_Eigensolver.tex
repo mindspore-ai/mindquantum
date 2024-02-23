@@ -90,3 +90,18 @@ When doing variational quantum algorithm on this system, we need to calculate th
         \ket{i} \\\ket{j}
     \end{pmatrix}.
 \end{equation}
+
+Here is a demonstration code of how to build a quantum circuit of evolution of coupled cluster operator.
+
+\begin{lstlisting}
+from qupack.vqe import ExpExciteGate
+from mindquantum.algorithm.nisq import uccsd_singlet_generator
+from mindquantum.core.circuit import Circuit
+
+ucc_fermion_ops = uccsd_singlet_generator(6, 4)
+circ = Circuit()
+for term in ucc_fermion_ops:
+    circ += ExpExciteGate(term)
+\end{lstlisting}
+
+A specific simulator, known as \code{ESConservation}, has been designed to efficiently simulate the coupled cluster operators within a subspace of the Hilbert space. This specialized simulator, which shares the same API as the simulator in \MindQuantum, excels in accurately modeling the intricate dynamics of these operators.
