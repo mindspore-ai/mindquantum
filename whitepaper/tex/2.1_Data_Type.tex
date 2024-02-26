@@ -8,7 +8,7 @@ In IEEE 754, a floating-point format is specified by three parts, sign, exponent
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{2.1_figures/ieee.png}
+    \includegraphics[width=\linewidth]{2.1_figures/Float_example.png}
     \caption{Floating-point format}
     \label{fig:ieee}
 \end{figure}
@@ -23,9 +23,9 @@ The real value assumed by a given sign $s$, biased exponent $e$ and fraction $\v
 \end{equation}
 
 Based on the different numbers of bits, IEEE 754 defined three types of floating-point formats single-, double- and quadruple-precision with 32, 64, and 128 bits, respectively.
-Among them, single- and double-precision is widely used in classical computers.
-In single-precision floating-point format (for short, denoted as Single as follows), sign $s$ consists of $1$ bit, $8$ bits in the exponent part $e$, and $23$ bits in the fraction part $\vec{b}$.
-In double-precision floating-point format (Double), sign $s$ still consists of $1$ bit, $11$ bits in the exponent part $e$, and $52$ bits in the fraction part $\vec{b}$.
+Among them, single- and double-precision are widely used in classical computers.
+In single-precision floating-point format (for short, denoted as Single as follows), there are $1$ bit in the sign part $s$, $8$ bits in the exponent part $e$, and $23$ bits in the fraction part $\vec{b}$.
+In double-precision floating-point format (Double), there are still $1$ bit in the sign part $s$, $11$ bits in the exponent part $e$, and $52$ bits in the fraction part $\vec{b}$.
 
 The value precision is determined by the number of bits in the fraction part.
 In Single, the fraction part is $\vec{b}=0.b_{22}b_{21}\cdots b{0}$.
@@ -48,7 +48,7 @@ In quantum machines, the complex number is essential for drawing quantum informa
 The complex number can be expressed in the form $c=a+bi$, where $a$ and $b$ are real numbers, $a$ is called the real part, and $b$ is called the imaginary part.
 
 In computer digital format, the data type of complex number $c$ is determined by the type of $a$ and $b$.
-In general, if $a$ and $b$ are Single, the type of $c$ is complex64 (used 64 bits to store $c$). And $a$ and $b$ are Double, the type of $c$ is complex128 (used 128 bits).
+In general, if $a$ and $b$ are Single, the type of $c$ is complex64 (used 64 bits to store $c$). If $a$ and $b$ are Double, the type of $c$ is complex128 (used 128 bits).
 
 In different programming languages, the symbol of the imaginary unit may be different.
 For example, In C, $i$ is denoted as $I$, in Python, it is denoted as $1j$.
