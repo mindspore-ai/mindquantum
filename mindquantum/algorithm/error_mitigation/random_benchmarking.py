@@ -37,7 +37,7 @@ def query_single_qubit_clifford_elem(idx: int) -> Simulator:
         idx (int): The index of clifford element in single qubit clifford group.
 
     Returns:
-        :class:`~.simulator.Simulator`r, a stabilizer with tableau be the queried clifford element.
+        :class:`~.simulator.Simulator`, a stabilizer with tableau be the queried clifford element.
 
     Examples:
         >>> from mindquantum.algorithm.error_mitigation import query_single_qubit_clifford_elem
