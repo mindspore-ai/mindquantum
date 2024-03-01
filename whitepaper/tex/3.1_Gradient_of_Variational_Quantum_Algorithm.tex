@@ -127,7 +127,7 @@ ansatz.matrix(pr=dict(zip(ansatz.params_name, res.x)))
 \end{align*}
 
 \subsubsection{Rotate three states}
-In previous example, the PQC only contains ansatz circuit, and in this example, we will show how to add encoder circuit into PQC in \MindQuantum. The problem is described as below: suppose we have three states $\ket{\psi_0}=\ket{0},\ket{\psi_1}=(\ket{0}+\ket{1})/\sqrt{2}$ and $\ket{\psi_2}=(\ket{0}+i\ket{1})/\sqrt{2}$, find a single qubit rotation gate $U_a(\theta)$, so that the sum of expectation of $Z$ over three states after rotation gate $U_a$ is maximum:
+In previous example, the PQC only contains ansatz circuit, and in this example, we will show how to add encoder circuit into PQC in \MindQuantum. The problem is described as below: find a single qubit rotation gate $U_a(\theta)$, which maximizes the sum of the expectation values of $Z$ for the following three states: $\ket{\psi_0}=\ket{0},\ket{\psi_1}=(\ket{0}+\ket{1})/\sqrt{2}$ and $\ket{\psi_2}=(\ket{0}+i\ket{1})/\sqrt{2}$.
 
 \begin{equation}
   \max_{\theta}\sum_i{\bra{\psi_i}U^\dagger(\theta)ZU(\theta)\ket{\psi_i}}.

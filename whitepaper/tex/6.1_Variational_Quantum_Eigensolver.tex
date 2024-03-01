@@ -19,30 +19,30 @@ Simulating molecule system with high accuracy in VQE is both a time and memory c
 
 Based on UCCSD (Unitary coupled-cluster with singles and doubles) theory, the ansatz is described as:
 \begin{equation}
-    U(\theta) = e^{(T-T^\dagger)}\ket{\psi_\text{HF}},
+    |\Psi(\vec{\theta})\rangle = e^{(\hat{T}-\hat{T}^\dagger)}\ket{\psi_\text{HF}},
 \end{equation}
-where $T$ is couple cluster operator, and $\ket{\psi_\text{HF}}$ is Hartree-Fork state. The couple cluster operator is written as:
+where $\hat{T}$ is couple cluster operator, and $\ket{\psi_\text{HF}}$ is Hartree-Fork state. The couple cluster operator is written as:
 \begin{equation}
-    T=\sum_{p\notin\text{occ},q\in\text{occ}}\theta_q^p a_p^\dagger a_q + \sum_{pq\notin\text{occ},rs\in\text{occ}}\theta_{rs}^{pq}a_p^\dagger a_q^\dagger a_r a_s,
+    \hat{T}=\sum_{p\notin\text{occ},q\in\text{occ}}\theta_q^p \hat{a}_p^\dagger \hat{a}_q + \sum_{pq\notin\text{occ},rs\in\text{occ}}\theta_{rs}^{pq}\hat{a}_p^\dagger \hat{a}_q^\dagger \hat{a}_r \hat{a}_s,
 \end{equation}
-and under trotterization the ansatz can be decomposed to:
+and under one order trotterization the ansatz can be decomposed to:
 \begin{equation}
-    U(\theta)=\prod_ie^{(T_i-T_i^\dagger)}\ket{\psi_\text{HF}}.
+    |\Psi(\vec{\theta})\rangle\approx \prod_ie^{(\hat{T}_i-\hat{T}_i^\dagger)}\ket{\psi_\text{HF}}.
 \end{equation}
-Taking hydrogen chain $H_4$ for example, we need 12 qubits to simulate this system and there are 6 electrons with 3 spin up and 3 spin down. Fig.~\ref{6_1_h4_a} shows the Hartree-Fork state of $H_4$ and Fig.~\ref{6_1_h4_b} shows the spin-orbital under excitation operator $T=a_{11}^\dagger a_{10}^\dagger a_5 a_4$.
+Taking hydrogen chain $H_6$ for example, we need 12 qubits to simulate this system and there are 6 electrons with 3 spin up and 3 spin down. Fig.~\ref{6_1_h6_a} shows the Hartree-Fork state of $H_6$ and Fig.~\ref{6_1_h6_b} shows the spin-orbital under excitation operator $\hat{T}=\hat{a}_{11}^\dagger \hat{a}_{10}^\dagger \hat{a}_5 \hat{a}_4$.
 \begin{figure}
     \centering
     \begin{subfigure}{0.3\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/6_1_h4_a.pdf}
-        \caption{Hartree-Fork state of $H_4$.}
-        \label{6_1_h4_a}
+        \includegraphics[width=\textwidth]{images/6_1_h6_a.pdf}
+        \caption{Hartree-Fork state of $H_6$.}
+        \label{6_1_h6_a}
     \end{subfigure}
     \begin{subfigure}{0.3\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{images/6_1_h4_b.pdf}
-        \caption{Spin-orbital after applying excitation operator $T=a_{11}^\dagger a_{10}^\dagger a_5 a_4$.}
-        \label{6_1_h4_b}
+        \includegraphics[width=0.9\textwidth]{images/6_1_h6_b.pdf}
+        \caption{Spin-orbital after applying excitation operator $\hat{T}=\hat{a}_{11}^\dagger \hat{a}_{10}^\dagger \hat{a}_5 \hat{a}_4$.}
+        \label{6_1_h6_b}
     \end{subfigure}
 \end{figure}
 \subsubsection{Electron and spin conservation}
@@ -52,13 +52,13 @@ In \QuPack, we impose the constraint that the total number of electrons and the 
 \end{equation}
 The memory consumption will reduce from 1TB to $\sim$35GB.
 
-Besides the memory reduction, we also optimized the evolution of coupled cluster operator. For a given coupled cluster operator $V(\theta)=e^{\theta(T-T^\dagger)}$, it is easy to prove that $(T-T^\dagger)^3 = - (T-T^\dagger)$ and $(T-T^\dagger)^4 = -(T-T^\dagger)^2$. After Taylor expansion, we have:
+Besides the memory reduction, we also optimized the evolution of coupled cluster operator. For a given coupled cluster operator $\hat{V}(\theta)=e^{\theta(\hat{T}-\hat{T}^\dagger)}$, it is easy to prove that $(\hat{T}-\hat{T}^\dagger)^3 = - (\hat{T}-\hat{T}^\dagger)$ and $(\hat{T}-\hat{T}^\dagger)^4 = -(\hat{T}-\hat{T}^\dagger)^2$. After Taylor expansion, we have:
 \begin{equation}
-    V(\theta) = \mathbb{I} + ( 1-\cos\theta)(T-T^\dagger)^2 + \sin\theta (T-T^\dagger).
+    \hat{V}(\theta) = \mathbb{I} + ( 1-\cos\theta)(\hat{T}-\hat{T}^\dagger)^2 + \sin\theta (\hat{T}-\hat{T}^\dagger).
 \end{equation}
-Choose a calculation base in reduced Hilbert space $\ket{i}$, so that $T\ket{i} = \ket{j}\neq0$, then we have $T^\dagger\ket{i}=0$ and $T^\dagger\ket{j}=\ket{i}$. The evolution of coupled cluster can be simplified to:
+Choose a calculation base in reduced Hilbert space $\ket{i}$, so that $\hat{T}\ket{i} = \ket{j}\neq0$, then we have $\hat{T}^\dagger\ket{i}=0$ and $\hat{T}^\dagger\ket{j}=\ket{i}$. The evolution of coupled cluster can be simplified to:
 \begin{equation}
-    e^{\theta(T-T^\dagger)}\begin{pmatrix}
+    e^{\theta(\hat{T}-\hat{T}^\dagger)}\begin{pmatrix}
         \ket{i} \\\ket{j}
     \end{pmatrix}=\begin{pmatrix}
         \cos\theta  & \sin\theta \\
@@ -67,9 +67,9 @@ Choose a calculation base in reduced Hilbert space $\ket{i}$, so that $T\ket{i} 
         \ket{i} \\\ket{j}
     \end{pmatrix}.
 \end{equation}
-And for $e^{i\theta(T+T^\dagger)}$, we have
+And for $e^{i\theta(\hat{T}+\hat{T}^\dagger)}$, we have
 \begin{equation}
-    e^{i\theta(T+T^\dagger)}\begin{pmatrix}
+    e^{i\theta(\hat{T}+\hat{T}^\dagger)}\begin{pmatrix}
         \ket{i} \\\ket{j}
     \end{pmatrix}=\begin{pmatrix}
         \cos\theta   & i\sin\theta \\
@@ -79,9 +79,9 @@ And for $e^{i\theta(T+T^\dagger)}$, we have
     \end{pmatrix}.
 \end{equation}
 
-When doing variational quantum algorithm on this system, we need to calculate the gradient of $V(\theta)$, which is given as:
+When doing variational quantum algorithm on this system, we need to calculate the gradient of $\hat{V}(\theta)$, which is given as:
 \begin{equation}
-    \frac{\partial V(\theta)}{\partial\theta}\begin{pmatrix}
+    \frac{\partial \hat{V}(\theta)}{\partial\theta}\begin{pmatrix}
         \ket{i} \\\ket{j}
     \end{pmatrix}=\begin{pmatrix}
         -\sin\theta & \cos\theta  \\
