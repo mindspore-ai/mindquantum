@@ -74,10 +74,11 @@ In general, the simulation time increases exponentially with the circuit scale. 
         \label{7_regular_4_gpu}
     \end{subfigure}
     \caption{Benchmarking of QAOA with different backends.}
+    \label{fig:benchmark_qaoa}
 \end{figure*}
 
 \subsection{QAOA Task}
 
-Variational quantum algorithm is also a very important algorithm in NISQ and in this part we choose Quantum Approximate Optimization Algorithm for benchmarking, which can further demonstrate the performance of the framework in solving practical problems. We apply QAOA to solve the max-cut problem of 4-regular graphs. The size of the problem ranges from 5 to 23 nodes. The ansatz circuit is obtained by one-step Trotter decomposition. The optimizer is \code{scipy.optimize.minimize()} with the BFGS method.
+Variational quantum algorithm is also a very important algorithm in NISQ. In this part, we choose Quantum Approximate Optimization Algorithm for benchmarking, which can further demonstrate the performance of the framework in solving practical problems. We apply QAOA to solve the max-cut problem of 4-regular graphs, and the size of the problem ranges from 5 to 23 nodes. The ansatz circuit is obtained by one-step Trotter decomposition. The optimizer is \code{scipy.optimize.minimize()} with the BFGS method. Since large-scale QAOA tasks are time-consuming, we stop the execution of each framework when the running time reaches a specified threshold. Therefore, in the result images, the maximum number of qubits that each framework data point can achieve is not consistent. The benchmark result is shown in Fig.~\ref{fig:benchmark_qaoa}.
 
 Overall, as the problem size increases, the solution time of all frameworks grows exponentially. However, \MindQuantum\ is at least one orders of magnitude faster than other frameworks for problems. This is mainly due to MindQuantum's optimized adjoint method for getting gradient parameterized quantum circuit and efficient implementation of circuit evolution.
