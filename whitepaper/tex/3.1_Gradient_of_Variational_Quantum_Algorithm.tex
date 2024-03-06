@@ -12,7 +12,7 @@ Variational Quantum Algorithms (VQA) \cite{cerezo2021variational,yuan2019theory,
   \label{fig:vqa_work_flow}
 \end{figure}
 
-Figure~\ref{fig:vqa_work_flow} illustrates the primary workflow of the VQA. The central component of VQA is the PQC, which comprises both non-parameterized gates such as Hadamard and Pauli gates, and parameterized gates like the rotation gates around the $x$, $y$, or $z$ axes of the Bloch sphere. Depending on the specific task, the PQC can be divided into two parts: the encoder circuit, responsible for encoding classical data into a quantum state denoted as $U_e(\alpha)$, and the ansatz circuit, serving as the trainable component of VQA, denoted as $U_a(\theta)$.
+Fig.~\ref{fig:vqa_work_flow} illustrates the primary workflow of the VQA. The central component of VQA is the PQC, which comprises both non-parameterized gates such as Hadamard and Pauli gates, and parameterized gates like the rotation gates around the $x$, $y$, or $z$ axes of the Bloch sphere. Depending on the specific task, the PQC can be divided into two parts: the encoder circuit, responsible for encoding classical data into a quantum state denoted as $U_e(\alpha)$, and the ansatz circuit, serving as the trainable component of VQA, denoted as $U_a(\theta)$.
 
 In VQA, we also require an observable operator denoted as $H$. The expectation value of this observable is calculated as follows:
 
@@ -94,7 +94,7 @@ And the output is:
 [[-0.04602095+0.j]] [[[-1.17340357e-17+0.j -3.47310364e-02+0.j -7.96875999e-01+0.j]]]
 \end{lstlisting}
 
-\getexpectationwithgrad receives observable Hamiltonian and ansatz circuit and returns a gradient operator. You can use this operator to calculate gradient in any ansatz parameters. The output of gradient operator is the expectation and its gradient with respect to ansatz parameters. The dimension of expectation value is $[n_\text{batch}, n_\text{ham}]$, where $n_\text{batch}$ is the batch size of encoder data. In this task, we do not have encoder and we have only one observable, so $n_\text{batch}=1, n_\text{ham}=1$. The dimension of gradient of ansatz is $[n_\text{batch}, n_\text{ham}, n_\text{ansatz}]$, while $n_\text{ansatz} = 3$ is the number of parameters in ansatz circuit.
+\getexpectationwithgrad receives observable Hamiltonian and ansatz circuit and returns a gradient operator. You can use this operator to calculate gradient in any ansatz parameters. The output of gradient operator is the expectation and its gradient with respect to ansatz parameters. The dimension of expectation value is $[n_\text{batch}, n_\text{ham}]$, where $n_\text{batch}$ is the batch size of encoder data and $n_\text{ham}$ is the number of Hamiltonian. In this task, we do not have encoder and we have only one observable, so $n_\text{batch}=1, n_\text{ham}=1$. The dimension of gradient of ansatz is $[n_\text{batch}, n_\text{ham}, n_\text{ansatz}]$, while $n_\text{ansatz} = 3$ is the number of parameters in ansatz circuit.
 
 The next step is to optimize the PQC with the help of gradient operator.
 \begin{lstlisting}
@@ -127,7 +127,7 @@ ansatz.matrix(pr=dict(zip(ansatz.params_name, res.x)))
 \end{align*}
 
 \subsubsection{Rotate three states}
-In previous example, the PQC only contains ansatz circuit, and in this example, we will show how to add encoder circuit into PQC in \MindQuantum. The problem is described as below: suppose we have three states $\ket{\psi_0}=\ket{0},\ket{\psi_1}=(\ket{0}+\ket{1})/\sqrt{2}$ and $\ket{\psi_2}=(\ket{0}+i\ket{1})/\sqrt{2}$, find a single qubit rotation gate $U_a(\theta)$, so that the sum of expectation of $Z$ over three states after rotation gate $U_a$ is maximum:
+In previous example, the PQC only contains ansatz circuit, and in this example, we will show how to add encoder circuit into PQC in \MindQuantum. The problem is described as below: find a single qubit rotation gate $U_a(\theta)$, which maximizes the sum of the expectation values of $Z$ for the following three states: $\ket{\psi_0}=\ket{0},\ket{\psi_1}=(\ket{0}+\ket{1})/\sqrt{2}$ and $\ket{\psi_2}=(\ket{0}+i\ket{1})/\sqrt{2}$.
 
 \begin{equation}
   \max_{\theta}\sum_i{\bra{\psi_i}U^\dagger(\theta)ZU(\theta)\ket{\psi_i}}.

@@ -13,7 +13,7 @@ QGAN, as a quantum version of GAN, has more advantages in sampling and generatin
 
 \subsubsection{Implementation}
 We show an example of using \MindQuantum, building a hybrid quantum-classical generative adversarial network (QC-GAN), and then learning a probability distribution to generate handwritten digits through training. Specifically, the QC-GAN consists of a variational quantum circuit with one layer of neural network to form ${G}$ and a classical neural network to form ${D}$. It is trained similarly to the classical GAN with a noise vector input ${z}$ to the ${G}$. Then, the adversarial training of ${G}$ and ${D}$ realizes the generation of images.
-Differently, the generated image is obtained by quantum circuit evolution, measurement, and nonlinear mapping of the neural network. The overall structure and training process of QC-GAN is shown in Fig~\ref{qc-gan}.
+Differently, the generated image is obtained by quantum circuit evolution, measurement, and nonlinear mapping of the neural network. The overall structure and training process of QC-GAN is shown in Fig.~\ref{qc-gan}.
 
 \begin{figure}[ht]
   \centering
@@ -93,7 +93,7 @@ The parameters of the quantum circuits are optimized according to the designed c
   {L_D} =  - {{\rm E}_{x\sim{p_r}(x)}}\left[ {\log D(x)} \right] - {{\rm E}_{x\sim{p_f}(x)}}\left[ {\log D(x)} \right].
 \end{equation}
 
-According to the designed loss function and model, the generator and discriminator are trained and parameters are updated in turn. After training, the noise vector is used as input to the generator and the generated handwritten digits are output and the results are shown in Fig~\ref{qgan-result}. It can be seen that as the number of iterations increases, the input noise is gradually able to produce a clear digital image. Notably, the number of iterations for training needs to be carefully designed and not more is better.
+According to the designed loss function and model, the generator and discriminator are trained and parameters are updated in turn. After training, the noise vector is used as input to the generator and the generated handwritten digits are output and the results are shown in Fig.~\ref{qgan-result}. It can be seen that as the number of iterations increases, the input noise is gradually able to produce a clear digital image. Notably, the number of iterations for training needs to be carefully designed and not more is better.
 \begin{figure}[htbp]
   \centering
   \includegraphics[scale=0.5]{5.4.4_figures/qgan-result.pdf}

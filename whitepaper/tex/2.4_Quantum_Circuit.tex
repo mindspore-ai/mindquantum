@@ -1,6 +1,6 @@
 View demo code of this section: \democode{02}{2.4}
 
-The quantum circuit is a graphical representation of the sequence of quantum gates applied to qubits in a quantum computation or quantum algorithm. Similar to classical digital circuits made up of logic gates that manipulate classical bits, quantum circuits are composed of quantum gates that manipulate quantum bits or qubits.
+The quantum circuit is a graphical representation of the sequence of quantum gates applied to qubits in a quantum computation or quantum algorithm. Similar to classical digital circuits made up of logic gates that manipulate classical bits, quantum circuits are composed of quantum gates that manipulate qubits.
 
 \subsubsection{Construct a quantum circuit}
 In \MindQuantum\ we use \Circuit to represent quantum circuit:
@@ -13,8 +13,8 @@ circ = Circuit()
 There are several basic operations for adding a quantum gate into \Circuit
 \begin{itemize}
     \item list: directly construct a quantum gate with gate list.
-    \item +=: use '+=' to add a quantum gate to the circuit.
-    \item Circuit.x: add an X gate to the circuit.
+    \item \code{+=}: use \code{+=} to add a quantum gate to the circuit.
+    \item \code{Circuit.x}: add an X gate to the circuit.
 \end{itemize}
 \begin{lstlisting}
 from mindquantum.core.gates import H, Y, X, Z
@@ -24,6 +24,8 @@ circ += Y.on(1, 0)
 circ.x(1, 0)
 circ.z(2, [0, 1])
 \end{lstlisting}
+
+the result is shown in Fig.~\ref{fig:Quantum-Circuit}.
 
 \subsubsection{Display a quantum circuit}
 SVG(Scalable Vector Graphics) is based on the XML markup language and is used to describe vector graphics in two dimensions. \MindQuantum\ provides a function to export quantum circuit to SVG format.
@@ -35,6 +37,7 @@ circ.svg().to_file(filename='circuit.svg')
         \includegraphics[width=0.9\linewidth]{images/2_4_circuit.png}
     \end{center}
     \caption{Quantum Circuit.}
+    \label{fig:Quantum-Circuit}
 \end{figure}
 Please note that if you are in jupyter notebook environment, you can directly get SVG image by \code{circ.svg()}.
 
@@ -44,8 +47,8 @@ Please note that if you are in jupyter notebook environment, you can directly ge
 Quantum Circuit is the basic element of quantum algorithm, \MindQuantum\ provide a lot of useful method for \Circuit.
 
 \begin{itemize}
-    \item \propnqubits: get the number of qubit of quantum circuit.
-    \item \propparamsname: get the params of circuit.
+    \item \propnqubits: get the number of qubits of quantum circuit.
+    \item \propparamsname: get the parameter names of circuit.
     \item \prophasmeasuregate: get whether to be measured.
     \item \methodmatrix: get the circuit matrix.
     \item \methodgetqs: get the final quantum state.
@@ -54,7 +57,7 @@ Quantum Circuit is the basic element of quantum algorithm, \MindQuantum\ provide
 
 \subsubsection{Advanced operator on circuit}
 
-Constructing a large size quantum circuit is always not a straightforward thing for users. Here in \MindQuantum, we provide some pre-defined methods to make manipulating \Circuit more easily. For example the origin quantum circuit is:
+Constructing a large size quantum circuit is always not a straightforward thing for users. Here in \MindQuantum, we provide some pre-defined methods to make manipulating \Circuit more easily. For example, let the origin quantum circuit be:
 
 \begin{lstlisting}
 from mindquantum.core.circuit import *

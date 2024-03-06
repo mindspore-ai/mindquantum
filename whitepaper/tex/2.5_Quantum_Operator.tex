@@ -99,36 +99,41 @@ In the fermion string, we use \verb|^| to represent $\dagger$ and the number to 
 
 \subsubsection{Operator Functions}
 
-\MindQuantum\ also supplies a number of advanced functions for Operators. Here are some showcases:
-\begin{itemize}
-    \item \methodcommutator{op1}{op2} : Calculate the commutator of two operators.
-          \begin{lstlisting}
+\MindQuantum\ also supplies a number of advanced functions for operators. Here are some showcases:
+
+- \methodcommutator{op1}{op2} : Calculate the commutator of two operators.
+
+\begin{lstlisting}
 from mindquantum.core.operators import QubitOperator, FermionOperator, commutator
 qub_op1 = QubitOperator("X1 Y2")
 qub_op2 = QubitOperator("X1 Z2")
 commutator(qub_op1, qub_op1)  # 0
 commutator(qub_op1, qub_op2)  # (2j) [X2]
-    \end{lstlisting}
-    \item \methodcountqubits{op1} : Count the number of qubits before deleting unused qubits.
-          \begin{lstlisting}
+\end{lstlisting}
+
+- \methodcountqubits{op1} : Count the number of qubits before deleting unused qubits.
+
+\begin{lstlisting}
 from mindquantum.core.operators import QubitOperator,FermionOperator, count_qubits
 qubit_op = QubitOperator("X1 Y2")
 count_qubits(qubit_op)  # 3
 fer_op = FermionOperator("1^")
 count_qubits(fer_op)  # 2
-    \end{lstlisting}
-    \item \methodhermitianconj{op1} : Get the hermitian conjugation of given operator.
-          \begin{lstlisting}
+\end{lstlisting}
+
+
+- \methodhermitianconj{op1} : Get the hermitian conjugation of given operator.
+
+\begin{lstlisting}
 from mindquantum.core.operators import FermionOperator, hermitian_conjugated
 fer_op = FermionOperator("1^ 3")
 hermitian_conjugated(fer_op)
-    \end{lstlisting}
-\end{itemize}
+\end{lstlisting}
 
 \subsubsection{Transformation}
-Quantum simulation of fermionic systems presents a specific challenge. To effectively reduce the resources used to simulate fermion Hamiltonian on quantum hardware, we can simulate fermions with qubits, which involves the conversion between the fermionic Hamiltonian and the qubit Hamiltonian. \MindQuantum\ supplies the module $mindquantum.algorithm.nisq.Transform$ for transformation between fermions ($FermionOperator$) and bosons ($QubitOperator$). The following functions are provided:
+Quantum simulation of fermionic systems presents a specific challenge. To effectively reduce the resources used to simulate fermion Hamiltonian on quantum hardware, we can simulate fermions with qubits, which involves the conversion between the fermionic Hamiltonian and the qubit Hamiltonian. \MindQuantum\ supplies the module \code{mindquantum.algorithm.nisq.Transform} for transformation between fermions (\FermionOperator) and bosons (\QubitOperator). The following functions are provided:
 \begin{itemize}
-    \item $jordan\_wigner()$: Apply the Jordan-Wigner transformation, which maps fermionic annihilation operators (fermions) to qubits (bosons) via:
+    \item \methodjordanwigner: Apply the Jordan-Wigner transformation, which maps fermionic annihilation operators (fermions) to qubits (bosons) via:
           \begin{equation}
               \begin{split}
                   a_j^{\dagger} \to {\sigma}_j^{-} X \prod_{i=0}^{j-1} {\sigma}^Z_i \\
@@ -136,7 +141,7 @@ Quantum simulation of fermionic systems presents a specific challenge. To effect
               \end{split}
           \end{equation}
           where ${\sigma}_j^{+} = {\sigma}_j^X+i{\sigma}_j^Y$, ${\sigma}_j^{-} = {\sigma}_j^X-i{\sigma}_j^Y$, are the spin-up operator and spin-down operator respectively. The operator $\prod_{i=0}^{p-1} {{\sigma}^Z_i}$ is a “parity operator” with eigenvalues ±1, corresponding to eigenstates for which the subset of bits with index less than or equal to $i$ has even or odd parity, respectively. This transformation can retain the locality of the initial occupation number. The problem with this method is that as a consequence of the non-locality of the parity operator, the number of extra qubit operations required to simulate a single fermionic operator scales as $O(n)$.
-    \item $parity()$: Apply the parity transformation, which uses qubit $j$ to store the $parity$ of all occupied orbitals up to orbital $j$. That is, we could let qubit $j$ store $p_j = (\sum_{i=0}^j f_i) mod 2$. This encoding of fermionic states in qubit states is called the $parity$ basis. In terms of these vectors (e.g. $(j_7,...,j_1,j_0)^T$), which is the occupation number basis states equivalent to, the map to the parity basis is given by:
+    \item \methodparity: Apply the parity transformation, which uses qubit $j$ to store the $parity$ of all occupied orbitals up to orbital $j$. That is, we could let qubit $j$ store $p_j = (\sum_{i=0}^j f_i) mod 2$. This encoding of fermionic states in qubit states is called the $parity$ basis. In terms of these vectors (e.g. $(j_7,...,j_1,j_0)^T$), which is the occupation number basis states equivalent to, the map to the parity basis is given by:
           \begin{equation}
               p_i = \sum_j {[\pi_n]_{ij} f_j},
           \end{equation}
@@ -155,19 +160,19 @@ Quantum simulation of fermionic systems presents a specific challenge. To effect
                   a_j \to \frac{1}{2} (\prod_{i=j+1}^n ({\sigma}^X_i X))({\sigma}^X_j + i{\sigma}^Y_j) X {\sigma}^Z_{j-1}.
               \end{split}
           \end{equation}
-    \item $bravyi\_kitaev()$ \cite{bravyi2002fermionic, fenwick1994new}: The previous two approaches are dual in the way that they store the information required to simulate fermionic operators with qubits. With the occupation number basis and its associated Jordan-Wigner transformation, the occupation information is stored locally but the parity information is non-local, whereas in the parity basis method and its corresponding operator transformation, the parity information is stored locally but the occupation information is non-local.
+    \item \methodbravyikitaev \cite{bravyi2002fermionic, fenwick1994new}: The previous two approaches are dual in the way that they store the information required to simulate fermionic operators with qubits. With the occupation number basis and its associated Jordan-Wigner transformation, the occupation information is stored locally but the parity information is non-local, whereas in the parity basis method and its corresponding operator transformation, the parity information is stored locally but the occupation information is non-local.
           The Bravyi-Kitaev transformation is a middle ground, it balances the locality of occupation and parity information for improved simulation efficiency. In this scheme, qubits store the parity of a set of $2^x$ orbitals, where $x \geq 0$. A qubit of index $j$ always stores orbital $j$. For even values of $j$, this is the only orbital that it stores, but for odd values of $j$, it also stores a certain set of adjacent orbitals with index less than $j$. The map from the occupation number basis to the Bravyi-Kitaev basis is:
           \begin{equation}
               b_i = \sum_j {[\beta_n]_{ij} f_j},
           \end{equation}
           where $n$ is the number of orbitals, $\beta_n$ is an ($n \times n$) square matrix. See \cite{seeley2012bravyi} for a detailed explanation.
-    \item $bravyi\_kitaev\_superfast()$: A fast version of $bravyi\_kitaev()$, which can perform the Bravyi-Kitaev transformation at a faster speed \cite{setia2018bravyi}. Note that only Hermitian operators such as the following can be transformed:
+    \item \methodbravyikitaevsuperfast: A fast version of $bravyi\_kitaev()$, which can perform the Bravyi-Kitaev transformation at a faster speed \cite{setia2018bravyi}. Note that only Hermitian operators such as the following can be transformed:
           \begin{equation}
               C + \sum_{p,q} h_{p,q} a_p^{\dagger} a_q + \sum_{p,q,r,s} h_{p,q,r,s} a_p^{\dagger} a_q^{\dagger} a_r a_s,
           \end{equation}
           where $C$ is a constant.
-    \item $reversed\_jordan\_wigner()$: Apply inverse transformation of Jordan-Wigner, which will transform $QubitOperator$ to $FermionOperator$.
-    \item $ternary\_tree()$: Apply the Ternary-Tree transformation. This function is based on \cite{jiang2020optimal}.
+    \item \methodreversedjordanwigner: Apply inverse transformation of Jordan-Wigner, which will transform $QubitOperator$ to $FermionOperator$.
+    \item \methodternarytree: Apply the Ternary-Tree transformation. This function is based on \cite{jiang2020optimal}.
 \end{itemize}
 In the code below, we use the function $Transform()$ to transform $FermionOperator$ to $QubitOperator$.
 \begin{lstlisting}

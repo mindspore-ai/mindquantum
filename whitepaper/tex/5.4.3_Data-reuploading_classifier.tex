@@ -34,9 +34,9 @@ The authors proved in their work that the equivalence between the data re-upload
 
 
 We precede the construction of the single-qubit classifier with an insight into the workflow of a classical single-layer neural network.
-As it is shown in Fig~\ref{diagram_data_reuploading} (a), the original data is fed into and processed by each neuron, or in other words, the original data is re-uploaded multiple times. And then in conjunction with the activation function, this feed-forward neural network captures non-linearity.
+As it is shown in Fig.~\ref{diagram_data_reuploading} (a), the original data is fed into and processed by each neuron, or in other words, the original data is re-uploaded multiple times. And then in conjunction with the activation function, this feed-forward neural network captures non-linearity.
 
-In order to introduce this capacity to the single-qubit classifier, we have also to re-upload the data into the qubit repeatedly, and without violating the principle of quantum no-cloning theorem. The data re-uploading scheme \cite{PerezSalinas2020datareuploading} is specifically designed to address this problem, and its workflow is depicted in Fig~\ref{diagram_data_reuploading} (b). Similarly to the classical neural network, data points are introduced simultaneously into each processing unit, represented by a unitary rotation, of single-qubit quantum classifier.
+In order to introduce this capacity to the single-qubit classifier, we have also to re-upload the data into the qubit repeatedly, and without violating the principle of quantum no-cloning theorem. The data re-uploading scheme \cite{PerezSalinas2020datareuploading} is specifically designed to address this problem, and its workflow is depicted in Fig.~\ref{diagram_data_reuploading} (b). Similarly to the classical neural network, data points are introduced simultaneously into each processing unit, represented by a unitary rotation, of single-qubit quantum classifier.
 However, the processing units are not only affected by the input data but also by the previous processing units.
 The resulting output is a quantum state that will be measured to extract the classification result.
 
@@ -51,7 +51,7 @@ The resulting output is a quantum state that will be measured to extract the cla
 \end{figure}
 
 The explicit form of this single-qubit classifier is
-shown in Fig~\ref{data_reuploading_circuit}. Classical data is repeatedly re-uploaded sequentially, with processing units interspersed between them. The introduced data can be represented as qubit rotations. A data point from 3-dimensional space, $\overrightarrow{x}$, can be re-uploaded by a rotation of the qubit $U(\overrightarrow{x})$. Subsequent processing units are also rotations, whose angles will be optimized as trainable parameters to minimize the cost value $C(F)$ for performance improvement. The fidelity $F$ quantifies the closeness between the final state of the circuit and the target state corresponding to the label.
+shown in Fig.~\ref{data_reuploading_circuit}. Classical data is repeatedly re-uploaded sequentially, with processing units interspersed between them. The introduced data can be represented as qubit rotations. A data point from 3-dimensional space, $\overrightarrow{x}$, can be re-uploaded by a rotation of the qubit $U(\overrightarrow{x})$. Subsequent processing units are also rotations, whose angles will be optimized as trainable parameters to minimize the cost value $C(F)$ for performance improvement. The fidelity $F$ quantifies the closeness between the final state of the circuit and the target state corresponding to the label.
 
 Then, the overall function of this quantum circuit is
 $$\mathcal{U}(\overrightarrow{\phi},\overrightarrow{x})=U(\overrightarrow{\phi}_N)U(\overrightarrow{x})\cdots U(\overrightarrow{\phi}_1)U(\overrightarrow{x}),$$

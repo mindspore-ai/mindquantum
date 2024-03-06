@@ -20,11 +20,11 @@ The following quantum channels are implemented in \MindQuantum.
 \begin{equation}
     \Psi(\rho) = (1-p_x-p_y-p_z) \rho + p_x X \rho X + p_y Y \rho Y + p_z Z \rho Z.
 \end{equation}
-It becomes \BitFlipChannel\ if only $p_x$ is nonzero. Similarly, \PhaseFlipChannel\ has only one nonzero value $p_z$ and \BitPhaseFlipChannel\ is nonzero $p_y$. A special case is, all Pauli operators have same probabilities, which is called depolarizing channel. Depolarizing channel is widely used in the description of quantum noise. Here is the formula in 1-qubit case:
+It becomes \BitFlipChannel\ if only $p_x$ is nonzero. Similarly, \PhaseFlipChannel\ has only one nonzero value $p_z$ and \BitPhaseFlipChannel\ is nonzero $p_y$. A special case is, all Pauli operators have same probabilities, which is called \DepolarizingChannel. Depolarizing channel is widely used in the description of quantum noise. Here is the formula in 1-qubit case:
 \begin{equation}
     \Psi(\rho) =  (1-p) \rho + \frac{p}{4}(I\rho I+X\rho X+Y\rho Y+Z\rho Z).
 \end{equation}
-\DepolarizingChannel\ in \MindQuantum\ also supports multiple qubits case.
+Depolarizing channel in \MindQuantum\ also supports multiple qubits case.
 \begin{lstlisting}
 from mindquantum.core.gates import DepolarizingChannel
 from mindquantum.core.circuit import Circuit
@@ -89,7 +89,7 @@ The output is:
 \begin{lstlisting}
 BitFlipAdder<flip_rate=0.3, with_ctrl=False>
 \end{lstlisting}
-After applying the noise model to a circuit, a bit flip channel will add to each quantum gate, see Fig~\ref{fig:bit_flip_adder}.
+After applying the noise model to a circuit, a bit flip channel will add to each quantum gate, see Fig.~\ref{fig:bit_flip_adder}.
 \begin{figure}
     \centering
     \begin{subfigure}{0.2\textwidth}
@@ -181,7 +181,7 @@ SequentialAdder<
   >
 >
 \end{lstlisting}
-A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excluder()} will be met. All the Channel Adder in \SequentialAdder will be executed one by one. From Fig~\ref{fig:complex_adder}, we can see that this noise model satisfied our requirement.
+A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excluder()} will be met. All the Channel Adder in \SequentialAdder will be executed one by one. From Fig.~\ref{fig:complex_adder}, we can see that this noise model satisfies our requirement.
 
 % \begin{lstlisting}
 % circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()
@@ -208,4 +208,4 @@ circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()
 noise_sim = Simulator(NoiseBackend('mqvector', 2, noise_model))
 noise_sim.sampling(circ, pr={'a': 1, 'b': 2, 'c':3}, shots=10000)
 \end{lstlisting}
-Here we construct a noise simulator together with \code{"mqvector"} based \NoiseBackend and the noise model than we built previously.
+Here we construct a noise simulator using \code{“mqvector”}-based \NoiseBackend and the noise model that we built previously.

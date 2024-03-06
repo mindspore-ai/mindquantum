@@ -34,14 +34,14 @@ The expression of \code{pr5} will be displayed as $\sqrt{2}*a + \pi*\text{theta}
 
 When parameterized circuits are simulated by \MindQuantum, the \ParameterResolver is provided such that the simulator will replace the symbol in circuits as the corresponding real value declared in the \ParameterResolver.
 
-In a hybrid quantum-classical algorithm, the parameters are usually optimized by some gradient descent methods such as SGD, ADAM, and BFGS. When we declare an instance of \ParameterResolver, by default, all parameters need to be differentiated.
+In a hybrid quantum-classical algorithm, the parameters are usually optimized by some gradient descent methods such as SGD, ADAM, and BFGS. When we declare an instance of \ParameterResolver, by default, all parameters need to be differentiable.
 However, we can explicitly state whether a parameter needs to be differentiated as follows,
 
 \begin{lstlisting}
 params.no_grad_part('theta')
 \end{lstlisting}
 
-In a hybrid algorithm, parameterized quantum gates or circuits usually are divided into two parts, encoder, and ansatz. The encoder encodes the classical data into the quantum state. And the ansatz is an assumption about the form of an unknown function, and we expect that we can get the solution to the problem by optimizing it. By default, all parameters in \ParameterResolver are initialized as ansatz's parameters. We can convert these parameters between encoder's and ansatz's parameters in the following way
+In a hybrid algorithm, parameterized quantum gates or circuits are usually divided into two parts, encoder, and ansatz. The encoder encodes the classical data into the quantum state. And the ansatz is an assumption about the form of an unknown function, and we expect that we can get the solution to the problem by optimizing it. By default, all parameters in \ParameterResolver are initialized as ansatz's parameters. We can convert these parameters between encoder's and ansatz's parameters in the following way
 
 \begin{lstlisting}
 #declare all parameters as encoder's parameters
@@ -65,7 +65,7 @@ params.astype(mq.complex128)
 
 \subsubsection{Parameter Generator}
 
-Besides the method in above section, \MindQuantum\ also provide a power tools to generate parameters quickly, \PRGenerator.
+Besides the method in above section, \MindQuantum\ also provide a powerful tool to generate parameters quickly, \PRGenerator.
 \begin{lstlisting}
 from mindquantum.core.parameterresolver import PRGenerator
 
