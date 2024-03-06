@@ -1,5 +1,7 @@
 View demo code of this section: \democode{02}{2.3}
 
+In this section, we will introduce quantum gates and show how to use quantum gates in \MindQuantum. We classify quantum gates into three types: fixed quantum gates, parameterized quantum gates and custom quantum gates, and use the \code{on()} method to set the target qubits and control qubits. In addition, we also introduce how to quickly add control qubits to multiple quantum gates through the \code{controlled()} function.
+
 \subsubsection{Quantum Gates}
 In the realm of quantum computing, a quantum gate is a fundamental unit of operation that acts upon qubits, the basic units of quantum information. Just as classical computers use logic gates to manipulate bits of information, quantum computers use quantum gates to manipulate qubits. However, due to the unique nature of quantum mechanics, quantum gates have some distinctive properties.
 
@@ -61,7 +63,7 @@ Here are some examples of single qubit gates, let $\ket{\phi}=a\ket{0}+b\ket{1}$
     Z\ket{\phi} & =
     \begin{bmatrix}
         1 &  & 0 \\
-        0 &  & -
+        0 &  & -1
     \end{bmatrix}
     \begin{bmatrix}
         a \\
@@ -104,7 +106,7 @@ SWAP(0 1)
 \end{lstlisting}
 
 \subsubsection{Parameterized Quantum Gate}
-Pauli matrices are the most important matrices, and they form a set of bases for spatial operators. When the Pauli matrix appears on the exponents, three classes of useful unitary operators are produced, namely rotation operators with respect to $\hat{x}, \hat{y}, \hat{z}$, defined by the following equation.
+Pauli matrices are very important matrices, and they form a set of bases for spatial operators. When the Pauli matrix appears on the exponents, three classes of useful unitary operators are produced, namely rotation operators with respect to $\hat{x}, \hat{y}, \hat{z}$, defined by the following equations.
 
 \begin{align*}
     Rx(\theta) & =
@@ -131,7 +133,7 @@ Pauli matrices are the most important matrices, and they form a set of bases for
 \end{align*}
 
 
-Since there are an infinite number of $2*2$ matrices, the number of quantum gates is also infinite. According to the Z-Y decomposition, a unitary matrix U over any single qubit can be represented as $U=e^{i\alpha}Rz(\beta)Ry(\gamma)Rz(\delta)$. Therefore, in order to construct arbitrary quantum gates, it is necessary to use parameters to construct rotating gates. There are three initialization methods provided in \MindQuantum, because \ParameterResolver has three initialization methods. Take the RX gate as an example:
+Since there is an infinite number of $2*2$ matrices, the number of quantum gates is also infinite. According to the Z-Y decomposition, a unitary matrix $U$ over any single qubit can be represented as $U=e^{i\alpha}Rz(\beta)Ry(\gamma)Rz(\delta)$. Therefore, in order to construct arbitrary quantum gates, it is necessary to use parameters to construct rotating gates. There are three initialization methods provided in \MindQuantum, because \ParameterResolver has three initialization methods. Take the RX gate as an example:
 
 \begin{lstlisting}
 from mindquantum.core.gates import RX
@@ -152,11 +154,9 @@ mat_rx4 = rx4.matrix(pr={'a': 1, 'b': 2})
 Please notice that in the above demo, \code{rx1} is actually a non-parameterized gate, since we already give the rotation angle $\theta = 0.5$.
 
 \subsubsection{Custom Quantum Gate}
-Since it is difficult to construct arbitrary quantum gates by using general gates in practical applications, two methods for constructing custom quantum gates are provided in \MindQuantum. They are quantum gates without parameters and quantum gates with parameters.
+Since it is difficult to construct arbitrary quantum gates by using general gates in practical applications, two methods for constructing custom quantum gates are provided in \MindQuantum. They are quantum gates without and with parameters.
 
-\textbf{1. Universal Math Gate}
-
-If the matrix representation of a gate is known, it is convenient to construct the gate in \MindQuantum. Two parameters are required to initialize \UnivMathGate, which are the gate name and the matrix value. If the matrix is not unitary, the result cannot be normalized.
+\textit{Universal Math Gate} -- If the matrix representation of a gate is known, it is convenient to construct the gate in \MindQuantum. Two parameters are required to initialize \UnivMathGate, which are the gate name and the matrix value. If the matrix is not unitary, the result cannot be normalized.
 Example:
 \begin{lstlisting}
 from mindquantum.core.gates import UnivMathGate
@@ -171,24 +171,19 @@ Output:
 custom_X(0 <-: 1)
 \end{lstlisting}
 
-\textbf{2. Universal Parameterized Gate}
-
-Sometimes we need to construct a parameterized gate in which the parameter is self-defined. In \MindQuantum, we can easily construct a customized parameterized gate by \geneunivparameterizedgate, and its usage is basically as same as that of \RX gate. Two parameters are required to initialize such a gate. One is a function or method to use only one parameter (similar to theta in \RX) to generate a unitary matrix, noting that no error is reported if the resulting matrix is not unitary. The other is the function or method that produces the derivative of this matrix, which is used to calculate the gradient. This method supports the generation of arbitrary qubit operators and can accelerate the performance by numba.JIT.
+\textit{Universal Parameterized Gate} -- Sometimes we need to construct a parameterized gate in which the parameter is self-defined. In \MindQuantum, we can easily construct a customized parameterized gate by \geneunivparameterizedgate, and its usage is basically as same as that of \RX gate. Two parameters are required to initialize such a gate. One is a function or method to use only one parameter (similar to theta in \RX) to generate a unitary matrix, noting that no error is reported if the resulting matrix is not unitary. The other is the function or method that produces the derivative of this matrix, which is used to calculate the gradient. This method supports the generation of arbitrary qubit operators and can accelerate the performance by numba.JIT.
 
 Example:
 \begin{lstlisting}
 from mindquantum.core.gates import gene_univ_parameterized_gate
 
-
 def matrix(theta):
     return np.array([[np.exp(1j * theta), 0],
                      [0, np.exp(-1j * theta)]])
 
-
 def diff_matrix(theta):
     return 1j * np.array([[np.exp(1j * theta), 0],
                           [0, -np.exp(-1j * theta)]])
-
 
 TestGate = gene_univ_parameterized_gate('Test', matrix, diff_matrix)
 
@@ -199,8 +194,8 @@ test1 = TestGate(0.5).on(0)
 test2 = TestGate('a').on(0)
 \end{lstlisting}
 
-\subsubsection{On Method}
-In quantum circuits, controlled operation is very common. Let U be any single qubit unitary operation, then the controlled U operation is a double qubit operation. One is the control bit and one is the target bit. In \MindQuantum, we can implement this function through the on method. This method takes two parameters. One is the target bit and the other is the control bit, both of which can be single qubit or multi-qubits. It is worth emphasizing that any gate can add arbitrary control operations.
+\subsubsection{`On' Method}
+When constructing quantum circuits, we need to specify the target qubits and control qubits of the quantum gate. In \MindQuantum, we can implement this function through the \code{on()} method. This method takes two parameters. One is the target qubits and the other is the control qubits, both of which can be single qubit or multiple qubits. It is worth emphasizing that any gate can add arbitrary control operations.
 
 Example:
 \begin{lstlisting}
@@ -215,8 +210,8 @@ Target qubit:[0],Control qubits:[1, 2]
 \end{lstlisting}
 
 % TODO(xusheng): move this section to quantum circuit.
-\subsubsection{Controlled Method}
-In addition to the \code{on} method, we can also add control bits via the Control method. The controlled method is used to add control qubits (which can be multiple) to any quantum circuit or quantum operator. For example, we build a quantum circuit containing only two qubits and add a control qubit - q2 to it by controlled method:
+\subsubsection{`Controlled' Function}
+In addition to the \code{on()} method, we can also add control bits via the \code{controlled()} function. The \code{controlled()} function is used to add control qubits (which can be multiple) to any quantum circuit or quantum operator. For example, we build a quantum circuit containing only two qubits and add a control qubit q2 to it by \code{controlled()} method:
 \begin{lstlisting}
 from mindquantum.algorithm.library import qft
 from mindquantum.core.circuit import controlled
@@ -226,19 +221,24 @@ u2 = controlled(u1)
 u2 = u2(2)
 u2.svg()
 \end{lstlisting}
+
+As shown in Fig.~\ref{fig:controlled-method}, the QFT circuit now is controlled by q2.
+
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.9\linewidth]{2.3_figures/control.png}
     \caption{Add control qubits}
     \label{fig:controlled-method}
 \end{figure}
-By looking at the circuit diagram of u2 and u4, we can see that the results are the same.\\
-In addition, we can add control bits to quantum circuits in batches. For example, in the following example, we add control bits to q0 and q1 - q2 and q3, respectively:
+
+In addition, we can add control bits to quantum circuits in batches. In the following example, the target qubits are q0 and q1, with control qubits q2 and q3, respectively:
 \begin{lstlisting}
 u = controlled(qft)
 u = u([2, 3], [0, 1])
 u.svg()
 \end{lstlisting}
+
+The result is shown in Fig.~\ref{fig:batch-control}.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.9\linewidth]{2.3_figures/batch_control.png}

@@ -44,6 +44,7 @@
 \newcommand{\tr}{\text{tr}}
 
 \usepackage{listings}
+\lstset{stepnumber=0}
 \usepackage{xcolor}
 
 \UseRawInputEncoding
@@ -112,108 +113,117 @@
 
 \begin{document}
 
-\title{MindSpore Quantum: A Pioneering Hybrid Quantum-classical Framework for Noisy Intermediate-Scale Quantum Algorithms Design and Implementation
+\title{MindSpore Quantum: A User-Friendly, High-Performance, and AI-Compatible Quantum Computing Framework
 }
 
 \author{Xusheng Xu}
-\email{xuxusheng2@huawei.com}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Junyuan Zhou}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Zuoheng Zou}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Xu Zhou}
-\affiliation{School of Physics and Astronomy, Sun Yat-sen University, Zhuhai 519082, China}
-\author{Runhong He}
-\affiliation{State Key Laboratory of Computer Science, Institute of Software Chinese Academy of Sciences, Beijing, 100190}
-\author{Wuxin Liu}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
+\email{thuxuxs@163.com}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
 \author{Jiangyu Cui}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Haiying Zhao}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Yikang Zhu}
-\affiliation{School of Computer Science and Technology,
-    University of Science and Technology of China, Hefei 230027, China}
-\author{Yanling Lin}
-\affiliation{School of Computer Science and Technology,
-    University of Science and Technology of China, Hefei 230027, China}
-\author{Chufan Lyu}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Zidong Cui}
 \affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu 610051, China}
-\author{Jialiang Tang}
-\affiliation{Department of Physical Chemistry, University of the Basque Country UPV/EHU, Apartado 644, 48080 Bilbao, Spain}
-\author{Ruoqian Xu}
-\affiliation{Department of Physical Chemistry, University of the Basque Country UPV/EHU, Apartado 644, 48080 Bilbao, Spain}
-\author{Runqiu Shu}
-\affiliation{School of Automation Science and Engineering, South China University of Technology, Guangzhou 510641, China}
+\author{Runhong He}
+\affiliation{State Key Laboratory of Computer Science, Institute of Software Chinese Academy of Sciences, Beijing 100190}
 \author{Qingyu Li}
-\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu, 610051, China}
-\author{Qiang Zheng}
+\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu 610051, China}
+\author{Xiaowei Li}
+\affiliation{Shenzhen Institute for Quantum Science and Engineering, Southern University of Science and Technology, Shenzhen 518055, China}
+\author{Yanling Lin}
 \affiliation{School of Computer Science and Technology,
     University of Science and Technology of China, Hefei 230027, China}
 \author{Jiale Liu}
 \affiliation{School of Computer Science and Technology,
     University of Science and Technology of China, Hefei 230027, China}
-\author{Xiaowei Li}
-\affiliation{Shenzhen Institute for Quantum Science and Engineering, Southern University of Science and Technology, Shenzhen 518055, China}
-\author{Xi Cao}
-\affiliation{Department of Automation, Tsinghua University, Beijing, 100084, China}
-\author{Zidong Cui}
-\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu, 610051, China}
-\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
-    University of Electronic Science and Technology of China, Chengdu, 611731, China}
-\author{Abolfazl Bayat}
-\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu, 610051, China}
-\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
-    University of Electronic Science and Technology of China, Chengdu, 611731, China}
-\author{Zizhu Wang}
-\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu, 610051, China}
-\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
-    University of Electronic Science and Technology of China, Chengdu, 611731, China}
-\author{Xiaoting Wang}
-\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu, 610051, China}
-\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
-    University of Electronic Science and Technology of China, Chengdu, 611731, China}
-\author{Qingguo Zeng}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Shu Xu}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Shijie Pan}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Maolin Luo}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Mosharev Pavel}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Wei Cui}
-\affiliation{School of Automation Science and Engineering, South China University of Technology, Guangzhou 510641, China}
-\author{Shijie Wei}
-\affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People’s Republic of China}
-\author{Kang Yang}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
+\author{Wuxin Liu}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
 \author{Jiale Lu}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
-\author{Zhaofeng Su}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Maolin Luo}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Chufan Lyu}
+\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu 610051, China}
+\author{Shijie Pan}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Mosharev Pavel}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Runqiu Shu}
+\affiliation{School of Automation Science and Engineering, South China University of Technology, Guangzhou 510641, China}
+\author{Jialiang Tang}
+\affiliation{Department of Physical Chemistry, University of the Basque Country UPV/EHU, Apartado 644, 48080 Bilbao, Spain}
+\author{Ruoqian Xu}
+\affiliation{Department of Physical Chemistry, University of the Basque Country UPV/EHU, Apartado 644, 48080 Bilbao, Spain}
+\author{Shu Xu}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Kang Yang}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Fan Yu}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Qingguo Zeng}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Haiying Zhao}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Qiang Zheng}
 \affiliation{School of Computer Science and Technology,
     University of Science and Technology of China, Hefei 230027, China}
-\author{Zhendong Li}
-\affiliation{Key Laboratory of Theoretical and Computational Photochemistry, Ministry of Education,
-    College of Chemistry, Beijing Normal University, Beijing 100875, China}
+\author{Junyuan Zhou}
+\email{jedzhou99@163.com}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\author{Xu Zhou}
+\affiliation{School of Physics and Astronomy, Sun Yat-sen University, Zhuhai 519082, China}
+\author{Yikang Zhu}
+\affiliation{School of Computer Science and Technology,
+    University of Science and Technology of China, Hefei 230027, China}
+\author{Zuoheng Zou}
+\email{zouzuoheng@pku.edu.cn}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+
+
+\author{Abolfazl Bayat}
+\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu 610051, China}
+\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
+    University of Electronic Science and Technology of China, Chengdu 611731, China}
+\author{Xi Cao}
+\affiliation{Department of Automation, Tsinghua University, Beijing 100084, China}
+\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
+    University of Electronic Science and Technology of China, Chengdu 611731, China}
 \author{Xi Chen}
 \affiliation{Department of Physical Chemistry, University of the Basque Country UPV/EHU, Apartado 644, 48080 Bilbao, Spain}
 \affiliation{EHU Quantum Center, University of the Basque Country UPV/EHU, Barrio Sarriena, s/n, 48940 Leioa, Spain}
-\author{Re-Bing Wu}
-\affiliation{Department of Automation, Tsinghua University, Beijing, 100084, China}
-\author{Pan Zhang}
-\affiliation{CAS Key Laboratory for Theoretical Physics, Institute of Theoretical Physics,
-    Chinese Academy of Sciences, Beijing 100190, China}
+\author{Wei Cui}
+\affiliation{School of Automation Science and Engineering, South China University of Technology, Guangzhou 510641, China}
+\author{Zhendong Li}
+\affiliation{Key Laboratory of Theoretical and Computational Photochemistry, Ministry of Education,
+    College of Chemistry, Beijing Normal University, Beijing 100875, China}
 \author{Guilu Long}
 \affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People’s Republic of China}
 \affiliation{State Key Laboratory of Low-Dimensional Quantum Physics and Department of Physics, Tsinghua University, Beijing 100084, People’s Republic of China}
-\author{Fan Yu}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
+\author{Zhaofeng Su}
+\affiliation{School of Computer Science and Technology,
+    University of Science and Technology of China, Hefei 230027, China}
+\author{Xiaoting Wang}
+\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu 610051, China}
+\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
+    University of Electronic Science and Technology of China, Chengdu 611731, China}
+\author{Zizhu Wang}
+\affiliation{Institute of Fundamental and Frontier Sciences, University of Electronic Science and Technology of China, Chengdu 610051, China}
+\affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
+    University of Electronic Science and Technology of China, Chengdu 611731, China}
+\author{Shijie Wei}
+\affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People’s Republic of China}
+\author{Re-Bing Wu}
+\affiliation{Department of Automation, Tsinghua University, Beijing 100084, China}
+\author{Pan Zhang}
+\affiliation{CAS Key Laboratory for Theoretical Physics, Institute of Theoretical Physics,
+    Chinese Academy of Sciences, Beijing 100190, China}
+
 \author{Man-Hong Yung}
-\email{yung.manhong@huawei.com}
-\affiliation{Central Research Institute, Huawei Technologies, Shenzhen 518129, China}
+\email{yung@sustech.edu.cn}
+\affiliation{Quantum Science Center of Guangdong-Hong Kong-Macao Greater Bay Area (Guangdong), Shenzhen, China}
+\affiliation{Shenzhen Institute for Quantum Science and Engineering, Southern University of Science and Technology, Shenzhen 518055, China}
+\affiliation{International Quantum Academy, Shenzhen 518048, China}
+\affiliation{Guangdong Provincial Key Laboratory of Quantum Science and Engineering, Southern University of Science and Technology, Shenzhen 518055, China}
+\affiliation{Shenzhen Key Laboratory of Quantum Science and Engineering, Southern University of Science and Technology, Shenzhen 518055, China}
 
 \date{\today}
 
@@ -221,7 +231,7 @@
 
 
 \begin{abstract}
-    We introduce MindSpore Quantum, a pioneering hybrid quantum-classical framework with a primary focus on the design and implementation of Noisy Intermediate-Scale Quantum (NISQ) algorithms. Leveraging the robust support of MindSpore, an advanced open-source deep learning training/inference framework, MindSpore Quantum exhibits exceptional efficiency in the design and training of variational quantum algorithms on both CPU and GPU platforms, delivering remarkable performance. Furthermore, this framework places a strong emphasis on enhancing the operational efficiency of quantum algorithms when executed on real quantum hardware. This encompasses the development of algorithms for quantum circuit compilation and qubit mapping, crucial components for achieving optimal performance on quantum processors. In addition to the core framework, we introduce QuPack—a meticulously crafted quantum computing acceleration engine. QuPack significantly accelerates the simulation speed of MindSpore Quantum, particularly in variational quantum eigensolver (VQE), Quantum Approximate Optimization Algorithm (QAOA), and tensor network simulations, providing astonishing results. This combination of cutting-edge technologies empowers researchers and practitioners to explore the frontiers of quantum computing with unprecedented efficiency and performance.
+    We introduce MindSpore Quantum, a pioneering hybrid quantum-classical framework with a primary focus on the design and implementation of noisy intermediate-scale quantum (NISQ) algorithms. Leveraging the robust support of MindSpore, an advanced open-source deep learning training/inference framework, MindSpore Quantum exhibits exceptional efficiency in the design and training of variational quantum algorithms on both CPU and GPU platforms, delivering remarkable performance. Furthermore, this framework places a strong emphasis on enhancing the operational efficiency of quantum algorithms when executed on real quantum hardware. This encompasses the development of algorithms for quantum circuit compilation and qubit mapping, crucial components for achieving optimal performance on quantum processors. In addition to the core framework, we introduce QuPack—a meticulously crafted quantum computing acceleration engine. QuPack significantly accelerates the simulation speed of MindSpore Quantum, particularly in variational quantum eigensolver (VQE), quantum approximate optimization algorithm (QAOA), and tensor network simulations, providing astonishing results. This combination of cutting-edge technologies empowers researchers and practitioners to explore the frontiers of quantum computing with unprecedented efficiency and performance.
 \end{abstract}
 \maketitle
 \tableofcontents
