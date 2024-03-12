@@ -137,7 +137,6 @@ def params_zyz(mat: np.ndarray):
     coe = linalg.det(mat) ** (-0.5)
     alpha = -np.angle(coe)
     v = coe * mat
-    v = v.round(10)
     theta = 2 * atan2(abs(v[1, 0]), abs(v[0, 0]))
     phi_lam_sum = 2 * np.angle(v[1, 1])
     phi_lam_diff = 2 * np.angle(v[1, 0])
