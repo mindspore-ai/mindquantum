@@ -108,6 +108,6 @@ def test_kak_decomposition():
     """
 
     g = gates.UnivMathGate('U', rand_unitary(4, random_state=123)).on([0, 1])
-    circ_original = (Circuit() + g).reverse_qubits()
+    circ_original = Circuit() + g
     circ_decomposed = decompose.kak_decompose(g)
     assert_equivalent_unitary(circ_original.matrix(), circ_decomposed.matrix())
