@@ -55,41 +55,6 @@ def _symmetric_index(dim: int, n_qudits: int) -> dict:
     return ind
 
 
-def is_symmetric(mat: np.ndarray, n_qudits: int = 1) -> bool:
-    '''Check whether a qubit matrix is symmetric.'''
-    if mat.ndim == 2 and (mat.shape[0] == 1 or mat.shape[1] == 1):
-        mat = mat.flatten()
-    if mat.ndim == 2 and mat.shape[0] != mat.shape[1]:
-        raise ValueError(f'Wrong matrix shape {mat.shape}')
-    if mat.ndim != 1 and mat.ndim != 2:
-        raise ValueError(f'Wrong matrix shape {mat.shape}')
-    is_sym = True
-    n = mat.shape[0]
-    if not is_power_of_two(n):
-        raise ValueError(f'Wrong matrix size {n} is not a power of 2')
-    nq = int(np.log2(n))
-    dim = nq // n_qudits + 1
-    if nq % n_qudits == 0 and nq != n_qudits:
-        ind = _symmetric_index(dim, n_qudits)
-    else:
-        raise ValueError(f'Wrong matrix shape {mat.shape} or number of qudits {n_qudits}')
-    if mat.ndim == 1:
-        for i in range(dim**n_qudits):
-            i_ = ind[i]
-            if len(i_) != 1:
-                a = mat[i_]
-                is_sym = is_sym & np.allclose(a, a[0])
-    elif mat.ndim == 2:
-        for i in range(dim**n_qudits):
-            i_ = ind[i]
-            for j in range(dim**n_qudits):
-                j_ = ind[j]
-                if len(i_) != 1 or len(j_) != 1:
-                    a = mat[np.ix_(i_, j_)]
-                    is_sym = is_sym & np.allclose(a, a[0][0])
-    return is_sym
-
-
 def qudit_symmetric_decoding(qubit: np.ndarray, n_qudits: int = 1) -> np.ndarray:
     '''Qudit symmetric decoding.'''
     if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
