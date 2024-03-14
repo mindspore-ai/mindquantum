@@ -55,7 +55,7 @@ def _symmetric_index(dim: int, n_qudits: int) -> dict:
     return ind
 
 
-def qudit_symmetric_decoding(qubit: np.ndarray, n_qudits: int = 1) -> np.ndarray:
+def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray:
     """Qudit symmetric decoding."""
     if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
         qubit = qubit.flatten()
@@ -67,14 +67,14 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qudits: int = 1) -> np.ndarray
     if not is_power_of_two(n):
         raise ValueError(f"Wrong matrix size {n} is not a power of 2")
     nq = int(np.log2(n))
-    dim = nq // n_qudits + 1
-    if nq % n_qudits == 0 and nq != n_qudits:
-        ind = _symmetric_index(dim, n_qudits)
+    dim = nq // n_qubits + 1
+    if nq % n_qubits == 0 and nq != n_qubits:
+        ind = _symmetric_index(dim, n_qubits)
     else:
-        raise ValueError(f"Wrong matrix shape {qubit.shape} or number of qudits {n_qudits}")
+        raise ValueError(f"Wrong matrix shape {qubit.shape} or number of qudits {n_qubits}")
     if qubit.ndim == 1:
-        qudit = np.zeros(dim**n_qudits, dtype=np.complex128)
-        for i in range(dim**n_qudits):
+        qudit = np.zeros(dim**n_qubits, dtype=np.complex128)
+        for i in range(dim**n_qubits):
             i_ = ind[i]
             qubit_i = qubit[i_]
             if np.allclose(qubit_i, qubit_i[0]):
@@ -82,10 +82,10 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qudits: int = 1) -> np.ndarray
             else:
                 raise ValueError("Qubit matrix is not symmetric")
     elif qubit.ndim == 2:
-        qudit = np.zeros([dim**n_qudits, dim**n_qudits], dtype=np.complex128)
-        for i in range(dim**n_qudits):
+        qudit = np.zeros([dim**n_qubits, dim**n_qubits], dtype=np.complex128)
+        for i in range(dim**n_qubits):
             i_ = ind[i]
-            for j in range(dim**n_qudits):
+            for j in range(dim**n_qubits):
                 j_ = ind[j]
                 qubit_ij = qubit[np.ix_(i_, j_)]
                 if np.allclose(qubit_ij, qubit_ij[0][0]):
