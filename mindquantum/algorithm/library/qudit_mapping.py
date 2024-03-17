@@ -23,8 +23,26 @@ from mindquantum.core.gates import X, RX, RY, RZ, U3, GlobalPhase, UnivMathGate
 optional_basis = ["zyz", "u3"]
 
 
-def _symmetric_index(dim: int, n_qudits: int) -> dict:
-    """Index of symmetric mapping."""
+def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
+    """
+    The index of the qudit state element corresponding to the qubit symmetric state during mapping.
+    
+    Args:
+        dim (int): the dimension of qudit state.
+        n_qudits (int): the number fo qudit state.
+
+    Returns:
+        dict, keys are the index of the qudit state, values are the corresponding index of qubit symmetric state.
+
+    Examples:
+        >>> from mindquantum.algorithm.library.qudit_mapping import _symmetric_state_index
+        >>> _symmetric_state_index(dim=3, n_qudits=1)
+        {0: [0], 1: [1, 2], 2: [3]}
+        >>> _symmetric_state_index(dim=4, n_qudits=1)
+        {0: [0], 1: [1, 2, 4], 2: [3, 5, 6], 3: [7]}
+        >>> _symmetric_state_index(dim=3, n_qudits=2)
+        {0: [0], 1: [1, 2], 2: [3], 3: [4, 8], 4: [5, 6, 9, 10], 5: [7, 11], 6: [12], 7: [13, 14], 8: [15]}
+    """
     if not isinstance(dim, int):
         raise ValueError(f"Wrong dimension type {dim} {type(dim)}")
     if not isinstance(n_qudits, int):
@@ -56,7 +74,35 @@ def _symmetric_index(dim: int, n_qudits: int) -> dict:
 
 
 def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray:
-    """Qudit symmetric decoding."""
+    r"""
+    Qudit symmetric decoding, decodes a qubit symmetric state into a qudit state.
+
+    .. math::
+        \begin{align}
+        \ket{00\cdots00}&\to\ket{0} \\[.5ex]
+        \frac{\ket{0\cdots01}+\ket{0\cdots010}+\ket{10\cdots0}}{\sqrt{d-1}}&\to\ket{1} \\
+        \frac{\ket{0\cdots011}+\ket{0\cdots0101}+\ket{110\cdots0}}{\sqrt{d-1}}&\to\ket{2} \\
+        \vdots&\qquad\vdots \\[.5ex]
+        \ket{11\cdots11}&\to\ket{d-1}
+        \end{align}
+
+    Args:
+        qubit (np.ndarray) - the qubit symmetric state that needs to be decoded, where the qubit state must satisfy the properties of symmetric state.
+        n_qubits (int) - the number of qubits in the qubit symmetric state, Default: ``1``.
+
+    Returns:
+        np.ndarray，the qudit state obtained after the qudit symmetric decoding.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.library.qudit_mapping import qudit_symmetric_decoding
+        >>> qubit = np.array([1., 2., 2., 3.])
+        >>> qubit /= np.linalg.norm(qubit)
+        >>> print(qubit)
+        [0.23570226 0.47140452 0.47140452 0.70710678]
+        >>> print(qudit_symmetric_decoding(qubit))
+        [0.23570226+0.j 0.66666667+0.j 0.70710678+0.j]
+    """
     if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
         qubit = qubit.flatten()
     if qubit.ndim == 2 and qubit.shape[0] != qubit.shape[1]:
@@ -69,7 +115,7 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
     nq = int(np.log2(n))
     dim = nq // n_qubits + 1
     if nq % n_qubits == 0 and nq != n_qubits:
-        ind = _symmetric_index(dim, n_qubits)
+        ind = _symmetric_state_index(dim, n_qubits)
     else:
         raise ValueError(f"Wrong matrix shape {qubit.shape} or number of qudits {n_qubits}")
     if qubit.ndim == 1:
@@ -97,7 +143,36 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
 
 
 def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool = False) -> np.ndarray:
-    """Qudit symmetric encoding."""
+    r"""
+    Qudit symmetric encoding, encodes a qudit state into a qubit symmetric state.
+
+    .. math::
+
+        \begin{align}
+        \ket{0}&\to\ket{00\cdots00} \\[.5ex]
+        \ket{1}&\to\frac{\ket{0\cdots01}+\ket{0\cdots010}+\ket{10\cdots0}}{\sqrt{d-1}} \\
+        \ket{2}&\to\frac{\ket{0\cdots011}+\ket{0\cdots0101}+\ket{110\cdots0}}{\sqrt{d-1}} \\
+        \vdots&\qquad\vdots \\[.5ex]
+        \ket{d-1}&\to\ket{11\cdots11}
+        \end{align}
+
+    Args:
+        qudit (np.ndarray) - the qudit state that needs to be encoded.
+        n_qudits (int) - the number of qudits in the qudit state, Default: ``1``.
+
+    Returns:
+        np.ndarray，the qubit symmetric state obtained after the qudit symmetric encoding.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.library.qudit_mapping import qudit_symmetric_encoding
+        >>> qudit = np.array([1., 2., 3.])
+        >>> qudit /= np.linalg.norm(qudit)
+        >>> print(qudit)
+        [0.26726124 0.53452248 0.80178373]
+        >>> print(qudit_symmetric_encoding(qudit))
+        [0.26726124+0.j 0.37796447+0.j 0.37796447+0.j 0.80178373+0.j]
+    """
     if qudit.ndim == 2 and (qudit.shape[0] == 1 or qudit.shape[1] == 1):
         qudit = qudit.flatten()
     if qudit.ndim == 2 and qudit.shape[0] != qudit.shape[1]:
@@ -108,7 +183,7 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
     if dim % 1 == 0:
         dim = int(dim)
         n = 2**((dim - 1) * n_qudits)
-        ind = _symmetric_index(dim, n_qudits)
+        ind = _symmetric_state_index(dim, n_qudits)
     else:
         raise ValueError(f"Wrong qudit shape {qudit.shape} or number of qudits {n_qudits}")
     if qudit.ndim == 1:
