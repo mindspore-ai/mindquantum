@@ -14,8 +14,8 @@
 # ============================================================================
 """Qudit symmetric mapping module."""
 
-import numpy as np
 from typing import List
+import numpy as np
 from scipy.sparse import csr_matrix
 from mindquantum.utils.f import is_power_of_two
 from mindquantum.core.circuit import Circuit
@@ -27,13 +27,14 @@ optional_basis = ["zyz", "u3"]
 def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
     """
     The index of the qudit state or matrix element corresponding to the qubit symmetric state or matrix during mapping.
-    
+
     Args:
         dim (int): the dimension of qudit state or matrix.
         n_qudits (int): the number fo qudit state or matrix.
 
     Returns:
-        dict, keys are the index of the qudit state or matrix, values are the corresponding index of qubit symmetric state or matrix.
+        dict, which keys are the index of the qudit state or matrix,
+        values are the corresponding index of qubit symmetric state or matrix.
 
     Examples:
         >>> from mindquantum.algorithm.library.qudit_mapping import _symmetric_state_index
@@ -81,7 +82,7 @@ def _is_symmetric(qubit: np.ndarray, n_qubits: int = 1) -> bool:
     Args:
         qubit (np.ndarray): the qubit state or matrix that needs to be checked whether it is symmetric.
         n_qubits (int): the number of qubits in the qubit symmetric state or matrix. Default: ``1``.
-    
+
     Returns:
         bool, whether the qubit state or matrix is symmetric.
     """
@@ -132,7 +133,8 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
         \end{align}
 
     Args:
-        qubit (np.ndarray): the qubit symmetric state or matrix that needs to be decoded, where the qubit state or matrix must preserve symmetry.
+        qubit (np.ndarray): the qubit symmetric state or matrix that needs to be decoded,
+        where the qubit state or matrix must preserve symmetry.
         n_qubits (int): the number of qubits in the qubit symmetric state or matrix. Default: ``1``.
 
     Returns:
@@ -304,7 +306,7 @@ def _two_level_unitary_synthesis(basis: str, ind: List[int], pr_str: List[str], 
 def _single_qutrit_unitary_synthesis(basis: str, name: str, obj: List[int]) -> Circuit:
     """
     Synthesize a single qutrit unitary gate with qubit circuit.
-    
+
     Args:
         basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``.
         name (str): the name of the single qutrit unitary gate.
@@ -390,7 +392,7 @@ def _controlled_rotation_synthesis(ind: List[int], name: str, obj: int, ctrl: Li
 def _controlled_diagonal_synthesis(name: str, obj: int, ctrl: List[int], state: int) -> Circuit:
     """
     Synthesize a qutrit controlled diagonal gate with qubit circuit.
-    
+
     Args:
         name (str): the name of the qutrit controlled diagonal gate.
         obj (int): object qubit.
@@ -413,14 +415,16 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
     r"""
     Construct a qubit ansatz that preserves the symmetry of encoding for arbitrary qutrit gate.
 
-    Reference: 
-    `Synthesis of multivalued quantum logic circuits by elementary gates <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.87.012325>`_,
-    `Optimal synthesis of multivalued quantum circuits <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.92.062317>`_.
-    
+    Reference: `Synthesis of multivalued quantum logic circuits by elementary gates
+    <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.87.012325>`_,
+    `Optimal synthesis of multivalued quantum circuits
+    <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.92.062317>`_.
+
     Args:
         gate (:class:`~.core.gates.UnivMathGate`): symmetry-preserving qubit gate encoded by qutrit gate.
         basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``. Default: ``"zyz"``.
-        with_phase (bool): whether return global phase in form of a :class:`~.core.gates.GlobalPhase` gate on the qubit circuit. Default: ``False``.
+        with_phase (bool): whether return global phase in form of a :class:`~.core.gates.GlobalPhase` gate
+        on the qubit circuit. Default: ``False``.
 
     Returns:
         :class:`~.core.circuit.Circuit`, qubit ansatz that preserves the symmetry of qutrit encoding.
@@ -442,11 +446,11 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
         q0: ──●────RY(π/2)────●─────────RZ(U_RZ01_0)────RY(U_RY01_0)────RZ(U_Rz01_0)─────────●────RY(-π/2)────●────X──>>
               │       │       │              │               │               │               │       │        │       >>
         q1: ──X───────●───────X────X─────────●───────────────●───────────────●──────────X────X───────●────────X───────>>
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         q0: <<──●────X────RZ(U_RZ02_1)────RY(U_RY02_1)────RZ(U_Rz02_1)────X────●────X────●────RY(-π/2)────●──>>
             <<  │              │               │               │               │         │       │        │  >>
         q1: <<──X──────────────●───────────────●───────────────●───────────────X─────────X───────●────────X──>>
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         q0: <<──RZ(U_RZ12_2)────RY(U_RY12_2)────RZ(U_Rz12_2)────●────RY(π/2)────●──
             <<       │               │               │          │       │       │
         q1: <<───────●───────────────●───────────────●──────────X───────●───────X──
@@ -454,12 +458,12 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
     if gate.ctrl_qubits:
         raise ValueError(f"Currently not applicable for a controlled gate {gate}.")
     basis = basis.lower()
-    if basis != "zyz" and basis != "u3":
+    if basis not in optional_basis:
         raise ValueError(f"{basis} is not a supported decomposition method of {optional_basis}.")
     circ = Circuit()
     obj = gate.obj_qubits
     name = f"{gate.name}_"
-    if not _is_symmetric(gate.matrix(), len(obj) / 2):
+    if not _is_symmetric(gate.matrix(), int(len(obj) / 2)):
         raise ValueError(f"{gate} is not a symmetric gate.")
     if len(obj) == 2:
         circ += _single_qutrit_unitary_synthesis(basis, f"{name}", obj)
@@ -486,8 +490,7 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
         circ += _single_qutrit_unitary_synthesis(basis, f"{name}U9_", obj[:2])
     else:
         raise ValueError(
-            "Currently only applicable when the number of qutrits is 1 or 2, which means the number of qubits must be 2 or 4."
-        )
+            "Currently only applicable when the n_qutrits is 1 or 2, which means the n_qubits must be 2 or 4.")
     if with_phase:
         for i in obj:
             circ += GlobalPhase(f"{name}phase").on(i)
