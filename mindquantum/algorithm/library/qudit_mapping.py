@@ -15,6 +15,7 @@
 """Qudit symmetric mapping module."""
 
 import numpy as np
+from typing import List
 from scipy.sparse import csr_matrix
 from mindquantum.utils.f import is_power_of_two
 from mindquantum.core.circuit import Circuit
@@ -25,14 +26,14 @@ optional_basis = ["zyz", "u3"]
 
 def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
     """
-    The index of the qudit state element corresponding to the qubit symmetric state during mapping.
+    The index of the qudit state or matrix element corresponding to the qubit symmetric state or matrix during mapping.
     
     Args:
-        dim (int): the dimension of qudit state.
-        n_qudits (int): the number fo qudit state.
+        dim (int): the dimension of qudit state or matrix.
+        n_qudits (int): the number fo qudit state or matrix.
 
     Returns:
-        dict, keys are the index of the qudit state, values are the corresponding index of qubit symmetric state.
+        dict, keys are the index of the qudit state or matrix, values are the corresponding index of qubit symmetric state or matrix.
 
     Examples:
         >>> from mindquantum.algorithm.library.qudit_mapping import _symmetric_state_index
@@ -44,9 +45,9 @@ def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
         {0: [0], 1: [1, 2], 2: [3], 3: [4, 8], 4: [5, 6, 9, 10], 5: [7, 11], 6: [12], 7: [13, 14], 8: [15]}
     """
     if not isinstance(dim, int):
-        raise ValueError(f"Wrong dimension type {dim} {type(dim)}")
+        raise ValueError(f"Wrong type of dimension {type(dim)} {dim}.")
     if not isinstance(n_qudits, int):
-        raise ValueError(f"Wrong number of qudits type {n_qudits} {type(n_qudits)}")
+        raise ValueError(f"Wrong type of n_qudits {type(n_qudits)} {n_qudits}.")
     if n_qudits == 1:
         ind = {}
         for i in range(2**(dim - 1)):
@@ -73,9 +74,53 @@ def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
     return ind
 
 
+def _is_symmetric(qubit: np.ndarray, n_qubits: int = 1) -> bool:
+    """
+    Check whether the qubit state or matrix is symmetric.
+
+    Args:
+        qubit (np.ndarray): the qubit state or matrix that needs to be checked whether it is symmetric.
+        n_qubits (int): the number of qubits in the qubit symmetric state or matrix. Default: ``1``.
+    
+    Returns:
+        bool, whether the qubit state or matrix is symmetric.
+    """
+    if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
+        qubit = qubit.flatten()
+    if qubit.ndim == 2 and qubit.shape[0] != qubit.shape[1]:
+        raise ValueError(f"Wrong qubit matrix shape {qubit.shape}.")
+    if qubit.ndim != 1 and qubit.ndim != 2:
+        raise ValueError(f"Wrong qubit matrix shape {qubit.shape}.")
+    is_sym = True
+    n = qubit.shape[0]
+    if not is_power_of_two(n):
+        raise ValueError(f"Wrong qubit matrix size {n} is not a power of 2.")
+    nq = int(np.log2(n))
+    dim = nq // n_qubits + 1
+    if nq % n_qubits == 0 and nq != n_qubits:
+        ind = _symmetric_state_index(dim, n_qubits)
+    else:
+        raise ValueError(f"Wrong qubit matrix shape {qubit.shape} or number of qubits {n_qubits}.")
+    if qubit.ndim == 1:
+        for i in range(dim**n_qubits):
+            i_ = ind[i]
+            if len(i_) != 1:
+                a = qubit[i_]
+                is_sym = is_sym & np.allclose(a, a[0])
+    elif qubit.ndim == 2:
+        for i in range(dim**n_qubits):
+            i_ = ind[i]
+            for j in range(dim**n_qubits):
+                j_ = ind[j]
+                if len(i_) != 1 or len(j_) != 1:
+                    a = qubit[np.ix_(i_, j_)]
+                    is_sym = is_sym & np.allclose(a, a[0][0])
+    return is_sym
+
+
 def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray:
     r"""
-    Qudit symmetric decoding, decodes a qubit symmetric state into a qudit state.
+    Qudit symmetric decoding, decodes a qubit symmetric state or matrix into a qudit state or matrix.
 
     .. math::
         \begin{align}
@@ -87,11 +132,11 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
         \end{align}
 
     Args:
-        qubit (np.ndarray) - the qubit symmetric state that needs to be decoded, where the qubit state must satisfy the properties of symmetric state.
-        n_qubits (int) - the number of qubits in the qubit symmetric state, Default: ``1``.
+        qubit (np.ndarray): the qubit symmetric state or matrix that needs to be decoded, where the qubit state or matrix must preserve symmetry.
+        n_qubits (int): the number of qubits in the qubit symmetric state or matrix. Default: ``1``.
 
     Returns:
-        np.ndarray，the qudit state obtained after the qudit symmetric decoding.
+        np.ndarray, the qudit state or matrix obtained after the qudit symmetric decoding.
 
     Examples:
         >>> import numpy as np
@@ -106,18 +151,18 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
     if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
         qubit = qubit.flatten()
     if qubit.ndim == 2 and qubit.shape[0] != qubit.shape[1]:
-        raise ValueError(f"Wrong qubit shape {qubit.shape}")
+        raise ValueError(f"Wrong qubit matrix shape {qubit.shape}.")
     if qubit.ndim != 1 and qubit.ndim != 2:
-        raise ValueError(f"Wrong qubit shape {qubit.shape}")
+        raise ValueError(f"Wrong qubit matrix shape {qubit.shape}.")
     n = qubit.shape[0]
     if not is_power_of_two(n):
-        raise ValueError(f"Wrong matrix size {n} is not a power of 2")
+        raise ValueError(f"Wrong qubit matrix size {n} is not a power of 2.")
     nq = int(np.log2(n))
     dim = nq // n_qubits + 1
     if nq % n_qubits == 0 and nq != n_qubits:
         ind = _symmetric_state_index(dim, n_qubits)
     else:
-        raise ValueError(f"Wrong matrix shape {qubit.shape} or number of qudits {n_qubits}")
+        raise ValueError(f"Wrong qubit matrix shape {qubit.shape} or number of qubits {n_qubits}.")
     if qubit.ndim == 1:
         qudit = np.zeros(dim**n_qubits, dtype=np.complex128)
         for i in range(dim**n_qubits):
@@ -126,7 +171,7 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
             if np.allclose(qubit_i, qubit_i[0]):
                 qudit[i] = qubit_i[0] * np.sqrt(len(i_))
             else:
-                raise ValueError("Qubit matrix is not symmetric")
+                raise ValueError("Qubit matrix is not symmetric.")
     elif qubit.ndim == 2:
         qudit = np.zeros([dim**n_qubits, dim**n_qubits], dtype=np.complex128)
         for i in range(dim**n_qubits):
@@ -138,13 +183,13 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
                     div = np.sqrt(len(i_)) * np.sqrt(len(j_))
                     qudit[i, j] = qubit_ij[0][0] * div
                 else:
-                    raise ValueError("Qubit matrix is not symmetric")
+                    raise ValueError("Qubit matrix is not symmetric.")
     return qudit
 
 
 def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool = False) -> np.ndarray:
     r"""
-    Qudit symmetric encoding, encodes a qudit state into a qubit symmetric state.
+    Qudit symmetric encoding, encodes a qudit state or matrix into a qubit symmetric state or matrix.
 
     .. math::
 
@@ -157,11 +202,11 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
         \end{align}
 
     Args:
-        qudit (np.ndarray) - the qudit state that needs to be encoded.
-        n_qudits (int) - the number of qudits in the qudit state, Default: ``1``.
+        qudit (np.ndarray): the qudit state or matrix that needs to be encoded.
+        n_qudits (int): the number of qudits in the qudit state or matrix. Default: ``1``.
 
     Returns:
-        np.ndarray，the qubit symmetric state obtained after the qudit symmetric encoding.
+        np.ndarray, the qubit symmetric state or matrix obtained after the qudit symmetric encoding.
 
     Examples:
         >>> import numpy as np
@@ -176,16 +221,16 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
     if qudit.ndim == 2 and (qudit.shape[0] == 1 or qudit.shape[1] == 1):
         qudit = qudit.flatten()
     if qudit.ndim == 2 and qudit.shape[0] != qudit.shape[1]:
-        raise ValueError(f"Wrong qudit shape {qudit.shape}")
+        raise ValueError(f"Wrong qudit matrix shape {qudit.shape}.")
     if qudit.ndim != 1 and qudit.ndim != 2:
-        raise ValueError(f"Wrong qudit shape {qudit.shape}")
+        raise ValueError(f"Wrong qudit matrix shape {qudit.shape}.")
     dim = round(qudit.shape[0]**(1 / n_qudits), 12)
     if dim % 1 == 0:
         dim = int(dim)
         n = 2**((dim - 1) * n_qudits)
         ind = _symmetric_state_index(dim, n_qudits)
     else:
-        raise ValueError(f"Wrong qudit shape {qudit.shape} or number of qudits {n_qudits}")
+        raise ValueError(f"Wrong qudit matrix shape {qudit.shape} or number of qudits {n_qudits}.")
     if qudit.ndim == 1:
         qubit = csr_matrix((n, 1), dtype=np.complex128)
         for i in range(dim**n_qudits):
@@ -214,18 +259,27 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
     return qubit
 
 
-def _two_level_unitary_synthesize(basis: str, dim: int, ind: list, pr: list, obj: list) -> Circuit:
-    """Synthesize a two-level unitary qudit gate with qubit circuit."""
-    if dim != 3:
-        raise ValueError("Currently only works when dim = 3")
+def _two_level_unitary_synthesis(basis: str, ind: List[int], pr_str: List[str], obj: List[int]) -> Circuit:
+    """
+    Synthesize a qutrit two-level unitary gate with qubit circuit.
+
+    Args:
+       basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``.
+       ind (List[int]): the subspace index of the qutrit two-level unitary gate.
+       pr_str (List[str]): the params name of the qutrit two-level unitary gate.
+       obj (List[int]): object qubits.
+
+    Returns:
+        :class:`~.core.circuit.Circuit`, qubit circuit that can synthesize a qutrit two-level unitary gate.
+    """
     if len(ind) != 2:
-        raise ValueError(f"U3 index length {len(ind)} should be 2")
+        raise ValueError(f"The qutrit unitary index length {len(ind)} should be 2.")
     if len(set(ind)) != len(ind):
-        raise ValueError(f"U3 index {ind} cannot be repeated")
-    if min(ind) < 0 or max(ind) >= dim:
-        raise ValueError(f"U3 index {ind} should in 0 to {dim-1}")
-    if len(pr) != 3:
-        raise ValueError(f"U3 params length {len(pr)} should be 3")
+        raise ValueError(f"The qutrit unitary index {ind} cannot be repeated")
+    if min(ind) < 0 or max(ind) >= 3:
+        raise ValueError(f"The qutrit unitary index {ind} should in 0 to 2.")
+    if len(pr_str) != 3:
+        raise ValueError(f"The qutrit unitary params length {len(pr_str)} should be 3.")
     circ = Circuit()
     if ind == [0, 1]:
         corr = Circuit() + X(obj[1], obj[0]) + RY(np.pi / 2).on(obj[0], obj[1]) + X(obj[1], obj[0]) + X(obj[1])
@@ -235,41 +289,61 @@ def _two_level_unitary_synthesize(basis: str, dim: int, ind: list, pr: list, obj
         corr = Circuit() + X(obj[1], obj[0]) + RY(-np.pi / 2).on(obj[0], obj[1]) + X(obj[1], obj[0])
     circ += corr
     if basis == "zyz":
-        circ += RZ(pr[0]).on(obj[0], obj[1])
-        circ += RY(pr[1]).on(obj[0], obj[1])
-        circ += RZ(pr[2]).on(obj[0], obj[1])
+        circ += RZ(pr_str[0]).on(obj[0], obj[1])
+        circ += RY(pr_str[1]).on(obj[0], obj[1])
+        circ += RZ(pr_str[2]).on(obj[0], obj[1])
     elif basis == "u3":
-        theta, phi, lam = pr
+        theta, phi, lam = pr_str
         circ += U3(theta, phi, lam).on(obj[0], obj[1])
     else:
-        raise ValueError(f"Wrong basis {basis} is not in {optional_basis}")
+        raise ValueError(f"{basis} is not a supported decomposition method of {optional_basis}.")
     circ += corr.hermitian()
     return circ
 
 
-def _single_qudit_unitary_synthesize(basis: str, dim: int, name: str, obj: list) -> Circuit:
-    """Synthesize a single qudit unitary gate with qubit circuit."""
+def _single_qutrit_unitary_synthesis(basis: str, name: str, obj: List[int]) -> Circuit:
+    """
+    Synthesize a single qutrit unitary gate with qubit circuit.
+    
+    Args:
+        basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``.
+        name (str): the name of the single qutrit unitary gate.
+        obj (List[int]): object qubits.
+
+    Returns:
+        :class:`~.core.circuit.Circuit`, qubit circuit that can synthesize a single qutrit unitary gate.
+    """
     circ = Circuit()
     index = [[0, 1], [0, 2], [1, 2]]
     if basis == "zyz":
         for i, ind in enumerate(index):
-            str_pr = f"{''.join(str(i) for i in ind)}_{i}"
-            pr = [f"{name}RZ{str_pr}", f"{name}RY{str_pr}", f"{name}Rz{str_pr}"]
-            circ += _two_level_unitary_synthesize(basis, dim, ind, pr, obj)
+            pr_ind = f"{''.join(str(i) for i in ind)}_{i}"
+            pr_str = [f"{name}RZ{pr_ind}", f"{name}RY{pr_ind}", f"{name}Rz{pr_ind}"]
+            circ += _two_level_unitary_synthesis(basis, ind, pr_str, obj)
     elif basis == "u3":
         for i, ind in enumerate(index):
-            str_pr = f"{''.join(str(i) for i in ind)}_{i}"
-            pr = [f"{name}𝜃{str_pr}", f"{name}𝜑{str_pr}", f"{name}𝜆{str_pr}"]
-            circ += _two_level_unitary_synthesize(basis, dim, ind, pr, obj)
+            pr_ind = f"{''.join(str(i) for i in ind)}_{i}"
+            pr_str = [f"{name}𝜃{pr_ind}", f"{name}𝜑{pr_ind}", f"{name}𝜆{pr_ind}"]
+            circ += _two_level_unitary_synthesis(basis, ind, pr_str, obj)
     else:
-        raise ValueError(f"Wrong basis {basis} is not in {optional_basis}")
+        raise ValueError(f"{basis} is not a supported decomposition method of {optional_basis}.")
     return circ
 
 
-def _controlled_rotation_synthesize(dim: int, ind: list, name: str, obj: int, ctrl: list, state: int) -> Circuit:
-    """Synthesize a controlled rotation qudit gate with qubit circuit."""
-    if dim != 3:
-        raise ValueError("Currently only works when dim = 3")
+def _controlled_rotation_synthesis(ind: List[int], name: str, obj: int, ctrl: List[int], state: int) -> Circuit:
+    """
+    Synthesize a qutrit controlled rotation gate with qubit circuit.
+
+    Args:
+        ind (List[int]): the subspace index of the qutrit controlled rotation gate.
+        name (str): the name of the qutrit controlled rotation gate.
+        obj (int): object qubit.
+        ctrl (List[int]): control qubits.
+        state (int): the control state of the qutrit controlled rotation gate.
+
+    Returns:
+        :class:`~.core.circuit.Circuit`, qubit circuit that can synthesize a qutrit controlled rotation gate.
+    """
     circ = Circuit()
     if state == 0:
         if ind == [0, 1]:
@@ -313,50 +387,107 @@ def _controlled_rotation_synthesize(dim: int, ind: list, name: str, obj: int, ct
     return circ
 
 
-def _controlled_diagonal_synthesize(dim: int, name: str, obj: int, ctrl: list, state: int) -> Circuit:
-    """Synthesize a controlled diagonal qudit gate with qubit circuit."""
-    if dim != 3:
-        raise ValueError("Currently only works when dim = 3")
+def _controlled_diagonal_synthesis(name: str, obj: int, ctrl: List[int], state: int) -> Circuit:
+    """
+    Synthesize a qutrit controlled diagonal gate with qubit circuit.
+    
+    Args:
+        name (str): the name of the qutrit controlled diagonal gate.
+        obj (int): object qubit.
+        ctrl (List[int]): control qubits.
+        state (int): the control state of the qutrit controlled diagonal gate.
+
+    Returns:
+        :class:`~.core.circuit.Circuit`, qubit circuit that can synthesize a qutrit controlled diagonal gate.
+    """
     circ = Circuit()
-    circ += _controlled_rotation_synthesize(dim, [0, 1], f"{name}RZ01", obj, ctrl, state)
-    circ += _controlled_rotation_synthesize(dim, [0, 2], f"{name}RZ02", obj, ctrl, state)
-    circ += _controlled_rotation_synthesize(dim, [0, 1], f"{name}GP", obj, ctrl, state)
-    circ += _controlled_rotation_synthesize(dim, [0, 2], f"{name}GP", obj, ctrl, state)
-    circ += _controlled_rotation_synthesize(dim, [1, 2], f"{name}GP", obj, ctrl, state)
+    circ += _controlled_rotation_synthesis([0, 1], f"{name}RZ01", obj, ctrl, state)
+    circ += _controlled_rotation_synthesis([0, 2], f"{name}RZ02", obj, ctrl, state)
+    circ += _controlled_rotation_synthesis([0, 1], f"{name}GP", obj, ctrl, state)
+    circ += _controlled_rotation_synthesis([0, 2], f"{name}GP", obj, ctrl, state)
+    circ += _controlled_rotation_synthesis([1, 2], f"{name}GP", obj, ctrl, state)
     return circ
 
 
 def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: bool = False) -> Circuit:
-    """Qudit symmetric ansatz."""
-    dim = 3
-    name = f"{gate.name}_"
-    obj = gate.obj_qubits
+    r"""
+    Construct a qubit ansatz that preserves the symmetry of encoding for arbitrary qutrit gate.
+
+    Reference: 
+    `Synthesis of multivalued quantum logic circuits by elementary gates <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.87.012325>`_,
+    `Optimal synthesis of multivalued quantum circuits <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.92.062317>`_.
+    
+    Args:
+        gate (:class:`~.core.gates.UnivMathGate`): symmetry-preserving qubit gate encoded by qutrit gate.
+        basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``. Default: ``"zyz"``.
+        with_phase (bool): whether return global phase in form of a :class:`~.core.gates.GlobalPhase` gate on the qubit circuit. Default: ``False``.
+
+    Returns:
+        :class:`~.core.circuit.Circuit`, qubit ansatz that preserves the symmetry of qutrit encoding.
+
+    Examples:
+        >>> from scipy.stats import unitary_group
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import UnivMathGate
+        >>> from qudit_mapping import qutrit_symmetric_ansatz, qudit_symmetric_encoding
+        >>> qutrit_unitary = unitary_group.rvs(3)
+        >>> qutrit_projector = np.eye(4) - qudit_symmetric_encoding(np.eye(3))
+        >>> qubit_unitary = qudit_symmetric_encoding(qutrit_unitary) + qutrit_projector
+        >>> qubit_gate = UnivMathGate('U', qubit_unitary).on([0, 1])
+        >>> print(Circuit() + qubit_gate)
+        q0: ──U──
+              │
+        q1: ──U──
+        >>> print(qutrit_symmetric_ansatz(qubit_gate))
+        q0: ──●────RY(π/2)────●─────────RZ(U_RZ01_0)────RY(U_RY01_0)────RZ(U_Rz01_0)─────────●────RY(-π/2)────●────X──>>
+              │       │       │              │               │               │               │       │        │       >>
+        q1: ──X───────●───────X────X─────────●───────────────●───────────────●──────────X────X───────●────────X───────>>
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        q0: <<──●────X────RZ(U_RZ02_1)────RY(U_RY02_1)────RZ(U_Rz02_1)────X────●────X────●────RY(-π/2)────●──>>
+            <<  │              │               │               │               │         │       │        │  >>
+        q1: <<──X──────────────●───────────────●───────────────●───────────────X─────────X───────●────────X──>>
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        q0: <<──RZ(U_RZ12_2)────RY(U_RY12_2)────RZ(U_Rz12_2)────●────RY(π/2)────●──
+            <<       │               │               │          │       │       │
+        q1: <<───────●───────────────●───────────────●──────────X───────●───────X──
+    """
+    if gate.ctrl_qubits:
+        raise ValueError(f"Currently not applicable for a controlled gate {gate}.")
+    basis = basis.lower()
+    if basis != "zyz" and basis != "u3":
+        raise ValueError(f"{basis} is not a supported decomposition method of {optional_basis}.")
     circ = Circuit()
+    obj = gate.obj_qubits
+    name = f"{gate.name}_"
+    if not _is_symmetric(gate.matrix(), len(obj) / 2):
+        raise ValueError(f"{gate} is not a symmetric gate.")
     if len(obj) == 2:
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}", obj)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}", obj)
     elif len(obj) == 4:
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U1_", obj[:2])
-        circ += _controlled_diagonal_synthesize(dim, f"{name}C1_", obj[0], obj[1:], 1)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U2_", obj[:2])
-        circ += _controlled_diagonal_synthesize(dim, f"{name}C2_", obj[0], obj[1:], 2)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U3_", obj[:2])
-        circ += _controlled_rotation_synthesize(dim, [1, 2], f"{name}RY12", obj[-1], obj[::-1][1:], 2)
-        circ += _controlled_rotation_synthesize(dim, [1, 2], f"{name}RY11", obj[-1], obj[::-1][1:], 1)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U4_", obj[:2])
-        circ += _controlled_diagonal_synthesize(dim, f"{name}C3_", obj[0], obj[1:], 2)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U5_", obj[:2])
-        circ += _controlled_rotation_synthesize(dim, [0, 1], f"{name}RY22", obj[-1], obj[::-1][1:], 2)
-        circ += _controlled_rotation_synthesize(dim, [0, 1], f"{name}RY21", obj[-1], obj[::-1][1:], 1)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U6_", obj[:2])
-        circ += _controlled_diagonal_synthesize(dim, f"{name}C4_", obj[0], obj[1:], 0)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U7_", obj[:2])
-        circ += _controlled_rotation_synthesize(dim, [1, 2], f"{name}RY32", obj[-1], obj[::-1][1:], 2)
-        circ += _controlled_rotation_synthesize(dim, [1, 2], f"{name}RY31", obj[-1], obj[::-1][1:], 1)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U8_", obj[:2])
-        circ += _controlled_diagonal_synthesize(dim, f"{name}C5_", obj[0], obj[1:], 2)
-        circ += _single_qudit_unitary_synthesize(basis, dim, f"{name}U9_", obj[:2])
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U1_", obj[:2])
+        circ += _controlled_diagonal_synthesis(f"{name}CD1_", obj[0], obj[1:], 1)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U2_", obj[:2])
+        circ += _controlled_diagonal_synthesis(f"{name}CD2_", obj[0], obj[1:], 2)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U3_", obj[:2])
+        circ += _controlled_rotation_synthesis([1, 2], f"{name}RY1_2", obj[-1], obj[::-1][1:], 2)
+        circ += _controlled_rotation_synthesis([1, 2], f"{name}RY1_1", obj[-1], obj[::-1][1:], 1)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U4_", obj[:2])
+        circ += _controlled_diagonal_synthesis(f"{name}CD3_", obj[0], obj[1:], 2)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U5_", obj[:2])
+        circ += _controlled_rotation_synthesis([0, 1], f"{name}RY2_2", obj[-1], obj[::-1][1:], 2)
+        circ += _controlled_rotation_synthesis([0, 1], f"{name}RY2_1", obj[-1], obj[::-1][1:], 1)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U6_", obj[:2])
+        circ += _controlled_diagonal_synthesis(f"{name}CD4_", obj[0], obj[1:], 0)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U7_", obj[:2])
+        circ += _controlled_rotation_synthesis([1, 2], f"{name}RY3_2", obj[-1], obj[::-1][1:], 2)
+        circ += _controlled_rotation_synthesis([1, 2], f"{name}RY3_1", obj[-1], obj[::-1][1:], 1)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U8_", obj[:2])
+        circ += _controlled_diagonal_synthesis(f"{name}CD5_", obj[0], obj[1:], 2)
+        circ += _single_qutrit_unitary_synthesis(basis, f"{name}U9_", obj[:2])
     else:
-        raise ValueError("Only works when number of qutrits <= 2")
+        raise ValueError(
+            "Currently only applicable when the number of qutrits is 1 or 2, which means the number of qubits must be 2 or 4."
+        )
     if with_phase:
         for i in obj:
             circ += GlobalPhase(f"{name}phase").on(i)
