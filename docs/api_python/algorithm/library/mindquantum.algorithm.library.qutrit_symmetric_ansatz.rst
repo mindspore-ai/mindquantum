@@ -1,5 +1,5 @@
 mindquantum.algorithm.compiler.qutrit_symmetric_ansatz
-============================================
+=======================================================
 
 .. py:function:: qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: bool = False)
 
