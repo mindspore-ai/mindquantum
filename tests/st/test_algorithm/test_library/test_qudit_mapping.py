@@ -14,9 +14,9 @@
 # ============================================================================
 """Test qudit mapping functions."""
 
+from functools import reduce
 import pytest
 import numpy as np
-from functools import reduce
 from numpy.linalg import norm
 from mindquantum.algorithm.library import qudit_mapping
 
@@ -41,7 +41,7 @@ def test_symmetric_state_index():
     Description: test arbitrary symmetric state index.
     Expectation: success.
     """
-    index_test = {f'd{dim}n{n_qudits}': qudit_mapping._symmetric_state_index(dim, n_qudits) for n_qudits in [1, 2] for dim in [3, 4, 5]}  # pylint: disable=line-too-long
+    index_test = {f'd{dim}n{n_qudits}': qudit_mapping._symmetric_state_index(dim, n_qudits) for n_qudits in [1, 2] for dim in [3, 4, 5]}  # pylint: disable=line-too-long,protected-access
     assert index_test == index_original
 
 
