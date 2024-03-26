@@ -5,4 +5,4 @@
 - [Modularized and scalable compilation for double quantum dot quantum computing](./modularized_and_scalable_compilation_for_double_quantum_dot_quatum_computing/readme.md)
 - [symmetry_enhanced_variational_quantum_spin_eigensolver](./symmetry_enhanced_variational_quantum_spin_eigensolver/readme.md)
 - [variational_quantum_ciruits_enhanced_generative_adversarial_network](./variational_quantum_circuits_enhanced_generative_adversarial_network/README.md)
-- [reachability deficit of Grover search](./reachability_deficit_of_variational_grover_search/README.md)
+- [reachability deficit of variational Grover search](./reachability_deficit_of_variational_grover_search/README.md)
