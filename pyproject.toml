@@ -4,7 +4,9 @@ requires = [
     'setuptools>=61;python_version>="3.12"',
     'wheel',
     'pybind11>=2.9.2',
-    'wheel-filename>1.2'
+    'wheel-filename>1.2',
+    'delocate==0.10.7; sys_platform == 'darwin'
+
 ]
 build-backend = 'backend'
 backend-path = [
