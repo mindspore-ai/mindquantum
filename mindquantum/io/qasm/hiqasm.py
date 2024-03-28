@@ -430,6 +430,12 @@ class HiQASM:
                 self.circuit.ry(*_extr_parameter(cmd), qubit[-1], qubit[:2])
             elif cmd.startswith('CCRZ '):
                 self.circuit.rz(*_extr_parameter(cmd), qubit[-1], qubit[:2])
+            elif cmd.startswith("XX"):
+                self.circuit.rxx(*_extr_parameter(cmd), qubit[-2:], qubit[:-2])
+            elif cmd.startswith("YY"):
+                self.circuit.ryy(*_extr_parameter(cmd), qubit[-2:], qubit[:-2])
+            elif cmd.startswith("ZZ"):
+                self.circuit.rzz(*_extr_parameter(cmd), qubit[-2:], qubit[:-2])
             elif cmd.startswith('MEASURE '):
                 qubit = _find_qubit_id(cmd)
                 if qubit:

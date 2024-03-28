@@ -54,7 +54,7 @@ if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         pkgs+=(auditwheel)
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        pkgs+=(delocate)
+        pkgs+=("delocate==0.10.7")
     fi
 
     if [ "${cmake_from_venv:-0}" -eq 1 ]; then
