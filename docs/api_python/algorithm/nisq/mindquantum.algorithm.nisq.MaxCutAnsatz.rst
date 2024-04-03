@@ -7,8 +7,8 @@ mindquantum.algorithm.nisq.MaxCutAnsatz
 
     .. math::
 
-        U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
-        \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
+        U(\beta, \gamma) = e^{-i\beta_pH_b}e^{-i\frac{\gamma_p}{2}H_c}
+        \cdots e^{-i\beta_0H_b}e^{-i\frac{\gamma_0}{2}H_c}H^{\otimes n}
 
     .. math::
 
