@@ -1,4 +1,4 @@
-mindquantum.algorithm.compiler.qudit_symmetric_decoding
+mindquantum.algorithm.library.qudit_symmetric_decoding
 ========================================================
 
 .. py:function:: qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1)

@@ -19,3 +19,4 @@ MindQuantum常用算法模块。
     mindquantum.algorithm.library.qudit_symmetric_decoding
     mindquantum.algorithm.library.qudit_symmetric_encoding
     mindquantum.algorithm.library.qutrit_symmetric_ansatz
+    mindquantum.algorithm.library.mat_to_op

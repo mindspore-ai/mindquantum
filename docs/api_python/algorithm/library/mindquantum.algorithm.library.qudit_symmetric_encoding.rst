@@ -1,4 +1,4 @@
-mindquantum.algorithm.compiler.qudit_symmetric_encoding
+mindquantum.algorithm.library.qudit_symmetric_encoding
 ========================================================
 
 .. py:function:: qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1)

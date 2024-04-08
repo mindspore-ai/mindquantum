@@ -28,7 +28,7 @@ index_original = {'d3n1': {0: [0], 1: [1, 2], 2: [3]}, 'd4n1': {0: [0], 1: [1, 2
 def random_qudits(dim: int, n_qudits: int) -> np.ndarray:
     """Generate random n-qudit states."""
     qudit_list = [np.random.rand(dim) + 1j * np.random.rand(dim) for _ in range(n_qudits)]
-    qudits = reduce(np.kron, qudit_list)
+    qudits = np.reshape(reduce(np.kron, qudit_list), (-1, 1))
     qudits /= norm(qudits)
     return qudits
 
@@ -71,3 +71,17 @@ def test_qudit_symmetric_encoding():
     for dim in [3, 4, 5]:
         qubit_test = qudit_mapping.qudit_symmetric_encoding(random_qudits(dim, 1))
         assert np.allclose(qubit_test, qubit_original[dim])
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_mat_to_op():
+    """
+    Feature: Matrix to QubitOperator transformation.
+    Description: test arbitrary Qubit matrix transform to QubitOperators.
+    Expectation: success.
+    """
+    np.random.seed(42)
+    state = random_qudits(2, 2)
+    mat = state @ np.transpose(np.conj(state))
+    qubit_test = qudit_mapping.mat_to_op(mat, big_endian=True)
+    assert np.allclose(qubit_test.matrix().A, mat)
