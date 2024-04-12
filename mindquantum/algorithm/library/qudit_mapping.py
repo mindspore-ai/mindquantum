@@ -501,14 +501,15 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
 
 
 def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
-    """ 
+    """
     Convert a matrix to a QubitOperator. Default output is in little endian.
 
     Args:
         mat: the qubit matrix that needs to be converted to a QubitOperator.
-        little_endian (bool): whether the qubit order is little endian (means the leftmost qubit is the qubit with the highest index). Default: ``True``.
-    
-    Returns: 
+        little_endian (bool): whether the qubit order is little endian. This means
+        the leftmost qubit is the qubit with the highest index. Default: ``True``.
+
+    Returns:
         :class:`~.core.QubitOperator`, the QubitOperator obtained after the matrix conversion.
 
     Examples:
@@ -536,7 +537,7 @@ def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
             elif b1 + b2 == '10':
                 term *= QubitOperator(f'X{ind}', 1/2) + QubitOperator(f'Y{ind}', -1/2 * 1j)
         return term
-    
+
     if np.shape(mat)[0] != np.shape(mat)[1]:
         raise ValueError(f"Not a legal qubit matrix {mat}.")
     if np.ceil(np.log2(np.shape(mat)[0])) != np.floor(np.log2(np.shape(mat)[0])):
