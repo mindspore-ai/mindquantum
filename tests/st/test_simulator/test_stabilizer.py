@@ -90,6 +90,8 @@ def test_stabilizer_sampling():
         sim = Simulator('stabilizer', clifford.n_qubits)
         res_clifford = sim.sampling(clifford, shots=10000)
         res_state_vector = Simulator('mqvector', clifford.n_qubits).sampling(clifford, shots=10000)
-        dis1 = np.array(list(res_clifford.data.values())) / res_clifford.shots
-        dis2 = np.array(list(res_state_vector.data.values())) / res_state_vector.shots
+
+        keys = set(res_clifford.data.keys()) | set(res_state_vector.data.keys())
+        dis1 = np.array([res_clifford.data.get(key, 0) for key in keys]) / res_clifford.shots
+        dis2 = np.array([res_state_vector.data.get(key, 0) for key in keys]) / res_state_vector.shots
         assert entropy(dis1, dis2) < 0.01
