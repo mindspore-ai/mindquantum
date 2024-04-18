@@ -99,7 +99,7 @@ def generate_single_qubit_rb_circ(length: int, seed: int = None) -> Circuit:
 
     Returns:
         :class:`~.core.circuit.Circuit`, the single qubit randomized benchmarking circuit, the quantum
-            state of this circuit is zero state.
+        state of this circuit is zero state.
 
     Examples:
         >>> import numpy as np
@@ -140,7 +140,7 @@ def generate_double_qubits_rb_circ(length: int, seed: int = None) -> Circuit:
 
     Returns:
         :class:`~.core.circuit.Circuit`, the double qubit randomized benchmarking circuit, the quantum state of
-            this circuit is zero state.
+        this circuit is zero state.
 
     Examples:
         >>> import numpy as np
