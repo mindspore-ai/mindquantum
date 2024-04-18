@@ -16,8 +16,11 @@
 
 from typing import List
 import numpy as np
+import scipy as sp
 from scipy.sparse import csr_matrix
 from mindquantum.utils.f import is_power_of_two
+from mindquantum.core import QubitOperator
+
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import X, RX, RY, RZ, U3, GlobalPhase, UnivMathGate
 
@@ -495,3 +498,65 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
         for i in obj:
             circ += GlobalPhase(f"{name}phase").on(i)
     return circ
+
+
+def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
+    """
+    Convert a matrix to a QubitOperator. Default output is in little endian.
+
+    Args:
+        mat: the qubit matrix that needs to be converted to a QubitOperator.
+        little_endian (bool): whether the qubit order is little endian. This means
+        the leftmost qubit is the qubit with the highest index. Default: ``True``.
+
+    Returns:
+        :class:`~.core.QubitOperator`, the QubitOperator obtained after the matrix conversion.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.library.qudit_mapping import mat_to_op
+        >>> mat = np.array([[1, 0, 0, 1], [0, 1, 1, 0], [0, 1, 1, 0], [1, 0, 0, 1]])
+        >>> print(mat_to_op(mat, 2))
+        1 [] +
+        1 [X0 X1]
+    """
+    def pairs_to_op(i, j):
+        bin_i = bin(i)[2:].zfill(n_qubits)
+        bin_j = bin(j)[2:].zfill(n_qubits)
+        if little_endian:
+            bin_i = bin_i[::-1]
+            bin_j = bin_j[::-1]
+        term = QubitOperator('')
+        for ind, (b1, b2) in enumerate(zip(bin_i, bin_j)):
+            if b1 + b2 == '00':
+                term *= QubitOperator(f'I{ind}', 1/2) + QubitOperator(f'Z{ind}', 1/2)
+            elif b1 + b2 == '11':
+                term *= QubitOperator(f'I{ind}', 1/2) + QubitOperator(f'Z{ind}', -1/2)
+            elif b1 + b2 == '01':
+                term *= QubitOperator(f'X{ind}', 1/2) + QubitOperator(f'Y{ind}', 1/2 * 1j)
+            elif b1 + b2 == '10':
+                term *= QubitOperator(f'X{ind}', 1/2) + QubitOperator(f'Y{ind}', -1/2 * 1j)
+        return term
+
+    if np.shape(mat)[0] != np.shape(mat)[1]:
+        raise ValueError(f"Not a legal qubit matrix {mat}.")
+    if np.ceil(np.log2(np.shape(mat)[0])) != np.floor(np.log2(np.shape(mat)[0])):
+        raise ValueError(f"Not a legal qubit matrix {mat}.")
+    n_qubits = int(np.ceil(np.log2(np.shape(mat)[0])))
+    res = QubitOperator()
+
+    if sp.sparse.issparse(mat):
+        coo_mat = sp.sparse.coo_matrix(mat)
+        for (i, j, value) in zip(coo_mat.row, coo_mat.col, coo_mat.data):
+            if np.abs(value) == 0:
+                continue
+            term = pairs_to_op(i, j)
+            res += term * value
+    else:
+        for i in range(2 ** n_qubits):
+            for j in range(2 ** n_qubits):
+                if np.abs(mat[i][j]) == 0:
+                    continue
+                term = pairs_to_op(i, j)
+                res += term * mat[i][j]
+    return res.compress()
