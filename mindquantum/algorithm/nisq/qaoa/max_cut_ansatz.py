@@ -66,8 +66,8 @@ class MaxCutAnsatz(Ansatz):
 
     .. math::
 
-        U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
-        \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
+        U(\beta, \gamma) = e^{-i\beta_pH_b}e^{-i\frac{\gamma_p}{2}H_c}
+        \cdots e^{-i\beta_0H_b}e^{-i\frac{\gamma_0}{2}H_c}H^{\otimes n}
 
     Where,
 
@@ -91,15 +91,15 @@ class MaxCutAnsatz(Ansatz):
         >>> graph = [(0, 1), (1, 2), (0, 2)]
         >>> maxcut = MaxCutAnsatz(graph, 1)
         >>> maxcut.circuit
-              ┏━━━┓ ┏━━━━━━━━━━━━━┓                 ┏━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━━┓
-        q0: ──┨ H ┠─┨             ┠─────────────────●             ┠─┨ RX(alpha_0) ┠───
-              ┗━━━┛ ┃             ┃                 ┃             ┃ ┗━━━━━━━━━━━━━┛
-              ┏━━━┓ ┃ Rzz(beta_0) ┃ ┏━━━━━━━━━━━━━┓ ┃             ┃ ┏━━━━━━━━━━━━━┓
-        q1: ──┨ H ┠─┨             ┠─┨             ┠─┨ Rzz(beta_0) ┠─┨ RX(alpha_0) ┠───
-              ┗━━━┛ ┗━━━━━━━━━━━━━┛ ┃             ┃ ┃             ┃ ┗━━━━━━━━━━━━━┛
-              ┏━━━┓                 ┃ Rzz(beta_0) ┃ ┃             ┃ ┏━━━━━━━━━━━━━┓
-        q2: ──┨ H ┠─────────────────┨             ┠─●             ┠─┨ RX(alpha_0) ┠───
-              ┗━━━┛                 ┗━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━━┛
+              ┏━━━┓ ┏━━━━━━━━━━━━━━┓                  ┏━━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━┓
+        q0: ──┨ H ┠─┨              ┠──────────────────●              ┠─┨ RX(beta_0) ┠───
+              ┗━━━┛ ┃              ┃                  ┃              ┃ ┗━━━━━━━━━━━━┛
+              ┏━━━┓ ┃ Rzz(gamma_0) ┃ ┏━━━━━━━━━━━━━━┓ ┃              ┃ ┏━━━━━━━━━━━━┓
+        q1: ──┨ H ┠─┨              ┠─┨              ┠─┨ Rzz(gamma_0) ┠─┨ RX(beta_0) ┠───
+              ┗━━━┛ ┗━━━━━━━━━━━━━━┛ ┃              ┃ ┃              ┃ ┗━━━━━━━━━━━━┛
+              ┏━━━┓                  ┃ Rzz(gamma_0) ┃ ┃              ┃ ┏━━━━━━━━━━━━┓
+        q2: ──┨ H ┠──────────────────┨              ┠─●              ┠─┨ RX(beta_0) ┠───
+              ┗━━━┛                  ┗━━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━━━┛ ┗━━━━━━━━━━━━┛
         >>>
         >>> print(maxcut.hamiltonian)
         3/2 [] +
@@ -133,12 +133,12 @@ class MaxCutAnsatz(Ansatz):
         """Build hc circuit."""
         circ = Circuit()
         for node in graph:
-            circ += Rzz('beta').on(node)
+            circ += Rzz('gamma').on(node)
         return circ
 
     def _build_hb(self, graph):
         """Build hb circuit."""
-        return Circuit([RX('alpha').on(i) for i in _get_graph_act_qubits(graph)])
+        return Circuit([RX('beta').on(i) for i in _get_graph_act_qubits(graph)])
 
     @property
     def hamiltonian(self):
@@ -228,5 +228,5 @@ class MaxCutAnsatz(Ansatz):
         """Implement of max cut ansatz."""
         self._circuit = UN(H, _get_graph_act_qubits(graph))
         for current_depth in range(depth):
-            self._circuit += CPN(self._build_hc(graph), {'beta': f'beta_{current_depth}'})
-            self._circuit += CPN(self._build_hb(graph), {'alpha': f'alpha_{current_depth}'})
+            self._circuit += CPN(self._build_hc(graph), {'gamma': f'gamma_{current_depth}'})
+            self._circuit += CPN(self._build_hb(graph), {'beta': f'beta_{current_depth}'})

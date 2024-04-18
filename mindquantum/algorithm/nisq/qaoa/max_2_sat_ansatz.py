@@ -70,8 +70,8 @@ class Max2SATAnsatz(Ansatz):
 
     .. math::
 
-        U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
-        \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
+        U(\beta, \gamma) = e^{-i\beta_pH_b}e^{-i\frac{\gamma_p}{2}H_c}
+        \cdots e^{-i\beta_0H_b}e^{-i\frac{\gamma_0}{2}H_c}H^{\otimes n}
 
     Where,
 
@@ -95,12 +95,12 @@ class Max2SATAnsatz(Ansatz):
         >>> clauses = [(2, -3)]
         >>> max2sat = Max2SATAnsatz(clauses, 1)
         >>> max2sat.circuit
-              ┏━━━┓ ┏━━━━━━━━━━━━━━━━┓                                  ┏━━━━━━━━━━━━━┓
-        q1: ──┨ H ┠─┨ RZ(1/2*beta_0) ┠────■─────────────────────────■───┨ RX(alpha_0) ┠───
-              ┗━━━┛ ┗━━━━━━━━━━━━━━━━┛    ┃                         ┃   ┗━━━━━━━━━━━━━┛
-              ┏━━━┓ ┏━━━━━━━━━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━━━━┓
-        q2: ──┨ H ┠─┨ RZ(-1/2*beta_0) ┠─┨╺╋╸┠─┨ RZ(-1/2*beta_0) ┠─┨╺╋╸┠─┨ RX(alpha_0) ┠───
-              ┗━━━┛ ┗━━━━━━━━━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━━━━┛
+              ┏━━━┓ ┏━━━━━━━━━━━━━━━━━┓                                   ┏━━━━━━━━━━━━┓
+        q1: ──┨ H ┠─┨ RZ(1/2*gamma_0) ┠────■──────────────────────────■───┨ RX(beta_0) ┠───
+              ┗━━━┛ ┗━━━━━━━━━━━━━━━━━┛    ┃                          ┃   ┗━━━━━━━━━━━━┛
+              ┏━━━┓ ┏━━━━━━━━━━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━━━┓
+        q2: ──┨ H ┠─┨ RZ(-1/2*gamma_0) ┠─┨╺╋╸┠─┨ RZ(-1/2*gamma_0) ┠─┨╺╋╸┠─┨ RX(beta_0) ┠───
+              ┗━━━┛ ┗━━━━━━━━━━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━━━┛
         >>> max2sat.hamiltonian
         1/4 [] +
         1/4 [Z1] +
@@ -133,19 +133,19 @@ class Max2SATAnsatz(Ansatz):
         ham = QubitOperator()
         for clause in clauses:
             ham += (
-                sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}', 'beta')
-                + sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}', 'beta')
+                sign(1, clause[0]) * QubitOperator(f'Z{abs(clause[0]) - 1}', 'gamma')
+                + sign(1, clause[1]) * QubitOperator(f'Z{abs(clause[1]) - 1}', 'gamma')
             ) / 4
             ham += (
                 sign(1, clause[0])
                 * sign(1, clause[1])
-                * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}', 'beta')
+                * QubitOperator(f'Z{abs(clause[0]) - 1} Z{abs(clause[1]) - 1}', 'gamma')
             ) / 4
         return TimeEvolution(ham.real).circuit
 
     def _build_hb(self, clauses):
         """Build hb circuit."""
-        return Circuit([RX('alpha').on(i) for i in _get_clause_act_qubits(clauses)])
+        return Circuit([RX('beta').on(i) for i in _get_clause_act_qubits(clauses)])
 
     @property
     def hamiltonian(self):
@@ -206,5 +206,5 @@ class Max2SATAnsatz(Ansatz):
         """Implement of Max-2-SAT ansatz."""
         self._circuit = UN(H, _get_clause_act_qubits(clauses))
         for depth_idx in range(depth):
-            self._circuit += CPN(self._build_hc(clauses), {'beta': f'beta_{depth_idx}'})
-            self._circuit += CPN(self._build_hb(clauses), {'alpha': f'alpha_{depth_idx}'})
+            self._circuit += CPN(self._build_hc(clauses), {'gamma': f'gamma_{depth_idx}'})
+            self._circuit += CPN(self._build_hb(clauses), {'beta': f'beta_{depth_idx}'})
