@@ -43,8 +43,8 @@ class QAOAAnsatz(Ansatz):
 
     .. math::
 
-        U(\beta, \gamma) = e^{-\beta_pH_b}e^{-\gamma_pH_c}
-        \cdots e^{-\beta_0H_b}e^{-\gamma_0H_c}H^{\otimes n}
+        U(\beta, \gamma) = e^{-i\beta_pH_b}e^{-i\frac{\gamma_p}{2}H_c}
+        \cdots e^{-i\beta_0H_b}e^{-i\frac{\gamma_0}{2}H_c}H^{\otimes n}
 
     Args:
         ham (QubitOperator): The hamiltonian structure.
@@ -56,11 +56,15 @@ class QAOAAnsatz(Ansatz):
         >>> ham = QubitOperator('Z0 Z1', 2) + QubitOperator('Z2 Z1', 1) + QubitOperator('Z0 Y2', 0.5)
         >>> qaoa = QAOAAnsatz(ham, 1)
         >>> qaoa.circuit[:11]
-        q0: ──H────●────────────────────●──
-                   │                    │
-        q1: ──H────X────RZ(4*beta_0)────X──
-
-        q2: ──H────────────────────────────
+              ┏━━━┓
+        q0: ──┨ H ┠───■───────────────────────■─────
+              ┗━━━┛   ┃                       ┃
+              ┏━━━┓ ┏━┻━┓ ┏━━━━━━━━━━━━━━━┓ ┏━┻━┓
+        q1: ──┨ H ┠─┨╺╋╸┠─┨ RZ(4*gamma_0) ┠─┨╺╋╸┠───
+              ┗━━━┛ ┗━━━┛ ┗━━━━━━━━━━━━━━━┛ ┗━━━┛
+              ┏━━━┓
+        q2: ──┨ H ┠─────────────────────────────────
+              ┗━━━┛
         >>> qaoa.hamiltonian
         2 [Z0 Z1] +
         0.5 [Z0 Y2] +
@@ -92,12 +96,12 @@ class QAOAAnsatz(Ansatz):
         circ = Circuit()
         for h in ham.terms:
             if h:
-                circ += decompose_single_term_time_evolution(h, {'beta': ham.terms[h]})
+                circ += decompose_single_term_time_evolution(h, {'gamma': ham.terms[h].const})
         return circ
 
     def _build_hb(self, circ):
         """Build hc circuit."""
-        return Circuit([RX('alpha').on(i) for i in circ.all_qubits.keys()])
+        return Circuit([RX('beta').on(i) for i in circ.all_qubits.keys()])
 
     def _implement(self, ham, depth):  # pylint: disable=arguments-differ
         """Implement of QAOA ansatz."""
@@ -105,5 +109,5 @@ class QAOAAnsatz(Ansatz):
         hb = self._build_hb(hc)
         self._circuit = UN(H, hc.all_qubits.keys())
         for current_depth in range(depth):
-            self._circuit += CPN(hc, {'beta': f'beta_{current_depth}'})
-            self._circuit += CPN(hb, {'alpha': f'alpha_{current_depth}'})
+            self._circuit += CPN(hc, {'gamma': f'gamma_{current_depth}'})
+            self._circuit += CPN(hb, {'beta': f'beta_{current_depth}'})

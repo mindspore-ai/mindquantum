@@ -97,7 +97,7 @@ class RQAOAAnsatz(QAOAAnsatz):
         >>> ra.translate({(0, 'Z'):-1, (1, 'Z'):1})   # recover original problem's solution by the subproblem's solution
         {(0, 'Z'): -1, (1, 'Z'): 1, (2, 'Z'): -1}
         >>> ra = RQAOAAnsatz(ham, 1)
-        >>> pr = {'beta_0': -0.4617199, 'alpha_0': 0.6284928}
+        >>> pr = {'gamma_0': -0.4617199, 'beta_0': 0.6284928}
         >>> ra.eliminate_variable(pr, 1) # reduce variable
         -- eliminated variable: Z1
         -- correlated variable: Z0

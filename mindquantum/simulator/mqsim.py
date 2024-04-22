@@ -52,11 +52,13 @@ class MQSim(BackendBase):
     def __init__(self, name: str, n_qubits: int, seed=None, dtype=complex128, internal=False):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed, dtype)
+        self.internal = internal
         if internal:
             self.sim = name
         else:
             if dtype is None:
                 dtype = complex128
+                self.arithmetic_type = dtype
             _check_mq_type(dtype)
             self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed)
 
@@ -76,6 +78,22 @@ class MQSim(BackendBase):
     def __repr__(self):
         """Return a string representation of the object."""
         return self.__str__()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state['sim']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Restore the sim object
+        if self.internal:
+            self.sim = self.name
+        else:
+            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(self.name, self.arithmetic_type), self.name)(
+                self.n_qubits, self.seed
+            )
 
     def apply_circuit(
         self,

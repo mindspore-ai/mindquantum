@@ -91,7 +91,7 @@ PYBIND11_MODULE(_mq_vector, module) {
 #ifndef __CUDACC__
     using namespace mindquantum::stabilizer;  // NOLINT
     pybind11::class_<StabilizerTableau>(stabilizer, "StabilizerTableau")
-        .def(pybind11::init<size_t>())
+        .def(pybind11::init<size_t, unsigned>(), "n_qubits"_a, "seed"_a = 42)
         .def("copy", [](const StabilizerTableau& s) { return s; })
         .def("tableau_to_string", &StabilizerTableau::TableauToString)
         .def("stabilizer_to_string", &StabilizerTableau::StabilizerToString)

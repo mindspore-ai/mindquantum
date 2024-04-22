@@ -46,7 +46,7 @@ class Stabilizer(BackendBase):
             self.sim = name
             self.name = 'stabilizer'
         else:
-            self.sim = _mq_vector.stabilizer.StabilizerTableau(n_qubits)
+            self.sim = _mq_vector.stabilizer.StabilizerTableau(n_qubits, seed)
 
     def __str__(self):
         """Return a string representation of the object."""

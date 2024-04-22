@@ -105,6 +105,25 @@ class Hamiltonian:
             return self.sparse_mat.__str__()
         return self.hamiltonian.__repr__()
 
+    def __getstate__(self):
+        """Create a dictionary that will be pickled."""
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        if self.ham_cpp:
+            state['ham_cpp'] = True
+        if self.herm_ham_cpp:
+            state['herm_ham_cpp'] = True
+        return state
+
+    def __setstate__(self, state):
+        """Restore instance state from the unpickled state."""
+        self.__dict__.update(state)
+        # Add the missing 'ham_cpp' and 'herm_ham_cpp' entries
+        if self.ham_cpp:
+            self.ham_cpp = self.get_cpp_obj(hermitian=False)
+        if self.herm_ham_cpp:
+            self.herm_ham_cpp = self.get_cpp_obj(hermitian=True)
+
     def sparse(self, n_qubits=1):
         """
         Calculate the sparse matrix of this hamiltonian in pqc operator.

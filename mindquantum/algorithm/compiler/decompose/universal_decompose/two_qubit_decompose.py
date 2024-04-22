@@ -209,8 +209,8 @@ def kak_decompose(gate: QuantumGate, return_u3: bool = True) -> Circuit:
     (q_left, q_right), (dr, di) = utils.simult_svd(ur, ui)
     d = dr + 1j * di
 
-    _, a0, a1 = kron_factor_4x4_to_2x2s(M @ q_left @ M_DAG)
-    _, b0, b1 = kron_factor_4x4_to_2x2s(M @ q_right.T @ M_DAG)
+    _, a1, a0 = kron_factor_4x4_to_2x2s(M @ q_left @ M_DAG)
+    _, b1, b0 = kron_factor_4x4_to_2x2s(M @ q_right.T @ M_DAG)
 
     k = linalg.inv(A) @ np.angle(np.diag(d))
     h1, h2, h3 = -k[1:]

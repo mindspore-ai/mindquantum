@@ -216,7 +216,7 @@ int CalcG(size_t x1, size_t z1, size_t x2, size_t z2) {
 void StabilizerTableau::RowSum(size_t h, size_t i) {
     int r0 = 2 * (phase.GetBit(h) + phase.GetBit(i));
     for (size_t j = 0; j < n_qubits; ++j) {
-        r0 = CalcG(GetElement(i, j), GetElement(i, j + n_qubits), GetElement(h, j), GetElement(h, j + n_qubits));
+        r0 += CalcG(GetElement(i, j), GetElement(i, j + n_qubits), GetElement(h, j), GetElement(h, j + n_qubits));
         table[j].SetBit(h, table[j].GetBit(h) ^ table[j].GetBit(i));
         table[j + n_qubits].SetBit(h, table[j + n_qubits].GetBit(h) ^ table[j + n_qubits].GetBit(i));
     }
@@ -247,10 +247,10 @@ size_t StabilizerTableau::ApplyMeasurement(size_t a) {
         if (GetElement(i, a) == 1) {
             int r0 = 2 * (tail.GetBit(2 * n_qubits) + phase.GetBit(i + n_qubits));
             for (size_t j = 0; j < n_qubits; ++j) {
-                r0 = CalcG(GetElement(i + n_qubits, j), GetElement(i + n_qubits, j + n_qubits), tail.GetBit(j),
-                           tail.GetBit(j + n_qubits));
-                tail.SetBit(j, tail.GetBit(j) ^ table[j].GetBit(i));
-                tail.SetBit(j + n_qubits, tail.GetBit(j + n_qubits) ^ table[j + n_qubits].GetBit(i));
+                r0 += CalcG(GetElement(i + n_qubits, j), GetElement(i + n_qubits, j + n_qubits), tail.GetBit(j),
+                            tail.GetBit(j + n_qubits));
+                tail.SetBit(j, tail.GetBit(j) ^ table[j].GetBit(i + n_qubits));
+                tail.SetBit(j + n_qubits, tail.GetBit(j + n_qubits) ^ table[j + n_qubits].GetBit(i + n_qubits));
             }
             tail.SetBit(2 * n_qubits, (((r0 % 4) + 4) % 4) / 2);
         }
