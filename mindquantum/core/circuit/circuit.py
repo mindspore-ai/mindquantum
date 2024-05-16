@@ -1484,7 +1484,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             q3: ──┨ H ┠───■───────────
                   ┗━━━┛
         """
-        return apply(self, [self.n_qubits - 1 - i for i in self.all_qubits.keys()])
+        all_qubits = self.all_qubits.keys()
+        all_qubits.sort()
+        return apply(self, [self.n_qubits - 1 - i for i in all_qubits])
 
     def svg(self, style=None, width=None, scale=None):
         """
