@@ -974,7 +974,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             >>> circ = UN(H, 3).x(0, 1).x(1, 2).measure_all()
             >>> circ += H.on(0)
             >>> circ += Measure('q0_1').on(0)
-            >>> circ.remove_measure_on_qubits(0)
+            >>> circ = circ.remove_measure_on_qubits(0)
+            >>> circ
                   ┏━━━┓ ┏━━━┓ ┏━━━┓
             q0: ──┨ H ┠─┨╺╋╸┠─┨ H ┠────────────
                   ┗━━━┛ ┗━┳━┛ ┗━━━┛
@@ -1473,7 +1474,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                   ┏━━━┓       ┏━┻━┓
             q3: ──┨ Y ┠───────┨╺╋╸┠───
                   ┗━━━┛       ┗━━━┛
-            >>> circ.reverse_qubits()
+            >>> circ = circ.reverse_qubits()
+            >>> circ
                   ┏━━━┓       ┏━━━┓
             q0: ──┨ Y ┠───────┨╺╋╸┠───
                   ┗━━━┛       ┗━┳━┛
