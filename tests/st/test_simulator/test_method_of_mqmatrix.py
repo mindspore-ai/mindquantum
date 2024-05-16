@@ -253,6 +253,59 @@ def test_get_expectation_with_grad(config):
         assert np.allclose(g, ref_g, atol=1e-4)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+def test_get_expectation_with_grad_batch_hams(config):
+    """
+    Description: test get expectation with gradient with batch hams
+    Expectation: success.
+    """
+    # pylint: disable=too-many-locals
+    virtual_qc, dtype = config
+    init_state_circ = UN(G.H, range(5))
+    ansatz = mq.MaxCutAnsatz([(0, 1), (1, 2), (2, 3), (3, 4), (0, 4), (0, 2)], 4).circuit
+    circ = init_state_circ + ansatz
+    sim = Simulator(virtual_qc, 5, dtype=dtype)
+
+    def numbers_to_binary_matrix(n):
+        max_bits = int(np.ceil(np.log2(n)))
+        binary_matrix = np.zeros((n, max_bits), dtype=int)
+        for i in range(n):
+            binary_representation = list(bin(i)[2:])
+            binary_matrix[i, -len(binary_representation) :] = list(map(int, binary_representation))
+        return binary_matrix
+
+    qubit_num = 5
+    output_dim = 2**qubit_num
+    max_bits = int(np.ceil(np.log2(output_dim)))
+    hams = [None] * output_dim
+    hams_sign = numbers_to_binary_matrix(output_dim)
+    for index in range(output_dim):
+        ham = QubitOperator('I0', 1)
+        for jndex in range(max_bits):
+            ham *= QubitOperator(f'I{jndex}', 0.5) + (-1) ** hams_sign[index, jndex] * QubitOperator(f'Z{jndex}', 0.5)
+        hams[index] = Hamiltonian(ham, dtype=dtype)
+    grad_ops = sim.get_expectation_with_grad(hams, circ)
+    rng = np.random.default_rng(10)
+    p0 = rng.random(size=len(circ.params_name)) * np.pi * 2 - np.pi
+    f, g = grad_ops(p0)
+    ref_f = []
+    init_state = np.zeros(2**5)
+    init_state[0] = 1
+    for ham in hams:
+        ref_f.append(
+            init_state.T.conj()
+            @ circ.hermitian().matrix(dict(zip(circ.params_name, p0)))
+            @ ham.hamiltonian.matrix(5)
+            @ circ.matrix(dict(zip(circ.params_name, p0)))
+            @ init_state
+        )
+    assert np.allclose(f, ref_f, atol=1e-4)
+
+
 def three_qubits_dm_evolution_in_py(dm, g, dtype):
     """
     Description: test three qubits density matrix
