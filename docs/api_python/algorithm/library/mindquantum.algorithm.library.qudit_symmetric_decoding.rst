@@ -1,7 +1,7 @@
 mindquantum.algorithm.library.qudit_symmetric_decoding
 ========================================================
 
-.. py:function:: qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1)
+.. py:function:: mindquantum.algorithm.library.qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1)
 
     对称性解码，将qubit对称态或矩阵解码成qudit态或矩阵。
 

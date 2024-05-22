@@ -1,7 +1,7 @@
 mindquantum.algorithm.library.qudit_symmetric_encoding
 ========================================================
 
-.. py:function:: qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1)
+.. py:function:: mindquantum.algorithm.library.qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1)
 
     对称性编码，将qudit态或矩阵编码成qubit对称态或矩阵。
 
