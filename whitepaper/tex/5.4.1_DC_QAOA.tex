@@ -44,13 +44,7 @@ DC-QAOA holds promise for solving a wide range of optimization problems, from co
 \end{itemize}
 
 \subsubsection{Implementation}
-As a mature application of QAOA, this algorithm requires two steps, which is building the ansatz circuit and optimization. Now let's look at how to implement DC-QAOA into Ising spin model, the model is depicted in Fig.~\ref{fig:ising}. The initial state is chosen as $H_{initial} = \sum_{i}\sigma_{i}^{x}$. The general form of the Hamiltonian of the 1D Ising spin model is given by
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{5.4.1_figure/ising.jpg}
-    \caption{Schematic picture of the Ising model}
-    \label{fig:ising}
-\end{figure}
+As a mature application of QAOA, this algorithm requires two steps, which is building the ansatz circuit and optimization. Now let's look at how to implement DC-QAOA into Ising spin model. The initial state is chosen as $H_{initial} = \sum_{i}\sigma_{i}^{x}$. The general form of the Hamiltonian of the 1D Ising spin model is given by
 
 \begin{equation}
     H_{\mathrm{final}} = -\sum_{\langle i,j \rangle}J_{ij}\sigma_{i}^{z}\sigma_{j}^{z} - \sum_{i}h_{i}\sigma_{i}^{z} - \sum_{i}k_{i}\sigma_{i}^{x}.
