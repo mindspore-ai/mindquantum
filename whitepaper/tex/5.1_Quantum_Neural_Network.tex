@@ -22,8 +22,8 @@ Since we just need to select the first 100 samples, then execute the following c
 \begin{lstlisting}
 import numpy as np
 
-X = iris_dataset.data[:100, :].astype(np.float32)
-X_feature_names = iris_dataset.feature_names
+x = iris_dataset.data[:100, :].astype(np.float32)
+x_feature_names = iris_dataset.feature_names
 y = iris_dataset.target[:100].astype(int)
 y_target_names = iris_dataset.target_names[:2]
 \end{lstlisting}
@@ -43,7 +43,7 @@ for i in range(4):
     for j in range(4):
         if i != j:
             ax = axes[i][j]
-            ax.scatter(X[:, i], X[:, j], c=cvalue)
+            ax.scatter(x[:, i], x[:, j], c=cvalue)
             ax.set_xlabel(feature_name[i], fontsize=22)
             ax.set_ylabel(feature_name[j], fontsize=22)
 
@@ -63,8 +63,8 @@ plt.show()
 Following that, we compute the parameters required to build the encoder.  Activate the upcoming command.
 
 \begin{lstlisting}
-alpha = X[:, :3] * X[:, 1:]
-X = np.append(X, alpha, axis=1)
+alpha = x[:, :3] * x[:, 1:]
+x = np.append(x, alpha, axis=1)
 \end{lstlisting}
 
 Constructing features is a common technique in data preprocessing. Therefore, it can be found that each sample has 7 features at this time, the first four feature values are the original feature values, and the last three feature values are the ones calculated by the above preprocessing. The specific calculation formula is as follows:
@@ -79,7 +79,7 @@ At last, we separate the current data set into a training set and a testing set 
 \begin{lstlisting}
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, shuffle=True)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0, shuffle=True)
 \end{lstlisting}
 
 At this point there are 80 samples in the training set and 20 samples in the testing set, each with 7 features.
@@ -210,8 +210,8 @@ opti = Adam(QuantumNet.trainable_params(), learning_rate=0.1)
 
 model = Model(QuantumNet, loss, opti, metrics={'Acc': Accuracy()})
 
-train_loader = NumpySlicesDataset({'features': X_train, 'labels': y_train}, shuffle=False).batch(5)
-test_loader = NumpySlicesDataset({'features': X_test, 'labels': y_test}).batch(5)
+train_loader = NumpySlicesDataset({'features': x_train, 'labels': y_train}, shuffle=False).batch(5)
+test_loader = NumpySlicesDataset({'features': x_test, 'labels': y_test}).batch(5)
 
 class StepAcc(ms.Callback):
     def __init__(self, model, test_loader):
@@ -279,7 +279,7 @@ Finally, we apply the trained model on the testing set.
 \begin{lstlisting}
 from mindspore import ops
 
-predict = np.argmax(ops.Softmax()(model.predict(ms.Tensor(X_test))), axis=1)
+predict = np.argmax(ops.Softmax()(model.predict(ms.Tensor(x_test))), axis=1)
 correct = model.eval(test_loader, dataset_sink_mode=False)
 
 print("Predicted classification result:", predict)
