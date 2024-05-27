@@ -23,7 +23,12 @@ y = iris_dataset.target[:100].astype(int)
 y_target_names = iris_dataset.target_names[:2]
 
 # Scatter plot to visualize the data
-feature_name = {0: "sepal length", 1: "sepal width", 2: "petal length", 3: "petal width"}
+feature_name = {
+    0: "sepal length",
+    1: "sepal width",
+    2: "petal length",
+    3: "petal width",
+}
 axes = plt.figure(figsize=(23, 23)).subplots(4, 4)
 
 colormap = {0: "r", 1: "g"}
@@ -44,7 +49,9 @@ alpha = x[:, :3] * x[:, 1:]
 x = np.append(x, alpha, axis=1)
 
 # Split the data into training and testing sets
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0, shuffle=True)
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=0, shuffle=True
+)
 
 # Building the encoder circuit
 encoder = Circuit()
@@ -61,7 +68,9 @@ encoder = encoder.no_grad()
 encoder.svg()
 
 # Building the ansatz circuit
-ansatz = HardwareEfficientAnsatz(4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3).circuit
+ansatz = HardwareEfficientAnsatz(
+    4, single_rot_gate_seq=[RY], entangle_gate=X, depth=3
+).circuit
 ansatz.svg()
 
 # Combining the encoder and ansatz into a full quantum circuit
@@ -87,8 +96,11 @@ opti = Adam(QuantumNet.trainable_params(), learning_rate=0.1)
 
 model = Model(QuantumNet, loss, opti, metrics={"Acc": Accuracy()})
 
-train_loader = NumpySlicesDataset({"features": x_train, "labels": y_train}, shuffle=False).batch(5)
+train_loader = NumpySlicesDataset(
+    {"features": x_train, "labels": y_train}, shuffle=False
+).batch(5)
 test_loader = NumpySlicesDataset({"features": x_test, "labels": y_test}).batch(5)
+
 
 class StepAcc(Callback):
     def __init__(self, model, test_loader):
@@ -97,7 +109,10 @@ class StepAcc(Callback):
         self.acc = []
 
     def step_end(self, run_context):
-        self.acc.append(self.model.eval(self.test_loader, dataset_sink_mode=False)["Acc"])
+        self.acc.append(
+            self.model.eval(self.test_loader, dataset_sink_mode=False)["Acc"]
+        )
+
 
 monitor = LossMonitor(16)
 acc = StepAcc(model, test_loader)
