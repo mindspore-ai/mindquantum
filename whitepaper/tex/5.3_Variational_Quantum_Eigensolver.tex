@@ -68,11 +68,8 @@ The \code{openfermion} and the \code{openfermionpyscf} are open resourced packag
     ]
     basis="sto3g"
     spin = 0
-    molecule = MolecularData(
-    geometry,
-    basis,
-    multiplicity=2*spin+1
-    )
+    molecule = MolecularData(geometry,basis,multiplicity=2*spin+1)
+    molecule = run_pyscf(molecule,run_scf=1,run_ccsd=1,run_fci=1)
 \end{lstlisting}
 Based on "molecule", we can use the function in \MindQuantum\ to obtain the corresponding qubit Hamiltonian formula,
 \begin{lstlisting}
@@ -117,6 +114,12 @@ So far, we have prepared all the things needed in VQE.
 The final step of VQE is to minimize the cost function to get the expected value of energy, which can be done by using the \textit{SciPy} package.
 \begin{lstlisting}
     from scipy.optimize import minimize
+
+    def fun(theta, grad_ops, energy_list):
+        energy, grad = grad_ops(theta)
+        energy_list.append(energy)
+        return np.squeeze(energy.real), np.squeeze(grad.real)
+
     energy_list = []
     res = minimize(fun, p0, args=(grad_ops, energy_list), method='bfgs', jac=True)
 \end{lstlisting}
