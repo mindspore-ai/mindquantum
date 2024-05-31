@@ -1,4 +1,4 @@
-View demo code of this section: \democode{05}{5.4.5}
+View demo code of this section: \democode{05}{5.8_Reinforcement_Learning}
 
 \subsubsection{Background}
 
@@ -33,7 +33,7 @@ Replace the neural network in the classical Deep Q-network's agent with the quan
 
 \begin{figure*}[ht]
     \centering
-    \includegraphics[scale=0.5]{5.4.5_RL/HDQN.png}
+    \includegraphics[width=0.9\linewidth]{5.4.5_RL/HDQN.png}
     \caption{\label{HDQN} The architecture of HDQN.}
   \end{figure*}
 
@@ -118,6 +118,8 @@ env = gym.make('CartPole-v0')
 class Memory(object):
     ......
 \end{lstlisting}
+
+The full implementation can be found at the beginning of this section.
 
 \subsubsection{Training}
 The final step is model training. At first, we initialize HDQN with random parameters and let the actor interact with the environment. Next, we store the interaction result in the memory buffer as training samples. Finally, we sample from the memory buffer and adjust the parameters both in the classical part and quantum part with loss function (\ref{loss func}). Because of the space limitation, we will not provide the detailed code here.

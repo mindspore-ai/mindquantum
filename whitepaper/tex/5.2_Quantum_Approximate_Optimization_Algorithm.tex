@@ -79,7 +79,7 @@ Next, construct the QAOA ansatz, in which function \code{build\_hc} and \code{bu
 def build_hc(g,para):
     hc = Circuit()
     for i in g.edges:
-        hc += ZZ(para).on(i)
+        hc += Rzz(para).on(i)
     return hc
 def build_hb(g, para):
     hc = Circuit()
