@@ -1,12 +1,10 @@
-View demo code of this section: \democode{03}{3.1}
-
 Owing to the principles of quantum superposition, quantum entanglement, and quantum parallelism, quantum algorithms have the capacity to efficiently address certain computational problems, such as Shor's algorithm \cite{shor1994algorithms}, Grover's algorithm \cite{grover1996fast,long2001grover} and Harrow-Hassidim-Lloyd algorithm \cite{harrow2009quantum}, achieving exponential or polynomial acceleration when compared to classical algorithms. Nevertheless, the current stage of quantum devices is constrained by limited quantum qubits and significant noise, which is often referred to as Noisy Intermediate-Scale Quantum (NISQ) devices \cite{preskill2018quantum}. It is worth noting that the quantum algorithms mentioned above do not exhibit quantum advantage under NISQ era.
 
 Variational Quantum Algorithms (VQA) \cite{cerezo2021variational,yuan2019theory,xu2021variational} are considered the most promising candidates for achieving quantum advantage in the NISQ era. VQA leverages optimization algorithms from classical machine learning to fine-tune parameterized quantum circuits (PQC). As a result, VQA is a hybrid quantum-classical algorithm. VQA has found extensive applications in various domains, including quantum many body simulations \cite{Peruzzo2014Peruzzo2014,kandala2017hardware,kokail2019self,lyu2023variational,Lyu2023symmetryenhanced,cao2022progress}, quantum approximate optimization algorithm \cite{farhi2014quantum,patti2022variational,chandarana2023digitized}, quantum machine learning \cite{benedetti2019parameterized,wei2022quantum,lloyd2018quantum,biamonte2017quantum,abbas2021power} and entanglement purification \cite{zhang2023variational}. In this section, we will provide a brief overview of the VQA algorithm's workflow and how it can be efficiently implemented in \MindQuantum. More examples of VQA algorithm applications will be present in chapter \ref{sec:applications}.
 
 \begin{figure}[h]
   \begin{center}
-    \includegraphics[width=0.9\linewidth]{images/3_1_vqa.png}
+    \includegraphics[width=0.9\linewidth]{images/4_1_vqa.png}
   \end{center}
   \caption{The work flow of VQA.}
   \label{fig:vqa_work_flow}
@@ -60,7 +58,7 @@ ansatz.svg()
 
 \begin{figure}[h]
   \begin{center}
-    \includegraphics[width=0.9\linewidth]{images/3_1_ansatz.png}
+    \includegraphics[width=0.9\linewidth]{images/4_1_ansatz.png}
   \end{center}
   \caption{The ansatz circuit that can be work as an arbitrary single qubit rotation.}
   \label{fig:u3_ansatz}
@@ -127,6 +125,8 @@ ansatz.matrix(pr=dict(zip(ansatz.params_name, res.x)))
 \end{align*}
 
 \subsubsection{Rotate three states}
+\label{sec:rotate_three_states}
+
 In previous example, the PQC only contains ansatz circuit, and in this example, we will show how to add encoder circuit into PQC in \MindQuantum. The problem is described as below: find a single qubit rotation gate $U_a(\theta)$, which maximizes the sum of the expectation values of $Z$ for the following three states: $\ket{\psi_0}=\ket{0},\ket{\psi_1}=(\ket{0}+\ket{1})/\sqrt{2}$ and $\ket{\psi_2}=(\ket{0}+i\ket{1})/\sqrt{2}$.
 
 \begin{equation}
@@ -221,8 +221,8 @@ plt.show()
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=0.48]{./images/3_1_result.pdf}
-  \caption{\label{3_1_vqa} Rotation of initial states. The red represent the initial quantum states, while the green represent the final quantum states.}
+  \includegraphics[scale=0.48]{./images/4_1_result.pdf}
+  \caption{\label{4_1_vqa} Rotation of initial states. The red represent the initial quantum states, while the green represent the final quantum states.}
 \end{figure}
 
 \subsubsection{More usage}
