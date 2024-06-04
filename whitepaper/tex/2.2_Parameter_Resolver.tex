@@ -3,7 +3,7 @@ View demo code of this section: \democode{02}{2.2}
 \subsubsection{Parameters in MindQuantum}
 The parameterized quantum gates or circuits are key ingredients for quantum computing, especially for hybrid quantum-classical algorithms.
 In \MindQuantum, we provide a Python Class \code{mindquantum.core.ParameterResolver} to efficiently manage these classical parameters.
-When we initialize a parameterized quantum gate in \MindQuantum, we usually can not determine the value of these parameters, for example, the parameters may change during an optimization process.
+Suppose we would like to initialize a parameterized gate, where the value of the parameter may change during an optimization process.
 \ParameterResolver solves this problem by
 denoting each parameter as a unique symbol, such as $\theta=0.1$, where $\theta$ is the symbol of the parameter and $0.1$ is the corresponding value.
 Then we can use some symbols to denote the parameters instead of the real value when we write the code in \MindQuantum.
@@ -32,7 +32,7 @@ print(pr5.expression())
 
 The expression of \code{pr5} will be displayed as $\sqrt{2}*a + \pi*\text{theta}$.
 
-When parameterized circuits are simulated by \MindQuantum, the \ParameterResolver is provided such that the simulator will replace the symbol in circuits as the corresponding real value declared in the \ParameterResolver.
+When parameterized circuits are simulated by \MindQuantum, the \ParameterResolver replaces the symbol in circuits as the corresponding real value declared in the \ParameterResolver.
 
 In a hybrid quantum-classical algorithm, the parameters are usually optimized by some gradient descent methods such as SGD, ADAM, and BFGS. When we declare an instance of \ParameterResolver, by default, all parameters need to be differentiable.
 However, we can explicitly state whether a parameter needs to be differentiated as follows,
@@ -41,7 +41,9 @@ However, we can explicitly state whether a parameter needs to be differentiated 
 params.no_grad_part('theta')
 \end{lstlisting}
 
-In a hybrid algorithm, parameterized quantum gates or circuits are usually divided into two parts, encoder, and ansatz. The encoder encodes the classical data into the quantum state. And the ansatz is an assumption about the form of an unknown function, and we expect that we can get the solution to the problem by optimizing it. By default, all parameters in \ParameterResolver are initialized as ansatz's parameters. We can convert these parameters between encoder's and ansatz's parameters in the following way
+Here, \code{params} is an instance of \ParameterResolver. The \code{no_grad_part('theta')} method is invoked to specify that the parameter named \code{theta} should be non-differentiable. This means that in any subsequent optimization steps or gradient calculations, the \code{theta} parameter will be excluded.
+
+In a hybrid algorithm, parameterized quantum gates or circuits are usually divided into two parts, encoder, and ansatz. The encoder encodes the classical data into the quantum state. And the ansatz is an assumption about the form of an unknown function, and we can approximate the solution to the problem by optimizing it. By default, all parameters in \ParameterResolver are initialized as ansatz's parameters. We can convert these parameters between encoder's and ansatz's parameters in the following way
 
 \begin{lstlisting}
 #declare all parameters as encoder's parameters
@@ -65,7 +67,7 @@ params.astype(mq.complex128)
 
 \subsubsection{Parameter Generator}
 
-Besides the method in above section, \MindQuantum\ also provide a powerful tool to generate parameters quickly, \PRGenerator.
+Besides, \MindQuantum\ also provides a powerful tool to generate parameters quickly, \PRGenerator.
 \begin{lstlisting}
 from mindquantum.core.parameterresolver import PRGenerator
 

@@ -1,8 +1,8 @@
 View demo code of this section: \democode{02}{2.1}
 
-In this section, we will introduce the basic data types supported by \MindQuantum. When we simulate quantum evolution in \MindQuantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
-Before we discuss the supported data types in \MindQuantum, we first briefly review the definition of the floating-point number in modern computers which helps us to understand the difference among these data types.
-The first unified technical standard of floating-point arithmetic (IEEE 754) \cite{8766229} was established in 1985 and is widely supported by much hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
+In this section, we will introduce the basic data types supported by \MindQuantum. When we run quantum evolution in \MindQuantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
+Before we discuss the supported data types in \MindQuantum, we first briefly review the definition of the floating-point number in modern computers which helps us understand the difference among these data types.
+The first unified technical standard of floating-point arithmetic (IEEE 754) \cite{8766229} was established in 1985 and is widely supported by various hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
 
 In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.~\ref{fig:ieee}.
 
@@ -44,7 +44,7 @@ print(z_64)
 which shows that Single can get $7$ significant digits and Double get $16$ significant digits.
 
 
-In quantum machines, the complex number is essential for drawing quantum information. A complex number is an element of a number system that extends the real number with a specific element denoted $i$, called the imaginary unit, and satisfying the equation $i^2=-1$.
+In quantum computing, the complex number is essential for drawing quantum information. A complex number is an element of a number system that extends the real number with a specific element denoted $i$, called the imaginary unit, and satisfying the equation $i^2=-1$.
 The complex number can be expressed in the form $c=a+bi$, where $a$ and $b$ are real numbers, $a$ is called the real part, and $b$ is called the imaginary part.
 
 In computer digital format, the data type of complex number $c$ is determined by the type of $a$ and $b$.
@@ -68,7 +68,7 @@ numpy_float64 = mq.to_np_type(mq.float64)
 \end{lstlisting}
 
 The exponential wall is the main obstacle to simulating a quantum system in a classical computer.
-As the size of the quantum system linearly increases, the required classical resources exponentially increase.
+As the size of the quantum system increases, the required classical resources exponentially increase.
 A quantum state with $N$ qubits can be described by $2^N$ amplitudes, all of which are complex numbers.
 
 If we want to store an $N=20$ quantum state with $2^{20}$ amplitudes and all amplitudes are represented as single precision (Complex64), the classical memory is
@@ -96,6 +96,6 @@ If we use complex double to represent the amplitude, the memory requirement is $
 \end{table}
 
 It is not hard to see, double precision requires twice as much storage as single precision because every amplitude is $128$ bits in Double but $64$ bits in Single.
-Although double precision requires more space and usually more computing time (which depends on the specific processing unit), we can get higher precision which is very important for some takes in quantum machines, such as finding the eigenvalue of quantum Hamiltonian.
-In fact, using single-precision to represent the amplitude is only one more qubit than double-precision at most in the same memory resources.
+Although double precision requires more space and usually more computing time (which depends on the specific processing unit), we can get higher precision which is very important for some takes in quantum computing, such as finding the eigenvalue of quantum Hamiltonians.
+In fact, using single-precision to represent the amplitude can only simulate one more qubit than double-precision at most in the same memory resources.
 Then we strongly recommend that complex double as the first choice if you have enough memory resources.
