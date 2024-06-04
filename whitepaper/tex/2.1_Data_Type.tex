@@ -1,47 +1,47 @@
-View demo code of this section: \democode{02}{2.1}
+% (Zhou Junyuan) The following content is not highly relevant to the main text, so it will not be included in the body.
 
-In this section, we will introduce the basic data types supported by \MindQuantum. When we run quantum evolution in \MindQuantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
-Before we discuss the supported data types in \MindQuantum, we first briefly review the definition of the floating-point number in modern computers which helps us understand the difference among these data types.
-The first unified technical standard of floating-point arithmetic (IEEE 754) \cite{8766229} was established in 1985 and is widely supported by various hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
+% In this section, we will introduce the basic data types supported by \MindQuantum. When we run quantum evolution in \MindQuantum, different data types require different sizes of computer memory and lead to different simulation accuracy.
+% Before we discuss the supported data types in \MindQuantum, we first briefly review the definition of the floating-point number in modern computers which helps us understand the difference among these data types.
+% The first unified technical standard of floating-point arithmetic (IEEE 754) \cite{8766229} was established in 1985 and is widely supported by various hardware today by the Institute of Electrical and Electronics Engineers (IEEE).
 
-In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.~\ref{fig:ieee}.
+% In IEEE 754, a floating-point format is specified by three parts, sign, exponent, and fraction, all of which consist of a ${0,1}$ bit string as shown in Fig.~\ref{fig:ieee}.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\linewidth]{2.1_figures/Float_example.png}
-    \caption{Floating-point format}
-    \label{fig:ieee}
-\end{figure}
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=\linewidth]{2.1_figures/Float_example.png}
+%     \caption{Floating-point format}
+%     \label{fig:ieee}
+% \end{figure}
 
-The sign bit $s$ determines the sign of the number, $s=0$ is positive and $s=1$ is negative.
-The exponent part $e$ is an m-bit unsigned integer, which determines the Maximum and minimum values, and the fraction part $\vec{b}$ with $n$ bits is the true significance that appears in the memory format which determines the precision of the number.
+% The sign bit $s$ determines the sign of the number, $s=0$ is positive and $s=1$ is negative.
+% The exponent part $e$ is an m-bit unsigned integer, which determines the Maximum and minimum values, and the fraction part $\vec{b}$ with $n$ bits is the true significance that appears in the memory format which determines the precision of the number.
 
-The real value assumed by a given sign $s$, biased exponent $e$ and fraction $\vec{b}$ as
-\begin{equation}
-    \mathrm{value} = (-1)^{s}\times 2^{e}\times (1+\sum_{i=1}^nb_{23-i}2^{-i}).
-\label[equation]{float-format}
-\end{equation}
+% The real value assumed by a given sign $s$, biased exponent $e$ and fraction $\vec{b}$ as
+% \begin{equation}
+%     \mathrm{value} = (-1)^{s}\times 2^{e}\times (1+\sum_{i=1}^nb_{23-i}2^{-i}).
+% \label[equation]{float-format}
+% \end{equation}
 
-Based on the different numbers of bits, IEEE 754 defined three types of floating-point formats single-, double- and quadruple-precision with 32, 64, and 128 bits, respectively.
-Among them, single- and double-precision are widely used in classical computers.
-In single-precision floating-point format (for short, denoted as Single as follows), there are $1$ bit in the sign part $s$, $8$ bits in the exponent part $e$, and $23$ bits in the fraction part $\vec{b}$.
-In double-precision floating-point format (Double), there are still $1$ bit in the sign part $s$, $11$ bits in the exponent part $e$, and $52$ bits in the fraction part $\vec{b}$.
+% Based on the different numbers of bits, IEEE 754 defined three types of floating-point formats single-, double- and quadruple-precision with 32, 64, and 128 bits, respectively.
+% Among them, single- and double-precision are widely used in classical computers.
+% In single-precision floating-point format (for short, denoted as Single as follows), there are $1$ bit in the sign part $s$, $8$ bits in the exponent part $e$, and $23$ bits in the fraction part $\vec{b}$.
+% In double-precision floating-point format (Double), there are still $1$ bit in the sign part $s$, $11$ bits in the exponent part $e$, and $52$ bits in the fraction part $\vec{b}$.
 
-The value precision is determined by the number of bits in the fraction part.
-In Single, the fraction part is $\vec{b}=0.b_{22}b_{21}\cdots b{0}$.
-In fact, the first $0$ is default as $1$, so the true fraction part is $1.b_{22}b_{21}\cdots b{0}$, that can explain the Eq.~\eqref{float-format} where $\vec{b}$ plus $1$.
-Then the total precision of Single is 24 bits which approximates $7.22$ decimal digits as $\log_{10}(2^{24}) \approx 7.225$.
-As similar, the total precision of Double is $53$ which can approximate $\log_{10}(2^{53}) \approx 15.95$ decimal digits.
-There is an interesting example showing the difference in the precision of Single and Double,
-\begin{lstlisting}
-z_32=0.1f0+0.2f0
-print(z_32)
-0.30000001192092896
-z_64=0.1+0.2
-print(z_64)
-0.30000000000000004
-\end{lstlisting}
-which shows that Single can get $7$ significant digits and Double get $16$ significant digits.
+% The value precision is determined by the number of bits in the fraction part.
+% In Single, the fraction part is $\vec{b}=0.b_{22}b_{21}\cdots b{0}$.
+% In fact, the first $0$ is default as $1$, so the true fraction part is $1.b_{22}b_{21}\cdots b{0}$, that can explain the Eq.~\eqref{float-format} where $\vec{b}$ plus $1$.
+% Then the total precision of Single is 24 bits which approximates $7.22$ decimal digits as $\log_{10}(2^{24}) \approx 7.225$.
+% As similar, the total precision of Double is $53$ which can approximate $\log_{10}(2^{53}) \approx 15.95$ decimal digits.
+% There is an interesting example showing the difference in the precision of Single and Double,
+% \begin{lstlisting}
+% z_32=0.1f0+0.2f0
+% print(z_32)
+% 0.30000001192092896
+% z_64=0.1+0.2
+% print(z_64)
+% 0.30000000000000004
+% \end{lstlisting}
+% which shows that Single can get $7$ significant digits and Double get $16$ significant digits.
 
 
 In quantum computing, the complex number is essential for drawing quantum information. A complex number is an element of a number system that extends the real number with a specific element denoted $i$, called the imaginary unit, and satisfying the equation $i^2=-1$.

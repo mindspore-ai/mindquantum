@@ -1,4 +1,7 @@
 \label{sec:noise_simulation}
+
+View demo code of this section: \demonotebook{03}{chapt03}
+
 \subsubsection{Quantum Channel}
 Due to quantum decoherence and coupling with the environment, errors often occur in current quantum computers during the calculation process. They occur in stages such as state preparation, quantum gate operation, and measurement. This is often called quantum noise. Quantum noise can be characterized by quantum channels. In quantum information theory, quantum channels refer to completely positive trace-preserving (CPTP) maps in the operator space, which can also be regarded as a quantum operation. All quantum channels can be represented by Kraus operators
 
@@ -94,12 +97,12 @@ After applying the noise model to a circuit, a bit flip channel will add to each
     \centering
     \begin{subfigure}{0.2\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/4_3_no_bit_fip.png}
+        \includegraphics[width=\textwidth]{images/3_3_no_bit_fip.png}
         \caption{Circuit without noise.}
     \end{subfigure}
     \begin{subfigure}{0.4\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{images/4_3_bit_fip.png}
+        \includegraphics[width=0.9\textwidth]{images/3_3_bit_fip.png}
         \caption{Circuit after a \code{BitFlipAdder}.}
     \end{subfigure}
     \caption{An example of applying a BitFlipAdder to a quantum circuit.}
@@ -190,12 +193,12 @@ A \MixerAdder is a set of adders, that all the \code{_accepter()} and\code{_excl
     \centering
     \begin{subfigure}{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/4_3_no_complex.png}
+        \includegraphics[width=\textwidth]{images/3_3_no_complex.png}
         \caption{Circuit without noise.}
     \end{subfigure}
     \begin{subfigure}{0.5\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/4_3_complex.png}
+        \includegraphics[width=\textwidth]{images/3_3_complex.png}
         \caption{Circuit after a complex Channel Adder.}
     \end{subfigure}
     \caption{An example of applying a complex Channel Adder to a quantum circuit.}
