@@ -2,7 +2,7 @@
 In recent years, NISQ devices have undergone great development. Different classes of simulators on classical computers have blossomed to address the challenging task of simulating large quantum circuits. Currently, simulators for quantum circuits can be categorized into two primary categories:
 \begin{itemize}
     \item state vector simulation: The state vector approach simulates a direct evolution of the quantum state. In \MindQuantum, the \code{"mqvector"} is in this category. However, this approach stores the full state information, leading to an exponential growth in memory requirements.
-    \item tensor network simulation: The tensor approach performs the simulation by contracting a tensor network.
+    \item tensor network simulation: The tensor approach performs the simulation by contracting a tensor network \cite{Huggins_2019,PhysRevLett.128.030501}.
 \end{itemize}
 
 In the tensor network approach, the quantum circuit is represented as a tensor network, with one-qubit gates described as rank-2 tensors, two-qubit gates as rank-4 tensors, and $n$-qubit gates as rank-2$n$ tensors. Simulating the quantum circuit is consequently transformed into the task of contracting the associated tensor network.
