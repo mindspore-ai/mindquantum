@@ -28,11 +28,6 @@ try:
     _mq_vector_gpu.double.mqvector_gpu(1).apply_gate(mqbackend.gate.HGate([0]))
     MQVECTOR_GPU_SUPPORTED = True
 except ImportError as err:
-    warnings.warn(
-        f"Unable import mqvector gpu backend. This could be due to your environment "
-        "not satisfying the requirements for mqvector_gpu, or the _mq_vector_gpu library may be missing.",
-        stacklevel=2,
-    )
     MQVECTOR_GPU_SUPPORTED = False
 except RuntimeError as err:
     warnings.warn(f"Disable mqvector gpu backend due to: {err}", stacklevel=2)
