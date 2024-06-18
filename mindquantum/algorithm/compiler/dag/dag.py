@@ -417,26 +417,63 @@ class DAGCircuit:
             q1: ──┨ H ┠─┨╺╋╸┠───
                   ┗━━━┛ ┗━━━┛
         """
+        sorted_nodes = self.topological_sort()
         circuit = Circuit()
-        considered_node = set(self.head_node.values())
+        considered_nodes = set(self.head_node.values())
 
-        def adding_current_node(current_node, circuit, considered):
-            if all(i in considered for i in current_node.father.values()) and not isinstance(
-                current_node, DAGQubitNode
-            ):
-                circuit += current_node.gate
-                considered.add(current_node)
-            else:
-                for node in current_node.father.values():
-                    if node not in considered:
-                        adding_current_node(node, circuit, considered)
-                for node in current_node.child.values():
-                    if node not in considered:
-                        adding_current_node(node, circuit, considered)
+        def add_node_to_circuit(node, circuit, considered_nodes):
+            if node not in considered_nodes:
+                for parent in node.father.values():
+                    add_node_to_circuit(parent, circuit, considered_nodes)
+                considered_nodes.add(node)
+                if isinstance(node, GateNode):
+                    circuit += node.gate
 
-        for current_node in self.final_node.values():
-            adding_current_node(current_node, circuit, considered_node)
+        for node in sorted_nodes:
+            add_node_to_circuit(node, circuit, considered_nodes)
+
         return circuit
+
+    def topological_sort(self) -> typing.List[DAGNode]:
+        """
+        Perform topological sorting on the DAG and return the nodes in topologically sorted order.
+
+        Returns:
+            List[DAGNode]: List of nodes in topologically sorted order.
+        """
+        from collections import deque, defaultdict
+
+        in_degree = defaultdict(int)
+        visited = set()
+        zero_in_degree_queue = deque()
+
+        # Initialize in-degrees and find initial zero in-degree nodes
+        for node in self.head_node.values():
+            if node not in visited:
+                queue = deque([node])
+                visited.add(node)
+                while queue:
+                    current_node = queue.popleft()
+                    for child in current_node.child.values():
+                        if child not in visited:
+                            in_degree[child] += 1
+                            queue.append(child)
+                            visited.add(child)
+                if in_degree[node] == 0:
+                    zero_in_degree_queue.append(node)
+
+        # Topologically sorted nodes
+        sorted_nodes = []
+
+        while zero_in_degree_queue:
+            node = zero_in_degree_queue.popleft()
+            sorted_nodes.append(node)
+            for child in node.child.values():
+                in_degree[child] -= 1
+                if in_degree[child] == 0:
+                    zero_in_degree_queue.append(child)
+
+        return [node for node in sorted_nodes if not isinstance(node, DAGQubitNode)]
 
 
 # pylint: disable=too-many-return-statements,too-many-branches
