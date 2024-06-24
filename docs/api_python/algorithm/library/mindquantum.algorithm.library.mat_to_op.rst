@@ -1,7 +1,7 @@
 mindquantum.algorithm.library.mat_to_op
 =======================================================
 
-.. py:function:: mat_to_op(mat, little_endian: bool = True)
+.. py:function:: mindquantum.algorithm.library.mat_to_op(mat, little_endian: bool = True)
 
     将一个基于qubit的矩阵表示转换为对应的泡利算符表示。默认以小端头表示输出QubitOperator。
 

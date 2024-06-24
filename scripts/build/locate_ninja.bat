@@ -62,7 +62,7 @@ if %ERRORLEVEL% == 0 (
 :install_ninja
 
 set pip_args=
-if %_IS_MINDSPORE_CI% == 1 set pip_args=!pip_args! -i https://mirror.baidu.com/pypi/simple
+if %_IS_MINDSPORE_CI% == 1 set pip_args=!pip_args! -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 echo Installing Ninja inside the Python virtual environment
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install !pip_args! ninja

@@ -69,7 +69,7 @@ fi
 
 pip_args=()
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
-    pip_args+=(-i https://mirror.baidu.com/pypi/simple)
+    pip_args+=(-i https://pypi.tuna.tsinghua.edu.cn/simple)
 fi
 
 if [ $has_ninja -eq 0 ]; then

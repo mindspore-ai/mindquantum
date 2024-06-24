@@ -537,7 +537,7 @@ class FermionOperator(FermionOperator_):
             >>> from mindquantum.core.operators import FermionOperator
             >>> a = FermionOperator("0^ 1", {"a": 1 + 2j})
             >>> a.hermitian()
-            (-1 + 2j)*a [1 0^]
+            (1 - 2j)*a [1^ 0]
         """
         return FermionOperator(FermionOperator_.hermitian_conjugated(self), internal=True)
 

@@ -781,8 +781,6 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
         n_thread = n_hams;
     }
     VT<py_qs_datas_t> f_and_g(n_hams, py_qs_datas_t((1 + p_map.size()), 0));
-    derived_t sim_qs = *this;
-    sim_qs.ApplyCircuit(circ, pr);
     int n_group = n_hams / n_thread;
     if (n_hams % n_thread) {
         n_group += 1;
@@ -793,6 +791,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradOneMulti(
         if (end > static_cast<int>(n_hams)) {
             end = n_hams;
         }
+        derived_t sim_qs = *this;
+        sim_qs.ApplyCircuit(circ, pr);
         std::vector<derived_t> sim_hams(end - start);
         for (int j = start; j < end; j++) {
             f_and_g[j][0] = GetStateExpectation(sim_qs.qs, *hams[j], dim);
@@ -946,8 +946,6 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
         n_thread = n_hams;
     }
     VT<py_qs_datas_t> f_and_g(n_hams, py_qs_datas_t((1 + p_map.size()), 0));
-    derived_t sim_qs = *this;
-    sim_qs.ApplyCircuit(circ, pr);
     int n_group = n_hams / n_thread;
     if (n_hams % n_thread) {
         n_group += 1;
@@ -958,6 +956,8 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneMulti(
         if (end > static_cast<int>(n_hams)) {
             end = n_hams;
         }
+        derived_t sim_qs = *this;
+        sim_qs.ApplyCircuit(circ, pr);
         std::vector<derived_t> sim_hams(end - start);
         for (int j = start; j < end; j++) {
             f_and_g[j][0] = GetStateExpectation(sim_qs.qs, *hams[j], dim);
