@@ -84,7 +84,7 @@ if(-Not $has_cmake) {
 if (-Not $has_cmake) {
     $pip_args = @('--prefer-binary')
     if ($_IS_MINDSPORE_CI) {
-        $pip_args += '-i', 'https://mirror.baidu.com/pypi/simple'
+        $pip_args += '-i', 'https://pypi.tuna.tsinghua.edu.cn/simple'
     }
 
     Write-Output "Installing CMake inside the Python virtual environment"
