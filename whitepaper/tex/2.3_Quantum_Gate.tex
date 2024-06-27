@@ -6,7 +6,7 @@ In quantum computing, quantum gates are fundamental operations that manipulate q
 
 Quantum gates are essential for constructing quantum circuits and implementing quantum algorithms by performing operations such as rotations, flips, and entanglement creation. These operations enable unique computational capabilities distinct to quantum computers.
 
-Quantum gates are categorized based on the number of qubits they act upon: single-qubit gates modify individual qubit states, while multi-qubit gates facilitate interactions between qubits, enabling complex quantum operations and entanglement. Gates can also be classified as non-parameterized (e.g., \X, \Y, \Z, \H) or parameterized (e.g., \RX, \RY, \RZ), the latter providing additional computational flexibility. In \MindQuantum, these gates—including parameterized ones using \ParameterResolver—are easily constructed.
+Quantum gates are categorized based on the number of qubits they act upon: single-qubit gates modify individual qubit states, while multi-qubit gates facilitate interactions between qubits, enabling complex quantum operations and entanglement. Gates can also be classified as non-parameterized (e.g., \X, \Y, \Z, \H) or parameterized (e.g., \RX, \RY, \RZ), the latter providing additional computational flexibility. In \MindQuantum, these gates---including parameterized ones using \ParameterResolver---are easily constructed.
 
 \subsubsection{Fixed Quantum Gates}
 Fixed quantum gates perform specific operations on quantum states, represented by unitary matrices. Here are some examples for a qubit state $\ket{\phi}=a\ket{0}+b\ket{1}$:
@@ -184,7 +184,7 @@ test1 = TestGate(0.5).on(0)
 test2 = TestGate('a').on(0)
 \end{lstlisting}
 
-\subsubsection{`On' Method}
+\subsubsection{``On'' Method}
 For some controlled quantum gates, we need to specify the target qubits and control qubits of the quantum gate. In \MindQuantum, we can implement this function through the \code{on()} method. This method takes two parameters. One is the target qubits and the other is the control qubits, both of which can be single qubit or multiple qubits. It is worth emphasizing that any gate can add arbitrary control operations.
 
 Example:
@@ -200,7 +200,7 @@ Output:
 Target qubit:[0], Control qubits:[1, 2]
 \end{lstlisting}
 
-\subsubsection{`Controlled' Function}
+\subsubsection{``Controlled'' Function}
 In addition to the \code{on()} method, we can also add control bits via the \code{controlled()} function. The \code{controlled()} function is used to add control qubits (which can be multiple) to any quantum circuit or quantum operator. For example, we build a quantum circuit containing only two qubits and add a control qubit q2 to it by \code{controlled()} method:
 \begin{lstlisting}
 from mindquantum.algorithm.library import qft

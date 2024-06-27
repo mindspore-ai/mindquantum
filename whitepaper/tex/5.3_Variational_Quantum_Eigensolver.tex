@@ -71,7 +71,7 @@ The \code{openfermion} and the \code{openfermionpyscf} are open resourced packag
     molecule = MolecularData(geometry,basis,multiplicity=2*spin+1)
     molecule = run_pyscf(molecule,run_scf=1,run_ccsd=1,run_fci=1)
 \end{lstlisting}
-Based on "molecule", we can use the function in \MindQuantum\ to obtain the corresponding qubit Hamiltonian formula,
+Based on \code{molecule}, we can use the function in \MindQuantum\ to obtain the corresponding qubit Hamiltonian formula,
 \begin{lstlisting}
     from mindquantum.algorithm.nisq import get_qubit_hamiltonian
     hamiltonian_QubitOP = get_qubit_hamiltonian(molecule)
