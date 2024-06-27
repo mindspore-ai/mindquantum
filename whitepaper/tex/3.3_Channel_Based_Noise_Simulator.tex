@@ -211,4 +211,4 @@ circ = Circuit().rx('a', 0).rx('b', 1).x(1, 0).rz('c', 1).x(1, 0).measure_all()
 noise_sim = Simulator(NoiseBackend('mqvector', 2, noise_model))
 noise_sim.sampling(circ, pr={'a': 1, 'b': 2, 'c':3}, shots=10000)
 \end{lstlisting}
-Here we construct a noise simulator using \code{“mqvector”}-based \NoiseBackend and the noise model that we built previously.
+Here we construct a noise simulator using \code{"mqvector"}-based \NoiseBackend and the noise model that we built previously.

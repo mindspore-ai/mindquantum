@@ -1,7 +1,8 @@
 \documentclass[pra,twocolumn,superscriptaddress,floatfix,nofootinbib,amsmath,amssymb]{revtex4-1}
 
-\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[english]{babel}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{bm}
@@ -43,8 +44,14 @@
 \newcommand{\tr}{\text{tr}}
 
 \usepackage{listings}
-\lstset{stepnumber=0}
-
+\usepackage{upquote}
+\lstset{
+    stepnumber=0,
+    literate=
+        {¦}{{\textbar}}1 % Correctly render vertical bar
+        {√}{{$\surd{}$}}1 % Correctly render square root
+        {⟩}{{$\rangle$}}1  % Correctly render right angle bracket
+}
 \UseRawInputEncoding
 \usepackage{titlesec} %自定义多级标题格式的宏包
 \titleformat{\paragraph}[block]{\small\bfseries}{}{}{}[]
@@ -191,8 +198,8 @@
 \affiliation{Key Laboratory of Theoretical and Computational Photochemistry, Ministry of Education,
     College of Chemistry, Beijing Normal University, Beijing 100875, China}
 \author{Guilu Long}
-\affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People’s Republic of China}
-\affiliation{State Key Laboratory of Low-Dimensional Quantum Physics and Department of Physics, Tsinghua University, Beijing 100084, People’s Republic of China}
+\affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People's Republic of China}
+\affiliation{State Key Laboratory of Low-Dimensional Quantum Physics and Department of Physics, Tsinghua University, Beijing 100084, People's Republic of China}
 \author{Zhaofeng Su}
 \affiliation{School of Computer Science and Technology,
     University of Science and Technology of China, Hefei 230027, China}
@@ -205,7 +212,7 @@
 \affiliation{Key Laboratory of Quantum Physics and Photonic Quantum Information, Ministry of Education,
     University of Electronic Science and Technology of China, Chengdu 611731, China}
 \author{Shijie Wei}
-\affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People’s Republic of China}
+\affiliation{Beijing Academy of Quantum Information Sciences, Beijing 100193, People's Republic of China}
 \author{Re-Bing Wu}
 \affiliation{Department of Automation, Tsinghua University, Beijing 100084, China}
 \author{Pan Zhang}
@@ -226,7 +233,7 @@
 
 
 \begin{abstract}
-    We introduce MindSpore Quantum, a pioneering hybrid quantum-classical framework with a primary focus on the design and implementation of noisy intermediate-scale quantum (NISQ) algorithms. Leveraging the robust support of MindSpore, an advanced open-source deep learning training/inference framework, MindSpore Quantum exhibits exceptional efficiency in the design and training of variational quantum algorithms on both CPU and GPU platforms, delivering remarkable performance. Furthermore, this framework places a strong emphasis on enhancing the operational efficiency of quantum algorithms when executed on real quantum hardware. This encompasses the development of algorithms for quantum circuit compilation and qubit mapping, crucial components for achieving optimal performance on quantum processors. In addition to the core framework, we introduce QuPack—a meticulously crafted quantum computing acceleration engine. QuPack significantly accelerates the simulation speed of MindSpore Quantum, particularly in variational quantum eigensolver (VQE), quantum approximate optimization algorithm (QAOA), and tensor network simulations, providing astonishing speed. This combination of cutting-edge technologies empowers researchers and practitioners to explore the frontiers of quantum computing with unprecedented efficiency and performance.
+    We introduce MindSpore Quantum, a pioneering hybrid quantum-classical framework with a primary focus on the design and implementation of noisy intermediate-scale quantum (NISQ) algorithms. Leveraging the robust support of MindSpore, an advanced open-source deep learning training/inference framework, MindSpore Quantum exhibits exceptional efficiency in the design and training of variational quantum algorithms on both CPU and GPU platforms, delivering remarkable performance. Furthermore, this framework places a strong emphasis on enhancing the operational efficiency of quantum algorithms when executed on real quantum hardware. This encompasses the development of algorithms for quantum circuit compilation and qubit mapping, crucial components for achieving optimal performance on quantum processors. In addition to the core framework, we introduce QuPack---a meticulously crafted quantum computing acceleration engine. QuPack significantly accelerates the simulation speed of MindSpore Quantum, particularly in variational quantum eigensolver (VQE), quantum approximate optimization algorithm (QAOA), and tensor network simulations, providing astonishing speed. This combination of cutting-edge technologies empowers researchers and practitioners to explore the frontiers of quantum computing with unprecedented efficiency and performance.
 \end{abstract}
 \maketitle
 \tableofcontents
