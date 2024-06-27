@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+\usepackage{upquote}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{bm}
@@ -44,14 +45,8 @@
 \newcommand{\tr}{\text{tr}}
 
 \usepackage{listings}
-\usepackage{upquote}
-\lstset{
-    stepnumber=0,
-    literate=
-        {¦}{{\textbar}}1 % Correctly render vertical bar
-        {√}{{$\surd{}$}}1 % Correctly render square root
-        {⟩}{{$\rangle$}}1  % Correctly render right angle bracket
-}
+\lstset{stepnumber=0}
+
 \UseRawInputEncoding
 \usepackage{titlesec} %自定义多级标题格式的宏包
 \titleformat{\paragraph}[block]{\small\bfseries}{}{}{}[]
