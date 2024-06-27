@@ -1,7 +1,7 @@
 \subsection{State Vector Simulator}
 \label{sec_state_vec}
 \subsubsection{Policy Based Design pattern}
-In \MindQuantum, we use \Simulator to simulate quantum states. A \Simulator maintains a quantum state, as mentioned in section \ref{sec:sim_basic_usage}, methods start with `apply' will change this maintained quantum state, and methods start with `get' will not change anything but only extrude information from the quantum state.
+In \MindQuantum, we use \Simulator to simulate quantum states. A \Simulator maintains a quantum state, as mentioned in section \ref{sec:sim_basic_usage}, methods start with ``apply'' will change this maintained quantum state, and methods start with ``get'' will not change anything but only extrude information from the quantum state.
 
 Simulating quantum systems imposes high performance requirements on simulators. In \MindQuantum, we utilize C++ or CUDA as the underlying simulator implementation language, accelerating quantum simulations based on different hardware instruction sets. We adopt a policy-based development approach, optimizing the fundamental simulator interface for different instruction sets and encapsulating them into policy types. Building upon a unified quantum simulation framework, we generate different quantum simulators using various simulator policies, such as AVX-supported simulators, neon-supported simulators, and GPU-supported simulators.
 
