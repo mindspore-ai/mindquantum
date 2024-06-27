@@ -12,7 +12,7 @@ for i in range(qubit_num-1):
         +Q('z{}'.format(i+1)))
 H_d=H_d.matrix()
 \end{lstlisting}
-\textit{Unitary evolution} -- Based on this quantum system, We can study the characteristics of quantum systems in many ways. Firstly, we can study the dynamic of this quantum system in a closed environment. For a closed system, its evolution is governed by the Schrödinger equation.
+\textit{Unitary evolution} -- Based on this quantum system, We can study the characteristics of quantum systems in many ways. Firstly, we can study the dynamic of this quantum system in a closed environment. For a closed system, its evolution is governed by the Schr\"{o}dinger equation.
 \begin{equation}
     i\hbar\frac{\partial}{\partial t}\Psi=\hat{H}\Psi,
 \end{equation}
@@ -33,7 +33,7 @@ t_list=np.linspace(0.0,10.0,100)
 H=[[H_d]]
 result=MQsesolve(H,psi0,t_list)
 \end{lstlisting}
-The function MQsesolve calculates states in each time slot during the schrödinger unitary evolution. If we want to add control into the closed system, we could easily append the control Hamiltonian into the Hamiltonian list with the time function. The MQmesolve will identify scenarios by itself. We add a control Hamiltonian in the following form in the case of a two-qubit system.
+The function MQsesolve calculates states in each time slot during the schr\"{o}dinger unitary evolution. If we want to add control into the closed system, we could easily append the control Hamiltonian into the Hamiltonian list with the time function. The MQmesolve will identify scenarios by itself. We add a control Hamiltonian in the following form in the case of a two-qubit system.
 \begin{equation}
     H_{c}=\sin(0.2\pi t)\sigma_{0}^{y}\sigma_{1}^{z},
 \end{equation}
@@ -146,7 +146,7 @@ Meanwhile, the gradient of the open system can be:
 \end{equation}
 Here, the gradient is still available for vector $\bra{\hat{\rho}_{n,targ}+\hat{\rho}_{n}(T)}$.
 
-\textit{Gradient ascent pulse engineering} -- Gradient ascent pulse engineering (GRAPE) algorithm is used in pulse optimal control. It divides the evolution time into many time slots. In each slot, the pulse is controlled by a time-independent Hamiltonian. The whole evolution can be regarded as a piecewise function. The reason is that solving the time-independent Schrödinger equation costs less time complexity. We denote the control Hamiltonian as $H_{k}$, the unitary operator $\hat{U}_{m}$ in $m$'th slot can be:
+\textit{Gradient ascent pulse engineering} -- Gradient ascent pulse engineering (GRAPE) algorithm is used in pulse optimal control. It divides the evolution time into many time slots. In each slot, the pulse is controlled by a time-independent Hamiltonian. The whole evolution can be regarded as a piecewise function. The reason is that solving the time-independent Schr\"{o}dinger equation costs less time complexity. We denote the control Hamiltonian as $H_{k}$, the unitary operator $\hat{U}_{m}$ in $m$'th slot can be:
 \begin{equation}
     \hat{U}_{m}=\mathrm{exp}\left[-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)\right],
 \end{equation}
@@ -281,11 +281,11 @@ Here, $\vec{a}$ is the parameter vector. We can get the following equations by c
     \end{pmatrix}
     \label{Goat_diff}
 \end{equation}
-with initial value $\partial_{a}\psi(0)=0$. In this package, we use a modified version of GOAT. Eq.~(\ref{Goat_diff}) is split into two parts. The first part is the ordinary Schrödinger equation and the second part is the inhomogeneous equation:
+with initial value $\partial_{a}\psi(0)=0$. In this package, we use a modified version of GOAT. Eq.~(\ref{Goat_diff}) is split into two parts. The first part is the ordinary Schr\"{o}dinger equation and the second part is the inhomogeneous equation:
 \begin{equation}
     i\hbar\frac{d}{dt}\ket{\partial_{\vec{a}}\psi(t)}=\hat{H}(t)\ket{\partial_{\vec{a}}\psi(t)}+\partial_{\vec{a}}\hat{H}(t)\ket{\psi(t)}.
 \end{equation}
-These two parts can be calculated in the size of Schrödinger equation rather than twice the lager size. This form avoids background propagation but needs forward propagation for each element in parameter vector $\ket{a}$. So far, we only realized the GOAT method in the closed system, and we can implement as following:
+These two parts can be calculated in the size of Schr\"{o}dinger equation rather than twice the lager size. This form avoids background propagation but needs forward propagation for each element in parameter vector $\ket{a}$. So far, we only realized the GOAT method in the closed system, and we can implement as following:
 \begin{lstlisting}
 result_unitary = MQ_opt_unitary_goat(
     drift=drift,

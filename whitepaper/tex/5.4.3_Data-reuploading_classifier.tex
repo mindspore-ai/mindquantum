@@ -80,7 +80,7 @@ In this example, we focus on a typical classification task: identifying points i
 
 We create a dataset comprising numerous points with coordinates $\overrightarrow{x}=(x_1, x_2)$ randomly distributed on a unit area plane ($x\in[-1,1]$).
 The task of the classifier is to determine, based on the coordinates of these data points, whether they fall within a circle of radius $r$, i.e., $x_1^2+x_2^2<r^2$.
-And the radius of the circle is intentionally set to $r=\sqrt{\frac{2}{\pi}}$ to ensure an equal probability of points being inside (labeled `0' and corresponding to the target quantum state $|0\rangle$) or outside (labeled `1' and corresponding to the target quantum state $|1\rangle$) the circle.
+And the radius of the circle is intentionally set to $r=\sqrt{\frac{2}{\pi}}$ to ensure an equal probability of points being inside (labeled ``0'' and corresponding to the target quantum state $|0\rangle$) or outside (labeled ``1'' and corresponding to the target quantum state $|1\rangle$) the circle.
 
 \begin{lstlisting}
 import numpy as np
@@ -112,7 +112,7 @@ Input data ($[x_1, x_2, x_3, \cdots x_{N-2}, x_{N-1},x_{N}]$) with $N$ dimension
 Next, we construct the circuit for a single-qubit classifier. We begin by applying an $H$ gate to the initial quantum state to generate a superposition state $(|0\rangle+|1\rangle)/\sqrt{2}$.
 Afterwards, we add $RZ(x_1)$ and $RX(x_2)$ gates to upload the sample's coordinates $x_1$ and $x_2$ onto the qubit.
 The subsequent processing unit is represented by a $U3$ gate with three independent trainable parameters to act as an arbitrary rotation.
-These two sub-circuits are also named as ``encoder" and ``ansatz" respectively to indicate the parameters of the rotation gates will be directly fed into or gradually updated during training.
+These two sub-circuits are also named as ``encoder'' and ``ansatz'' respectively to indicate the parameters of the rotation gates will be directly fed into or gradually updated during training.
 The encoder and ansatz together form a layer, and multiple such layers can be repeated to achieve the functionality of multiple data re-uploading and processing, thereby enabling points classification.
 
 \begin{lstlisting}
@@ -142,8 +142,8 @@ $H$ gate to generate a uniform superposition state, along with an encoding and i
 \end{figure}
 
 The overall quantum circuit will transform the quantum state from $|0\rangle$ to $\varphi$, which requires to be measured.
-As mentioned before, the classification result `0' (inside the circle) or `1' (outside the circle) can be determined according to the final measurement of the single qubit, e.g., a sampled point can be classified into `0' if the output probabilities $P(|0\rangle)>P(|1\rangle)$ and into `1' otherwise.
-This approach can also be represented by the energy expectation of the final quantum state along the $Z$ direction, i.e., classifies the sampled point into `0' if $E(|\varphi\rangle)>0$ and else into `1'. Hence, the loss function can be defined as $Loss=[E(|\varphi\rangle)-(1-2\cdot\mathrm{label})]^2$.
+As mentioned before, the classification result ``0'' (inside the circle) or ``1'' (outside the circle) can be determined according to the final measurement of the single qubit, e.g., a sampled point can be classified into ``0'' if the output probabilities $P(|0\rangle)>P(|1\rangle)$ and into ``1'' otherwise.
+This approach can also be represented by the energy expectation of the final quantum state along the $Z$ direction, i.e., classifies the sampled point into ``0'' if $E(|\varphi\rangle)>0$ and else into ``1''. Hence, the loss function can be defined as $Loss=[E(|\varphi\rangle)-(1-2\cdot\mathrm{label})]^2$.
 
 In the following code, we utilize the Adam optimizer with a learning rate of 0.1 as a classical subroutine to train the trainable parameters in the quantum circuit. The performance of classification will be enhanced by minimizing the loss function.
 
