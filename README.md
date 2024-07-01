@@ -271,15 +271,17 @@ Welcome contributions. See our [Contributor Wiki](https://gitee.com/mindspore/mi
 
 ## How to cite
 
-When using MindQuantum for research, please cite:
+Welcome to access [the white paper of MindQuantum](https://arxiv.org/abs/2406.17248). When using MindQuantum for research, please cite:
 
 ```bash
-@misc{mq_2021,
-    author      = {MindQuantum Developer},
-    title       = {MindQuantum, version 0.6.0},
-    month       = {March},
-    year        = {2021},
-    url         = {https://gitee.com/mindspore/mindquantum}
+@misc{xu2024mindspore,
+      title={MindSpore Quantum: A User-Friendly, High-Performance, and AI-Compatible Quantum Computing Framework},
+      author={Xusheng Xu and Jiangyu Cui and Zidong Cui and Runhong He and Qingyu Li and Xiaowei Li and Yanling Lin and Jiale Liu and Wuxin Liu and Jiale Lu and others},
+      year={2024},
+      eprint={2406.17248},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      url={https://arxiv.org/abs/2406.17248},
 }
 ```
 

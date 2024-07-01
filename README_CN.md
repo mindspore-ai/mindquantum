@@ -261,15 +261,17 @@ export OMP_NUM_THREADS=4
 
 ## 引用MindQuantum
 
-当您用MindQuantum进行科学研究时，请引用：
+欢迎查阅[MindQuantum白皮书](https://arxiv.org/abs/2406.17248)。当您用MindQuantum进行科学研究时，请引用：
 
 ```bash
-@misc{mq_2021,
-    author      = {MindQuantum Developer},
-    title       = {MindQuantum, version 0.6.0},
-    month       = {March},
-    year        = {2021},
-    url         = {https://gitee.com/mindspore/mindquantum}
+@misc{xu2024mindspore,
+      title={MindSpore Quantum: A User-Friendly, High-Performance, and AI-Compatible Quantum Computing Framework},
+      author={Xusheng Xu and Jiangyu Cui and Zidong Cui and Runhong He and Qingyu Li and Xiaowei Li and Yanling Lin and Jiale Liu and Wuxin Liu and Jiale Lu and others},
+      year={2024},
+      eprint={2406.17248},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      url={https://arxiv.org/abs/2406.17248},
 }
 ```
 
