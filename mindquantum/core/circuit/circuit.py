@@ -647,6 +647,47 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             return max(self.all_qubits.keys()) + 1
         return 0
 
+    def depth(self, with_single:bool=False, with_barrier:bool=False) -> int:
+        """Get the depth of the circuit.
+
+        Args:
+            with_single(bool): whether to include single-qubit gates. Default: ``False``.
+            with_barrier(bool): whether to align quantum gates to barrer gates. Default: ``False``.
+
+        Examples:
+            >>> circ = Circuit().x(0).x(1,0).x(2,1).x(3,2)
+            >>> circ.depth(single=True)
+            4
+            >>> circ.depth(single=False)
+            3
+        """
+        from mindquantum import NoiseGate, BarrierGate
+        depth_stack = {i: 0 for i in range(self.n_qubits)}
+        if not depth_stack:
+            return 0
+        for gate in self: # type: ignore
+            if isinstance(gate, NoiseGate):
+                continue
+            qubits = gate.obj_qubits + gate.ctrl_qubits
+            # for single-qubit gate
+            if len(qubits) == 1:
+                if isinstance(gate, BarrierGate):
+                    continue
+                if with_single:
+                    depth_stack[qubits[0]] += 1
+                continue
+            # for multi-qubit gate
+            tmp = 0
+            for i in qubits:
+                tmp = max(tmp, depth_stack[i])
+            if isinstance(gate, BarrierGate) and with_barrier:
+                for i in qubits:
+                    depth_stack[i] = tmp
+            else:
+                for i in qubits:
+                    depth_stack[i] = tmp + 1
+        return max(depth_stack.values())
+
     def summary(self, show=True):
         r"""
         Print a summary of the current circuit.
