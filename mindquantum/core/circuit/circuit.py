@@ -647,6 +647,70 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             return max(self.all_qubits.keys()) + 1
         return 0
 
+    def depth(self, with_single:bool=False, with_barrier:bool=False) -> int:
+        """Get the depth of the circuit.
+
+        Args:
+            with_single(bool): whether to include single-qubit gates. Default: ``False``.
+            with_barrier(bool): whether to align quantum gates to barrier gates. Default: ``False``.
+
+        Examples:
+            >>> circ = Circuit().x(0).x(1,0).x(0).barrier().x(3,2).x(1).x(2,1)
+            >>> print(circ)
+                  ┏━━━┓       ┏━━━┓
+            q0: ──┨╺╋╸┠───■───┨╺╋╸┠─▓───────────────
+                  ┗━━━┛   ┃   ┗━━━┛ ▓
+                        ┏━┻━┓       ▓ ┏━━━┓
+            q1: ────────┨╺╋╸┠───────▓─┨╺╋╸┠───■─────
+                        ┗━━━┛       ▓ ┗━━━┛   ┃
+                                    ▓       ┏━┻━┓
+            q2: ────────────────────▓───■───┨╺╋╸┠───
+                                    ▓   ┃   ┗━━━┛
+                                    ▓ ┏━┻━┓
+            q3: ────────────────────▓─┨╺╋╸┠─────────
+                                      ┗━━━┛
+            >>> circ.depth(with_single=True, with_barrier=True)
+            5
+            >>> circ.depth(with_single=True, with_barrier=False)
+            4
+            >>> circ.depth(with_single=False, with_barrier=True)
+            3
+            >>> circ.depth(with_single=False, with_barrier=False)
+            2
+        """
+        from mindquantum.core.gates import NoiseGate, BarrierGate, Measure
+        depth_stack = {i: 0 for i in range(self.n_qubits)}
+        if not depth_stack:
+            return 0
+        for gate in self: # type: ignore
+            if isinstance(gate, (NoiseGate, Measure)):
+                continue
+            qubits = gate.obj_qubits + gate.ctrl_qubits
+            # for single-qubit gate
+            if len(qubits) == 1:
+                if isinstance(gate, BarrierGate):
+                    continue
+                if with_single:
+                    depth_stack[qubits[0]] += 1
+                continue
+            # for multi-qubit gate
+            tmp = 0
+            if isinstance(gate, BarrierGate):
+                if not with_barrier:
+                    continue
+                if not qubits:
+                    qubits = list(range(self.n_qubits))
+                for i in qubits:
+                    tmp = max(tmp, depth_stack[i])
+                for i in qubits:
+                    depth_stack[i] = tmp
+            else:
+                for i in qubits:
+                    tmp = max(tmp, depth_stack[i])
+                for i in qubits:
+                    depth_stack[i] = tmp + 1
+        return max(depth_stack.values())
+
     def summary(self, show=True):
         r"""
         Print a summary of the current circuit.

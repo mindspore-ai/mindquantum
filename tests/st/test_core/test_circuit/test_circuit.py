@@ -135,6 +135,19 @@ def test_is_measure_end():
     assert not circ1.is_measure_end
 
 
+def test_depth():
+    """
+    test
+    Description:
+    Expectation:
+    """
+    circ = Circuit().x(0).x(1,0).x(0).barrier().x(3,2).x(1).x(2,1)
+    assert circ.depth(with_single=True, with_barrier=True) == 5
+    assert circ.depth(with_single=True, with_barrier=False) == 4
+    assert circ.depth(with_single=False, with_barrier=True) == 3
+    assert circ.depth(with_single=False, with_barrier=False) == 2
+
+
 def test_circuit_operator():
     """
     test
