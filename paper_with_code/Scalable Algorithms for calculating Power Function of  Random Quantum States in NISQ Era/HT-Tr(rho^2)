@@ -1,0 +1,196 @@
+from mindquantum.core.circuit import Circuit,UN
+from mindquantum.simulator import Simulator
+from mindquantum.core.gates import X,Y,Z, H, RY,I,UnivMathGate
+from mindquantum import *
+import numpy as np  
+import random  
+import math  
+import os
+
+qs_lista = []
+qs_listb = []
+
+n_qubits=4
+
+dim=2**(n_qubits-1) #Dimensions of the target bits.
+
+M0_mat=np.array([[1,0],[0,0]])
+M0_Gate=UnivMathGate('M0',M0_mat)
+M0=M0_Gate #Customized calculation base M0.
+
+M1_mat=np.array([[0,0],[0,1]])
+M1_Gate=UnivMathGate('M1',M1_mat)
+M1=M1_Gate #Customized computation base M1
+
+#-------------------------------------------------------------------------------------------
+#Randomly selected parameters
+theta1=0.29*math.pi
+phi1=0.07*math.pi
+lam1=0.11*math.pi
+
+theta2=0.46*math.pi
+phi2=0.62*math.pi
+lam2=0.82*math.pi
+
+theta3=0.41*math.pi
+phi3=0.59*math.pi
+lam3=0.53*math.pi
+
+theta4=0.55*math.pi
+phi4=0.31*math.pi
+lam4=0.6*math.pi
+
+
+
+U1_mat=np.array([[np.cos(0.5*theta1),-1*np.exp(1j*lam1)*np.sin(0.5*theta1)],
+                 [np.exp(1j*phi1)*np.sin(0.5*theta1),np.exp(1j*lam1+1j*phi1)*np.cos(0.5*theta1)]])
+U1_Gate=UnivMathGate('U1',U1_mat)
+U1=U1_Gate
+
+U1d_mat=np.array([[np.cos(0.5*theta1),np.exp(-1j*phi1)*np.sin(0.5*theta1)],
+                  [-1*np.exp(-1j*lam1)*np.sin(0.5*theta1),np.exp(-1j*lam1-1j*phi1)*np.cos(0.5*theta1)]])
+U1d_Gate=UnivMathGate('U1d',U1d_mat)
+U1d=U1d_Gate
+
+#-------------------------------------------------------------------------------------------
+
+
+U2_mat=np.array([[np.cos(0.5*theta2),-1*np.exp(1j*lam2)*np.sin(0.5*theta2)],
+                 [np.exp(1j*phi2)*np.sin(0.5*theta2),np.exp(1j*lam2+1j*phi2)*np.cos(0.5*theta2)]])
+U2_Gate=UnivMathGate('U2',U2_mat)
+U2=U2_Gate
+
+U2d_mat=np.array([[np.cos(0.5*theta2),np.exp(-1j*phi2)*np.sin(0.5*theta2)],
+                  [-1*np.exp(-1j*lam2)*np.sin(0.5*theta2),np.exp(-1j*lam2-1j*phi2)*np.cos(0.5*theta2)]])
+U2d_Gate=UnivMathGate('U2d',U2d_mat)
+U2d=U2d_Gate
+
+#-------------------------------------------------------------------------------------------
+
+
+U3_mat=np.array([[np.cos(0.5*theta3),-1*np.exp(1j*lam3)*np.sin(0.5*theta3)],
+                 [np.exp(1j*phi3)*np.sin(0.5*theta3),np.exp(1j*lam3+1j*phi3)*np.cos(0.5*theta3)]])
+U3_Gate=UnivMathGate('U3',U3_mat)
+U3=U3_Gate
+
+U3d_mat=np.array([[np.cos(0.5*theta3),np.exp(-1j*phi3)*np.sin(0.5*theta3)],
+                  [-1*np.exp(-1j*lam3)*np.sin(0.5*theta3),np.exp(-1j*lam3-1j*phi3)*np.cos(0.5*theta3)]])
+U3d_Gate=UnivMathGate('U3d',U3d_mat)
+U3d=U3d_Gate
+
+#-------------------------------------------------------------------------------------------
+
+U4_mat=np.array([[np.cos(0.5*theta4),-1*np.exp(1j*lam4)*np.sin(0.5*theta4)],
+                 [np.exp(1j*phi4)*np.sin(0.5*theta4),np.exp(1j*lam4+1j*phi4)*np.cos(0.5*theta4)]])
+U4_Gate=UnivMathGate('U4',U4_mat)
+U4=U4_Gate
+
+U4d_mat=np.array([[np.cos(0.5*theta4),np.exp(-1j*phi4)*np.sin(0.5*theta4)],
+                  [-1*np.exp(-1j*lam4)*np.sin(0.5*theta4),np.exp(-1j*lam4-1j*phi4)*np.cos(0.5*theta4)]])
+U4d_Gate=UnivMathGate('U4d',U4d_mat)
+U4d=U4d_Gate
+
+
+
+
+random_Ui=[U1,U2,U3,U4]
+random_Uj=[U1,U2,U3,U4]
+random_Ui_d=[U1d,U2d,U3d,U4d]
+random_Uj_d=[U1d,U2d,U3d,U4d]
+
+M=[M0,M1]
+p1=0.1
+p2=0.2
+p3=0.3
+p4=0.4
+Up=[p1,p2,p3,p4] #Customizable random gate probability.
+
+G_mat=np.array([[-1,0],[0,1]])
+G_Gate=UnivMathGate('G',G_mat)
+G=G_Gate #Custom Single-Bit G-Gate
+
+rho_pure_a = np.zeros((dim, dim), dtype=np.complex_)
+rho_pure_b = np.zeros((dim, dim), dtype=np.complex_)
+
+
+def rho(i):
+    circuit  = Circuit()
+    circuit += random_Ui[i].on(1)
+    circuit += random_Ui[i].on(2)
+    circuit += random_Ui[i].on(3)
+
+    
+    return circuit 
+
+def Ctrl_G(j):
+    circuit  = Circuit()
+    circuit += random_Uj_d[j].on(1)
+    circuit += random_Uj_d[j].on(2)
+    circuit += random_Uj_d[j].on(3)
+    circuit += G.on(3,0)
+    circuit += G.on(3,[0,1])
+    circuit += G.on(3,[2,0])
+    circuit += G.on(3,[1,2,0])
+    circuit += random_Uj[j].on(1)
+    circuit += random_Uj[j].on(2)
+    circuit += random_Uj[j].on(3)
+
+
+   
+    return circuit
+
+#rho_all = [rho(0),rho(1),rho(2),rho(3)]  
+ii = [0] * 8  # Initialize a list containing 8 zeros
+jj = [0] * 8
+num=0
+traa=0 #Tr(\rho^2) obtained using P(0)
+trbb=0 #Tr(\rho^2) obtained using P(1)
+zbb=0  #The total P(1) output during the loop process, with an initial state of 0
+for i in range (0,4):
+    for j in range (0,4):
+        #print('i=',i,'j=',j)                                                                                                                                                                
+        for k in range (0,2):
+    
+            circuit = Circuit()
+            circuit += H.on(0)
+            circuit += rho(i)
+            circuit += Ctrl_G(j)
+            
+            circuit += H.on(0)
+            circuit += M[k].on(0)
+            print(circuit)
+
+
+            sim = Simulator('mqvector', n_qubits)   #Declare a mqvector simulator with n_qubits qubits
+            sim       
+            sim.apply_circuit(circuit)    # Run a quantum circuit on the simulator
+            num+=1
+            
+            #Obtain the result using P(0),We primarily use the latter, hence the following section of code is commented out.
+            if k == 0 :    
+                #print('i=',i,'j=',j,'k=0--------------------------------------------')
+               #print(sim.get_qs(True))
+                for a in range(0, 8, 1):
+                    ii[a]=sim.get_qs()[2*a]
+                    #print(ii[a])
+                for a1 in range (0,8):
+                    for a2 in range (0,8):
+                        rho_pure_a[a1,a2]=ii[a1]*np.conj(ii[a2])
+                #display(rho_pure)        
+                #print('0',np.trace(rho_pure_a))   
+                traa+=np.trace(rho_pure_a)
+                print("traa=",traa)
+          
+            #Obtain the result using P(1)  We obtain it using this. 
+            else:
+                print('i=',i,'j=',j,'k=1--------------------------------------------')
+                #print(sim.get_qs(True))
+                for b in range(0, 8, 1):
+                    jj[b]=sim.get_qs()[2*b+1]
+                    #print(jj[b])
+                    bb=abs(jj[b])**2*Up[i]*Up[j]
+                    print("bb",bb)
+                    zbb+=bb
+                    print('zbb',zbb) 
+            trbb=zbb
+            print('trbb',trbb) #The result obtained from running this step is Tr(\rho^3)
