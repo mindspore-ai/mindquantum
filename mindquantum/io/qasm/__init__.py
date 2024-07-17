@@ -17,7 +17,8 @@
 
 from .hiqasm import HiQASM, random_hiqasm
 from .openqasm import OpenQASM
+from .qcis import QCIS
 
-__all__ = ['OpenQASM', 'random_hiqasm', 'HiQASM']
+__all__ = ['OpenQASM', 'random_hiqasm', 'HiQASM', 'QCIS']
 
 __all__.sort()

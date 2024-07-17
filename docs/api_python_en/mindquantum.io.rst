@@ -14,6 +14,7 @@ Class
     mindquantum.io.BlochScene
     mindquantum.io.HiQASM
     mindquantum.io.OpenQASM
+    mindquantum.io.QCIS
 
 Function
 ---------
