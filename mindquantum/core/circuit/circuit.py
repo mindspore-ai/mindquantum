@@ -385,6 +385,32 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """Return a shallow copy of the circuit."""
         return copy.copy(self)
 
+    def __eq__(self, other:"Circuit"):
+        """Whether equal to the other Circuit."""
+        from mindquantum.core.gates import BarrierGate
+        _check_input_type("other", Circuit, other)
+        if len(self) != len(other):
+            return False
+        for gate_i, gate_j in zip(self, other):
+            if isinstance(gate_i, BarrierGate):
+                if not isinstance(gate_j, BarrierGate):
+                    return False
+                qubits_i, qubits_j = gate_i.obj_qubits, gate_j.obj_qubits
+                if not qubits_i:
+                    qubits_i = list(range(self.n_qubits))
+                if not qubits_j:
+                    qubits_j = list(range(other.n_qubits))
+                if set(qubits_i) != set(qubits_j):
+                    return False
+                continue
+            if not gate_i == gate_j:
+                return False
+        return True
+
+    def __ne__(self, other:"Circuit"):
+        """Whether not equal to the other Circuit."""
+        return not self.__eq__(other)
+
     def __add__(self, gates):
         """Addition operator."""
         out = Circuit()
