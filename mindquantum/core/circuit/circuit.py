@@ -1213,6 +1213,23 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         HiQASM().to_file(file_name, self, version=version)
         return ""
 
+    def to_qcis(self, file_name: Optional[str] = None) -> str:
+        """
+        Convert a MindQuantum circuit to QCIS format string or file.
+
+        Args:
+            file_name (str): File name if you want to save QCIS. If it is ``None``, we
+                will return the string. Otherwise, we will save to given file.
+                Default: ``None``.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.qasm import QCIS
+
+        if file_name is None:
+            return QCIS().to_string(self)
+        QCIS().to_file(file_name, self)
+        return ""
+
     def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):
         """
         Add a SX gate.
@@ -1455,6 +1472,24 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         if os.path.exists(hiqasm_str):
             return HiQASM().from_file(hiqasm_str)
         return HiQASM().from_string(hiqasm_str)
+
+    @staticmethod
+    def from_qcis(qcis_str: str):
+        """
+        Convert an QCIS string or an QCIS file to MindQuantum circuit.
+
+        Args:
+            qcis_str (str): String format of QCIS or an QCIS file name.
+
+        Returns:
+            :class:`~.core.circuit.Circuit`, The MindQuantum circuit converted from QCIS.
+        """
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.io.qasm import QCIS
+
+        if os.path.exists(qcis_str):
+            return QCIS().from_file(qcis_str)
+        return QCIS().from_string(qcis_str)
 
     def fsim(self, theta, phi, obj_qubits, ctrl_qubits=None):
         """
