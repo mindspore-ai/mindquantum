@@ -15,6 +15,21 @@
 """Quantum neural networks operators and cells."""
 import warnings
 
+framework_modules = [
+    "MQAnsatzOnlyLayer",
+    "MQN2AnsatzOnlyLayer",
+    "MQLayer",
+    "MQN2Layer",
+    "MQOps",
+    "MQN2Ops",
+    "MQAnsatzOnlyOps",
+    "MQN2AnsatzOnlyOps",
+    "MQEncoderOnlyOps",
+    "MQN2EncoderOnlyOps",
+    "QRamVecOps",
+    "QRamVecLayer",
+]
+
 __all__ = []
 try:
     import mindspore
@@ -36,22 +51,7 @@ try:
         QRamVecOps,
     )
 
-    __all__.extend(
-        [
-            "MQAnsatzOnlyLayer",
-            "MQN2AnsatzOnlyLayer",
-            "MQLayer",
-            "MQN2Layer",
-            "MQOps",
-            "MQN2Ops",
-            "MQAnsatzOnlyOps",
-            "MQN2AnsatzOnlyOps",
-            "MQEncoderOnlyOps",
-            "MQN2EncoderOnlyOps",
-            "QRamVecOps",
-            "QRamVecLayer",
-        ]
-    )
+    __all__.extend(framework_modules)
     import packaging.version
 
     ms_version = mindspore.__version__
@@ -70,8 +70,15 @@ try:
 
 except ImportError:
     warnings.warn(
-        "MindSpore not installed, you may not be able to use hybrid quantum classical neural network.",
+        "MindSpore not installed. 'mindquantum.framework' modules (for hybrid quantum-classical neural network) are disabled.",
         stacklevel=2,
     )
 
 __all__.sort()
+
+
+def __getattr__(name):
+    if name in framework_modules:
+        if name not in __all__:
+            raise ImportError(f"MindSpore not install, cannot import '{name}' from 'mindquantum'.")
+    raise ImportError(f"cannot import '{name}' from 'mindquantum'")
