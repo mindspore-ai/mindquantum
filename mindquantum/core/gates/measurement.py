@@ -214,7 +214,7 @@ class MeasureResult:
         for meas in measure:
             if not isinstance(meas, Measure):
                 raise ValueError("Measurement gates need to be objects of class 'Measurement' ")
-        for meas in measure:
+        for meas in reversed(measure):
             if meas.key in self.keys:
                 raise ValueError(f"Measure key {meas.key} already defined.")
             self.measures.append(meas)
@@ -234,11 +234,10 @@ class MeasureResult:
                 the sampling bit string in 0 or 1, where N represents the number of shot
                 times, and M represents the number of keys in this measurement container
         """
-        self.samples = samples
         out = {}
-        res = np.fliplr(self.samples)
+        self.samples = np.fliplr(samples)
         self.shots = len(self.samples)
-        for string in res:
+        for string in self.samples:
             string = ''.join([str(i) for i in string])
             if string in out:
                 out[string] += 1
@@ -385,3 +384,21 @@ class MeasureResult:
                 json.dump(data, f, ensure_ascii=False, indent=4)
         else:
             return json.dumps(data, ensure_ascii=False, indent=4)
+
+    def reverse_endian(self):
+        """
+        Reverse the endianness of the measurement result.
+
+        This function reverses the order of bits in each bit string of the measurement result,
+        and also reverses the order of keys.
+
+        Returns:
+            MeasureResult: A new MeasureResult object with reversed endian.
+        """
+        new_result = MeasureResult()
+        new_result.keys = self.keys[::-1]
+        new_result.measures = self.measures[::-1]
+        new_result.bit_string_data = {bit_string[::-1]: count for bit_string, count in self.bit_string_data.items()}
+        new_result.samples = np.fliplr(self.samples)
+        new_result.shots = self.shots
+        return new_result

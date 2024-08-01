@@ -1601,6 +1601,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         Flip the circuit to big endian.
 
+        Note:
+            This operation also changes the qubits that measurement gates act on,
+            which may cause the measurement keys to no longer correspond to the actual measured qubits.
+
         Examples:
             >>> from mindquantum.core.circuit import Circuit
             >>> circ = Circuit().h(0).x(2, 0).y(3).x(3, 2)
