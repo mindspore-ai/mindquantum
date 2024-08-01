@@ -927,14 +927,16 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """
         circ = self.remove_barrier()
         high = [0 for i in range(self.n_qubits)]
+        measure_num = [0 for i in range(self.n_qubits)]
         for gate in circ:
             for idx in set(gate.obj_qubits + gate.ctrl_qubits):
                 high[idx] += 1
             if isinstance(gate, mq_gates.Measure):
                 m_idx = gate.obj_qubits[0]
+                measure_num[m_idx] += 1
                 if high[m_idx] != circ.all_qubits.map[m_idx]:
                     return False
-        return True
+        return all(x == 1 for x in measure_num)
 
     def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None, dtype=None):
         """
