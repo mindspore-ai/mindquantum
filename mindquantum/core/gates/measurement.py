@@ -20,6 +20,7 @@
 from collections.abc import Iterable
 
 import numpy as np
+import json
 from rich.console import Console
 
 from mindquantum import mqbackend as mb
@@ -361,3 +362,26 @@ class MeasureResult:
                 raise ValueError(f"Style not found, currently we support {list(supported_style.keys())}")
             style = supported_style[style]
         return SVGMeasure(self, style)
+
+    def to_json(self, filename=None):
+        """
+        Convert the measure result to JSON format and optionally save to a file.
+
+        Args:
+            filename (str): save the JSON to this file. If None, return the JSON string. Default: ``None``.
+
+        Returns:
+            str: JSON representation of the object if filename is None,
+                 otherwise None (file is saved instead).
+        """
+        data = {
+            "keys": self.keys,
+            "data": self.data,
+            "shots": self.shots,
+        }
+
+        if filename:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+        else:
+            return json.dumps(data, ensure_ascii=False, indent=4)
