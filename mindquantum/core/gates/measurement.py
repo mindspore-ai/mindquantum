@@ -19,8 +19,8 @@
 
 from collections.abc import Iterable
 
-import numpy as np
 import json
+import numpy as np
 from rich.console import Console
 
 from mindquantum import mqbackend as mb
@@ -367,11 +367,10 @@ class MeasureResult:
         Convert the measure result to JSON format and optionally save to a file.
 
         Args:
-            filename (str): save the JSON to this file. If None, return the JSON string. Default: ``None``.
+            filename (str): The name of the file to save the JSON. Default: ``None``.
 
         Returns:
-            str: JSON representation of the object if filename is None,
-                 otherwise None (file is saved instead).
+            str: JSON representation of the object.
         """
         data = {
             "keys": self.keys,
@@ -382,8 +381,7 @@ class MeasureResult:
         if filename:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
-        else:
-            return json.dumps(data, ensure_ascii=False, indent=4)
+        return json.dumps(data, ensure_ascii=False, indent=4)
 
     def reverse_endian(self):
         """
