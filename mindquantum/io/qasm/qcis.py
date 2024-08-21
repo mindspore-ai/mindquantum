@@ -221,7 +221,7 @@ class QCIS:
         return self.from_string('\n'.join(terms))
 
     def from_string(self, string):
-        """Read a QCIS string.
+        r"""Read a QCIS string.
 
         Args:
             string (str): The QCIS string of Circuit.
