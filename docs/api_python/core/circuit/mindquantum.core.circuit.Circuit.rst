@@ -63,6 +63,14 @@ mindquantum.core.circuit.Circuit
 
         返回该量子线路的浅拷贝。
 
+    .. py:method:: depth(with_single:bool=False, with_barrier:bool=False)
+
+        获取整个量子线路的深度。
+
+        参数：
+            - **with_single** (bool) - 是否考虑单量子比特门。默认值：``False``。
+            - **with_barrier** (bool) - 是否将量子门对齐到栅栏门。默认值：``False``。
+
     .. py:method:: display_detail(state: bool)
         :staticmethod:
 
@@ -252,14 +260,6 @@ mindquantum.core.circuit.Circuit
         :property:
 
         获取量子线路所使用的比特数。
-
-    .. py:method:: depth(with_single=False, with_barrier=False)
-
-        获取整个量子线路的深度。
-
-        参数：
-            - **with_single** (bool) - 是否考虑单量子比特门。默认值：``False``。
-            - **with_barrier** (bool) - 是否将量子门对齐到栅栏门。默认值：``False``。
 
     .. py:method:: no_grad()
 
