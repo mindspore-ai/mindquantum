@@ -59,8 +59,8 @@ DoubleQubitGateMask::DoubleQubitGateMask(const qbits_t &obj_qubits, const qbits_
         q_max = obj_qubits[0];
     }
     this->ctrl_qubits = ctrl_qubits;
-    obj_min_mask = (static_cast<uint64_t>(1) << q_min);
-    obj_max_mask = (static_cast<uint64_t>(1) << q_max);
+    obj_min_mask = (static_cast<uint64_t>(1) << obj_qubits[0]);
+    obj_max_mask = (static_cast<uint64_t>(1) << obj_qubits[1]);
     obj_mask = obj_min_mask + obj_max_mask;
     ctrl_mask = QIndexToMask(ctrl_qubits);
     for (qbit_t i = 0; i < q_min; i++) {
