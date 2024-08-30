@@ -1,0 +1,19 @@
+# meta
+.vscode/
+__pycache__/
+
+# repo
+repo/*
+!repo/*.cmd
+
+# thesis
+thesis/*
+!thesis/*.cmd
+
+# generated training data
+data_opt/
+
+# vis_lookup_table
+img/*
+!img/embed_orig.png
+!img/interp.png
