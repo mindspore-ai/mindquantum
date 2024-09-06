@@ -313,6 +313,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             else:
                 self.append(gates)
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
         self.cpp_obj = None
         self.herm_cpp_obj = None
 
@@ -350,6 +351,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             self._collect_parameterized_gate(gate)
         super().append(gate)
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
 
     def extend(self, gates):
         """
@@ -380,6 +382,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             for gate in gates:
                 self.append(gate)
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
 
     def copy(self):
         """Return a shallow copy of the circuit."""
@@ -490,6 +493,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         if isinstance(v, mq_gates.NoiseGate):
             self.all_noises.collect(v.name)
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
 
     def __getitem__(self, sliced):
         """Implement the dictionary-like [] operator (read)."""
@@ -565,12 +569,14 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         else:
             raise TypeError(f"Unsupported type for quantum gate: {type(gates)}")
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
 
     def no_grad(self):
         """Set all parameterized gate in this quantum circuit not require grad."""
         for gate in self:
             gate.no_grad()
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
         return self
 
     def requires_grad(self):
@@ -578,6 +584,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         for gate in self:
             gate.requires_grad()
         self.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
         return self
 
     def compress(self):
@@ -832,7 +839,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             q0: ──┨ RX(-1/5*a) ┠───
                   ┗━━━━━━━━━━━━┛
         """
-        return Circuit([gate.hermitian() for gate in self[::-1]])
+        return Circuit([gate.hermitian() for gate in reversed(self)])
 
     def parameter_resolver(self):
         """
@@ -1092,14 +1099,20 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Args:
             hermitian (bool): Whether to get cpp object of this circuit in hermitian version. Default: ``False``.
         """
+        if hermitian:
+            if not self.has_herm_cpp_obj:
+                self.has_herm_cpp_obj = True
+                self.herm_cpp_obj = [
+                    i.get_cpp_obj() for i in self.hermitian() if not isinstance(i, mq_gates.BarrierGate)
+                ]
+            if hasattr(self, 'herm_cpp_obj'):
+                return self.herm_cpp_obj
+            raise ValueError("Circuit does not generate herm cpp obj yet.")
+
         if not self.has_cpp_obj:
             self.has_cpp_obj = True
             self.cpp_obj = [i.get_cpp_obj() for i in self if not isinstance(i, mq_gates.BarrierGate)]
-            self.herm_cpp_obj = [i.get_cpp_obj() for i in self.hermitian() if not isinstance(i, mq_gates.BarrierGate)]
-
-        if hasattr(self, 'cpp_obj') and hasattr(self, 'herm_cpp_obj'):
-            if hermitian:
-                return self.herm_cpp_obj
+        if hasattr(self, 'cpp_obj'):
             return self.cpp_obj
         raise ValueError("Circuit does not generate cpp obj yet.")
 
@@ -1703,6 +1716,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         circ.all_encoder.merge(circ.all_ansatz)
         circ.all_ansatz.map = {}
         circ.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
         return circ
 
     def as_ansatz(self, inplace=True):
@@ -1725,6 +1739,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         circ.all_ansatz.merge(circ.all_encoder)
         circ.all_encoder.map = {}
         circ.has_cpp_obj = False
+        self.has_herm_cpp_obj = False
         return circ
 
 
