@@ -1,0 +1,236 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(__file__))
+from simulator import HKSSimulator
+from utils import generate_molecule, get_molecular_hamiltonian, read_mol_data
+from mindquantum.core.operators import QubitOperator, Hamiltonian, TimeEvolution
+from mindquantum.core.circuit import Circuit, UN
+from mindquantum.core.gates import X
+from mindquantum import uccsd_singlet_generator, SingleLoopProgress
+from mindquantum.core.parameterresolver import ParameterResolver
+
+import numpy as np
+from scipy.optimize import minimize
+from mindquantum.simulator import Simulator
+from mindquantum.algorithm.nisq import Transform
+
+
+def split_hamiltonian(ham: QubitOperator):
+    const = 0
+    split_ham = []
+    for i, j in ham.split():
+        if j == 1:
+            const = i.const.real
+        else:
+            split_ham.append([i.const.real, j])
+    return const, split_ham
+
+
+def rotate_to_z_axis_and_add_measure(circ: Circuit, ops: QubitOperator):
+    circ = circ.copy()
+    assert ops.is_singlet
+    for idx, o in list(ops.terms.keys())[0]:
+        if o == 'X':
+            circ.ry(-np.pi / 2, idx)
+        elif o == 'Y':
+            circ.rx(np.pi / 2, idx)
+        circ.measure(idx)
+    return circ
+
+
+def get_ucc_circ(mol):
+    ucc = Transform(uccsd_singlet_generator(
+        mol.n_qubits, mol.n_electrons)).jordan_wigner().imag
+    ucc = TimeEvolution(ucc).circuit
+
+    return UN(X, mol.n_electrons) + ucc
+
+
+def get_best_params(mol, ham):
+    circ = get_ucc_circ(mol)
+    p0 = np.random.uniform(-np.pi, np.pi, len(circ.params_name))
+    grad_ops = Simulator('mqvector', circ.n_qubits).get_expectation_with_grad(
+        Hamiltonian(ham), circ)
+
+    def fun(x, grad_ops):
+        f, g = grad_ops(x)
+        f = f.real[0, 0]
+        g = g.real[0, 0]
+        return f, g
+
+    res = minimize(fun, p0, (grad_ops, ), 'bfgs', True)
+    return res.x
+
+
+def mea_single_ham(circ, ops, p, Simulator: HKSSimulator, shots=100):
+    circ = rotate_to_z_axis_and_add_measure(circ, ops)
+    pr = ParameterResolver(dict(zip(circ.params_name, p)))
+    sim = Simulator('mqvector', circ.n_qubits)
+    result = sim.sampling(circ, shots=shots, pr=pr)
+    expec = 0
+    for i, j in result.data.items():
+        expec += (-1)**i.count('1') * j / shots
+    return expec
+
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+
+# 真实数据
+true_data = np.array([-2.14495224271296535, -2.1306192788516278, -2.1176635863661233, -2.13417873917522054, -2.168916053054316, -0.1878188492416377, 2.11570149881340352, -2.1673171043374647, -2.1776595069030829, -2.165636504732103])
+
+# 噪声数据列表
+noise_data = np.array([[-0.3161205569274258,
+  -0.2786096770260138,
+  -0.16528290733065693,
+  -0.320787152710335,
+  -0.2646299503505069,
+  -0.4091756656441685,
+  -0.3197279955898739,
+  -0.4309173804484905,
+  -0.15550917921148935,
+  -0.31417288902601265],
+ [-0.28069356841150817,
+  -0.3664491257584874,
+  -0.5239391844590267,
+  -0.31891267934683215,
+  -0.34091262360453795,
+  0.8989177493070617,
+  -0.3637160821252382,
+  -0.17186940302231207,
+  -0.3504780303331542,
+  -0.3072154851893505],
+ [-0.48893557883641586,
+  -0.09356508914201835,
+  -0.21022203344189339,
+  -0.501261426359534,
+  -0.28966751140170466,
+  -0.5340758213844833,
+  -0.19223067200124017,
+  -0.21194813432281917,
+  -0.17101152952947118,
+  -0.36481116366648036],
+ [-0.3432862368814921,
+  -0.42295587801156775,
+  -0.47706281670113443,
+  -0.3050897235105593,
+  -0.4490342153482056,
+  -0.2892569912383526,
+  -0.36884703403540514,
+  -0.3239493733127354,
+  -0.17218947321877257,
+  -0.28213245627546457],
+ [-0.10136392743602816,
+  -0.3161622924364409,
+  -0.31138549863744225,
+  -0.21418463516174677,
+  -0.259372687330711,
+  -0.14601127127877975,
+  -0.30556160487250483,
+  -0.43312181441703146,
+  -0.27117329306278865,
+  -0.08068716277018638],
+ [-0.36457067788028624,
+  -0.25134099985836,
+  -0.3083346077229849,
+  -0.4881009359382836,
+  -0.41314368990570105,
+  -0.09570448177570395,
+  -0.2201180319016054,
+  -0.41498149695682635,
+  -0.2856415460100833,
+  -0.4533655844439698],
+ [-0.46256450107777686,
+  -0.28059167100732213,
+  -0.27006187422084443,
+  -0.33220610136423095,
+  -0.5326923027140511,
+  -0.39173872776206237,
+  -0.39888259239177254,
+  -0.08440101527173156,
+  -0.30030017561810274,
+  -0.6104661274628297],
+ [0.20138934458448712,
+  -0.2814900309581553,
+  -0.2831819142667833,
+  -0.1931389404650601,
+  -0.3103867025271058,
+  -0.22260191481603178,
+  -0.4578010109714171,
+  -0.22686549072973347,
+  -0.4160324376762849,
+  -0.29083391509386913],
+ [-0.41877072785808034,
+  -0.40340720313539724,
+  -0.3943808312790647,
+  -0.4248960724183129,
+  -0.270106973414444,
+  -0.020707611023436934,
+  -0.33169847297661875,
+  -0.021870494230199218,
+  -0.4175988437179356,
+  -0.47550155025779706],
+ [-0.08091394610171122,
+  -1.0628644077238432,
+  -0.5291806566264137,
+  -0.3563493298525554,
+  -0.47762030652081194,
+  -0.654648403855157,
+  -0.4806838059334607,
+  -0.23713494133838253,
+  -0.33743548184458194,
+  -0.621306716933571]])
+
+# 将噪声数据转换为二维数组，每行是一个样本，每列是一个特征
+noise_data = noise_data.T
+
+# 构建神经网络模型
+model = Sequential([
+    Dense(64, input_shape=(10,), activation='relu'),  # 输入层有10个特征
+    Dense(64, activation='relu'),  # 隐藏层
+    Dense(1)  # 输出层，预测一个值
+])
+
+# 编译模型
+model.compile(optimizer=Adam(), loss='mean_squared_error')
+
+# 训练模型
+model.fit(noise_data, true_data, epochs=100, batch_size=10)
+
+
+def solution(molecule, Simulator: HKSSimulator) -> float:
+    mol = generate_molecule(molecule)
+    ham = get_molecular_hamiltonian(mol)
+    const, split_ham = split_hamiltonian(ham)
+    ucc = get_ucc_circ(mol)
+    p = get_best_params(mol, ham)
+    result = const
+    with SingleLoopProgress(len(split_ham), '哈密顿量测量中') as bar:
+        for idx, (coeff, ops) in enumerate(split_ham):
+            result += mea_single_ham(ucc, ops, p, Simulator) * coeff
+            bar.update_loop(idx)
+    return result
+
+
+if __name__ == '__main__':
+    import simulator
+    #噪声数据
+    new_noise_data = np.array([
+        -0.47762030652081194,
+        -0.47762030652081194,
+        -0.5291806566264137,
+        -0.47762030652081194,
+        -0.47762030652081194,
+        -0.654648403855157,
+        -0.4806838059334607,
+        -0.47762030652081194,
+        -0.33743548184458194,
+        -0.621306716933571
+    ]).reshape(-1, 10)  # 确保它是二维数组
+
+    # 使用模型进行预测
+    predictions = model.predict(new_noise_data)
+
+    print("预测的真实数据:", predictions)
