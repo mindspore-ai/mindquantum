@@ -1,0 +1,14 @@
+# meta
+.vscode/
+__pycache__/
+
+# repo
+repo/*
+!repo/*.cmd
+
+# thesis
+thesis/*
+!thesis/*.cmd
+
+# generated
+*.hdf5
