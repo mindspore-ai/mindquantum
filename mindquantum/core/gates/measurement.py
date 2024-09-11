@@ -235,7 +235,7 @@ class MeasureResult:
                 times, and M represents the number of keys in this measurement container
         """
         out = {}
-        self.samples = np.fliplr(samples)
+        self.samples = samples
         self.shots = len(self.samples)
         for string in self.samples:
             string = ''.join([str(i) for i in string])

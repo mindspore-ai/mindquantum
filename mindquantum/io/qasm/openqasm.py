@@ -585,6 +585,9 @@ class OpenQASM:
             'x': lambda prs, qids: G.X.on(qids),
             'y': lambda prs, qids: G.Y.on(qids),
             'z': lambda prs, qids: G.Z.on(qids),
+            'c3sqrtx': lambda prs, qids: G.SX.on(qids[-1], qids[:-1]),
+            'c3x': lambda prs, qids: G.X.on(qids[-1], qids[:-1]),
+            'c4x': lambda prs, qids: G.X.on(qids[-1], qids[:-1]),
         }
 
         self.gate_map_mq_openqasm = {

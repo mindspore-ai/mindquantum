@@ -70,7 +70,7 @@ try:
 
 except ImportError:
     warnings.warn(
-        "MindSpore not installed."
+        "MindSpore not installed. "
         "'mindquantum.framework' modules (for hybrid quantum-classical neural network) are disabled.",
         stacklevel=2,
     )
