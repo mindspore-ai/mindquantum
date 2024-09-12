@@ -72,7 +72,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs
                 qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
                 qs[IdxMap(r2, r2)] = tmp;
 
-                qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
+                SetValue(qs, r2, r1, std::conj(GetValue(qs, r2, r1)));
             })
     } else {
         THRESHOLD_OMP_FOR(
@@ -130,7 +130,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs
                     qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
                     qs[IdxMap(r2, r2)] = tmp;
 
-                    qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
+                    SetValue(qs, r2, r1, std::conj(GetValue(qs, r2, r1)));
                 }
             })
     }
@@ -195,7 +195,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyISWAPNoCtrl(qs_data_
             qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
             qs[IdxMap(r2, r2)] = tmp;
 
-            qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
+            SetValue(qs, r2, r1, std::conj(GetValue(qs, r2, r1)));
         })
 }
 
@@ -266,7 +266,7 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::ApplyISWAPCtrl(qs_data_p_
                 qs[IdxMap(r1, r1)] = qs[IdxMap(r2, r2)];
                 qs[IdxMap(r2, r2)] = tmp;
 
-                qs[IdxMap(r2, r1)] = std::conj(qs[IdxMap(r2, r1)]);
+                SetValue(qs, r2, r1, std::conj(GetValue(qs, r2, r1)));
             }
         })
 }
