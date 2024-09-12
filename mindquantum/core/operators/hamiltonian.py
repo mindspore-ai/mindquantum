@@ -15,6 +15,7 @@
 """Hamiltonian module."""
 # pylint: disable=too-many-instance-attributes,no-member
 from enum import Enum
+import warnings
 
 import numpy as np
 import scipy.sparse as sp
@@ -85,9 +86,17 @@ class Hamiltonian:
             self.how_to = HowTo.ORIGIN
             self.n_qubits = count_qubits(hamiltonian)
         self.ham_termlist = []
+        has_warned = False
         for i, j in self.hamiltonian.terms.items():
             if not j.is_const():
                 raise ValueError("Hamiltonian cannot be parameterized.")
+            if abs(j.const.imag) > 1e-8 and not has_warned:
+                warnings.warn(
+                    f"Hamiltonian coefficients must be real numbers. Imaginary part will be discarded.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                has_warned = True
             self.ham_termlist.append((i, j.const.real))
 
         self.ham_cpp = None

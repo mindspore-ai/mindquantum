@@ -784,16 +784,19 @@ def test_custom_gate_order(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-@pytest.mark.parametrize("gate", single_parameter_gate + multi_parameter_gate)
+@pytest.mark.parametrize("gate", none_parameter_gate + single_parameter_gate + multi_parameter_gate)
 def test_two_qubit_gate_order(config, gate):  # pylint: disable=too-many-locals
     """
     Description: test object qubits order of two qubit gates
     Expectation: success.
     """
     virtual_qc, dtype = config
-    n_pr = len(signature(gate).parameters)
-    pr = np.random.rand(n_pr) * 2 * np.pi
-    g = gate(*pr)
+    if isinstance(gate, mq.NoneParameterGate):
+        g = gate()
+    else:
+        n_pr = len(signature(gate).parameters)
+        pr = np.random.rand(n_pr) * 2 * np.pi
+        g = gate(*pr)
     dim = 2**g.n_qubits
     g = g.on(list(reversed(range(g.n_qubits))))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
