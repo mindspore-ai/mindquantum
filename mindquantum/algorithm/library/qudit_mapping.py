@@ -54,7 +54,7 @@ def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
         raise ValueError(f"Wrong type of n_qudits {type(n_qudits)} {n_qudits}.")
     if n_qudits == 1:
         ind = {}
-        for i in range(2**(dim - 1)):
+        for i in range(2 ** (dim - 1)):
             num = bin(i).count("1")
             if num in ind:
                 ind[num].append(i)
@@ -62,7 +62,7 @@ def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
                 ind[num] = [i]
     else:
         ind, ind_ = {}, {}
-        for i in range(2**(dim - 1)):
+        for i in range(2 ** (dim - 1)):
             num = bin(i).count("1")
             i_ = bin(i)[2::].zfill(dim - 1)
             if num in ind_:
@@ -137,7 +137,7 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
 
     Args:
         qubit (np.ndarray): the qubit symmetric state or matrix that needs to be decoded,
-        where the qubit state or matrix must preserve symmetry.
+            where the qubit state or matrix must preserve symmetry.
         n_qubits (int): the number of qubits in the qubit symmetric state or matrix. Default: ``1``.
 
     Returns:
@@ -209,6 +209,7 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
     Args:
         qudit (np.ndarray): the qudit state or matrix that needs to be encoded.
         n_qudits (int): the number of qudits in the qudit state or matrix. Default: ``1``.
+        is_csr (bool): whether to return the matrix in CSR (Compressed Sparse Row) format. Default: False.
 
     Returns:
         np.ndarray, the qubit symmetric state or matrix obtained after the qudit symmetric encoding.
@@ -229,10 +230,10 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
         raise ValueError(f"Wrong qudit matrix shape {qudit.shape}.")
     if qudit.ndim != 1 and qudit.ndim != 2:
         raise ValueError(f"Wrong qudit matrix shape {qudit.shape}.")
-    dim = round(qudit.shape[0]**(1 / n_qudits), 12)
+    dim = round(qudit.shape[0] ** (1 / n_qudits), 12)
     if dim % 1 == 0:
         dim = int(dim)
-        n = 2**((dim - 1) * n_qudits)
+        n = 2 ** ((dim - 1) * n_qudits)
         ind = _symmetric_state_index(dim, n_qudits)
     else:
         raise ValueError(f"Wrong qudit matrix shape {qudit.shape} or number of qudits {n_qudits}.")
@@ -352,33 +353,72 @@ def _controlled_rotation_synthesis(ind: List[int], name: str, obj: int, ctrl: Li
     circ = Circuit()
     if state == 0:
         if ind == [0, 1]:
-            corr = Circuit() + X(ctrl[1]) + X(ctrl[2]) + X(ctrl[0], ctrl[1:] + [obj]) + RY(np.pi / 2).on(obj, ctrl) + X(
-                ctrl[0], ctrl[1:] + [obj]) + X(ctrl[0], ctrl[1:])
+            corr = (
+                Circuit()
+                + X(ctrl[1])
+                + X(ctrl[2])
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + RY(np.pi / 2).on(obj, ctrl)
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + X(ctrl[0], ctrl[1:])
+            )
         elif ind == [0, 2]:
-            corr = Circuit() + X(ctrl[1]) + X(ctrl[2]) + X(obj, ctrl[1:]) + X(ctrl[0], ctrl[1:] + [obj]) + X(
-                obj, ctrl[1:])
+            corr = (
+                Circuit() + X(ctrl[1]) + X(ctrl[2]) + X(obj, ctrl[1:]) + X(ctrl[0], ctrl[1:] + [obj]) + X(obj, ctrl[1:])
+            )
         elif ind == [1, 2]:
-            corr = Circuit() + X(ctrl[1]) + X(ctrl[2]) + X(ctrl[0], ctrl[1:] + [obj]) + RY(-np.pi / 2).on(
-                obj, ctrl) + X(ctrl[0], ctrl[1:] + [obj])
+            corr = (
+                Circuit()
+                + X(ctrl[1])
+                + X(ctrl[2])
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + RY(-np.pi / 2).on(obj, ctrl)
+                + X(ctrl[0], ctrl[1:] + [obj])
+            )
     elif state == 1:
         if ind == [0, 1]:
-            corr = Circuit() + X(ctrl[1], ctrl[2]) + RY(np.pi / 2).on(ctrl[2]) + X(ctrl[0], ctrl[1:] + [obj]) + RY(
-                np.pi / 2).on(obj, ctrl) + X(ctrl[0], ctrl[1:] + [obj]) + X(ctrl[0], ctrl[1:])
+            corr = (
+                Circuit()
+                + X(ctrl[1], ctrl[2])
+                + RY(np.pi / 2).on(ctrl[2])
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + RY(np.pi / 2).on(obj, ctrl)
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + X(ctrl[0], ctrl[1:])
+            )
         elif ind == [0, 2]:
-            corr = Circuit() + X(ctrl[1], ctrl[2]) + RY(np.pi / 2).on(ctrl[2]) + X(obj, ctrl[1:]) + X(
-                ctrl[0], ctrl[1:] + [obj]) + X(obj, ctrl[1:])
+            corr = (
+                Circuit()
+                + X(ctrl[1], ctrl[2])
+                + RY(np.pi / 2).on(ctrl[2])
+                + X(obj, ctrl[1:])
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + X(obj, ctrl[1:])
+            )
         elif ind == [1, 2]:
-            corr = Circuit() + X(ctrl[1], ctrl[2]) + RY(np.pi / 2).on(ctrl[2]) + X(ctrl[0], ctrl[1:] + [obj]) + RY(
-                -np.pi / 2).on(obj, ctrl) + X(ctrl[0], ctrl[1:] + [obj])
+            corr = (
+                Circuit()
+                + X(ctrl[1], ctrl[2])
+                + RY(np.pi / 2).on(ctrl[2])
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + RY(-np.pi / 2).on(obj, ctrl)
+                + X(ctrl[0], ctrl[1:] + [obj])
+            )
     elif state == 2:
         if ind == [0, 1]:
-            corr = Circuit() + X(ctrl[0], ctrl[1:] + [obj]) + RY(np.pi / 2).on(obj, ctrl) + X(
-                ctrl[0], ctrl[1:] + [obj]) + X(ctrl[0], ctrl[1:])
+            corr = (
+                Circuit()
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + RY(np.pi / 2).on(obj, ctrl)
+                + X(ctrl[0], ctrl[1:] + [obj])
+                + X(ctrl[0], ctrl[1:])
+            )
         elif ind == [0, 2]:
             corr = Circuit() + X(obj, ctrl[1:]) + X(ctrl[0], ctrl[1:] + [obj]) + X(obj, ctrl[1:])
         elif ind == [1, 2]:
-            corr = Circuit() + X(ctrl[0], ctrl[1:] + [obj]) + RY(-np.pi / 2).on(obj, ctrl) + X(
-                ctrl[0], ctrl[1:] + [obj])
+            corr = (
+                Circuit() + X(ctrl[0], ctrl[1:] + [obj]) + RY(-np.pi / 2).on(obj, ctrl) + X(ctrl[0], ctrl[1:] + [obj])
+            )
     circ += corr
     if "RX" in name:
         circ = circ + RX(name).on(obj, ctrl)
@@ -427,7 +467,7 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
         gate (:class:`~.core.gates.UnivMathGate`): symmetry-preserving qubit gate encoded by qutrit gate.
         basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``. Default: ``"zyz"``.
         with_phase (bool): whether return global phase in form of a :class:`~.core.gates.GlobalPhase` gate
-        on the qubit circuit. Default: ``False``.
+            on the qubit circuit. Default: ``False``.
 
     Returns:
         :class:`~.core.circuit.Circuit`, qubit ansatz that preserves the symmetry of qutrit encoding.
@@ -493,7 +533,8 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
         circ += _single_qutrit_unitary_synthesis(basis, f"{name}U9_", obj[:2])
     else:
         raise ValueError(
-            "Currently only applicable when the n_qutrits is 1 or 2, which means the n_qubits must be 2 or 4.")
+            "Currently only applicable when the n_qutrits is 1 or 2, which means the n_qubits must be 2 or 4."
+        )
     if with_phase:
         for i in obj:
             circ += GlobalPhase(f"{name}phase").on(i)
@@ -520,6 +561,7 @@ def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
         1 [] +
         1 [X0 X1]
     """
+
     def pairs_to_op(i, j):
         bin_i = bin(i)[2:].zfill(n_qubits)
         bin_j = bin(j)[2:].zfill(n_qubits)
@@ -529,13 +571,13 @@ def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
         term = QubitOperator('')
         for ind, (b1, b2) in enumerate(zip(bin_i, bin_j)):
             if b1 + b2 == '00':
-                term *= QubitOperator(f'I{ind}', 1/2) + QubitOperator(f'Z{ind}', 1/2)
+                term *= QubitOperator(f'I{ind}', 1 / 2) + QubitOperator(f'Z{ind}', 1 / 2)
             elif b1 + b2 == '11':
-                term *= QubitOperator(f'I{ind}', 1/2) + QubitOperator(f'Z{ind}', -1/2)
+                term *= QubitOperator(f'I{ind}', 1 / 2) + QubitOperator(f'Z{ind}', -1 / 2)
             elif b1 + b2 == '01':
-                term *= QubitOperator(f'X{ind}', 1/2) + QubitOperator(f'Y{ind}', 1/2 * 1j)
+                term *= QubitOperator(f'X{ind}', 1 / 2) + QubitOperator(f'Y{ind}', 1 / 2 * 1j)
             elif b1 + b2 == '10':
-                term *= QubitOperator(f'X{ind}', 1/2) + QubitOperator(f'Y{ind}', -1/2 * 1j)
+                term *= QubitOperator(f'X{ind}', 1 / 2) + QubitOperator(f'Y{ind}', -1 / 2 * 1j)
         return term
 
     if np.shape(mat)[0] != np.shape(mat)[1]:
@@ -547,14 +589,14 @@ def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
 
     if sp.sparse.issparse(mat):
         coo_mat = sp.sparse.coo_matrix(mat)
-        for (i, j, value) in zip(coo_mat.row, coo_mat.col, coo_mat.data):
+        for i, j, value in zip(coo_mat.row, coo_mat.col, coo_mat.data):
             if np.abs(value) == 0:
                 continue
             term = pairs_to_op(i, j)
             res += term * value
     else:
-        for i in range(2 ** n_qubits):
-            for j in range(2 ** n_qubits):
+        for i in range(2**n_qubits):
+            for j in range(2**n_qubits):
                 if np.abs(mat[i][j]) == 0:
                     continue
                 term = pairs_to_op(i, j)
