@@ -21,6 +21,7 @@ import warnings
 import numpy as np
 
 from .mqbackend import logging
+from .framework import framework_modules
 
 # isort: split
 
@@ -70,3 +71,11 @@ __all__.extend(config.__all__)
 __all__.extend(device.__all__)
 __all__.extend(dtype.__all__)
 __all__.sort()
+
+
+# pylint: disable=invalid-name
+def __getattr__(name):
+    if name in framework_modules:
+        if name not in framework.__all__:
+            raise ImportError(f"MindSpore not install, cannot import '{name}' from 'mindquantum'.")
+    raise ImportError(f"cannot import '{name}' from 'mindquantum'")

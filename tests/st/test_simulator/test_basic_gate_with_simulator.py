@@ -748,3 +748,67 @@ def test_rot_pauli_string_gate_gradient(config):  # pylint: disable=too-many-loc
             atol = 1e-8
         assert np.allclose(f1, f2, atol=atol)
         assert np.allclose(g1, g2, atol=atol)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+def test_custom_gate_order(config):  # pylint: disable=too-many-locals
+    """
+    Description: test object qubits order of custom gate
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    for n in (2, 3, 4):
+        circ = mq.random_circuit(n, 100, 1.0, 0.0)
+        g = G.UnivMathGate('random', circ.matrix()).on(list(reversed(range(n))))
+        dim = 2**g.n_qubits
+        init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
+        sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
+        sim.set_qs(init_state)
+        sim.apply_gate(g)
+        ref_sim = Simulator("mqvector", g.n_qubits, dtype=dtype)
+        ref_sim.set_qs(init_state)
+        ref_sim.apply_circuit(circ.reverse_qubits())
+        ref_qs = ref_sim.get_qs()
+        if virtual_qc.startswith("mqmatrix"):
+            assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()), atol=1e-6)
+        else:
+            assert np.allclose(sim.get_qs(), ref_qs, atol=1e-6)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+@pytest.mark.parametrize("gate", none_parameter_gate + single_parameter_gate + multi_parameter_gate)
+def test_two_qubit_gate_order(config, gate):  # pylint: disable=too-many-locals
+    """
+    Description: test object qubits order of two qubit gates
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    if isinstance(gate, mq.NoneParameterGate):
+        g = gate()
+    else:
+        n_pr = len(signature(gate).parameters)
+        pr = np.random.rand(n_pr) * 2 * np.pi
+        g = gate(*pr)
+    dim = 2**g.n_qubits
+    g = g.on(list(reversed(range(g.n_qubits))))
+    init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
+    sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
+    sim.set_qs(init_state)
+    sim.apply_gate(g)
+    ref_g = G.UnivMathGate('ref', g.matrix()).on(list(reversed(range(g.n_qubits))))
+    ref_sim = Simulator("mqvector", g.n_qubits, dtype=dtype)
+    ref_sim.set_qs(init_state)
+    ref_sim.apply_gate(ref_g)
+    ref_qs = ref_sim.get_qs()
+    if virtual_qc.startswith("mqmatrix"):
+        assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()), atol=1e-6)
+    else:
+        assert np.allclose(sim.get_qs(), ref_qs, atol=1e-6)

@@ -406,7 +406,7 @@ class ParameterResolver(ParameterResolver_):
 
     def __neg__(self):
         """Return the negative of this parameter resolver."""
-        return 0 - self
+        return ParameterResolver(ParameterResolver_.__sub__(ParameterResolver(), self), internal=True)
 
     def __itruediv__(self, other: PRConvertible):
         """Divide a number inplace."""

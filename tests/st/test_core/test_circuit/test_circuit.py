@@ -127,7 +127,7 @@ def test_is_measure_end():
     Expectation:
     """
     circ1 = Circuit().x(0)
-    assert circ1.is_measure_end
+    assert not circ1.is_measure_end
     circ1 += G.Measure().on(0)
     circ1 += G.BARRIER
     assert circ1.is_measure_end

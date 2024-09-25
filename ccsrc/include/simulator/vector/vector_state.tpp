@@ -1304,6 +1304,7 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
 
     VT<int> already_measured(this->n_qubits, 0);
     VT<int> m_qids;
+    std::map<int, std::string> qid_maps;
     circuit_t other_circ;
     for (auto& g : circ) {
         if (g->GetID() == GateID::M) {
@@ -1313,6 +1314,7 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
             }
             already_measured[m_qid] = 1;
             m_qids.push_back(m_qid);
+            qid_maps[m_qid] = static_cast<MeasureGate*>(g.get())->Name();
         } else {
             other_circ.push_back(g);
         }
@@ -1326,12 +1328,15 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
     }
     std::sort(sampled_probs.begin(), sampled_probs.end());
     auto res = qs_policy_t_::LowerBound(cum_prob, sampled_probs);
-    VT<unsigned> out;
+    auto key_size = key_map.size();
+    VT<unsigned> out(shots * key_size);
+    size_t count = 0;
     // Measure all qubits and filter actually measurement qubit.
     for (auto r : res) {
         for (auto i : m_qids) {
-            out.push_back((r >> i) & 1);
+            out[count * key_size + key_map.at(qid_maps[i])] = ((r >> i) & 1);
         }
+        count++;
     }
     return out;
 }

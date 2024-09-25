@@ -50,7 +50,7 @@ def measure_text_drawer(res):  # pylint: disable=too-many-locals
     else:
         max_prop /= 0.8
     ket_exp = 'Keys: '
-    ket_exp += ' '.join(keys[::-1])
+    ket_exp += ' '.join(keys)
     string = [f'shots: {res.shots}']
     string.append(ket_exp + vline)
     axis_num = ''

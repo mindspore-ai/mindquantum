@@ -1,7 +1,7 @@
 mindquantum.algorithm.library.qudit_symmetric_encoding
 ========================================================
 
-.. py:function:: mindquantum.algorithm.library.qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1)
+.. py:function:: mindquantum.algorithm.library.qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool = False)
 
     对称性编码，将qudit态或矩阵编码成qubit对称态或矩阵。
 
@@ -18,6 +18,7 @@ mindquantum.algorithm.library.qudit_symmetric_encoding
     参数：
         - **qudit** (np.ndarray) - 需要编码的qudit态或矩阵。
         - **n_qudits** (int) - qudit态或矩阵的量子位个数。默认值：``1``。
+        - **is_csr** (bool) - 是否以CSR格式返回矩阵。默认值：False。
 
     返回：
         np.ndarray，对称性编码后的qubit对称态或矩阵。
