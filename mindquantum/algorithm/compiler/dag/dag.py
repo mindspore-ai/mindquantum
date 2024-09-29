@@ -439,7 +439,7 @@ class DAGCircuit:
         Perform topological sorting on the DAG and return the nodes in topologically sorted order.
 
         Returns:
-            List[DAGNode]: List of nodes in topologically sorted order.
+            List[DAGNode], List of nodes in topologically sorted order.
         """
         from collections import deque, defaultdict
 
