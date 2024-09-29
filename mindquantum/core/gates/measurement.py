@@ -370,7 +370,7 @@ class MeasureResult:
             filename (str): The name of the file to save the JSON. Default: ``None``.
 
         Returns:
-            str: JSON representation of the object.
+            str, JSON representation of the object.
         """
         data = {
             "keys": self.keys,
@@ -391,7 +391,7 @@ class MeasureResult:
         and also reverses the order of keys.
 
         Returns:
-            MeasureResult: A new MeasureResult object with reversed endian.
+            MeasureResult, A new MeasureResult object with reversed endian.
         """
         new_result = MeasureResult()
         new_result.keys = self.keys[::-1]

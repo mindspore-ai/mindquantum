@@ -327,6 +327,9 @@ mindquantum.core.circuit.Circuit
 
         将线路翻转成大端头(big endian)。
 
+        .. note::
+            此操作还会改变测量门作用的量子比特，这可能导致测量门的键不再与实际测量的量子比特对应。
+
     .. py:method:: rx(para, obj_qubits, ctrl_qubits=None)
 
         在电路中添加 `RX` 门。

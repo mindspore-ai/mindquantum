@@ -32,6 +32,15 @@ mindquantum.core.gates.MeasureResult
 
         返回测量门名词与出现顺序的关系的字典。
 
+    .. py:method:: reverse_endian()
+
+        反转测量结果的字节序。
+
+        这个函数反转测量结果中每个比特串的比特顺序，同时也反转键的顺序。
+
+        返回：
+            MeasureResult，一个新的 MeasureResult 对象，具有反转的字节序。
+
     .. py:method:: select_keys(*keys)
 
         从该测量容器中选择某些测量键。
@@ -45,3 +54,13 @@ mindquantum.core.gates.MeasureResult
 
         参数：
             - **style** (dict, str) - 设置svg样式的样式。目前，我们支持 ``'official'``。默认值： ``None``。
+
+    .. py:method:: to_json(filename=None):
+
+        将测量结果转换为JSON格式，并可选择性地保存到文件中。
+
+        参数：
+            - **filename** (str) - 保存 JSON 的文件名。默认值： ``None``。
+
+        返回：
+            str，对象的JSON表示。

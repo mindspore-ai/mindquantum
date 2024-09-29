@@ -548,10 +548,10 @@ def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
     Args:
         mat: the qubit matrix that needs to be converted to a QubitOperator.
         little_endian (bool): whether the qubit order is little endian. This means
-        the leftmost qubit is the qubit with the highest index. Default: ``True``.
+            the leftmost qubit is the qubit with the highest index. Default: ``True``.
 
     Returns:
-        :class:`~.core.QubitOperator`, the QubitOperator obtained after the matrix conversion.
+        :class:`~.core.operators.QubitOperator`, the QubitOperator obtained after the matrix conversion.
 
     Examples:
         >>> import numpy as np
