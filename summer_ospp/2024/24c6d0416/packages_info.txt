@@ -1,0 +1,10 @@
+Status `C:\Users\Admin\.julia\environments\v1.10\Project.toml`
+  [336ed68f] CSV v0.10.14
+  [8f4d0f93] Conda v1.10.2
+⌃ [f65535da] Convex v0.14.16
+  [a93c6f00] DataFrames v1.6.1
+⌃ [4076af6c] JuMP v0.21.10
+  [6af15267] MaxCut v1.0.1 `https://github.com/ericproffitt/MaxCut.jl#master`
+  [438e738f] PyCall v1.96.4
+⌃ [c946c3f1] SCS v0.7.1
+Info Packages marked with ⌃ have new versions available and may be upgradable.
