@@ -43,16 +43,16 @@ mindquantum.algorithm.compiler.DAGCircuit
             - **node** (:class:`~.algorithm.compiler.DAGNode`) - 原始的节点。
             - **coming** (:class:`~.algorithm.compiler.DAGCircuit`) - 新的 DAG 图。
 
-    .. py:method:: topological_sort()
-
-        执行有向无环图（DAG）的拓扑排序，并返回拓扑排序后的节点顺序。
-
-        返回：
-            List[:class:`~.algorithm.compiler.DAGNode`]，拓扑排序后的节点列表。
-
     .. py:method:: to_circuit()
 
         将 :class:`~.algorithm.compiler.DAGCircuit` 转化为量子线路。
 
         返回：
             :class:`~.core.circuit.Circuit` ， DAG 图对应的量子线路。
+
+    .. py:method:: topological_sort()
+
+        执行有向无环图（DAG）的拓扑排序，并返回拓扑排序后的节点顺序。
+
+        返回：
+            List[:class:`~.algorithm.compiler.DAGNode`]，拓扑排序后的节点列表。
