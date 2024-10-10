@@ -1,16 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-
 
 #define         CNOT		0
 #define         HADAMARD	1
 #define         PHASE		2
 #define         MEASURE		3
 
-
+using namespace std;
 
 struct QProg
 // Quantum circuit
@@ -31,11 +26,8 @@ struct QProg
 };
 
 
-
 struct QState
-
 // Quantum state
-
 {
 
 	// To save memory and increase speed, the bits are packed 32 to an unsigned long
@@ -47,8 +39,6 @@ struct QState
 	long over32; // floor(n/8)+1
 
 };
-
-
 
 void error(int k)
 
@@ -63,9 +53,7 @@ void error(int k)
 
 
 void cnot(struct QState *q, long b, long c)
-
 // Apply a CNOT gate with control b and target c
-
 {
 
 	long i;
@@ -738,9 +726,6 @@ void initstae_(struct QState *q, long n, char *s)
 
 
 void readprog(struct QProg *h, char *fn, char *params)
-
-// Read a quantum circuit from filename fn, with optional parameters params
-
 {
 
 	long t;
@@ -767,33 +752,32 @@ void readprog(struct QProg *h, char *fn, char *params)
                  if ((params[t]=='m')||(params[t]=='M')) h->SUPPRESSM = 1;
          }
 	}
-
 	sprintf(fn2, "%s", fn);
 	fp = fopen(fn2, "r");
 	if (!fp)
 	{
-         sprintf(fn2, "%s.chp", fn);
-         fp = fopen(fn2, "r");
-         if (!fp) error(1);
+        sprintf(fn2, "%s.chp", fn);
+        fp = fopen(fn2, "r");
+        if (!fp) error(1);
 	}
 	while (!feof(fp)&&(c!='#'))
-         fscanf(fp, "%c", &c);
+        fscanf(fp, "%c", &c);
 	if (c!='#') error(2);
 	h->T = 0;
 	h->n = 0;
 	while (!feof(fp))
 	{
-         fscanf(fp, "%c", &c);
-         if ((c=='\r')||(c=='\n'))
+        fscanf(fp, "%c", &c);
+        if ((c=='\r')||(c=='\n'))
                  continue;
-         fscanf(fp, "%ld", &val);
-         if (val+1 > h->n) h->n = val+1;
-         if ((c=='c')||(c=='C'))
-         {
-                 fscanf(fp, "%ld", &val);
-                 if (val+1 > h->n) h->n = val+1;
-         }
-         h->T++;
+        fscanf(fp, "%ld", &val);
+        if (val+1 > h->n) h->n = val+1;
+        if ((c=='c')||(c=='C'))
+        {
+                fscanf(fp, "%ld", &val);
+                if (val+1 > h->n) h->n = val+1;
+        }
+        h->T++;
 	}
 	fclose(fp);
 	h->a = malloc(h->T * sizeof(char));
@@ -817,9 +801,7 @@ void readprog(struct QProg *h, char *fn, char *params)
          t++;
 	}
 	fclose(fp);
-
 	return;
-
 }
 
 
@@ -831,9 +813,6 @@ int main(int argc, char **argv)
 	struct QProg *h;
 	struct QState *q;
 	int param=0; // whether there are command-line parameters
-
-	printf("\nCHP: Efficient Simulator for Stabilizer Quantum Circuits");
-	printf("\nby Scott Aaronson\n");
 	srand(time(0));
 	if (argc==1) error(0);
 	if (argv[1][0]=='-') param = 1;
