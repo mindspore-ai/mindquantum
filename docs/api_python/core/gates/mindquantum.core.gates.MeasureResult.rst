@@ -55,7 +55,7 @@ mindquantum.core.gates.MeasureResult
         参数：
             - **style** (dict, str) - 设置svg样式的样式。目前，我们支持 ``'official'``。默认值： ``None``。
 
-    .. py:method:: to_json(filename=None):
+    .. py:method:: to_json(filename=None)
 
         将测量结果转换为JSON格式，并可选择性地保存到文件中。
 
