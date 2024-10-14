@@ -198,7 +198,7 @@ def ADAPT_QAOA(nodes, qubo, pool, layers, method):
         qaoa_hamil(circ_grad, qubo, 0.01)
 
         for mixer in pool:
-            gradients.append(derivative(qubo, nodes, mixer, circ_grad))
+            gradients.append(abs(derivative(qubo, nodes, mixer, circ_grad)))
         mixers_used.append(pool[np.argmax(gradients)])
 
         if k == layers:

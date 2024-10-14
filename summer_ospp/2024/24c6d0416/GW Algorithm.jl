@@ -6,7 +6,6 @@ using DataFrames
 
 stim = pyimport("stim")
 
-# 读取csv文件得到所有的矩阵（maxcut 问题）
 function read_matrices_from_csv(file_path)
     matrices = []
     current_matrix = []
@@ -27,12 +26,12 @@ function read_matrices_from_csv(file_path)
     end
     return matrices
 end
-# 将列表存储为csv文件
+
 function save_list_to_csv(data::Vector{T}, file_path::String) where T
     df = DataFrame(Value = data)
     CSV.write(file_path, df)
 end
-# 将一个maxcut矩阵提取它的 edges 和 weights
+
 function qubo(matrix)
     positions = []
     values = []
@@ -44,7 +43,7 @@ function qubo(matrix)
     end
     return positions, values
 end
-# 根据求得的分割方法partition，求对应的期望
+
 function halfexpec(lst,ham,n,weights)
     circ = stim.Circuit()
     for i in lst
@@ -70,13 +69,32 @@ function expec(par,matrix)
     exp2 = halfexpec(lst2,ham,n,weights)
     return exp1 + exp2
 end
-# GW算法，num为迭代次数，返回值为期望
+
 function GW(matrix, num)
 
     cut, partition = maxcut(matrix,iter=num,tol=0)
     exp = expec(partition,matrix)
 
     return exp
+end
+
+
+
+qubits_list = [150,200]
+
+for i in qubits_list
+    println("qubits = $i")
+    expectation = []
+    file_path = "instance_5we_$i.csv"  
+    matrices = read_matrices_from_csv(file_path)
+
+    for mat in matrices
+        exp = GW(mat,1)
+        println(exp)
+        push!(expectation, exp)
+    end
+
+    save_list_to_csv(expectation, "data_GW_we_$i.csv")
 end
 
 
