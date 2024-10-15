@@ -16,7 +16,7 @@
 
 import numpy as np
 from mindquantum.utils import normalize
-from mindquantum.algorithm import qft
+from mindquantum.algorithm.library.quantum_fourier import qft
 from mindquantum.core.circuit import Circuit, dagger
 from mindquantum.simulator import Simulator
 
