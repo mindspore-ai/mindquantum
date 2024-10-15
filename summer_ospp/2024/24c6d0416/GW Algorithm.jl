@@ -79,7 +79,7 @@ function GW(matrix, num)
 end
 
 
-
+## A example
 qubits_list = [150,200]
 
 for i in qubits_list
