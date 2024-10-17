@@ -21,28 +21,30 @@ from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.utils import normalize
 
+
 def amp_circuit(n_qubits):
     '''Construct the quantum circuit of the amplitude_encoder.'''
     circ = Circuit()
-    circ += RY(f'alpha_{n_qubits}0').on(n_qubits-1)
-    circ += RZ(f'lambda_{n_qubits}0').on(n_qubits-1)
+    circ += RY(f'alpha_{n_qubits}_0').on(n_qubits - 1)
+    circ += RZ(f'lambda_{n_qubits}_0').on(n_qubits - 1)
     for i in range(1, n_qubits):
         for j in range(int(2**i)):
             string = bin(j)[2:].zfill(i)
             for tem_qubit, bit in enumerate(string):
                 qubit = int(n_qubits - tem_qubit)
                 if bit == '0':
-                    circ += X.on(qubit-1)
+                    circ += X.on(qubit - 1)
 
-            circ += RY(f'alpha_{int(n_qubits-i)}{j}').on(int(n_qubits-1-i), list(range(n_qubits-i, n_qubits)))
-            circ += RZ(f'lambda_{int(n_qubits-i)}{j}').on(int(n_qubits-1-i), list(range(n_qubits-i, n_qubits)))
+            circ += RY(f'alpha_{int(n_qubits-i)}_{j}').on(int(n_qubits - 1 - i), list(range(n_qubits - i, n_qubits)))
+            circ += RZ(f'lambda_{int(n_qubits-i)}_{j}').on(int(n_qubits - 1 - i), list(range(n_qubits - i, n_qubits)))
             string = bin(j)[2:].zfill(i)
 
             for tem_qubit, bit in enumerate(string):
                 qubit = int(n_qubits - tem_qubit)
                 if bit == '0':
-                    circ += X.on(qubit-1)
+                    circ += X.on(qubit - 1)
     return circ
+
 
 # pylint: disable=too-many-locals
 def amplitude_encoder(x, n_qubits):
@@ -97,10 +99,10 @@ def amplitude_encoder(x, n_qubits):
     for i in range(len(vec)):
         eta[0].append(abs(vec[i]))
 
-    for v in range(1, n_qubits+1):
+    for v in range(1, n_qubits + 1):
         eta.append([])
-        for i in range(int(2**(n_qubits-v))):
-            eta[v].append(np.sqrt(eta[v-1][2*i]**2 + eta[v-1][2*i+1]**2))
+        for i in range(int(2 ** (n_qubits - v))):
+            eta[v].append(np.sqrt(eta[v - 1][2 * i] ** 2 + eta[v - 1][2 * i + 1] ** 2))
 
     omega_0 = []
     for i in range(len(vec)):
@@ -108,26 +110,26 @@ def amplitude_encoder(x, n_qubits):
 
     omega = [[]]
     for i in range(len(vec)):
-        omega[0].append(2*np.angle(vec[i]))
+        omega[0].append(2 * np.angle(vec[i]))
 
-    for v in range(1, n_qubits+1):
+    for v in range(1, n_qubits + 1):
         omega.append([])
-        for i in range(2**(n_qubits-v)):
-            omega[v].append(0.)
+        for i in range(2 ** (n_qubits - v)):
+            omega[v].append(0.0)
             for j in range(2**v):
-                omega[v][i] += omega_0[i*2**v+j]/2**(v-1)
+                omega[v][i] += omega_0[i * 2**v + j] / 2 ** (v - 1)
 
     alphas = {}
     for v in range(n_qubits, 0, -1):
-        for i in range(2**(n_qubits-v)):
+        for i in range(2 ** (n_qubits - v)):
             if eta[v][i] < 1e-6:
-                alphas[f'alpha_{v}{i}'] = 0
+                alphas[f'alpha_{v}_{i}'] = 0
             else:
-                alphas[f'alpha_{v}{i}'] = 2*np.arcsin(eta[v-1][2*i+1]/eta[v][i])
+                alphas[f'alpha_{v}_{i}'] = 2 * np.arcsin(eta[v - 1][2 * i + 1] / eta[v][i])
 
     lambs = {}
     for v in range(n_qubits, 0, -1):
-        for i in range(2**(n_qubits-v)):
-            lambs[f'lambda_{v}{i}'] = omega[v-1][2*i+1] - omega[v][i]
+        for i in range(2 ** (n_qubits - v)):
+            lambs[f'lambda_{v}_{i}'] = omega[v - 1][2 * i + 1] - omega[v][i]
 
     return amp_circuit(n_qubits), ParameterResolver({**alphas, **lambs})
