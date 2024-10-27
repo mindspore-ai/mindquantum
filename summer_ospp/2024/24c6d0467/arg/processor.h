@@ -1,8 +1,9 @@
+# pragma once
 #include<string.h>
 #include<assert.h>
 #include "circuit/circuit.h"
 #include "circuit/operate_unit.h"
-#include "tableau/tableau_simluator.h"
+#include "tableau/tableau_simulator.hpp"
 
 class Processor
 {
@@ -144,7 +145,6 @@ public:
     
     void doProgram(int argc, char* argv[]) {
         readParameter(argc, argv);
-        TableauSimulator tableauSimulator{};
         tableauSimulator.doCircuit(circuit);
     }
 
