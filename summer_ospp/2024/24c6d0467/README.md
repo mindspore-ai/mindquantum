@@ -15,9 +15,9 @@ A stabilizer tableau Quantum Simulator
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+Linux环境下，在源目录下使用cmake编译代码
+1.  make stab_test
+2.  ./out/stab_test 运行单元测试文件
 
 #### 参与贡献
 
