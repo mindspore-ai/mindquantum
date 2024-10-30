@@ -2,6 +2,70 @@
 
 [View English](./RELEASE.md)
 
+
+## MindQuantum 0.10.0 Release Notes
+
+### 新特性
+
+- 新增对 **qudit** 编码和解码的支持，以及 **qutrit** 对称 **ansatz**，丰富了对多能级量子系统的支持。
+
+### 主要特性和增强
+
+#### Simulator
+
+- 使 **MQSim** 支持序列化，支持多进程（`multiprocessing`）。
+
+#### Measure
+
+- 为 `MeasureResult` 添加了 `to_json` 函数，方便测量结果的序列化和存储。
+- 统一了 `MeasureResult` 中 `keys`、`samples` 和 `data` 的字节序，并添加了 `reverse_endian` 函数，方便用户根据需求调整字节序。
+
+#### Operator
+
+- 使 **Hamiltonian** 支持序列化，支持多进程（`multiprocessing`）。
+- 新增了从矩阵转换为 `QubitOperator` 的函数 `mat_to_op`。
+
+#### Circuit
+
+- 为 `Circuit` 类添加了 `from_qcis()` 和 `to_qcis()` 函数，支持量子电路与 **QCIS** 格式的相互转换。
+- 增加了 `__eq__` 和 `__ne__` 方法，支持电路对象的比较操作。
+- 添加了新的函数 `depth()`，用于获取电路的深度信息。
+
+#### IO
+
+- 新增了用于在量子电路和 **QCIS** 之间转换的类，方便不同格式之间的兼容应用。
+
+#### Compiler
+
+- `DAGCircuit` 现在支持对任意深度线路的处理，不再会出现递归错误。
+
+### 问题修复
+
+- [`PR2497`](https://gitee.com/mindspore/mindquantum/pulls/2497)：修复了 **Amplitude Encoder** 中参数名可能重复的问题。
+- [`PR2410`](https://gitee.com/mindspore/mindquantum/pulls/2410)：修复了 `is_measure_end` 的错误，该错误会导致即使没有测量操作也返回 `True`。
+- [`PR2410`](https://gitee.com/mindspore/mindquantum/pulls/2410)：修复了在双量子比特门中颠倒量子比特顺序后计算结果不正确的问题。
+- [`PR2345`](https://gitee.com/mindspore/mindquantum/pulls/2345)：修复了 `mqmatrix` 的 `get_expectation_with_grad` 方法在处理批量哈密顿量时计算错误的问题，并添加了测试用例。
+- [`PR2345`](https://gitee.com/mindspore/mindquantum/pulls/2345)：修复了未按指定顺序添加门并使用 `reverse_qubits` 时出现的错误。
+- [`PR2345`](https://gitee.com/mindspore/mindquantum/pulls/2345)：修正了 `FermionOperator.hermitian()` 示例代码中的错误。
+- [`PR2319`](https://gitee.com/mindspore/mindquantum/pulls/2319)：修复了 Stabilizer 模拟器的测量错误。
+- [`PR2319`](https://gitee.com/mindspore/mindquantum/pulls/2319)：修复了 Stabilizer 模拟器中种子未正确应用的问题。
+- [`PR2319`](https://gitee.com/mindspore/mindquantum/pulls/2319)：增加了对 Stabilizer 模拟器输出比特串正确性的检测。
+- [`PR2309`](https://gitee.com/mindspore/mindquantum/pulls/2309)：修复了 **QAOA** 的一些 ansatz 中缺失虚数项和系数的问题。
+- [`PR2309`](https://gitee.com/mindspore/mindquantum/pulls/2309)：修复了 `QAOAAnsatz` 示例无法正常运行的问题。
+- [`PR2309`](https://gitee.com/mindspore/mindquantum/pulls/2309)：修改了 ansatz 电路中的参数名称，使其与公式对应。
+- [`PR2296`](https://gitee.com/mindspore/mindquantum/pulls/2296)：修复了 `kron_factor_4x4_to_2x2s()` 返回值的索引错误，确保了双比特门分解函数 `kak_decompose` 的正确性。
+- [`PR2285`](https://gitee.com/mindspore/mindquantum/pulls/2285)：移除了计算梯度时不必要的输出。
+
+### 其他更新
+
+- 优化了量子线路第一次运行时的速度，提升了性能。
+- 提高了 `params_zyz()` 函数的精度，提升了 **ZYZ** 分解的计算精度。
+- 移除了 `mqvector_gpu` 的警告信息。
+- 当哈密顿量包含虚部时，增加了警告提示，提醒用户注意可能的计算结果异常。
+- 提升了未安装 **MindSpore** 时警告信息的清晰度。
+- 将 `pip` 源更改为清华镜像源。
+
+
 ## MindQuantum 0.9.11 Release Notes
 
 ### 主要特性和增强
