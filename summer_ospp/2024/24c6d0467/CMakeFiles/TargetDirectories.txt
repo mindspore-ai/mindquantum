@@ -1,0 +1,3 @@
+/home/umi/stim_test/CMakeFiles/stab_test.dir
+/home/umi/stim_test/CMakeFiles/edit_cache.dir
+/home/umi/stim_test/CMakeFiles/rebuild_cache.dir
