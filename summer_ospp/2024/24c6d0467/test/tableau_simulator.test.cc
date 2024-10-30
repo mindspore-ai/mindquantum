@@ -15,7 +15,6 @@ TEST(tableau_test, inverse_test) {
     tableau.to_str();
 }
 
-
 TEST(simulator_test, x_test) {
     std::mt19937_64 rng;
     std::random_device rd;
@@ -69,28 +68,33 @@ TEST(simulator_test, cnot_test) {
 TEST(simulaotr_test, bell_test) {
     std::mt19937_64 rng;
     std::random_device rd;
-    OperateUnit op(GateType::HADAMARD, 0);
+    OperateUnit op1(GateType::HADAMARD, 0);
+    OperateUnit op2(GateType::CNOT, 0, 1);
     OperateUnit op3(GateType::MEASURE, 0);
     rng.seed(1);
     TableauSimulator sim(1, rng);
-    sim.do_H(op);
+    sim.do_H(op1);
+    sim.do_CNOT(op2);
     sim.do_MEASURE(op3);
-    // sim.print_measure_result();
     sim.get_tableau().to_str();
 }
 
 TEST(tableau_test, ghz_test) {
     std::mt19937_64 rng;
     rng.seed(1234);
-    TableauSimulator sim(2, rng);
+    TableauSimulator sim(3, rng);
     OperateUnit op1(GateType::HADAMARD, 0);
     OperateUnit op2(GateType::CNOT, 0, 1);
-    OperateUnit op3(GateType::MEASURE, 0);
-    OperateUnit op4(GateType::MEASURE, 1);
-    sim.do_H(op1);
-    sim.do_CNOT(op2);
-    sim.do_MEASURE(op3);
-    sim.do_MEASURE(op4);
+    OperateUnit op3(GateType::CNOT, 1, 2);
+    OperateUnit op4(GateType::MEASURE, 0);
+    OperateUnit op5(GateType::MEASURE, 1);
+    Circuit circuit{};
+    circuit.add_operation(op1);
+    circuit.add_operation(op2);
+    circuit.add_operation(op3);
+    circuit.add_operation(op4);
+    circuit.add_operation(op5);
+    sim.do_circuit(circuit);
     sim.get_tableau().to_str();
     sim.print_measure_result();
 }
