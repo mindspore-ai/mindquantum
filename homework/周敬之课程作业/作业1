@@ -1,0 +1,41 @@
+import numpy as np                                              #添加numpy库
+from mindquantum.core.gates import H, X, RZ                     #添加门
+from mindquantum.core.circuit import Circuit                    #添加量子线路
+from mindquantum.simulator import Simulator                     #添加模拟器
+
+
+# TODO: 请根据图中所示构建量子线路
+circ = Circuit()                                                #建立量子电路
+# 在这里添加量子门...
+circ += H.on(0)                                                 #给q0添加H门
+circ += H.on(1)                                                 #给q1添加H门
+circ += H.on(2)                                                 #给q2添加H门
+circ += H.on(3)                                                 #给q3添加H门
+circ += RZ('a0').on(0)                                          #给q0添加RZ(a0)门
+circ += RZ('a1').on(1)                                          #给q1添加RZ(a1)门
+circ += RZ('a2').on(2)                                          #给q2添加RZ(a2)门
+circ += RZ('a3').on(3)                                          #给q3添加RZ(a3)门
+circ += X.on(1,0)                                               #给q0和q1间添加CNOT门
+circ += RZ('a4').on(1)                                          #给q1添加RZ(a4)门
+circ += X.on(1,0)                                               #给q0和q1间添加CNOT门
+circ += X.on(2,1)                                               #给q1和q2间添加CNOT门
+circ += RZ('a5').on(2)                                          #给q2添加RZ(a5)门
+circ += X.on(2,1)                                               #给q1和q2间添加CNOT门
+circ += X.on(3,2)                                               #给q2和q3间添加CNOT门
+circ += RZ('a6').on(3)                                          #给q3添加RZ(a6)门
+circ += X.on(3,2)                                               #给q2和q3间添加CNOT门
+print(circ)                                                     #打印查看量子电路
+
+# TODO: 使用模拟器运行线路，打印运行后的量子态
+sim = Simulator('mqvector', circ.n_qubits)                      #建立模拟器
+sim.apply_circuit(circ, pr={'a0': 1, 'a1': 1, 'a2': 1, 'a3': 1, 'a4': 1, 'a5': 1, 'a6': 1, 'a': 1})    #作用量子线路
+print(sim)                                                      #打印查看作用后量子比特
+
+circ.measure_all()                                              #在电路中给所有量子比特添加测量
+print(circ)                                                     #再次打印量子电路进行确认
+
+# TODO: 使用模拟器采样线路结果10000次
+sim = Simulator('mqvector', circ.n_qubits)                      #重置量子比特到|0000>
+result = sim.sampling(circ, pr={'a0': 1, 'a1': 1, 'a2': 1, 'a3': 1, 'a4': 1, 'a5': 1, 'a6': 1, 'a': 1}, shots=10000)      #进行模拟器线路采样
+print(result)                                                   #打印结果
+

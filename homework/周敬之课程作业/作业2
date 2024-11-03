@@ -1,0 +1,97 @@
+from openfermion.chem import MolecularData
+from openfermionpyscf import run_pyscf
+from mindquantum.core.operators import Hamiltonian
+from mindquantum.algorithm import get_qubit_hamiltonian, HardwareEfficientAnsatz
+from mindquantum.core.gates import X, H, RY
+from mindquantum.core.circuit import Circuit
+from mindquantum.simulator import Simulator
+from mindquantum.framework import MQAnsatzOnlyLayer
+import mindspore.nn as nn
+from matplotlib import pyplot as plt
+
+
+def get_H2_ham(d):
+    """
+    根据键长生成H2分子哈密顿量
+    Args:
+        d (float): 键长，单位埃米
+    Returns:
+        Hamiltonian: H2分子哈密顿量
+    """
+    mol = MolecularData([("H", (0, 0, 0)), ("H", (0, 0, d))], "sto3g", multiplicity=1)
+    mol = run_pyscf(mol, run_fci=1)
+    return Hamiltonian(get_qubit_hamiltonian(mol)), mol.fci_energy, mol.hf_energy
+
+
+# TODO: 请根据图中所示构建量子线路
+circ = Circuit()   
+# 在这里添加量子门...
+
+#-------------------------------------定义量子电路-----------------------------------                           
+circ += X.on(0)
+circ += X.on(1)
+circ += RY('a0').on(0)
+circ += RY('a1').on(1)
+circ += RY('a2').on(2)
+circ += RY('a3').on(3)
+#------------------------------------将量子电路重复部分进行多次定义-------------------
+for i in range(0,3):
+    circ += X.on(1,0)
+    circ += X.on(2,1)
+    circ += X.on(3,2)
+    circ += RY('b' + str(4*i)).on(0)
+    circ += RY('b' + str(4*i+1)).on(1)
+    circ += RY('b' + str(4*i+2)).on(2)
+    circ += RY('b' + str(4*i+3)).on(3)
+
+print(circ)                           #打印量子电路
+
+# Initialize lists to store results
+distances = [i/20 for i in range(10, 23)]  # From 0.5 to 1.1 Angstrom with 0.05 step
+energies = []
+fci_energies = []
+hf_energies = []
+
+# Create simulator
+sim = Simulator('mqvector', 4)
+
+for d in distances:
+    # Calculate Hamiltonian for current distance
+    ham, fci_energy, hf_energy = get_H2_ham(d)
+
+    fci_energies.append(fci_energy)
+    hf_energies.append(hf_energy)
+
+    
+    # TODO: 获取期望值和梯度算子
+    grad_ops = sim.get_expectation_with_grad(ham, circ)             #设置梯度算子
+    # TODO: 生成待训练的神经网络
+    net = MQAnsatzOnlyLayer(grad_ops)                               #生成神经网络
+    # TODO: 设置优化器                          
+    opti = nn.Adam(net.trainable_params(), learning_rate=0.05)      #设置优化器
+    # TODO: 生成能对神经网络进行一步训练的算子
+    train_net = nn.TrainOneStepCell(net, opti)                      
+    # 在这里补充代码...
+
+    # 对网络进行200步训练
+    for i in range(200):
+        cut = (d - train_net()) / 2
+        if i % 10 == 0:
+             print("train step:", i, ", cut:", cut)
+    # 获取第201步训练后的网络的输出，并将其添加到energies列表中
+    energies.append(train_net().asnumpy())
+   
+
+# Plot results
+plt.figure(figsize=(10, 6))
+if energies:
+    plt.plot(distances, energies, 'b-', label='VQE Energy', linewidth=2)
+plt.plot(distances, fci_energies, 'r--', label='FCI Energy', linewidth=2)
+plt.plot(distances, hf_energies, 'g-.', label='HF Energy', linewidth=2)
+plt.xlabel('Bond Length (Angstrom)', fontsize=12)
+plt.ylabel('Energy (Hartree)', fontsize=12)
+plt.title('H2 Molecule Energy vs Bond Length', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(fontsize=10)
+plt.tight_layout()
+plt.show()
