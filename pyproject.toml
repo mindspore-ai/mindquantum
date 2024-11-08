@@ -31,7 +31,8 @@ classifiers = [
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10'
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11'
 ]
 dynamic = ["version"]
 
@@ -94,7 +95,7 @@ include = ['mindquantum*']
 
 [tool.black]
 line-length = 120
-target-version = ['py37','py38', 'py39', 'py310']
+target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
 skip-string-normalization = true
 
 
