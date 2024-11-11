@@ -14,10 +14,29 @@
 # ============================================================================
 """Simulated bifurcation (SB) algorithms and its variants."""
 # pylint: disable=invalid-name
+import warnings
 import numpy as np
 from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA, OverflowException
+
+try:
+    from mindquantum import _qaia_sb
+
+    # pylint: disable=no-member
+    SB_GPU_SUPPORTED = True
+except ImportError as err:
+    print("ImportError")
+    print(err)
+    warnings.warn(
+        f"Unable import bSB gpu backend. This could be due to your environment " "not satisfying the requirements.",
+        stacklevel=2,
+    )
+    SB_GPU_SUPPORTED = False
+except RuntimeError as err:
+    print("RuntimeError")
+    warnings.warn(f"Disable bSB gpu backend due to: {err}", stacklevel=2)
+    SB_GPU_SUPPORTED = False
 
 
 class SB(QAIA):
@@ -159,6 +178,9 @@ class BSB(SB):  # noqa: N801
         """Construct BSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         self.initialize()
+        if SB_GPU_SUPPORTED:
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+            # _qaia_sb.cuda_init(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt)
 
     # pylint: disable=attribute-defined-outside-init
     def update(self):
@@ -173,6 +195,9 @@ class BSB(SB):  # noqa: N801
             cond = np.abs(self.x) > 1
             self.x = np.where(cond, np.sign(self.x), self.x)
             self.y = np.where(cond, np.zeros_like(self.x), self.y)
+
+    def update_gpu(self):
+        _qaia_sb.bsb_update(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
 
 
 class DSB(SB):  # noqa: N801
@@ -206,6 +231,12 @@ class DSB(SB):  # noqa: N801
         """Construct DSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         self.initialize()
+        if SB_GPU_SUPPORTED:
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+            # _qaia_sb.cuda_init(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt)
+
+    def update_gpu(self):
+        _qaia_sb.dsb_update(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
 
     # pylint: disable=attribute-defined-outside-init
     def update(self):
@@ -223,3 +254,136 @@ class DSB(SB):  # noqa: N801
             cond = np.abs(self.x) > 1
             self.x = np.where(cond, np.sign(self.x), self.x)
             self.y = np.where(cond, np.zeros_like(self.y), self.y)
+
+
+class BSB_HALF(SB):
+    r"""
+    Ballistic SB algorithm implemented by GPU.
+
+    """
+
+    # pylint: disable=too-many-arguments
+
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1,
+        xi=None,
+    ):
+        """Construct BSB algorithm."""
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        self.initialize()
+        if SB_GPU_SUPPORTED:
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+
+    def update(self):
+        """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.h is None:
+            _qaia_sb.bsb_update_half(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
+        else:
+            _qaia_sb.bsb_update_h_half(
+                self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+            )
+
+
+class BSB_INT8(SB):
+    r"""
+    Ballistic SB algorithm implemented by GPU.
+    """
+
+    # pylint: disable=too-many-arguments
+
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1,
+        xi=None,
+    ):
+        """Construct BSB algorithm."""
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        self.initialize()
+        if SB_GPU_SUPPORTED:
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+
+    def update(self):
+        """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.h is None:
+            _qaia_sb.bsb_update_int8(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
+        else:
+            _qaia_sb.bsb_update_h_int8(
+                self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+            )
+
+
+class DSB_HALF(SB):
+    r"""
+    Discrete SB algorithm implemented by GPU.
+    """
+
+    # pylint: disable=too-many-arguments
+
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1,
+        xi=None,
+    ):
+        """Construct BSB algorithm."""
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        self.initialize()
+        if SB_GPU_SUPPORTED:
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+
+    def update(self):
+        """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.h is None:
+            _qaia_sb.dsb_update_half(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
+        else:
+            _qaia_sb.dsb_update_h_half(
+                self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+            )
+
+
+class DSB_INT8(SB):
+    r"""
+    Discrete SB algorithm implemented by GPU.
+    """
+
+    # pylint: disable=too-many-arguments
+
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1,
+        xi=None,
+    ):
+        """Construct BSB algorithm."""
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        self.initialize()
+        if SB_GPU_SUPPORTED:
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+
+    def update(self):
+        """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.h is None:
+            _qaia_sb.dsb_update_int8(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
+        else:
+            _qaia_sb.dsb_update_h_int8(
+                self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+            )

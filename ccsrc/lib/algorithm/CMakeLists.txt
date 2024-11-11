@@ -16,14 +16,12 @@
 #
 # ==============================================================================
 
-add_subdirectory(core)
+if(ENABLE_CUDA)
+  add_library(qaia_sb_gpu STATIC)
+  target_link_libraries(qaia_sb_gpu PUBLIC CUDA_mindquantum mq_math cublas)
+  set_target_properties(qaia_sb_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
+  force_at_least_cxx17_workaround(qaia_sb_gpu)
+  append_to_property(mq_install_targets GLOBAL qaia_sb_gpu)
+endif()
 
-# ==============================================================================
-
-add_subdirectory(algorithm)
-add_subdirectory(mqbackend)
-add_subdirectory(simulator)
-add_subdirectory(device)
-add_subdirectory(math)
-
-# ==============================================================================
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/qaia/detail)
