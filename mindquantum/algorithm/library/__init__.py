@@ -21,9 +21,10 @@ from .general_ghz_state import general_ghz_state
 from .general_w_state import general_w_state
 from .quantum_fourier import qft
 from .qudit_mapping import qudit_symmetric_decoding, qudit_symmetric_encoding, qutrit_symmetric_ansatz, mat_to_op
+from .qjpeg import qjpeg
 
 __all__ = [
-    'qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator',
+    'qft', 'amplitude_encoder', 'general_w_state', 'general_ghz_state', 'bitphaseflip_operator', 'qjpeg',
     'qudit_symmetric_decoding', 'qudit_symmetric_encoding', 'qutrit_symmetric_ansatz', 'mat_to_op'
 ]
 
