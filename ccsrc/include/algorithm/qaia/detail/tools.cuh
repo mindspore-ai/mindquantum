@@ -32,7 +32,7 @@ using mindquantum::Index;
 template <typename T>
 struct Bounds;
 
-// 对 int8_t 进行特化
+// Specialization for int8_t
 template <>
 struct Bounds<int8_t> {
     static __device__ int8_t UP() {
@@ -43,7 +43,7 @@ struct Bounds<int8_t> {
     }
 };
 
-// 对 half 进行特化
+// Specialization for half
 template <>
 struct Bounds<half> {
     static __device__ half UP() {
@@ -54,7 +54,7 @@ struct Bounds<half> {
     }
 };
 
-// 模板化的 CUDA 核函数
+// Templated CUDA kernel functions
 template <typename T>
 __global__ void sign_kernel(const T* __restrict__ x, T* __restrict__ signx, int size) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;

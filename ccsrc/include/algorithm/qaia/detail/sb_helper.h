@@ -25,7 +25,7 @@
 
 namespace mindquantum::algorithm::qaia::detail {
 
-// 辅助结构，使用模板特化选择不同的更新函数
+// Helper structure, using template specialization to select different update functions
 template <int SB, typename T, bool H>
 struct SBUpdater;
 
