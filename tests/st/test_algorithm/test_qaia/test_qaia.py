@@ -22,6 +22,14 @@ from scipy.sparse import coo_matrix
 from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC
 from mindquantum.utils.fdopen import fdopen
 
+import pytest
+
+try:
+    from mindquantum import _qaia_sb
+    GPU_AVAILABLE = True
+except (ImportError, RuntimeError):
+    GPU_AVAILABLE = False
+
 
 def read_gset(filename, negate=True):
     """
@@ -103,6 +111,59 @@ def test_bSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU backend not available")
+def test_bSB_gpu():
+    """
+    Description: Test BSB GPU implementation
+    Expectation: success
+    """
+    N = G.shape[0]
+    np.random.seed(666)
+    x = 0.01 * (np.random.rand(N, 1) - 0.5)
+    y = 0.01 * (np.random.rand(N, 1) - 0.5)
+
+    # Test float32 precision
+    solver_gpu = BSB(G, n_iter=1, device='gpu', precision='float32')
+    solver_cpu = BSB(G, n_iter=1, device='cpu')
+
+    solver_gpu.x = x.copy()
+    solver_gpu.y = y.copy()
+    solver_cpu.x = x.copy()
+    solver_cpu.y = y.copy()
+
+    solver_gpu.update()
+    solver_cpu.update()
+    assert np.allclose(solver_gpu.x, solver_cpu.x, rtol=1e-5, atol=1e-5)
+
+    # Test with external field
+    h = np.random.rand(N, 1)
+    solver_gpu_h = BSB(G, h=h, n_iter=1, device='gpu', precision='float32')
+    solver_cpu_h = BSB(G, h=h, n_iter=1, device='cpu')
+
+    solver_gpu_h.x = x.copy()
+    solver_gpu_h.y = y.copy()
+    solver_cpu_h.x = x.copy()
+    solver_cpu_h.y = y.copy()
+
+    solver_gpu_h.update()
+    solver_cpu_h.update()
+    assert np.allclose(solver_gpu_h.x, solver_cpu_h.x, rtol=1e-5, atol=1e-5)
+
+    # Test float16 precision
+    solver_fp16 = BSB(G, n_iter=1, device='gpu', precision='float16')
+    solver_fp16.x = x.copy()
+    solver_fp16.y = y.copy()
+    solver_fp16.update()
+    assert np.allclose(solver_fp16.x, solver_cpu.x, rtol=1e-3, atol=1e-3)  # Lower precision for float16, relaxed error bounds
+
+    # Test int8 precision
+    solver_int8 = BSB(G, n_iter=1, device='gpu', precision='int8')
+    solver_int8.x = x.copy()
+    solver_int8.y = y.copy()
+    solver_int8.update()
+    assert np.allclose(solver_int8.x, solver_cpu.x, rtol=1e-2, atol=1e-2)  # Lowest precision for int8, further relaxed error bounds
+
+
 def test_dSB():
     """
     Description: Test DSB
@@ -120,6 +181,59 @@ def test_dSB():
     x += y * solver.dt
     x = np.where(np.abs(x) > 1, np.sign(x), x)
     np.allclose(x, solver.x)
+
+
+@pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU backend not available")
+def test_dSB_gpu():
+    """
+    Description: Test DSB GPU implementation
+    Expectation: success
+    """
+    N = G.shape[0]
+    np.random.seed(666)
+    x = 0.01 * (np.random.rand(N, 1) - 0.5)
+    y = 0.01 * (np.random.rand(N, 1) - 0.5)
+
+    # Test float32 precision
+    solver_gpu = DSB(G, n_iter=1, device='gpu', precision='float32')
+    solver_cpu = DSB(G, n_iter=1, device='cpu')
+
+    solver_gpu.x = x.copy()
+    solver_gpu.y = y.copy()
+    solver_cpu.x = x.copy()
+    solver_cpu.y = y.copy()
+
+    solver_gpu.update()
+    solver_cpu.update()
+    assert np.allclose(solver_gpu.x, solver_cpu.x, rtol=1e-5, atol=1e-5)
+
+    # Test with external field
+    h = np.random.rand(N, 1)
+    solver_gpu_h = DSB(G, h=h, n_iter=1, device='gpu', precision='float32')
+    solver_cpu_h = DSB(G, h=h, n_iter=1, device='cpu')
+
+    solver_gpu_h.x = x.copy()
+    solver_gpu_h.y = y.copy()
+    solver_cpu_h.x = x.copy()
+    solver_cpu_h.y = y.copy()
+
+    solver_gpu_h.update()
+    solver_cpu_h.update()
+    assert np.allclose(solver_gpu_h.x, solver_cpu_h.x, rtol=1e-5, atol=1e-5)
+
+    # Test float16 precision
+    solver_fp16 = DSB(G, n_iter=1, device='gpu', precision='float16')
+    solver_fp16.x = x.copy()
+    solver_fp16.y = y.copy()
+    solver_fp16.update()
+    assert np.allclose(solver_fp16.x, solver_cpu.x, rtol=1e-3, atol=1e-3)  # Lower precision for float16, relaxed error bounds
+
+    # Test int8 precision
+    solver_int8 = DSB(G, n_iter=1, device='gpu', precision='int8')
+    solver_int8.x = x.copy()
+    solver_int8.y = y.copy()
+    solver_int8.update()
+    assert np.allclose(solver_int8.x, solver_cpu.x, rtol=1e-2, atol=1e-2)  # Lowest precision for int8, further relaxed error bounds
 
 
 def test_LQA():

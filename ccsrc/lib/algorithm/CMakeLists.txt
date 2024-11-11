@@ -22,6 +22,5 @@ if(ENABLE_CUDA)
   set_target_properties(qaia_sb_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
   force_at_least_cxx17_workaround(qaia_sb_gpu)
   append_to_property(mq_install_targets GLOBAL qaia_sb_gpu)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/qaia/detail)
 endif()
-
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/qaia/detail)

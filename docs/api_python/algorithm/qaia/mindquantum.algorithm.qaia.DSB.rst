@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.DSB
 ===============================
 
-.. py:class:: mindquantum.algorithm.qaia.DSB(J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None)
+.. py:class:: mindquantum.algorithm.qaia.DSB(J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, device='cpu', precision='float32')
 
     离散模拟分叉算法。
 
@@ -12,9 +12,11 @@ mindquantum.algorithm.qaia.DSB
         - **h** (numpy.array) - 外场强度，维度为 :math:`(N, )`。
         - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N x batch_size)`。默认值： ``None``。
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
-        - **batch_size** (int) - 样本个数。默认值为： ``1``。
-        - **dt** (float) - 迭代步长。默认值： ``0.1``。
+        - **batch_size** (int) - 样本个数。默认值： ``1``。
+        - **dt** (float) - 迭代步长。默认值： ``1``。
         - **xi** (float) - 频率维数，正的常数。默认值： ``None``。
+        - **device** (str) - 计算设备（'cpu' 或 'gpu'）。默认值： ``'cpu'``。
+        - **precision** (str) - 使用 GPU 时的精度类型（'float32'、'float16'、'int8'）。默认值： ``'float32'``。
 
     .. py:method:: update()
 

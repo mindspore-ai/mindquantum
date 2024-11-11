@@ -19,7 +19,7 @@ from .CFC import CFC
 from .LQA import LQA
 from .NMFA import NMFA
 from .QAIA import QAIA
-from .SB import ASB, BSB, DSB, BSB_INT8, BSB_HALF, DSB_INT8, DSB_HALF
+from .SB import ASB, BSB, DSB
 from .SFC import SFC
 from .SimCIM import SimCIM
 
@@ -34,8 +34,4 @@ __all__ = [
     "DSB",
     "SFC",
     "SimCIM",
-    "BSB_INT8",
-    "BSB_HALF",
-    "DSB_INT8",
-    "DSB_HALF",
 ]
