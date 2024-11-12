@@ -42,8 +42,8 @@ using namespace pybind11::literals;  // NOLINT(build/namespaces_literals)
 using mindquantum::Index;
 
 template <int SB, typename T, bool H>
-void sb_update(py::object& csr, py::array_t<double>& x, py::array_t<double>& h, int B, float xi, float delta, float dt,
-               int n_iter) {
+void sb_update(const py::object& csr, const py::array_t<double>& x, const py::array_t<double>& h, int B, float xi,
+               float delta, float dt, int n_iter) {
     auto indices = csr.attr("indices").cast<py::array_t<Index>>();
     auto indptr = csr.attr("indptr").cast<py::array_t<Index>>();
     auto data = csr.attr("data").cast<py::array_t<double>>();

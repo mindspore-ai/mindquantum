@@ -148,10 +148,10 @@ __global__ void update_h_tail(const int* __restrict__ tmp, int8_t* x, int* y, in
 
 // Base template (left undefined)
 template <typename T>
-__global__ void init_xy(T* array, int size, unsigned long long seed);
+__global__ void init_xy(T* array, int size, uint64_t seed);
 // Specialization for int
 template <>
-__global__ void init_xy<int>(int* array, int size, unsigned long long seed) {
+__global__ void init_xy<int>(int* array, int size, uint64_t seed) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
         curandState state;
@@ -162,7 +162,7 @@ __global__ void init_xy<int>(int* array, int size, unsigned long long seed) {
 }
 // Specialization for int8_t
 template <>
-__global__ void init_xy<int8_t>(int8_t* array, int size, unsigned long long seed) {
+__global__ void init_xy<int8_t>(int8_t* array, int size, uint64_t seed) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
         curandState state;
@@ -173,7 +173,7 @@ __global__ void init_xy<int8_t>(int8_t* array, int size, unsigned long long seed
 }
 // Specialization for half
 template <>
-__global__ void init_xy<half>(half* array, int size, unsigned long long seed) {
+__global__ void init_xy<half>(half* array, int size, uint64_t seed) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
         curandState state;
@@ -201,14 +201,14 @@ struct Value<half> {
 };
 
 template <typename T>
-void fill_J(Index* indices, Index* indptr, double* data, std::vector<T>& h_J, int N) {
+void fill_J(Index* indices, Index* indptr, double* data, std::vector<T>* h_J, int N) {
     for (int i = 0; i < N; ++i) {
         Index start = indptr[i];
         Index end = indptr[i + 1];
         for (Index j = start; j < end; ++j) {
             Index col = indices[j];
             double value = data[j];
-            h_J[i * N + col] = Value<T>::v(value);
+            (*h_J)[i * N + col] = Value<T>::v(value);
         }
     }
 }

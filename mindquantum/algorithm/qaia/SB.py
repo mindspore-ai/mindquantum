@@ -190,6 +190,7 @@ class BSB(SB):  # noqa: N801
             self._update_func = self._cpu_update
             self._is_gpu = False
 
+    # pylint: disable=unused-argument
     def _cpu_update(self, J, x, h, batch_size, xi, delta, dt, n_iter):
         """CPU implementation of update."""
         for i in range(n_iter):
@@ -269,6 +270,7 @@ class DSB(SB):  # noqa: N801
             self._update_func = self._cpu_update
             self._is_gpu = False
 
+    # pylint: disable=unused-argument
     def _cpu_update(self, J, x, h, batch_size, xi, delta, dt, n_iter):
         """CPU implementation of update."""
         for i in range(n_iter):

@@ -25,12 +25,16 @@ from mindquantum.utils.fdopen import fdopen
 import pytest
 
 try:
+    # pylint: disable=unused-import
     from mindquantum import _qaia_sb
+
     GPU_AVAILABLE = True
 except (ImportError, RuntimeError):
     GPU_AVAILABLE = False
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def read_gset(filename, negate=True):
     """
     Reading Gset and transform it into sparse matrix
@@ -73,6 +77,8 @@ def read_gset(filename, negate=True):
 G = read_gset(str(Path(__file__).parent.parent.parent / 'G1.txt'))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_aSB():
     """
     Description: Test ASB
@@ -92,6 +98,8 @@ def test_aSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_bSB():
     """
     Description: Test BSB
@@ -111,6 +119,9 @@ def test_bSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
 @pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU backend not available")
 def test_bSB_gpu():
     """
@@ -154,16 +165,22 @@ def test_bSB_gpu():
     solver_fp16.x = x.copy()
     solver_fp16.y = y.copy()
     solver_fp16.update()
-    assert np.allclose(solver_fp16.x, solver_cpu.x, rtol=1e-3, atol=1e-3)  # Lower precision for float16, relaxed error bounds
+    assert np.allclose(
+        solver_fp16.x, solver_cpu.x, rtol=1e-3, atol=1e-3
+    )  # Lower precision for float16, relaxed error bounds
 
     # Test int8 precision
     solver_int8 = BSB(G, n_iter=1, device='gpu', precision='int8')
     solver_int8.x = x.copy()
     solver_int8.y = y.copy()
     solver_int8.update()
-    assert np.allclose(solver_int8.x, solver_cpu.x, rtol=1e-2, atol=1e-2)  # Lowest precision for int8, further relaxed error bounds
+    assert np.allclose(
+        solver_int8.x, solver_cpu.x, rtol=1e-2, atol=1e-2
+    )  # Lowest precision for int8, further relaxed error bounds
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_dSB():
     """
     Description: Test DSB
@@ -183,6 +200,9 @@ def test_dSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
 @pytest.mark.skipif(not GPU_AVAILABLE, reason="GPU backend not available")
 def test_dSB_gpu():
     """
@@ -226,16 +246,22 @@ def test_dSB_gpu():
     solver_fp16.x = x.copy()
     solver_fp16.y = y.copy()
     solver_fp16.update()
-    assert np.allclose(solver_fp16.x, solver_cpu.x, rtol=1e-3, atol=1e-3)  # Lower precision for float16, relaxed error bounds
+    assert np.allclose(
+        solver_fp16.x, solver_cpu.x, rtol=1e-3, atol=1e-3
+    )  # Lower precision for float16, relaxed error bounds
 
     # Test int8 precision
     solver_int8 = DSB(G, n_iter=1, device='gpu', precision='int8')
     solver_int8.x = x.copy()
     solver_int8.y = y.copy()
     solver_int8.update()
-    assert np.allclose(solver_int8.x, solver_cpu.x, rtol=1e-2, atol=1e-2)  # Lowest precision for int8, further relaxed error bounds
+    assert np.allclose(
+        solver_int8.x, solver_cpu.x, rtol=1e-2, atol=1e-2
+    )  # Lowest precision for int8, further relaxed error bounds
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_LQA():
     """
     Description: Test LQA
@@ -268,6 +294,8 @@ def test_LQA():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_CAC():
     """
     Description: Test CAC
@@ -286,6 +314,8 @@ def test_CAC():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_CFC():
     """
     Description: Test CFC
@@ -305,6 +335,8 @@ def test_CFC():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_SFC():
     """
     Description: Test SFC
