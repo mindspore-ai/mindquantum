@@ -16,14 +16,11 @@
 #
 # ==============================================================================
 
-add_subdirectory(core)
-
-# ==============================================================================
-
-add_subdirectory(algorithm)
-add_subdirectory(mqbackend)
-add_subdirectory(simulator)
-add_subdirectory(device)
-add_subdirectory(math)
-
-# ==============================================================================
+if(ENABLE_CUDA)
+  pybind11_add_module(_qaia_sb MODULE
+                      ${CMAKE_CURRENT_SOURCE_DIR}/lib/_qaia_sb.cu
+                      OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
+  force_at_least_cxx17_workaround(_qaia_sb)
+  target_link_libraries(_qaia_sb PUBLIC mq_python_core qaia_sb_gpu)
+  set_target_properties(_qaia_sb PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
+endif()
