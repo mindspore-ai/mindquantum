@@ -328,12 +328,16 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                     'manylinux_2_27_x86_64',
                     'manylinux_2_28_x86_64',
                     'manylinux_2_31_x86_64',
+                    'manylinux_2_34_x86_64',
+                    'manylinux_2_35_x86_64',
                     'linux_x86_64',
                     'manylinux2014_aarch64',  # NB: equivalent to manylinux_2_17_aarch64
                     'manylinux_2_24_aarch64',
                     'manylinux_2_27_aarch64',
                     'manylinux_2_28_aarch64',
                     'manylinux_2_31_aarch64',
+                    'manylinux_2_34_aarch64',
+                    'manylinux_2_35_aarch64',
                     'linux_aarch64',
                 ):
                     logging.info('----------------------------------------')
