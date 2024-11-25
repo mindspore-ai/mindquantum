@@ -159,8 +159,8 @@ class BSB(SB):  # noqa: N801
                 from mindquantum import _qaia_sb
             except ImportError:
                 warnings.warn(
-                    "Unable to import bSB GPU backend. This could be due to your environment "
-                    "not satisfying the requirements. Will use CPU backend instead.",
+                    "Unable to import bSB GPU backend. This backend requires CUDA 11 or higher. "
+                    "Will use CPU backend instead.",
                     stacklevel=2,
                 )
                 self.device = 'cpu'
@@ -240,8 +240,8 @@ class DSB(SB):  # noqa: N801
                 from mindquantum import _qaia_sb
             except ImportError:
                 warnings.warn(
-                    "Unable to import dSB GPU backend. This could be due to your environment "
-                    "not satisfying the requirements. Will use CPU backend instead.",
+                    "Unable to import dSB GPU backend. This backend requires CUDA 11 or higher. "
+                    "Will use CPU backend instead.",
                     stacklevel=2,
                 )
                 self.device = 'cpu'
