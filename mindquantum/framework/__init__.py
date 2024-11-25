@@ -69,11 +69,7 @@ try:
         )
 
 except ImportError:
-    warnings.warn(
-        "MindSpore not installed. "
-        "'mindquantum.framework' modules (for hybrid quantum-classical neural network) are disabled.",
-        stacklevel=2,
-    )
+    pass
 
 __all__.sort()
 
@@ -81,6 +77,8 @@ __all__.sort()
 # pylint: disable=invalid-name
 def __getattr__(name):
     if name in framework_modules:
-        if name not in __all__:
-            raise ImportError(f"MindSpore not install, cannot import '{name}' from 'mindquantum'.")
-    raise ImportError(f"cannot import '{name}' from 'mindquantum'")
+        raise ImportError(
+            f"cannot import '{name}' from 'mindquantum.framework'. "
+            "MindSpore not installed, 'mindquantum.framework' modules (for hybrid quantum-classical neural network) are disabled."
+        )
+    raise ImportError(f"cannot import '{name}' from 'mindquantum'. '{name}' does not exist in mindquantum.")
