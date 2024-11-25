@@ -2,7 +2,6 @@
 
 [View English](./RELEASE.md)
 
-
 ## MindQuantum 0.10.0 Release Notes
 
 ### 新特性
@@ -10,6 +9,14 @@
 - 新增对 **qudit** 编码和解码的支持，以及 **qutrit** 对称 **ansatz**，丰富了对多能级量子系统的支持。
 
 ### 主要特性和增强
+
+#### Algorithm
+
+- 新增了量子图像压缩算法 **Q-JPEG** 。
+
+- 新增对 **CnRY** 门的分解。
+
+- 为BSB (Ballistic Simulated Bifurcation)和DSB (Discrete Simulated Bifurcation)算法添加GPU加速支持，并支持float32、float16、int8三种精度选项。
 
 #### Simulator
 
