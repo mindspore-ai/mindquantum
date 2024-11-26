@@ -35,7 +35,7 @@ from .rx_related import crx_decompose
 from .rxx_related import crxx_decompose, rxx_decompose
 from .ry_related import cry_decompose, cnry_decompose
 from .ryy_related import cryy_decompose, ryy_decompose
-from .rz_related import crz_decompose
+from .rz_related import crz_decompose, cnrz_decompose
 from .rzz_related import rzz_decompose
 from .s_related import cs_decompose
 from .swap_related import cswap_decompose, swap_decompose

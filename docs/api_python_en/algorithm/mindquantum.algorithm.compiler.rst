@@ -17,6 +17,8 @@ Fixed decompose rules
     mindquantum.algorithm.compiler.crxx_decompose
     mindquantum.algorithm.compiler.cry_decompose
     mindquantum.algorithm.compiler.cnry_decompose
+    mindquantum.algorithm.compiler.crz_decompose
+    mindquantum.algorithm.compiler.cnrz_decompose
     mindquantum.algorithm.compiler.ryy_decompose
     mindquantum.algorithm.compiler.cryy_decompose
     mindquantum.algorithm.compiler.rzz_decompose
