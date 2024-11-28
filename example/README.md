@@ -4,7 +4,7 @@
 
 ## 案例列表
 
-- [Q-JEPG算法](./q-jpeg)
+- [Q-JEPG算法](./quantum-jpeg/quantum-jpeg.ipynb)
 
 ## 贡献指南
 
