@@ -60,7 +60,75 @@ def crz_decompose(gate: gates.RZ):
     circuit += gates.X.on(target, control)
     return [circuit]
 
+def _cnrz_frame(ctrl_qubits, obj_qubit, angle):
+    """The function used to construct iteratively the circuit of the cnrz_decompose compiler.
 
-decompose_rules = ['crz_decompose']
+    Args:
+        ctrl_qubits (List[int]): The remainder ctrl_qubits in current iteration.
+        obj_qubit (int): The obj_qubit of the RZ gate to be decomposed.
+        angle (:class:'~core.parameterresolver.ParameterResolver`): The rotation angle in current iteration.
+
+    Returns:
+        :class:`~.core.circuit.Circuit`, the decompose solution in current iteration.
+    """
+    circ = Circuit()
+    if len(ctrl_qubits) == 1:
+        circ.rz(angle/2, obj_qubit)
+        circ.x(obj_qubit, ctrl_qubits[0])
+        circ.rz(-angle/2, obj_qubit)
+        circ.x(obj_qubit, ctrl_qubits[0])
+    else:
+        circ += _cnrz_frame(ctrl_qubits[1:], obj_qubit, angle/2)
+        circ.x(obj_qubit, ctrl_qubits[0])
+        circ += _cnrz_frame(ctrl_qubits[1:], obj_qubit, -angle/2)
+        circ.x(obj_qubit, ctrl_qubits[0])
+    return circ
+
+def cnrz_decompose(gate: gates.RZ):
+    """
+    Decompose controlled :class:`~.core.gates.RZ` gate.
+
+    Args:
+        gate (:class:`~.core.gates.RZ`): A :class:`~.core.gates.RZ` gate with zero or more control qubits.
+
+    Returns:
+        List[:class:`~.core.circuit.Circuit`], all possible decompose solution.
+
+    Examples:
+        >>> from mindquantum.algorithm.compiler import cnrz_decompose
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import RZ
+        >>> crz = RZ(1).on(2, [0, 1])
+        >>> origin_circ = Circuit() + crz
+        >>> decomposed_circ = cnrz_decompose(crz)[0]
+        >>> origin_circ
+        q0: ──────■───────
+                  ┃
+                  ┃
+        q1: ──────■───────
+                  ┃
+              ┏━━━┻━━━┓
+        q2: ──┨ RZ(1) ┠───
+              ┗━━━━━━━┛
+        >>> decomposed_circ
+        q0: ─────────────────────────────────────────■──────────────────────────────────────────■────
+                                                     ┃                                          ┃
+                                                     ┃                                          ┃
+        q1: ────────────────■──────────────────■─────╂──────────────────■─────────────────■─────╂────
+                            ┃                  ┃     ┃                  ┃                 ┃     ┃
+              ┏━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━━┓ ┏━┻━┓ ┏━┻━┓ ┏━━━━━━━━━━┓ ┏━┻━┓ ┏━━━━━━━━━┓ ┏━┻━┓ ┏━┻━┓
+        q2: ──┨ RZ(1/4) ┠─┨╺╋╸┠─┨ RZ(-1/4) ┠─┨╺╋╸┠─┨╺╋╸┠─┨ RZ(-1/4) ┠─┨╺╋╸┠─┨ RZ(1/4) ┠─┨╺╋╸┠─┨╺╋╸┠──
+              ┗━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━━┛ ┗━━━┛ ┗━━━┛ ┗━━━━━━━━━━┛ ┗━━━┛ ┗━━━━━━━━━┛ ┗━━━┛ ┗━━━┛
+    """
+    _check_input_type('gate', gates.RZ, gate)
+
+    if not gate.ctrl_qubits:
+        return [Circuit(gate)]
+
+    circuit = _cnrz_frame(gate.ctrl_qubits, gate.obj_qubits[0], gate.coeff)
+    return [circuit]
+
+
+decompose_rules = ['crz_decompose', 'cnrz_decompose']
 
 __all__ = decompose_rules
