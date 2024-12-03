@@ -17,6 +17,7 @@
 from typing import Tuple, List
 from mindquantum.algorithm.library.quantum_fourier import qft
 from mindquantum.core.circuit import Circuit, dagger
+from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
 
 def qjpeg(n_qubits:int, m_qubits:int) -> Tuple[Circuit, List[int], List[int]]:
     """
@@ -54,6 +55,16 @@ def qjpeg(n_qubits:int, m_qubits:int) -> Tuple[Circuit, List[int], List[int]]:
         [[0.3, 0.],
          [0.4, 0.3]]
     """
+    # 添加参数类型和值的校验
+    _check_int_type("n_qubits", n_qubits)
+    _check_int_type("m_qubits", m_qubits)
+    _check_value_should_not_less("n_qubits", 0, n_qubits)
+    _check_value_should_not_less("m_qubits", 0, m_qubits)
+    if n_qubits < m_qubits:
+        raise ValueError("n_qubits should be not less than m_qubits.")
+    if n_qubits % 2 != 0 or m_qubits % 2 != 0:
+        raise ValueError("Both n_qubits and m_qubits should be even numbers.")
+
     half_diff = (n_qubits - m_qubits) // 2
     former_qubits = list(range(0, n_qubits // 2))
     latter_qubits = list(range(n_qubits // 2, n_qubits))
