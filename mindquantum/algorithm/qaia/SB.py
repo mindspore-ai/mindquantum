@@ -14,11 +14,21 @@
 # ============================================================================
 """Simulated bifurcation (SB) algorithms and its variants."""
 # pylint: disable=invalid-name
-import warnings
 import numpy as np
 from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA, OverflowException
+
+try:
+    from mindquantum import _qaia_sb
+
+    GPU_AVAILABLE = True
+except ImportError as err:
+    GPU_DISABLE_REASON = "Unable to import SB GPU backend. This backend requires CUDA 11 or higher."
+    GPU_AVAILABLE = False
+except RuntimeError as err:
+    GPU_DISABLE_REASON = f"Disable SB GPU backend due to: {err}."
+    GPU_AVAILABLE = False
 
 
 class SB(QAIA):
@@ -144,70 +154,64 @@ class BSB(SB):  # noqa: N801
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        device (str): The device to use for computation ('cpu' or 'gpu'). Default: ``'cpu'``.
-        precision (str): Precision type when using GPU ('float32', 'float16', 'int8'). Default: ``'float32'``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float16', or 'gpu-int8'. Default: ``'cpu-float32'``.
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, device='cpu', precision='float32'):
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1,
+        xi=None,
+        backend='cpu-float32',
+    ):
         """Construct BSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
-
-        self.device = device.lower()
-        if self.device == 'gpu':
-            try:
-                from mindquantum import _qaia_sb
-            except ImportError:
-                warnings.warn(
-                    "Unable to import bSB GPU backend. This backend requires CUDA 11 or higher. "
-                    "Will use CPU backend instead.",
-                    stacklevel=2,
-                )
-                self.device = 'cpu'
-            except RuntimeError as err:
-                warnings.warn(f"Disable bSB GPU backend due to: {err}. Will use CPU backend instead.", stacklevel=2)
-                self.device = 'cpu'
-
-        self.precision = precision.lower()
-        if self.precision not in ['float32', 'float16', 'int8']:
-            raise ValueError("precision must be one of 'float32', 'float16', 'int8'")
-
-        if self.precision != 'float32' and device.lower() == 'cpu':
-            raise NotImplementedError(f"BSB with {precision} precision only supports GPU computation")
-
-        self.initialize()
-
-        if self.device == 'gpu':
+        valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
+        if backend not in valid_backends:
+            raise ValueError(f"backend must be one of {valid_backends}")
+        if backend.startswith('gpu'):
+            if not GPU_AVAILABLE:
+                raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
             _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
-            if self.precision == 'float32':
-                self._update_func = _qaia_sb.bsb_update
-            elif self.precision == 'float16':
-                self._update_func = _qaia_sb.bsb_update_half if self.h is None else _qaia_sb.bsb_update_h_half
-            else:  # int8
-                self._update_func = _qaia_sb.bsb_update_int8 if self.h is None else _qaia_sb.bsb_update_h_int8
-            self._is_gpu = True
-        else:
-            self._update_func = self._cpu_update
-            self._is_gpu = False
+        self.backend = backend
 
-    # pylint: disable=unused-argument
-    def _cpu_update(self, J, x, h, batch_size, xi, delta, dt, n_iter):
-        """CPU implementation of update."""
-        for i in range(n_iter):
-            if h is None:
-                self.y += (-(delta - self.p[i]) * x + xi * J.dot(x)) * dt
-            else:
-                self.y += (-(delta - self.p[i]) * x + xi * (J.dot(x) + h)) * dt
-            x += dt * self.y * delta
-
-            cond = np.abs(x) > 1
-            x = np.where(cond, np.sign(x), x)
-            self.y = np.where(cond, np.zeros_like(x), self.y)
-
-    # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
-        self._update_func(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
+        if self.backend == 'gpu-float16':
+            if self.h is not None:
+                _qaia_sb.bsb_update_h_half(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+            else:
+                _qaia_sb.bsb_update_half(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+        elif self.backend == 'gpu-int8':
+            if self.h is not None:
+                _qaia_sb.bsb_update_h_int8(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+            else:
+                _qaia_sb.bsb_update_int8(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+        else:  # cpu-float32
+            for i in range(self.n_iter):
+                if self.h is None:
+                    self.y += (-(self.delta - self.p[i]) * self.x + self.xi * self.J.dot(self.x)) * self.dt
+                else:
+                    self.y += (-(self.delta - self.p[i]) * self.x + self.xi * (self.J.dot(self.x) + self.h)) * self.dt
+                self.x += self.dt * self.y * self.delta
+
+                cond = np.abs(self.x) > 1
+                self.x = np.where(cond, np.sign(self.x), self.x)
+                self.y = np.where(cond, np.zeros_like(self.x), self.y)
 
 
 class DSB(SB):  # noqa: N801
@@ -225,66 +229,63 @@ class DSB(SB):  # noqa: N801
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        device (str): The device to use for computation ('cpu' or 'gpu'). Default: ``'cpu'``.
-        precision (str): Precision type when using GPU ('float32', 'float16', 'int8'). Default: ``'float32'``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float16', or 'gpu-int8'. Default: ``'cpu-float32'``.
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, device='cpu', precision='float32'):
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1,
+        xi=None,
+        backend='cpu-float32',
+    ):
         """Construct DSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
-
-        self.device = device.lower()
-        if self.device == 'gpu':
-            try:
-                from mindquantum import _qaia_sb
-            except ImportError:
-                warnings.warn(
-                    "Unable to import dSB GPU backend. This backend requires CUDA 11 or higher. "
-                    "Will use CPU backend instead.",
-                    stacklevel=2,
-                )
-                self.device = 'cpu'
-            except RuntimeError as err:
-                warnings.warn(f"Disable dSB GPU backend due to: {err}. Will use CPU backend instead.", stacklevel=2)
-                self.device = 'cpu'
-
-        self.precision = precision.lower()
-        if self.precision not in ['float32', 'float16', 'int8']:
-            raise ValueError("precision must be one of 'float32', 'float16', 'int8'")
-
-        if self.precision != 'float32' and device.lower() == 'cpu':
-            raise NotImplementedError(f"DSB with {precision} precision only supports GPU computation")
-
-        self.initialize()
-        if self.device == 'gpu':
+        valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
+        if backend not in valid_backends:
+            raise ValueError(f"backend must be one of {valid_backends}")
+        if backend.startswith('gpu'):
+            if not GPU_AVAILABLE:
+                raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
             _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
-            if self.precision == 'float32':
-                self._update_func = _qaia_sb.dsb_update
-            elif self.precision == 'float16':
-                self._update_func = _qaia_sb.dsb_update_half if self.h is None else _qaia_sb.dsb_update_h_half
-            else:  # int8
-                self._update_func = _qaia_sb.dsb_update_int8 if self.h is None else _qaia_sb.dsb_update_h_int8
-            self._is_gpu = True
-        else:
-            self._update_func = self._cpu_update
-            self._is_gpu = False
+        self.backend = backend
 
-    # pylint: disable=unused-argument
-    def _cpu_update(self, J, x, h, batch_size, xi, delta, dt, n_iter):
-        """CPU implementation of update."""
-        for i in range(n_iter):
-            if h is None:
-                self.y += (-(delta - self.p[i]) * x + xi * J.dot(np.sign(x))) * dt
-            else:
-                self.y += (-(delta - self.p[i]) * x + xi * (J.dot(np.sign(x)) + h)) * dt
-            x += dt * self.y * delta
-
-            cond = np.abs(x) > 1
-            x = np.where(cond, np.sign(x), x)
-            self.y = np.where(cond, np.zeros_like(x), self.y)
-
-    # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
-        self._update_func(self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter)
+        if self.backend == 'gpu-float16':
+            if self.h is not None:
+                _qaia_sb.dsb_update_h_half(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+            else:
+                _qaia_sb.dsb_update_half(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+        elif self.backend == 'gpu-int8':
+            if self.h is not None:
+                _qaia_sb.dsb_update_h_int8(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+            else:
+                _qaia_sb.dsb_update_int8(
+                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                )
+        else:  # cpu-float32
+            for i in range(self.n_iter):
+                if self.h is None:
+                    self.y += (-(self.delta - self.p[i]) * self.x + self.xi * self.J.dot(np.sign(self.x))) * self.dt
+                else:
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x + self.xi * (self.J.dot(np.sign(self.x)) + self.h)
+                    ) * self.dt
+                self.x += self.dt * self.y * self.delta
+
+                cond = np.abs(self.x) > 1
+                self.x = np.where(cond, np.sign(self.x), self.x)
+                self.y = np.where(cond, np.zeros_like(self.x), self.y)
