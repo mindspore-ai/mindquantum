@@ -23,6 +23,7 @@ from mindquantum.core import QubitOperator
 
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import X, RX, RY, RZ, U3, GlobalPhase, UnivMathGate
+from mindquantum.utils.type_value_check import _check_input_type, _check_int_type, _check_value_should_not_less
 
 optional_basis = ["zyz", "u3"]
 
@@ -48,10 +49,10 @@ def _symmetric_state_index(dim: int, n_qudits: int) -> dict:
         >>> _symmetric_state_index(dim=3, n_qudits=2)
         {0: [0], 1: [1, 2], 2: [3], 3: [4, 8], 4: [5, 6, 9, 10], 5: [7, 11], 6: [12], 7: [13, 14], 8: [15]}
     """
-    if not isinstance(dim, int):
-        raise ValueError(f"Wrong type of dimension {type(dim)} {dim}.")
-    if not isinstance(n_qudits, int):
-        raise ValueError(f"Wrong type of n_qudits {type(n_qudits)} {n_qudits}.")
+    _check_int_type("dim", dim)
+    _check_int_type("n_qudits", n_qudits)
+    _check_value_should_not_less("dim", 2, dim)
+    _check_value_should_not_less("n_qudits", 1, n_qudits)
     if n_qudits == 1:
         ind = {}
         for i in range(2 ** (dim - 1)):
@@ -89,6 +90,9 @@ def _is_symmetric(qubit: np.ndarray, n_qubits: int = 1) -> bool:
     Returns:
         bool, whether the qubit state or matrix is symmetric.
     """
+    _check_input_type("qubit", np.ndarray, qubit)
+    _check_int_type("n_qubits", n_qubits)
+    _check_value_should_not_less("n_qubits", 1, n_qubits)
     if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
         qubit = qubit.flatten()
     if qubit.ndim == 2 and qubit.shape[0] != qubit.shape[1]:
@@ -126,6 +130,9 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
     r"""
     Qudit symmetric decoding, decodes a qubit symmetric state or matrix into a qudit state or matrix.
 
+    The input qubit state/matrix must preserve the symmetry required by the qudit-qubit mapping.
+    For example, in a qutrit(d=3) to two-qubit mapping:
+
     .. math::
         \begin{align}
         \ket{00\cdots00}&\to\ket{0} \\[.5ex]
@@ -135,6 +142,9 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
         \ket{11\cdots11}&\to\ket{d-1}
         \end{align}
 
+    The symmetry requires that states in the same symmetric subspace must have equal amplitudes.
+    For example, states |01⟩ and |10⟩ belong to the same symmetric subspace and must have equal amplitudes.
+
     Args:
         qubit (np.ndarray): the qubit symmetric state or matrix that needs to be decoded,
             where the qubit state or matrix must preserve symmetry.
@@ -143,9 +153,13 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
     Returns:
         np.ndarray, the qudit state or matrix obtained after the qudit symmetric decoding.
 
+    Raises:
+        ValueError: If the input qubit state/matrix does not preserve the required symmetry.
+
     Examples:
         >>> import numpy as np
         >>> from mindquantum.algorithm.library.qudit_mapping import qudit_symmetric_decoding
+        >>> # A symmetric qubit state where amplitudes in |01⟩ and |10⟩ are equal
         >>> qubit = np.array([1., 2., 2., 3.])
         >>> qubit /= np.linalg.norm(qubit)
         >>> print(qubit)
@@ -153,6 +167,9 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
         >>> print(qudit_symmetric_decoding(qubit))
         [0.23570226+0.j 0.66666667+0.j 0.70710678+0.j]
     """
+    _check_input_type("qubit", np.ndarray, qubit)
+    _check_int_type("n_qubits", n_qubits)
+    _check_value_should_not_less("n_qubits", 1, n_qubits)
     if qubit.ndim == 2 and (qubit.shape[0] == 1 or qubit.shape[1] == 1):
         qubit = qubit.flatten()
     if qubit.ndim == 2 and qubit.shape[0] != qubit.shape[1]:
@@ -224,6 +241,10 @@ def qudit_symmetric_encoding(qudit: np.ndarray, n_qudits: int = 1, is_csr: bool 
         >>> print(qudit_symmetric_encoding(qudit))
         [0.26726124+0.j 0.37796447+0.j 0.37796447+0.j 0.80178373+0.j]
     """
+    _check_input_type("qudit", np.ndarray, qudit)
+    _check_int_type("n_qudits", n_qudits)
+    _check_value_should_not_less("n_qudits", 1, n_qudits)
+    _check_input_type("is_csr", bool, is_csr)
     if qudit.ndim == 2 and (qudit.shape[0] == 1 or qudit.shape[1] == 1):
         qudit = qudit.flatten()
     if qudit.ndim == 2 and qudit.shape[0] != qudit.shape[1]:
@@ -458,6 +479,15 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
     r"""
     Construct a qubit ansatz that preserves the symmetry of encoding for arbitrary qutrit gate.
 
+    This function constructs a parameterized quantum circuit (ansatz) that can implement any qutrit gate while
+    preserving the symmetry required by the qutrit-qubit mapping. The symmetry preservation means that states
+    in the same symmetric subspace will maintain equal amplitudes after the gate operation.
+
+    For a single qutrit (mapped to 2 qubits), the symmetric subspaces are:
+    - {|00⟩} for qutrit state |0⟩
+    - {|01⟩, |10⟩} for qutrit state |1⟩
+    - {|11⟩} for qutrit state |2⟩
+
     Reference: `Synthesis of multivalued quantum logic circuits by elementary gates
     <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.87.012325>`_,
     `Optimal synthesis of multivalued quantum circuits
@@ -465,39 +495,32 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
 
     Args:
         gate (:class:`~.core.gates.UnivMathGate`): symmetry-preserving qubit gate encoded by qutrit gate.
-        basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``. Default: ``"zyz"``.
+        basis (str): decomposition basis, can be one of ``"zyz"`` or ``"u3"``. The ZYZ basis uses RZ and RY
+            rotations, while the U3 basis uses the U3 gate. Default: ``"zyz"``.
         with_phase (bool): whether return global phase in form of a :class:`~.core.gates.GlobalPhase` gate
             on the qubit circuit. Default: ``False``.
 
     Returns:
         :class:`~.core.circuit.Circuit`, qubit ansatz that preserves the symmetry of qutrit encoding.
 
+    Raises:
+        ValueError: If the input gate is not symmetric or if the number of qubits is not compatible
+            with qutrit encoding (must be 2 or 4 qubits).
+
     Examples:
         >>> from scipy.stats import unitary_group
         >>> from mindquantum.core.circuit import Circuit
         >>> from mindquantum.core.gates import UnivMathGate
-        >>> from qudit_mapping import qutrit_symmetric_ansatz, qudit_symmetric_encoding
+        >>> from mindquantum.algorithm import qutrit_symmetric_ansatz, qudit_symmetric_encoding
         >>> qutrit_unitary = unitary_group.rvs(3)
-        >>> qutrit_projector = np.eye(4) - qudit_symmetric_encoding(np.eye(3))
-        >>> qubit_unitary = qudit_symmetric_encoding(qutrit_unitary) + qutrit_projector
+        >>> qubit_unitary = qudit_symmetric_encoding(qutrit_unitary)
         >>> qubit_gate = UnivMathGate('U', qubit_unitary).on([0, 1])
-        >>> print(Circuit() + qubit_gate)
-        q0: ──U──
-              │
-        q1: ──U──
-        >>> print(qutrit_symmetric_ansatz(qubit_gate))
-        q0: ──●────RY(π/2)────●─────────RZ(U_RZ01_0)────RY(U_RY01_0)────RZ(U_Rz01_0)─────────●────RY(-π/2)────●────X──>>
-              │       │       │              │               │               │               │       │        │       >>
-        q1: ──X───────●───────X────X─────────●───────────────●───────────────●──────────X────X───────●────────X───────>>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        q0: <<──●────X────RZ(U_RZ02_1)────RY(U_RY02_1)────RZ(U_Rz02_1)────X────●────X────●────RY(-π/2)────●──>>
-            <<  │              │               │               │               │         │       │        │  >>
-        q1: <<──X──────────────●───────────────●───────────────●───────────────X─────────X───────●────────X──>>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        q0: <<──RZ(U_RZ12_2)────RY(U_RY12_2)────RZ(U_Rz12_2)────●────RY(π/2)────●──
-            <<       │               │               │          │       │       │
-        q1: <<───────●───────────────●───────────────●──────────X───────●───────X──
+        >>> ansatz_circ = qutrit_symmetric_ansatz(qubit_gate)
     """
+    _check_input_type("gate", UnivMathGate, gate)
+    _check_input_type("basis", str, basis)
+    _check_input_type("with_phase", bool, with_phase)
+
     if gate.ctrl_qubits:
         raise ValueError(f"Currently not applicable for a controlled gate {gate}.")
     basis = basis.lower()
@@ -561,6 +584,8 @@ def mat_to_op(mat, little_endian: bool = True) -> QubitOperator:
         1 [] +
         1 [X0 X1]
     """
+    _check_input_type("mat", (np.ndarray, sp.sparse.spmatrix), mat)
+    _check_input_type("little_endian", bool, little_endian)
 
     def pairs_to_op(i, j):
         bin_i = bin(i)[2:].zfill(n_qubits)
