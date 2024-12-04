@@ -19,7 +19,7 @@ import pytest
 import numpy as np
 from numpy.linalg import norm
 from mindquantum.algorithm.library import qudit_mapping
-
+from mindquantum.core.circuit import Circuit
 qudit_original = {3: np.array([0.26570339 + 0.42469573j, 0.67444848 + 0.11068155j, 0.51928555 + 0.11066444j]), 4: np.array([0.03199561 + 0.01133906j, 0.47713693 + 0.5342791j, 0.33112684 + 0.45855468j, 0.39004489 + 0.11696793j]), 5: np.array([0.15829351 + 0.2535388j, 0.15966864 + 0.53266802j, 0.26486777 + 0.12144082j, 0.45684342 + 0.25433583j, 0.37604349 + 0.31894797j])}  # pylint: disable=line-too-long
 qubit_original = {3: np.array([0.26570339 + 0.42469573j, 0.47690709 + 0.07826368j, 0.47690709 + 0.07826368j, 0.51928555 + 0.11066444j]), 4: np.array([0.03199561 + 0.01133906j, 0.27547514 + 0.30846618j, 0.27547514 + 0.30846618j, 0.19117617 + 0.26474667j, 0.27547514 + 0.30846618j, 0.19117617 + 0.26474667j, 0.19117617 + 0.26474667j, 0.39004489 + 0.11696793j]), 5: np.array([0.15829351 + 0.2535388j, 0.07983432 + 0.26633401j, 0.07983432 + 0.26633401j, 0.10813182 + 0.04957801j, 0.07983432 + 0.26633401j, 0.10813182 + 0.04957801j, 0.10813182 + 0.04957801j, 0.22842171 + 0.12716791j, 0.07983432 + 0.26633401j, 0.10813182 + 0.04957801j, 0.10813182 + 0.04957801j, 0.22842171 + 0.12716791j, 0.10813182 + 0.04957801j, 0.22842171 + 0.12716791j, 0.22842171 + 0.12716791j, 0.37604349 + 0.31894797j])}  # pylint: disable=line-too-long
 index_original = {'d3n1': {0: [0], 1: [1, 2], 2: [3]}, 'd4n1': {0: [0], 1: [1, 2, 4], 2: [3, 5, 6], 3: [7]}, 'd5n1': {0: [0], 1: [1, 2, 4, 8], 2: [3, 5, 6, 9, 10, 12], 3: [7, 11, 13, 14], 4: [15]}, 'd3n2': {0: [0], 1: [1, 2], 2: [3], 3: [4, 8], 4: [5, 6, 9, 10], 5: [7, 11], 6: [12], 7: [13, 14], 8: [15]}, 'd4n2': {0: [0], 1: [1, 2, 4], 2: [3, 5, 6], 3: [7], 4: [8, 16, 32], 5: [9, 10, 12, 17, 18, 20, 33, 34, 36], 6: [11, 13, 14, 19, 21, 22, 35, 37, 38], 7: [15, 23, 39], 8: [24, 40, 48], 9: [25, 26, 28, 41, 42, 44, 49, 50, 52], 10: [27, 29, 30, 43, 45, 46, 51, 53, 54], 11: [31, 47, 55], 12: [56], 13: [57, 58, 60], 14: [59, 61, 62], 15: [63]}, 'd5n2': {0: [0], 1: [1, 2, 4, 8], 2: [3, 5, 6, 9, 10, 12], 3: [7, 11, 13, 14], 4: [15], 5: [16, 32, 64, 128], 6: [17, 18, 20, 24, 33, 34, 36, 40, 65, 66, 68, 72, 129, 130, 132, 136], 7: [19, 21, 22, 25, 26, 28, 35, 37, 38, 41, 42, 44, 67, 69, 70, 73, 74, 76, 131, 133, 134, 137, 138, 140], 8: [23, 27, 29, 30, 39, 43, 45, 46, 71, 75, 77, 78, 135, 139, 141, 142], 9: [31, 47, 79, 143], 10: [48, 80, 96, 144, 160, 192], 11: [49, 50, 52, 56, 81, 82, 84, 88, 97, 98, 100, 104, 145, 146, 148, 152, 161, 162, 164, 168, 193, 194, 196, 200], 12: [51, 53, 54, 57, 58, 60, 83, 85, 86, 89, 90, 92, 99, 101, 102, 105, 106, 108, 147, 149, 150, 153, 154, 156, 163, 165, 166, 169, 170, 172, 195, 197, 198, 201, 202, 204], 13: [55, 59, 61, 62, 87, 91, 93, 94, 103, 107, 109, 110, 151, 155, 157, 158, 167, 171, 173, 174, 199, 203, 205, 206], 14: [63, 95, 111, 159, 175, 207], 15: [112, 176, 208, 224], 16: [113, 114, 116, 120, 177, 178, 180, 184, 209, 210, 212, 216, 225, 226, 228, 232], 17: [115, 117, 118, 121, 122, 124, 179, 181, 182, 185, 186, 188, 211, 213, 214, 217, 218, 220, 227, 229, 230, 233, 234, 236], 18: [119, 123, 125, 126, 183, 187, 189, 190, 215, 219, 221, 222, 231, 235, 237, 238], 19: [127, 191, 223, 239], 20: [240], 21: [241, 242, 244, 248], 22: [243, 245, 246, 249, 250, 252], 23: [247, 251, 253, 254], 24: [255]}}  # pylint: disable=line-too-long
@@ -85,3 +85,93 @@ def test_mat_to_op():
     mat = state @ np.transpose(np.conj(state))
     qubit_test = qudit_mapping.mat_to_op(mat, little_endian=True)
     assert np.allclose(qubit_test.matrix().A, mat)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_invalid_inputs():
+    """
+    Feature: Input validation
+    Description: Test error handling for invalid inputs
+    Expectation: Raise appropriate errors
+    """
+    # Test invalid dimension type
+    with pytest.raises(TypeError, match="dim requires an int, but get"):
+        qudit_mapping._symmetric_state_index(2.5, 1)
+
+    # Test invalid n_qudits type
+    with pytest.raises(TypeError, match="n_qudits requires an int, but get"):
+        qudit_mapping._symmetric_state_index(3, 1.5)
+
+    # Test invalid matrix shape
+    invalid_mat = np.array([[1, 2], [3, 4], [5, 6]])
+    with pytest.raises(ValueError, match="Wrong qubit matrix shape"):
+        qudit_mapping.qudit_symmetric_decoding(invalid_mat)
+
+    # Test non-power-of-2 size
+    invalid_size = np.ones((3, 3))
+    with pytest.raises(ValueError, match="Wrong qubit matrix size .* is not a power of 2"):
+        qudit_mapping.qudit_symmetric_decoding(invalid_size)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_is_symmetric():
+    """
+    Feature: Symmetry checking
+    Description: Test _is_symmetric function for various inputs
+    Expectation: success
+    """
+    # Test symmetric state
+    sym_state = np.array([1, 1 / np.sqrt(2), 1 / np.sqrt(2), 1]) / 2
+    assert qudit_mapping._is_symmetric(sym_state, n_qubits=1)
+
+    # Test non-symmetric state
+    non_sym_state = np.array([1, 0, 1, 0]) / np.sqrt(2)
+    assert not qudit_mapping._is_symmetric(non_sym_state, n_qubits=1)
+
+    # Test symmetric matrix
+    sym_mat = np.array([[1, 0, 0, 1], [0, 1, 1, 0], [0, 1, 1, 0], [1, 0, 0, 1]]) / 2
+    assert qudit_mapping._is_symmetric(sym_mat, n_qubits=1)
+
+    # Test invalid shape
+    with pytest.raises(ValueError, match="Wrong qubit matrix shape"):
+        qudit_mapping._is_symmetric(np.ones((2, 3)), n_qubits=1)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_qutrit_symmetric_ansatz():
+    """
+    Feature: Qutrit symmetric ansatz
+    Description: Test qutrit_symmetric_ansatz function
+    Expectation: success
+    """
+    from mindquantum.core.gates import UnivMathGate
+
+    # Create a simple symmetric 4x4 unitary matrix
+    mat = np.array([[1, 0, 0, 1], [0, 1, 1, 0], [0, 1, 1, 0], [1, 0, 0, 1]]) / np.sqrt(2)
+    gate = UnivMathGate('U', mat).on([0, 1])
+
+    # Test with zyz basis
+    circ_zyz = qudit_mapping.qutrit_symmetric_ansatz(gate, basis="zyz")
+    assert isinstance(circ_zyz, Circuit)
+
+    # Test with u3 basis
+    circ_u3 = qudit_mapping.qutrit_symmetric_ansatz(gate, basis="u3")
+    assert isinstance(circ_u3, Circuit)
+
+    # Test with invalid basis
+    with pytest.raises(ValueError, match="is not a supported decomposition method"):
+        qudit_mapping.qutrit_symmetric_ansatz(gate, basis="invalid")
+
+    # Test with controlled gate
+    ctrl_gate = UnivMathGate('U', mat).on([0, 1], [2])
+    with pytest.raises(ValueError, match="Currently not applicable for a controlled gate"):
+        qudit_mapping.qutrit_symmetric_ansatz(ctrl_gate)
+
+    # Test with non-symmetric gate
+    non_sym_mat = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    non_sym_gate = UnivMathGate('U', non_sym_mat).on([0, 1])
+    with pytest.raises(ValueError, match="is not a symmetric gate"):
+        qudit_mapping.qutrit_symmetric_ansatz(non_sym_gate)
