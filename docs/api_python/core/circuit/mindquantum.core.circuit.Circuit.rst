@@ -493,12 +493,13 @@ mindquantum.core.circuit.Circuit
         返回：
             str，OpenQASM格式的量子线路字符串。
 
-    .. py:method:: to_qcis(file_name: Optional[str] = None)
+    .. py:method:: to_qcis(file_name: Optional[str] = None,  parametric: bool = True)
 
         将 MindQuantum 中的量子线路转化为 QCIS 字符串或者文件。
 
         参数：
             - **file_name** (str) - 保存成 QCIS 文件的文件名。默认值： ``None``。
+            - **parametric** (bool) - 是否保留参数。如果为 ``False``，则会丢弃所有参数，以及参数值为 0 的参数门，参数门的角度也会被限制在区间 [-pi, pi]。默认值： ``True``。
 
         返回：
             str，QCIS格式的量子线路字符串。

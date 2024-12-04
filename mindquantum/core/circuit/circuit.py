@@ -1232,12 +1232,16 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             HiQASM().to_file(file_name, self, version=version)
         return hiqasm_str
 
-    def to_qcis(self, file_name: Optional[str] = None) -> str:
+    def to_qcis(self, file_name: Optional[str] = None, parametric: bool = True) -> str:
         """
         Convert a MindQuantum circuit to QCIS format string and optionally save to a file.
 
         Args:
             file_name (str): File name if you want to save QCIS. Default: ``None``.
+            parametric (bool): Whether to keep the parameters in gates. If it is ``False``
+                , we will discard all parameters and rotation gates with zero angles. The
+                remaining angles will be restricted to the interval [-pi, pi].
+                Default: ``True``.
 
         Returns:
             str, The QCIS format string representation of the circuit.
@@ -1245,9 +1249,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import QCIS
 
-        qcis_str = QCIS().to_string(self)
+        qcis_str = QCIS().to_string(self, parametric)
         if file_name is not None:
-            QCIS().to_file(file_name, self)
+            QCIS().to_file(file_name, self, parametric)
         return qcis_str
 
     def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):

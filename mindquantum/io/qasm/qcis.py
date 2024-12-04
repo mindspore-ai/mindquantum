@@ -15,6 +15,7 @@
 """QCIS support module."""
 # pylint: disable=import-outside-toplevel
 import re
+from typing import List, Tuple
 
 import numpy as np
 
@@ -22,7 +23,7 @@ from mindquantum.utils import fdopen
 from mindquantum.utils.type_value_check import _check_input_type
 from mindquantum.core.parameterresolver import ParameterResolver
 
-def _floatable(string):
+def _floatable(string) -> bool:
     """Whether the input string can be converted to a float number.
     This function will return `Ture` if the input string is composed only of digits, point, star and slash.
 
@@ -35,7 +36,7 @@ def _floatable(string):
     num_chars = re.findall(r"([\d\.\+\-\*\/])", string)
     return len(num_chars) == len(string)
 
-def _to_float(string):
+def _to_float(string) -> float:
     """convert the input floatable string to a float number.
 
     Examples:
@@ -51,7 +52,7 @@ def _to_float(string):
         res = float(tmp[0])
     return res
 
-def _string_to_param(string):
+def _string_to_param(string) -> ParameterResolver:
     """Convert the input string to a ParameterResolver object.
 
     Examples:
@@ -110,6 +111,10 @@ def _failed_from_qcis(gate_name):
 def _failed_to_qcis(gate):
     raise NotImplementedError(f"Cannot convert the {gate} from gate to QCIS.")
 
+def _valid_angle(angle) -> float:
+    """Restrict the angle to the interval [-pi, pi]."""
+    return np.mod(angle + np.pi, np.pi * 2) - np.pi
+
 class QCIS:
     """Convert a circuit to qcis format.
 
@@ -141,23 +146,23 @@ class QCIS:
         self.gate_class = G
         self.circuit_class = Circuit
 
-    def _get_gate_terms(self, string):
+    def _get_gate_terms(self, string) -> List[str]:
         """Extract lines containing gate."""
         terms = string.split("\n")
         terms = [_.strip() for _ in terms if _.strip()]
         return terms
 
-    def _get_gate_name(self, term):
+    def _get_gate_name(self, term) -> str:
         """Get the gate name from the term."""
         name = re.findall(r"^([\w]+)(?=\s)", term)[0]
         return name
 
-    def _get_qubits(self, term):
+    def _get_qubits(self, term) -> List[int]:
         """Get the qubits acted upon by the gate from the term."""
         qubits = re.findall(r"(?<=Q)(\d+)", term)
         return list(reversed([int(i) for i in qubits])) # [obj_qubit, ctrl_qubit]
 
-    def _get_gate_info(self, term):
+    def _get_gate_info(self, term) -> Tuple[str, List[int], List[ParameterResolver]]:
         """Get the gate information (name, params and qubits) according to the term."""
         term = term.strip()
         gate_name = self._get_gate_name(term)
@@ -168,7 +173,7 @@ class QCIS:
             params = [_string_to_param(param)]
         return gate_name, qubits, params
 
-    def _to_gate(self, gate_name, qubits, params):
+    def _to_gate(self, gate_name: str, qubits: List[int], params: List[ParameterResolver]):
         """Create a gate according to the given information."""
         if gate_name in ["Z", "CZ"]:
             return self.gate_class.Z.on(*qubits)
@@ -207,7 +212,7 @@ class QCIS:
         _failed_from_qcis(gate_name)
         return None
 
-    def from_file(self, file_name):
+    def from_file(self, file_name: str):
         """Read a qcis file.
 
         Args:
@@ -220,7 +225,7 @@ class QCIS:
             terms = fd.readlines()
         return self.from_string('\n'.join(terms))
 
-    def from_string(self, string):
+    def from_string(self, string: str):
         r"""Read a QCIS string.
 
         Args:
@@ -259,15 +264,19 @@ class QCIS:
             circ += BarrierGate().on(barrier_qubits)
         return circ
 
-    def _qubits_str(self, gate):
+    def _qubits_str(self, gate) -> str:
         """Convert the gate's qubits to a string"""
         return "".join(f"Q{qubit} " for qubit in gate.ctrl_qubits + gate.obj_qubits)
 
-    def to_string(self, circuit):
+    def to_string(self, circuit, parametric: bool = True) -> str:
         """Convert the input circuit to qcis.
 
         Args:
             circuit (Circuit): The quantum circuit you want to translated to qcis.
+            parametric (bool): Whether to keep the parameters in gates. If it is ``False``
+                , we will discard all parameters and rotation gates with zero angles. The
+                remaining angles will be restricted to the interval [-pi, pi].
+                Default: ``True``.
 
         Returns:
             str, The qcis format of the input circuit.
@@ -348,7 +357,12 @@ class QCIS:
             if isinstance(gate, (self.gate_class.RX, self.gate_class.RY, self.gate_class.RZ)):
                 if gate.ctrl_qubits:
                     _failed_to_qcis(gate)
-                param = str(gate.coeff)
+                if parametric:
+                    param = str(gate.coeff)
+                else:
+                    if not gate.coeff.const:
+                        continue
+                    param = str(_valid_angle(gate.coeff.const))
                 string.append(f"{gate.name} " + self._qubits_str(gate) + param)
                 continue
             if isinstance(gate, self.gate_class.IGate):
@@ -359,13 +373,16 @@ class QCIS:
             _failed_to_qcis(gate)
         return "\n".join(string)
 
-    def to_file(self, file_name, circuit):
+    def to_file(self, file_name: str, circuit, parametric: bool = True) -> None:
         """
         Convert a quantum circuit to qcis format and save in file.
 
         Args:
             file_name (str): The file name you want to save the qcis file.
             circuit (Circuit): The Circuit you want to convert.
+            parametric (bool): Whether to keep the parameters in gates. If it is ``False``
+                , we will discard all parameters and rotation gates with zero angles. The
+                remaining angles will be restricted to the interval [-pi, pi]. Default: ``True``.
 
         Raises:
             TypeError: if `file_name` is not a str.
@@ -377,5 +394,5 @@ class QCIS:
         if not isinstance(circuit, self.circuit_class):
             raise TypeError(f"circuit requires a Circuit, but get {type(circuit)}")
         with fdopen(file_name, 'w') as fd:
-            fd.writelines(self.to_string(circuit))
+            fd.writelines(self.to_string(circuit, parametric))
         print(f"write circuit to {file_name} finished!")

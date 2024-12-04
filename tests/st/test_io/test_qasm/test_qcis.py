@@ -28,7 +28,14 @@ def test_qcis():
     circ0 = Circuit()
     circ0.x(0).z(1,0).rx({"a":-2*np.sqrt(2)}, 0).sx(0).barrier()
     circ0.ry(ParameterResolver(data={'theta':-np.pi}, const=np.pi), 1)
-    string= QCIS().to_string(circ0)
+    string = QCIS().to_string(circ0)
     circ1 = QCIS().from_string(string)
     assert circ1 == circ0
     assert circ1.x(0) != circ0
+
+    circ2 = Circuit().rx({"a":-2*np.sqrt(2)}, 0)
+    circ2.ry(ParameterResolver(data={'theta':-np.pi}, const=np.pi/2), 0).rz(0., 0)
+    string = QCIS().to_string(circ2, parametric=False)
+    circ3 = Circuit().from_qcis(string)
+    circ4 = Circuit().ry(np.pi/2, 0)
+    assert circ3 == circ4
