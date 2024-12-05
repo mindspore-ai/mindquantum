@@ -38,7 +38,8 @@ from .arxiv_1905_10876 import (
 )
 from .iqp_encoding import IQPEncoding
 from .strongly_entangling import StronglyEntangling
+from .quantum_neuron import QuantumNeuron
 
-__all__ = ['IQPEncoding', 'StronglyEntangling']
+__all__ = ['IQPEncoding', 'StronglyEntangling', 'QuantumNeuron']
 __all__.extend(arxiv_1905_10876.__all__)
 __all__.sort()
