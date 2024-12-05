@@ -55,7 +55,6 @@ def qjpeg(n_qubits:int, m_qubits:int) -> Tuple[Circuit, List[int], List[int]]:
         [[0.3, 0.],
          [0.4, 0.3]]
     """
-    # 添加参数类型和值的校验
     _check_int_type("n_qubits", n_qubits)
     _check_int_type("m_qubits", m_qubits)
     _check_value_should_not_less("n_qubits", 0, n_qubits)
