@@ -12,11 +12,14 @@
 
 #### Algorithm
 
+- [BETA]新增了基于虚拟蒸馏的误差缓解算法**virtual_distillation**。
+- [BETA]新增了量子神经元**QuantumNeuron**。
+
 - 新增了量子图像压缩算法 **Q-JPEG** 。
 
 - 新增对 **CnRY** 门的分解。
 
-- 为BSB (Ballistic Simulated Bifurcation)和DSB (Discrete Simulated Bifurcation)算法添加GPU加速支持，并支持float32、float16、int8三种精度选项。
+- 为BSB (Ballistic Simulated Bifurcation)和DSB (Discrete Simulated Bifurcation)算法添加GPU加速支持，支持cpu-float32、gpu-float16、gpu-int8三种精度选项。
 
 #### Simulator
 

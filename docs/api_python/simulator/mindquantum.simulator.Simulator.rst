@@ -200,7 +200,8 @@ mindquantum.simulator.Simulator
 
     .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
 
-        在线路中对测量比特进行采样。采样不会改变模拟器的量子态。
+        在线路中对测量比特进行采样。采样不会改变模拟器的量子态。采样结果默认使用小端序表示（例如：'01'表示q1=0, q0=1）。
+        如果需要大端序表示，可以使用MeasureResult.reverse_endian()方法。
 
         参数：
             - **circuit** (Circuit) - 要进行演化和采样的电路。
@@ -209,7 +210,7 @@ mindquantum.simulator.Simulator
             - **seed** (int) - 采样的随机种子。如果为None，则种子将是随机的整数。默认值： ``None``。
 
         返回：
-            MeasureResult，采样的统计结果。
+            MeasureResult，采样的统计结果，结果中的比特串采用小端序表示。
 
     .. py:method:: set_qs(quantum_state)
 
