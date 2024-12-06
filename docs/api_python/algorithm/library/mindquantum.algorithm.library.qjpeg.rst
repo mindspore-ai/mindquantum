@@ -1,7 +1,7 @@
 mindquantum.algorithm.library.qjpeg
 ===================================
 
-.. py:function:: mindquantum.algorithm.library.qjpeg(n_qubits, m_qubits)
+.. py:function:: mindquantum.algorithm.library.qjpeg(n_qubits: int, m_qubits: int)
 
     基于QJEPG算法实现对量子图像的压缩。
 
@@ -13,6 +13,7 @@ mindquantum.algorithm.library.qjpeg
         - **m_qubits** (int) - 用于编码压缩后量子图像的量子比特数。
 
     返回：
-        - Circuit，QJPEG 算法的量子线路。
-        - list[int]，携带着压缩后量子图像信息的量子比特。
-        - list[int]，被抛弃的量子比特，这些量子比特中含有原量子图像中的冗余信息。
+        Tuple[Circuit, List[int], List[int]]:
+            - Circuit: QJPEG 算法的量子线路
+            - List[int]: 保留比特的索引列表，这些比特携带压缩后的量子图像信息
+            - List[int]: 丢弃比特的索引列表，这些比特包含原量子图像中的冗余信息

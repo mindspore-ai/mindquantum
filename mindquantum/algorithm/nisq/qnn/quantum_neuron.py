@@ -51,7 +51,7 @@ class QuantumNeuron:
         ancilla_qubit (Optional[int]): Index of the auxiliary qubit used for computation. If None,
             will be set to len(input_qubits) + 1. Default: None
 
-    Example:
+    Examples:
         >>> from mindquantum.simulator import Simulator
         >>> from mindquantum import Circuit, H,X
         >>> # Create 2-qubit input state
