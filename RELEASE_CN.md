@@ -9,29 +9,20 @@
 #### Algorithm
 
 - [BETA] [`virtual_distillation`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/error_mitigation/mindquantum.algorithm.error_mitigation.virtual_distillation.html): 新增基于虚拟蒸馏的误差缓解算法，通过创建量子态的虚拟副本并在纠缠系统上进行测量来减少量子噪声。
-- [BETA] [`QuantumNeuron`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qnn/mindquantum.algorithm.qnn.QuantumNeuron.html): 新增基于重复直到成功（RUS）策略的量子神经元实现，通过量子电路模拟经典神经元行为，应用非线性函数旋转。
-- [STABLE] [`qjpeg`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qimage/mindquantum.algorithm.library.qjpeg.html): 新增基于量子傅里叶变换的量子图像压缩算法，可以通过减少量子比特数量来压缩量子图像，同时保留频域中的关键信息。
+- [BETA] [`QuantumNeuron`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/nisq/mindquantum.algorithm.nisq.QuantumNeuron.html): 新增基于重复直到成功（RUS）策略的量子神经元实现，通过量子电路模拟经典神经元行为，应用非线性函数旋转。
+- [STABLE] [`qjpeg`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/library/mindquantum.algorithm.library.qjpeg.html): 新增基于量子傅里叶变换的量子图像压缩算法，可以通过减少量子比特数量来压缩量子图像，同时保留频域中的关键信息。
 - [STABLE] [`cnry_decompose`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.cnry_decompose.html): 新增对CnRY门的分解。
 - [STABLE] [`cnrz_decompose`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.cnrz_decompose.html): 新增对CnRZ门的分解。
-- [STABLE] [`BSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html): 为弹道模拟分叉算法添加GPU加速支持，支持以下精度选项：
-  - cpu-float32
-  - gpu-float16
-  - gpu-int8
-
-- [STABLE] [`DSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html): 为离散模拟分叉算法添加GPU加速支持，支持以下精度选项：
-  - cpu-float32
-  - gpu-float16
-  - gpu-int8
-
+- [STABLE] [`BSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html): 为弹道模拟分叉算法添加GPU加速支持，支持`'cpu-float32'`, `'gpu-float16'`, `'gpu-int8'`三种精度选项。
+- [STABLE] [`DSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html): 为离散模拟分叉算法添加GPU加速支持，支持`'cpu-float32'`, `'gpu-float16'`, `'gpu-int8'`三种精度选项。
 - [STABLE] [`qudit_symmetric_encoding`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/library/mindquantum.algorithm.library.qudit_symmetric_encoding.html): 新增qudit编码功能，将d级量子态映射到量子比特态，通过对称编码实现，在标准量子比特量子计算机上高效模拟高维量子系统。
 - [STABLE] [`qudit_symmetric_decoding`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/library/mindquantum.algorithm.library.qudit_symmetric_decoding.html): 新增解码功能，将量子比特对称态或矩阵解码为qudit态或矩阵，增强对多能级量子系统的支持。解码过程涉及将对称量子比特态转换为相应的qudit态，便于在标准量子比特量子计算机上高效模拟高维量子系统。
 - [STABLE] [`qutrit_symmetric_ansatz`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/library/mindquantum.algorithm.library.qutrit_symmetric_ansatz.html): 引入qutrit对称ansatz，构建保持任意qutrit门编码对称性的量子比特ansatz。该功能通过利用对称性保持变换，允许在标准量子比特量子计算机上高效模拟高维量子系统。ansatz支持分解为`"zyz"`或`"u3"`基，并可选择性地包含全局相位。
 
 #### Measure
 
-- [STABLE] [`MeasureResult`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/gates/mindquantum.core.gates.MeasureResult.html):
-  - 新增[`to_json`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.to_json)函数，支持测量结果的序列化和存储。
-  - 新增[`reverse_endian`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.reverse_endian)函数，支持反转测量结果中比特串和测量键的字节序。
+- [STABLE] [`MeasureResult.to_json`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.to_json): 支持测量结果的序列化和存储。
+- [STABLE] [`MeasureResult.reverse_endian`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.reverse_endian): 支持反转测量结果中比特串和测量键的字节序。
 
 #### Operator
 
@@ -39,10 +30,9 @@
 
 #### Circuit
 
-- [STABLE] [`Circuit`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html):
-  - 新增[`from_qcis()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.from_qcis)和[`to_qcis()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.to_qcis)函数，支持与QCIS格式互转。
-  - 新增`__eq__`和`__ne__`方法，支持电路对象比较。
-  - 新增[`depth()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.depth)函数：新增获取量子线路深度的功能，支持考虑单比特门和栅栏门对电路深度的影响，帮助用户更好地评估和优化量子线路的复杂度。
+- [STABLE] 新增[`Circuit.from_qcis()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.from_qcis)和[`Circuit.to_qcis()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.to_qcis)函数，支持与QCIS格式互转。
+- [STABLE] 新增`__eq__`和`__ne__`方法，支持电路对象比较。
+- [STABLE] [`Circuit.depth()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.depth): 新增获取量子线路深度的功能，支持考虑单比特门和栅栏门对电路深度的影响，帮助用户更好地评估和优化量子线路的复杂度。
 
 #### IO
 
@@ -80,7 +70,6 @@
 - 当哈密顿量包含虚部时，增加了警告提示，提醒用户注意可能的计算结果异常。
 - 提升了未安装 **MindSpore** 时警告信息的清晰度。
 - 将 `pip` 源更改为清华镜像源。
-
 
 ## MindQuantum 0.9.11 Release Notes
 

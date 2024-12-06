@@ -79,6 +79,7 @@ def __getattr__(name):
     if name in framework_modules:
         raise ImportError(
             f"cannot import '{name}' from 'mindquantum.framework'. "
-            "MindSpore not installed, 'mindquantum.framework' modules (for hybrid quantum-classical neural network) are disabled."
+            "MindSpore not installed, 'mindquantum.framework' modules "
+            "(for hybrid quantum-classical neural network) are disabled."
         )
     raise ImportError(f"cannot import '{name}' from 'mindquantum'. '{name}' does not exist in mindquantum.")

@@ -9,30 +9,20 @@
 #### Algorithm
 
 - [BETA] [`virtual_distillation`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/error_mitigation/mindquantum.algorithm.error_mitigation.virtual_distillation.html): Added error mitigation algorithm based on virtual distillation, which reduces quantum noise by creating virtual copies of quantum states and performing measurements on an entangled system.
-- [BETA] [`QuantumNeuron`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qnn/mindquantum.algorithm.qnn.QuantumNeuron.html): Added quantum neuron implementation based on Repeat-Until-Success (RUS) strategy, which simulates classical neuron behavior through quantum circuits by applying non-linear function rotations.
-- [STABLE] [`qjpeg`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qimage/mindquantum.algorithm.library.qjpeg.html): Added quantum image compression algorithm based on quantum Fourier transform, which can compress quantum images by reducing the number of qubits while preserving key information in the frequency domain.
+- [BETA] [`QuantumNeuron`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/nisq/mindquantum.algorithm.nisq.QuantumNeuron.html): Added quantum neuron implementation based on Repeat-Until-Success (RUS) strategy, which simulates classical neuron behavior through quantum circuits by applying non-linear function rotations.
+- [STABLE] [`qjpeg`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/library/mindquantum.algorithm.library.qjpeg.html): Added quantum image compression algorithm based on quantum Fourier transform, which can compress quantum images by reducing the number of qubits while preserving key information in the frequency domain.
 - [STABLE] [`cnry_decompose`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.cnry_decompose.html): Added decomposition for CnRY gate.
 - [STABLE] [`cnrz_decompose`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.cnrz_decompose.html): Added decomposition for CnRZ gate.
-- [STABLE] [`BSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html): Added GPU acceleration support for Ballistic Simulated Bifurcation algorithm with the following precision options:
-  - cpu-float32
-  - gpu-float16
-  - gpu-int8
-
-- [STABLE] [`DSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html): Added GPU acceleration support for Discrete Simulated Bifurcation algorithm with the following precision options:
-  - cpu-float32
-  - gpu-float16
-  - gpu-int8
-
+- [STABLE] [`BSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html): Added GPU acceleration support for Ballistic Simulated Bifurcation algorithm with the three precision options: `'cpu-float32'`, `'gpu-float16'`, `'gpu-int8'`.
+- [STABLE] [`DSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html): Added GPU acceleration support for Discrete Simulated Bifurcation algorithm with the three precision options: `'cpu-float32'`, `'gpu-float16'`, `'gpu-int8'`.
 - [STABLE] [`qudit_symmetric_encoding`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/library/mindquantum.algorithm.library.qudit_symmetric_encoding.html): Added qudit encoding functionality that maps d-level quantum states to qubit states through symmetric encoding, enabling efficient simulation of higher-dimensional quantum systems on standard qubit-based quantum computers.
 - [STABLE] [`qudit_symmetric_decoding`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/library/mindquantum.algorithm.library.qudit_symmetric_decoding.html): This feature introduces the ability to decode qubit symmetric states or matrices into qudit states or matrices, thereby enhancing the support for multi-level quantum systems. The decoding process involves transforming symmetric qubit states into corresponding qudit states, which facilitates efficient simulation of higher-dimensional quantum systems on standard qubit-based quantum computers.
 - [STABLE] [`qutrit_symmetric_ansatz`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/library/mindquantum.algorithm.library.qutrit_symmetric_ansatz.html): Introduced a qutrit symmetric ansatz that constructs a qubit ansatz preserving the symmetry of encoding for arbitrary qutrit gates. This feature allows for efficient simulation of higher-dimensional quantum systems on standard qubit-based quantum computers by leveraging symmetry-preserving transformations. The ansatz supports decomposition into `"zyz"` or `"u3"` basis and can optionally include a global phase.
 
 #### Measure
 
-- [STABLE] [`MeasureResult`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.MeasureResult.html):
-  - Added [`to_json`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.to_json) function for measurement result serialization and storage
-  - Unified endianness for `keys`, `samples` and `data`
-  - Added [`reverse_endian`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.reverse_endian) function to reverse bit order in measurement results, enabling flexible endianness handling for quantum state readouts
+- [STABLE] [`MeasureResult.to_json`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.to_json): for measurement result serialization and storage
+- [STABLE] [`MeasureResult.reverse_endian`](https://www.mindspore.cn/mindquantum/docs/en/master/core/gates/mindquantum.core.gates.MeasureResult.html#mindquantum.core.gates.MeasureResult.reverse_endian): reverse bit order in measurement results, enabling flexible endianness handling for quantum state readouts
 
 #### Operator
 
@@ -40,10 +30,9 @@
 
 #### Circuit
 
-- [STABLE] [`Circuit`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html):
-  - Added [`from_qcis()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.from_qcis) and [`to_qcis()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.to_qcis) functions for QCIS format conversion
-  - Added `__eq__` and `__ne__` methods for circuit comparison
-  - Added [`depth()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.depth): Added function to calculate quantum circuit depth with options to include single-qubit gates and align gates to barriers.
+- [STABLE] Added [`Circuit.from_qcis()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.from_qcis) and [`Circuit.to_qcis()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.to_qcis) functions for QCIS format conversion
+- [STABLE] Added `__eq__` and `__ne__` methods for circuit comparison
+- [STABLE] [`Circuit.depth()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.depth): Added function to calculate quantum circuit depth with options to include single-qubit gates and align gates to barriers.
 
 #### IO
 
@@ -81,7 +70,6 @@
 - Added warning when Hamiltonian contains imaginary parts, alerting users to potential calculation anomalies.
 - Enhanced clarity of warning messages when MindSpore is not installed.
 - Changed `pip` source to Tsinghua mirror.
-
 
 ## MindQuantum 0.9.11 Release Notes
 
