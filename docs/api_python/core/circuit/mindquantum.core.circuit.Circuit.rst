@@ -63,7 +63,7 @@ mindquantum.core.circuit.Circuit
 
         返回该量子线路的浅拷贝。
 
-    .. py:method:: depth(with_single:bool=False, with_barrier:bool=False)
+    .. py:method:: depth(with_single: bool = True, with_barrier: bool = False)
 
         获取整个量子线路的深度。
 

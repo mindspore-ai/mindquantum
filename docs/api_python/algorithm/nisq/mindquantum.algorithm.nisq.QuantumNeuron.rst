@@ -12,7 +12,7 @@ mindquantum.algorithm.nisq.QuantumNeuron
         - 测量结果为'0'表示成功应用非线性函数旋转
         - 测量结果为'1'触发恢复操作并重复直到成功
 
-    说明：
+    .. note::
         - 根据经验测试，RUS电路需要至少一次失败（测量结果为'1'）后接一次成功（测量结果为'0'）才能正确应用非线性函数
         - 原始论文中的恢复旋转角度为RY(-π/2)，但基于实验验证，本实现使用RY(π/2)。建议用户在具体应用中仔细验证其行为。
 
@@ -24,14 +24,16 @@ mindquantum.algorithm.nisq.QuantumNeuron
         - **output_qubit** (Optional[int]) - 作为神经元输出的量子比特索引。如果为None，将设置为`ancilla_qubit + 1`。默认值：``None``。
         - **ancilla_qubit** (Optional[int]) - 用于计算的辅助量子比特索引。如果为None，将设置为`len(input_qubits) + 1`。默认值：``None``。
 
-    .. py:property:: circuit
+    .. py:method:: circuit
+        :property:
 
         量子神经元的量子电路。
 
         返回：
             Circuit，量子神经元的量子电路。
 
-    .. py:property:: recovery_circuit
+    .. py:method:: recovery_circuit
+        :property:
 
         测量结果为'1'时的恢复电路。
 

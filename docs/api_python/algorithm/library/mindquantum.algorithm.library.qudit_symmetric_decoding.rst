@@ -27,4 +27,4 @@ mindquantum.algorithm.library.qudit_symmetric_decoding
         np.ndarray，对称性解码后的qudit态或矩阵。
 
     异常：
-        ValueError: 如果输入的qubit状态或矩阵不保持所需的对称性。
+        - **ValueError** - 如果输入的qubit状态或矩阵不保持所需的对称性。

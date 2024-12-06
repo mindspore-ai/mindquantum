@@ -19,7 +19,8 @@ from mindquantum.algorithm.library.quantum_fourier import qft
 from mindquantum.core.circuit import Circuit, dagger
 from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
 
-def qjpeg(n_qubits:int, m_qubits:int) -> Tuple[Circuit, List[int], List[int]]:
+
+def qjpeg(n_qubits: int, m_qubits: int) -> Tuple[Circuit, List[int], List[int]]:
     """
     Construct the circuit for compressing quantum figure with the QJPEG algorithm.
 
@@ -27,13 +28,15 @@ def qjpeg(n_qubits:int, m_qubits:int) -> Tuple[Circuit, List[int], List[int]]:
         n_qubits (int): The number of qubits used to encode the quantum figure to be compressed.
         m_qubits (int): The number of qubits used to encode the compressed quantum figure.
 
-    Note: The input arguments, n_qubits and m_qubits, should both be even, and the n_qubits must
-          be not less than the m_qubits. Please refer to arXiv:2306.09323v2 for more information.
+    Note:
+        The input arguments, n_qubits and m_qubits, should both be even, and the n_qubits must
+        be not less than the m_qubits. Please refer to arXiv:2306.09323v2 for more information.
 
     Returns:
-        Circuit, the qjpeg circuit that compresses the quantum figure.
-        list[int], the remainder qubits that carrying the information of the compressed quantum figure.
-        list[int], the discard qubits.
+        Tuple[Circuit, List[int], List[int]]:
+            - Circuit: The QJPEG circuit for quantum image compression
+            - List[int]: List of indices for remainder qubits that carry the compressed quantum image information
+            - List[int]: List of indices for discarded qubits
 
     Examples:
         >>> from mindquantum import Simulator, normalize
@@ -68,12 +71,12 @@ def qjpeg(n_qubits:int, m_qubits:int) -> Tuple[Circuit, List[int], List[int]]:
     half_diff = (n_qubits - m_qubits) // 2
     former_qubits = list(range(0, n_qubits // 2))
     latter_qubits = list(range(n_qubits // 2, n_qubits))
-    mid_qubits = former_qubits[len(former_qubits) - half_diff:]
-    last_qubits = latter_qubits[len(latter_qubits) - half_diff:]
+    mid_qubits = former_qubits[len(former_qubits) - half_diff :]
+    last_qubits = latter_qubits[len(latter_qubits) - half_diff :]
     discard_qubits = mid_qubits + last_qubits
     remainder_qubits = list(set(range(n_qubits)).difference(discard_qubits))
 
     circ = Circuit()
     circ += qft(range(n_qubits))
-    circ += dagger(qft(range(n_qubits-half_diff)))
+    circ += dagger(qft(range(n_qubits - half_diff)))
     return circ, remainder_qubits, discard_qubits
