@@ -79,7 +79,7 @@ __global__ void update_tail_half(const half* __restrict__ tmp, half* x, half* y,
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= size)
         return;
-    y[idx] += static_cast<half>(xi * static_cast<float>(tmp[idx]) + beta * static_cast<float>(x[idx]));
+    y[idx] += static_cast<half>(dt * (xi * static_cast<float>(tmp[idx]) + beta * static_cast<float>(x[idx])));
     half x_idx = static_cast<half>(x[idx]) + y[idx] * static_cast<half>(delta * dt);
     if (x_idx >= static_cast<half>(1.0)) {
         x[idx] = 1.0;
@@ -97,7 +97,7 @@ __global__ void update_h_tail_half(const half* __restrict__ tmp, half* x, half* 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= size)
         return;
-    y[idx] += static_cast<half>(xi * static_cast<float>(tmp[idx] + h[idx]) + beta * static_cast<float>(x[idx]));
+    y[idx] += static_cast<half>(dt * (xi * static_cast<float>(tmp[idx] + h[idx]) + beta * static_cast<float>(x[idx])));
     half x_idx = static_cast<half>(x[idx]) + y[idx] * static_cast<half>(delta * dt);
     if (x_idx >= static_cast<half>(1.0)) {
         x[idx] = 1.0;
@@ -115,7 +115,7 @@ __global__ void update_tail(const int* __restrict__ tmp, int8_t* x, int* y, int 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= size)
         return;
-    y[idx] += static_cast<int>(xi * static_cast<float>(tmp[idx] / 127) + beta * static_cast<float>(x[idx]));
+    y[idx] += static_cast<int>(dt * (xi * static_cast<float>(tmp[idx] / 127) + beta * static_cast<float>(x[idx])));
     int x_idx = static_cast<int>(x[idx]) + y[idx] * delta * dt;
     if (x_idx >= UP) {
         x[idx] = UP;
@@ -133,7 +133,8 @@ __global__ void update_h_tail(const int* __restrict__ tmp, int8_t* x, int* y, in
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= size)
         return;
-    y[idx] += static_cast<int>(xi * static_cast<float>((tmp[idx] + h[idx]) / 127) + beta * static_cast<float>(x[idx]));
+    y[idx] += static_cast<int>(
+        dt * (xi * static_cast<float>((tmp[idx] + h[idx]) / 127) + beta * static_cast<float>(x[idx])));
     int x_idx = static_cast<int>(x[idx]) + y[idx] * delta * dt;
     if (x_idx >= UP) {
         x[idx] = UP;

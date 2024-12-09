@@ -171,7 +171,9 @@ class BSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct BSB algorithm."""
-        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        if not isinstance(x, np.ndarray):
+            raise ValueError("x must be a numpy array")
+        super().__init__(J, h, x.copy(), n_iter, batch_size, dt, xi)
         valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
@@ -246,7 +248,9 @@ class DSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct DSB algorithm."""
-        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        if not isinstance(x, np.ndarray):
+            raise ValueError("x must be a numpy array")
+        super().__init__(J, h, x.copy(), n_iter, batch_size, dt, xi)
         valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
