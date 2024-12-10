@@ -27,10 +27,16 @@ class NMFA(QAIA):
     Reference: `Emulating the coherent Ising machine with a mean-field
     algorithm <https://arxiv.org/abs/1806.08422>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         alpha (float): Momentum factor. Default: ``0.15``.

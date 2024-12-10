@@ -27,10 +27,16 @@ class CAC(QAIA):
     Reference: `Coherent Ising machines with optical error correction
     circuits <https://onlinelibrary.wiley.com/doi/full/10.1002/qute.202100077>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.075``.
@@ -65,9 +71,7 @@ class CAC(QAIA):
         self.beta = 0.3
         self.initialize()
 
-    def initialize(
-        self,
-    ):
+    def initialize(self):
         """Initialize spin values and error variables."""
         if self.x is None:
             self.x = np.random.normal(0, 10 ** (-4), size=(self.N, self.batch_size))
@@ -88,8 +92,7 @@ class CAC(QAIA):
             else:
                 self.x = (
                     self.x
-                    + (-self.x**3 + (self.p[i] - 1) * self.x + self.xi * self.e * (self.J @ self.x + self.h))
-                    * self.dt
+                    + (-self.x**3 + (self.p[i] - 1) * self.x + self.xi * self.e * (self.J @ self.x + self.h)) * self.dt
                 )
 
             self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt

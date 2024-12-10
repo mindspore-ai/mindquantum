@@ -38,10 +38,16 @@ class SB(QAIA):
     This class is the base class for SB. It contains the initialization of
     spin values and momentum.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -92,10 +98,16 @@ class ASB(SB):  # noqa: N801
     Reference: `Combinatorial optimization by simulating adiabatic bifurcations in nonlinear
     Hamiltonian systems <https://www.science.org/doi/10.1126/sciadv.aav2372>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -146,10 +158,16 @@ class BSB(SB):  # noqa: N801
     Reference: `High-performance combinatorial optimization based on classical
     mechanics <https://www.science.org/doi/10.1126/sciadv.abe7953>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -171,9 +189,7 @@ class BSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct BSB algorithm."""
-        if not isinstance(x, np.ndarray):
-            raise ValueError("x must be a numpy array")
-        super().__init__(J, h, x.copy(), n_iter, batch_size, dt, xi)
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
@@ -223,10 +239,16 @@ class DSB(SB):  # noqa: N801
     Reference: `High-performance combinatorial optimization based on classical
     mechanics <https://www.science.org/doi/10.1126/sciadv.abe7953>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -248,9 +270,7 @@ class DSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct DSB algorithm."""
-        if not isinstance(x, np.ndarray):
-            raise ValueError("x must be a numpy array")
-        super().__init__(J, h, x.copy(), n_iter, batch_size, dt, xi)
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")

@@ -23,10 +23,16 @@ class QAIA:
 
     This class contains the basic and common functions of all the algorithms.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N x 1)`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
     """
@@ -46,7 +52,8 @@ class QAIA:
 
     def initialize(self):
         """Randomly initialize spin values."""
-        self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
+        if self.x is None:
+            self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
 
     def calc_cut(self, x=None):
         r"""
