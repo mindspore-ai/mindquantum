@@ -38,7 +38,7 @@ class NMFA(QAIA):
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
             Will be modified during optimization. Default: ``None``.

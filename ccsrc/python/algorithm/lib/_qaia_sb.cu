@@ -44,6 +44,10 @@ using mindquantum::Index;
 template <int SB, typename T, bool H>
 void sb_update(const py::object& csr, const py::array_t<double>& x, const py::array_t<double>& h, int B, float xi,
                float delta, float dt, int n_iter) {
+    py::str type_name = py::str(csr.attr("__class__").attr("__name__"));
+    if (std::string(type_name) != "csr_matrix") {
+        throw std::runtime_error("Input matrix must be in CSR format (scipy.sparse.csr_matrix)");
+    }
     auto indices = csr.attr("indices").cast<py::array_t<Index>>();
     auto indptr = csr.attr("indptr").cast<py::array_t<Index>>();
     auto data = csr.attr("data").cast<py::array_t<double>>();

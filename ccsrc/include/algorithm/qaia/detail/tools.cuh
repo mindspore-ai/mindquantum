@@ -115,7 +115,7 @@ __global__ void update_tail(const int* __restrict__ tmp, int8_t* x, int* y, int 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= size)
         return;
-    y[idx] += static_cast<int>(dt * (xi * static_cast<float>(tmp[idx] / 127) + beta * static_cast<float>(x[idx])));
+    y[idx] += static_cast<int>(dt * (xi * (static_cast<float>(tmp[idx]) / 127.0f) + beta * static_cast<float>(x[idx])));
     int x_idx = static_cast<int>(x[idx]) + y[idx] * delta * dt;
     if (x_idx >= UP) {
         x[idx] = UP;
@@ -134,7 +134,7 @@ __global__ void update_h_tail(const int* __restrict__ tmp, int8_t* x, int* y, in
     if (idx >= size)
         return;
     y[idx] += static_cast<int>(
-        dt * (xi * static_cast<float>((tmp[idx] + h[idx]) / 127) + beta * static_cast<float>(x[idx])));
+        dt * (xi * (static_cast<float>(tmp[idx] + h[idx]) / 127.0f) + beta * static_cast<float>(x[idx])));
     int x_idx = static_cast<int>(x[idx]) + y[idx] * delta * dt;
     if (x_idx >= UP) {
         x[idx] = UP;

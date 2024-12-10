@@ -12,7 +12,7 @@ mindquantum.algorithm.qaia.NMFA
         如果需要保留原始数据，请使用 `x.copy()` 传入副本。
 
     参数：
-        - **J** (Union[numpy.array, csr_matrix]) - 耦合矩阵，维度为 :math:`(N x N)`。
+        - **J** (Union[numpy.array, scipy.sparse.spmatrix]) - 耦合矩阵，维度为 :math:`(N x N)`。
         - **h** (numpy.array) - 外场强度，维度为 :math:`(N, )`。
         - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N x batch_size)`。会在优化过程中被修改。默认值： ``None``。
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。

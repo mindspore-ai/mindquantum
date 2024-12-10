@@ -15,7 +15,7 @@
 """The base class of QAIA."""
 # pylint: disable=invalid-name
 import numpy as np
-from scipy.sparse import csr_matrix
+from scipy import sparse as sp
 from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
 
 
@@ -31,7 +31,7 @@ class QAIA:
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N x 1)`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
             Will be modified during optimization. Default: ``None``.
@@ -42,8 +42,8 @@ class QAIA:
     # pylint: disable=too-many-arguments
     def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1):
         """Construct a QAIA algorithm."""
-        if not isinstance(J, (np.ndarray, csr_matrix)):
-            raise TypeError(f"J requires numpy.array or scipy.sparse.csr_matrix, but get {type(J)}")
+        if not isinstance(J, (np.ndarray, sp.spmatrix)):
+            raise TypeError(f"J requires numpy.array or scipy sparse matrix, but get {type(J)}")
         if len(J.shape) != 2 or J.shape[0] != J.shape[1]:
             raise ValueError(f"J must be a square matrix, but got shape {J.shape}")
 

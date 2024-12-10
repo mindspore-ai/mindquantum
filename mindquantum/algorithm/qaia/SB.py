@@ -45,7 +45,7 @@ class SB(QAIA):
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
             Will be modified during optimization. Default: ``None``.
@@ -112,7 +112,7 @@ class ASB(SB):  # noqa: N801
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
             Will be modified during optimization. Default: ``None``.
@@ -185,7 +185,7 @@ class BSB(SB):  # noqa: N801
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
             Will be modified during optimization. Default: ``None``.
@@ -245,7 +245,7 @@ class BSB(SB):  # noqa: N801
                 )
             if len(self.h.shape) == 1:
                 self.h = self.h[:, np.newaxis]
-            h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
+
         if self.x is not None:
             if not isinstance(self.x, np.ndarray):
                 raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
@@ -253,8 +253,10 @@ class BSB(SB):  # noqa: N801
                 raise ValueError(f"x must be a 2D array, but got shape {self.x.shape}")
             if self.x.shape[0] != self.J.shape[0] or self.x.shape[1] != self.batch_size:
                 raise ValueError(f"x must have shape ({self.J.shape[0]}, {self.batch_size}), but got {self.x.shape}")
+
         if self.backend == 'gpu-float16':
             if self.h is not None:
+                h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
                 _qaia_sb.bsb_update_h_half(
                     self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
@@ -264,6 +266,7 @@ class BSB(SB):  # noqa: N801
                 )
         elif self.backend == 'gpu-int8':
             if self.h is not None:
+                h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
                 _qaia_sb.bsb_update_h_int8(
                     self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
@@ -297,7 +300,7 @@ class DSB(SB):  # noqa: N801
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
             Will be modified during optimization. Default: ``None``.
@@ -356,7 +359,7 @@ class DSB(SB):  # noqa: N801
                 )
             if len(self.h.shape) == 1:
                 self.h = self.h[:, np.newaxis]
-            h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
+
         if self.x is not None:
             if not isinstance(self.x, np.ndarray):
                 raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
@@ -364,8 +367,10 @@ class DSB(SB):  # noqa: N801
                 raise ValueError(f"x must be a 2D array, but got shape {self.x.shape}")
             if self.x.shape[0] != self.J.shape[0] or self.x.shape[1] != self.batch_size:
                 raise ValueError(f"x must have shape ({self.J.shape[0]}, {self.batch_size}), but got {self.x.shape}")
+
         if self.backend == 'gpu-float16':
             if self.h is not None:
+                h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
                 _qaia_sb.dsb_update_h_half(
                     self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
@@ -375,6 +380,7 @@ class DSB(SB):  # noqa: N801
                 )
         elif self.backend == 'gpu-int8':
             if self.h is not None:
+                h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
                 _qaia_sb.dsb_update_h_int8(
                     self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
