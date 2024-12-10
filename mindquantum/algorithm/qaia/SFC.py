@@ -42,6 +42,17 @@ class SFC(QAIA):
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.1``.
         k (float): parameter of deviation between mean-field and error variables. Default: ``0.2``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import SFC
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = SFC(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes

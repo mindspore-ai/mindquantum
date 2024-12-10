@@ -42,6 +42,17 @@ class NMFA(QAIA):
         batch_size (int): The number of sampling. Default: ``1``.
         alpha (float): Momentum factor. Default: ``0.15``.
         sigma (float): The standard deviation of noise. Default: ``0.15``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import NMFA
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = NMFA(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments

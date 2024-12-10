@@ -49,6 +49,17 @@ class SimCIM(QAIA):
         momentum (float): momentum factor. Default: ``0.9``.
         sigma (float): The standard deviation of noise. Default: ``0.03``.
         pt (float): Pump parameter. Default: ``6.5``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import SimCIM
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = SimCIM(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 0. 0.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1.  1.  1.]
     """
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes

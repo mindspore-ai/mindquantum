@@ -41,6 +41,17 @@ class CAC(QAIA):
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.075``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import CAC
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = CAC(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes

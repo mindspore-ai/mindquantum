@@ -121,6 +121,17 @@ class ASB(SB):  # noqa: N801
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
         M (int): The number of update without mean-field terms. Default: ``2``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import ASB
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = ASB(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments
@@ -184,6 +195,17 @@ class BSB(SB):  # noqa: N801
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
             'gpu-float16', or 'gpu-int8'. Default: ``'cpu-float32'``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import BSB
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = BSB(J, batch_size=5, backend='cpu-float32')
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments
@@ -214,6 +236,20 @@ class BSB(SB):  # noqa: N801
 
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.h is not None:
+            if not isinstance(self.h, np.ndarray):
+                raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
+            if self.h.shape != (self.J.shape[0],):
+                raise ValueError(f"h must have shape ({self.J.shape[0]},), but got {self.h.shape}")
+            if len(self.h.shape) < 2:
+                self.h = self.h[:, np.newaxis]
+        if self.x is not None:
+            if not isinstance(self.x, np.ndarray):
+                raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
+            if len(self.x.shape) != 2:
+                raise ValueError(f"x must be a 2D array, but got shape {self.x.shape}")
+            if self.x.shape[0] != self.J.shape[0] or self.x.shape[1] != self.batch_size:
+                raise ValueError(f"x must have shape ({self.J.shape[0]}, {self.batch_size}), but got {self.x.shape}")
         if self.backend == 'gpu-float16':
             if self.h is not None:
                 _qaia_sb.bsb_update_h_half(
@@ -268,6 +304,17 @@ class DSB(SB):  # noqa: N801
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
             'gpu-float16', or 'gpu-int8'. Default: ``'cpu-float32'``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import DSB
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = DSB(J, batch_size=5, backend='cpu-float32')
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [0. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [ 1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments
@@ -297,6 +344,20 @@ class DSB(SB):  # noqa: N801
 
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.h is not None:
+            if not isinstance(self.h, np.ndarray):
+                raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
+            if self.h.shape != (self.J.shape[0],):
+                raise ValueError(f"h must have shape ({self.J.shape[0]},), but got {self.h.shape}")
+            if len(self.h.shape) < 2:
+                self.h = self.h[:, np.newaxis]
+        if self.x is not None:
+            if not isinstance(self.x, np.ndarray):
+                raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
+            if len(self.x.shape) != 2:
+                raise ValueError(f"x must be a 2D array, but got shape {self.x.shape}")
+            if self.x.shape[0] != self.J.shape[0] or self.x.shape[1] != self.batch_size:
+                raise ValueError(f"x must have shape ({self.J.shape[0]}, {self.batch_size}), but got {self.x.shape}")
         if self.backend == 'gpu-float16':
             if self.h is not None:
                 _qaia_sb.dsb_update_h_half(
