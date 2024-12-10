@@ -61,9 +61,9 @@ void sb_update(const py::object& csr, const py::array_t<double>& x, const py::ar
     mindquantum::algorithm::qaia::detail::Para paras(B, xi, delta, dt, n_iter);
 
     double* raw_h = static_cast<double*>(h.request().ptr);
-    int ndim = h.ndim();
+    int h_size = h.size();
 
-    mindquantum::algorithm::qaia::detail::SBUpdater<SB, T, H>::update(csr_matrix, raw_x, paras, raw_h, ndim);
+    mindquantum::algorithm::qaia::detail::SBUpdater<SB, T, H>::update(csr_matrix, raw_x, paras, raw_h, h_size);
 }
 
 PYBIND11_MODULE(_qaia_sb, module) {

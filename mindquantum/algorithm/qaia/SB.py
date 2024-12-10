@@ -240,9 +240,12 @@ class BSB(SB):  # noqa: N801
             if not isinstance(self.h, np.ndarray):
                 raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
             if self.h.shape != (self.J.shape[0],) and self.h.shape != (self.J.shape[0], 1):
-                raise ValueError(f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}")
+                raise ValueError(
+                    f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}"
+                )
             if len(self.h.shape) == 1:
                 self.h = self.h[:, np.newaxis]
+            h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
         if self.x is not None:
             if not isinstance(self.x, np.ndarray):
                 raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
@@ -253,7 +256,7 @@ class BSB(SB):  # noqa: N801
         if self.backend == 'gpu-float16':
             if self.h is not None:
                 _qaia_sb.bsb_update_h_half(
-                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                    self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
             else:
                 _qaia_sb.bsb_update_half(
@@ -262,7 +265,7 @@ class BSB(SB):  # noqa: N801
         elif self.backend == 'gpu-int8':
             if self.h is not None:
                 _qaia_sb.bsb_update_h_int8(
-                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                    self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
             else:
                 _qaia_sb.bsb_update_int8(
@@ -348,9 +351,12 @@ class DSB(SB):  # noqa: N801
             if not isinstance(self.h, np.ndarray):
                 raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
             if self.h.shape != (self.J.shape[0],) and self.h.shape != (self.J.shape[0], 1):
-                raise ValueError(f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}")
+                raise ValueError(
+                    f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}"
+                )
             if len(self.h.shape) == 1:
                 self.h = self.h[:, np.newaxis]
+            h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
         if self.x is not None:
             if not isinstance(self.x, np.ndarray):
                 raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
@@ -361,7 +367,7 @@ class DSB(SB):  # noqa: N801
         if self.backend == 'gpu-float16':
             if self.h is not None:
                 _qaia_sb.dsb_update_h_half(
-                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                    self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
             else:
                 _qaia_sb.dsb_update_half(
@@ -370,7 +376,7 @@ class DSB(SB):  # noqa: N801
         elif self.backend == 'gpu-int8':
             if self.h is not None:
                 _qaia_sb.dsb_update_h_int8(
-                    self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
+                    self.J, self.x, h_broadcast, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
             else:
                 _qaia_sb.dsb_update_int8(

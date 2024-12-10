@@ -31,13 +31,17 @@ struct SBBase {
 
     static void dSB_update_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras);
 
-    static void dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim);
+    static void dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h,
+                                  int h_size);
 
-    static void bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim);
+    static void bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h,
+                                  int h_size);
 
-    static void bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim);
+    static void bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h,
+                                  int h_size);
 
-    static void dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim);
+    static void dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h,
+                                  int h_size);
 
     static void cublas_warmup(int N, int B);
 };

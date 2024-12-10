@@ -268,7 +268,7 @@ void SBBase::dSB_update_fp16(mindquantum::sparse::CsrBase<double> csr, double* x
     HANDLE_ERROR(cudaFree(signx));
 }
 
-void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim) {
+void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int h_size) {
     Index* indptr = csr.indptr_;
     Index* indices = csr.indices_;
     double* data = csr.data_;
@@ -280,6 +280,11 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     int n_iter = paras.n_iter;
     int NN = N * N;
     int NB = N * B;
+
+    if (h_size != N * B) {
+        throw std::runtime_error("External field h must have length N * batch_size(" + std::to_string(N * B)
+                                 + "), but got length " + std::to_string(h_size));
+    }
 
     std::vector<int8_t> h_J(NN, 0);
     std::vector<int8_t> h_x(NB);
@@ -295,10 +300,12 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(int)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&signx), NB * sizeof(int8_t)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(int8_t), cudaMemcpyHostToDevice));
+
     std::vector<int> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
         h_h[i] = static_cast<int>(h[i] * 127);
     }
+
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(int), cudaMemcpyHostToDevice));
 
@@ -334,7 +341,7 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaFree(signx));
 }
 
-void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim) {
+void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int h_size) {
     Index* indptr = csr.indptr_;
     Index* indices = csr.indices_;
     double* data = csr.data_;
@@ -346,6 +353,11 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     int n_iter = paras.n_iter;
     int NN = N * N;
     int NB = N * B;
+
+    if (h_size != N * B) {
+        throw std::runtime_error("External field h must have length N * batch_size(" + std::to_string(N * B)
+                                 + "), but got length " + std::to_string(h_size));
+    }
 
     std::vector<int8_t> h_J(NN, 0);
     std::vector<int8_t> h_x(NB);
@@ -360,10 +372,12 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_y), NB * sizeof(int)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(int8_t), cudaMemcpyHostToDevice));
+
     std::vector<int> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
-        h_h[i] = static_cast<int>(data[i] * 127);
+        h_h[i] = static_cast<int>(h[i] * 127);
     }
+
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(int), cudaMemcpyHostToDevice));
 
@@ -397,7 +411,7 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaFree(tmp));
 }
 
-void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim) {
+void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int h_size) {
     Index* indptr = csr.indptr_;
     Index* indices = csr.indices_;
     double* data = csr.data_;
@@ -409,6 +423,11 @@ void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     int n_iter = paras.n_iter;
     int NN = N * N;
     int NB = N * B;
+
+    if (h_size != N * B) {
+        throw std::runtime_error("External field h must have length N * batch_size(" + std::to_string(N * B)
+                                 + "), but got length " + std::to_string(h_size));
+    }
 
     std::vector<half> h_J(NN, 0);
     std::vector<half> h_x(NB);
@@ -423,10 +442,12 @@ void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_y), NB * sizeof(half)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(half), cudaMemcpyHostToDevice));
+
     std::vector<half> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
         h_h[i] = static_cast<half>(h[i]);
     }
+
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
@@ -462,7 +483,7 @@ void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaFree(tmp));
 }
 
-void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int ndim) {
+void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double* x, Para paras, double* h, int h_size) {
     Index* indptr = csr.indptr_;
     Index* indices = csr.indices_;
     double* data = csr.data_;
@@ -474,6 +495,11 @@ void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     int n_iter = paras.n_iter;
     int NN = N * N;
     int NB = N * B;
+
+    if (h_size != N * B) {
+        throw std::runtime_error("External field h must have length N * batch_size(" + std::to_string(N * B)
+                                 + "), but got length " + std::to_string(h_size));
+    }
 
     std::vector<half> h_J(NN, 0);
     std::vector<half> h_x(NB);
@@ -489,10 +515,12 @@ void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(half)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&signx), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(half), cudaMemcpyHostToDevice));
+
     std::vector<half> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
         h_h[i] = static_cast<half>(h[i]);
     }
+
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
