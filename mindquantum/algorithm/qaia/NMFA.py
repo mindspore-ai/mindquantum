@@ -17,6 +17,11 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
+from mindquantum.utils.type_value_check import (
+    _check_number_type,
+    _check_value_should_between_close_set,
+    _check_value_should_not_less,
+)
 from .QAIA import QAIA
 
 
@@ -27,14 +32,31 @@ class NMFA(QAIA):
     Reference: `Emulating the coherent Ising machine with a mean-field
     algorithm <https://arxiv.org/abs/1806.08422>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         alpha (float): Momentum factor. Default: ``0.15``.
         sigma (float): The standard deviation of noise. Default: ``0.15``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import NMFA
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = NMFA(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments
@@ -49,6 +71,12 @@ class NMFA(QAIA):
         sigma=0.15,
     ):
         """Construct NMFA algorithm."""
+        _check_number_type("alpha", alpha)
+        _check_value_should_between_close_set("alpha", 0, 1, alpha)
+
+        _check_number_type("sigma", sigma)
+        _check_value_should_not_less("sigma", 0, sigma)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         if self.h is None:

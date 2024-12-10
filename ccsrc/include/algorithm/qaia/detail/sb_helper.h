@@ -32,39 +32,39 @@ struct SBUpdater;
 template <>
 struct SBUpdater<0, half, true> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
-        mindquantum::algorithm::qaia::detail::SBBase::bSB_update_h_fp16(csr_matrix, raw_x, paras, raw_h, ndim);
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
+        mindquantum::algorithm::qaia::detail::SBBase::bSB_update_h_fp16(csr_matrix, raw_x, paras, raw_h, h_size);
     }
 };
 
 template <>
 struct SBUpdater<0, int8_t, true> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
-        mindquantum::algorithm::qaia::detail::SBBase::bSB_update_h_int8(csr_matrix, raw_x, paras, raw_h, ndim);
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
+        mindquantum::algorithm::qaia::detail::SBBase::bSB_update_h_int8(csr_matrix, raw_x, paras, raw_h, h_size);
     }
 };
 
 template <>
 struct SBUpdater<1, half, true> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
-        mindquantum::algorithm::qaia::detail::SBBase::dSB_update_h_fp16(csr_matrix, raw_x, paras, raw_h, ndim);
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
+        mindquantum::algorithm::qaia::detail::SBBase::dSB_update_h_fp16(csr_matrix, raw_x, paras, raw_h, h_size);
     }
 };
 
 template <>
 struct SBUpdater<1, int8_t, true> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
-        mindquantum::algorithm::qaia::detail::SBBase::dSB_update_h_int8(csr_matrix, raw_x, paras, raw_h, ndim);
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
+        mindquantum::algorithm::qaia::detail::SBBase::dSB_update_h_int8(csr_matrix, raw_x, paras, raw_h, h_size);
     }
 };
 
 template <>
 struct SBUpdater<0, half, false> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
         mindquantum::algorithm::qaia::detail::SBBase::bSB_update_fp16(csr_matrix, raw_x, paras);
     }
 };
@@ -72,7 +72,7 @@ struct SBUpdater<0, half, false> {
 template <>
 struct SBUpdater<0, int8_t, false> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
         mindquantum::algorithm::qaia::detail::SBBase::bSB_update_int8(csr_matrix, raw_x, paras);
     }
 };
@@ -80,7 +80,7 @@ struct SBUpdater<0, int8_t, false> {
 template <>
 struct SBUpdater<1, half, false> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
         mindquantum::algorithm::qaia::detail::SBBase::dSB_update_fp16(csr_matrix, raw_x, paras);
     }
 };
@@ -88,7 +88,7 @@ struct SBUpdater<1, half, false> {
 template <>
 struct SBUpdater<1, int8_t, false> {
     static void update(const mindquantum::sparse::CsrBase<double>& csr_matrix, double* raw_x,
-                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int ndim) {
+                       const mindquantum::algorithm::qaia::detail::Para& paras, double* raw_h, int h_size) {
         mindquantum::algorithm::qaia::detail::SBBase::dSB_update_int8(csr_matrix, raw_x, paras);
     }
 };
