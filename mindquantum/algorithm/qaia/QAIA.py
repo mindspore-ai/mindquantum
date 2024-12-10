@@ -50,9 +50,9 @@ class QAIA:
         if h is not None:
             if not isinstance(h, np.ndarray):
                 raise TypeError(f"h requires numpy.array, but get {type(h)}")
-            if h.shape != (J.shape[0],):
-                raise ValueError(f"h must have shape ({J.shape[0]},), but got {h.shape}")
-            if len(h.shape) < 2:
+            if h.shape != (J.shape[0],) and h.shape != (J.shape[0], 1):
+                raise ValueError(f"h must have shape ({J.shape[0]},) or ({J.shape[0]}, 1), but got {h.shape}")
+            if len(h.shape) == 1:
                 h = h[:, np.newaxis]
 
         if x is not None:

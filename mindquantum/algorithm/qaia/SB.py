@@ -17,8 +17,8 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from .QAIA import QAIA, OverflowException
 from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less, _check_int_type
+from .QAIA import QAIA, OverflowException
 
 try:
     from mindquantum import _qaia_sb
@@ -239,9 +239,9 @@ class BSB(SB):  # noqa: N801
         if self.h is not None:
             if not isinstance(self.h, np.ndarray):
                 raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
-            if self.h.shape != (self.J.shape[0],):
-                raise ValueError(f"h must have shape ({self.J.shape[0]},), but got {self.h.shape}")
-            if len(self.h.shape) < 2:
+            if self.h.shape != (self.J.shape[0],) and self.h.shape != (self.J.shape[0], 1):
+                raise ValueError(f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}")
+            if len(self.h.shape) == 1:
                 self.h = self.h[:, np.newaxis]
         if self.x is not None:
             if not isinstance(self.x, np.ndarray):
@@ -347,9 +347,9 @@ class DSB(SB):  # noqa: N801
         if self.h is not None:
             if not isinstance(self.h, np.ndarray):
                 raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
-            if self.h.shape != (self.J.shape[0],):
-                raise ValueError(f"h must have shape ({self.J.shape[0]},), but got {self.h.shape}")
-            if len(self.h.shape) < 2:
+            if self.h.shape != (self.J.shape[0],) and self.h.shape != (self.J.shape[0], 1):
+                raise ValueError(f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}")
+            if len(self.h.shape) == 1:
                 self.h = self.h[:, np.newaxis]
         if self.x is not None:
             if not isinstance(self.x, np.ndarray):

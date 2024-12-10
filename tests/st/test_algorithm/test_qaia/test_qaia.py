@@ -130,20 +130,23 @@ def test_bSB_gpu():
     N = G.shape[0]
     np.random.seed(666)
     n_iter = 1000  # Increase the number of iterations for end-to-end testing
+    batch_size = 100
+    dt = 0.9
+    xi = 0.1
 
     # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    y = 0.01 * (np.random.rand(N, 1) - 0.5)
+    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
+    y = 0.01 * (np.random.rand(N, batch_size) - 0.5)
 
     # CPU float32 baseline test
-    solver_cpu = BSB(G, n_iter=n_iter, backend='cpu-float32')
+    solver_cpu = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
     solver_cpu.x = x.copy()
     solver_cpu.y = y.copy()
     solver_cpu.update()
     cut_cpu = np.mean(solver_cpu.calc_cut())
 
     # GPU float16 test
-    solver_gpu_fp16 = BSB(G, n_iter=n_iter, backend='gpu-float16')
+    solver_gpu_fp16 = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
     solver_gpu_fp16.x = x.copy()
     solver_gpu_fp16.y = y.copy()
     solver_gpu_fp16.update()
@@ -154,8 +157,8 @@ def test_bSB_gpu():
 
     # Use external field for testing
     h = np.random.rand(N, 1)
-    solver_cpu_h = BSB(G, h=h, n_iter=n_iter, backend='cpu-float32')
-    solver_gpu_h = BSB(G, h=h, n_iter=n_iter, backend='gpu-float16')
+    solver_cpu_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
+    solver_gpu_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
 
     solver_cpu_h.x = x.copy()
     solver_cpu_h.y = y.copy()
@@ -169,7 +172,7 @@ def test_bSB_gpu():
     assert np.abs(cut_gpu_h - cut_cpu_h) / np.abs(cut_cpu_h) < 0.1
 
     # GPU int8 test
-    solver_int8 = BSB(G, n_iter=n_iter, backend='gpu-int8')
+    solver_int8 = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
     solver_int8.x = x.copy()
     solver_int8.y = y.copy()
     solver_int8.update()
@@ -177,7 +180,7 @@ def test_bSB_gpu():
     assert np.abs(cut_int8 - cut_cpu) / np.abs(cut_cpu) < 0.1
 
     # GPU int8 + external field test
-    solver_int8_h = BSB(G, h=h, n_iter=n_iter, backend='gpu-int8')
+    solver_int8_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
     solver_int8_h.x = x.copy()
     solver_int8_h.y = y.copy()
     solver_int8_h.update()
@@ -218,20 +221,23 @@ def test_dSB_gpu():
     N = G.shape[0]
     np.random.seed(666)
     n_iter = 1000  # Increase the number of iterations for end-to-end testing
+    batch_size = 100
+    dt = 0.9
+    xi = 0.1
 
     # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    y = 0.01 * (np.random.rand(N, 1) - 0.5)
+    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
+    y = 0.01 * (np.random.rand(N, batch_size) - 0.5)
 
     # CPU float32 baseline test
-    solver_cpu = DSB(G, n_iter=n_iter, backend='cpu-float32')
+    solver_cpu = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
     solver_cpu.x = x.copy()
     solver_cpu.y = y.copy()
     solver_cpu.update()
     cut_cpu = np.mean(solver_cpu.calc_cut())
 
     # GPU float16 test
-    solver_gpu_fp16 = DSB(G, n_iter=n_iter, backend='gpu-float16')
+    solver_gpu_fp16 = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
     solver_gpu_fp16.x = x.copy()
     solver_gpu_fp16.y = y.copy()
     solver_gpu_fp16.update()
@@ -242,8 +248,8 @@ def test_dSB_gpu():
 
     # Use external field for testing
     h = np.random.rand(N, 1)
-    solver_cpu_h = DSB(G, h=h, n_iter=n_iter, backend='cpu-float32')
-    solver_gpu_h = DSB(G, h=h, n_iter=n_iter, backend='gpu-float16')
+    solver_cpu_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
+    solver_gpu_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
 
     solver_cpu_h.x = x.copy()
     solver_cpu_h.y = y.copy()
@@ -257,7 +263,7 @@ def test_dSB_gpu():
     assert np.abs(cut_gpu_h - cut_cpu_h) / np.abs(cut_cpu_h) < 0.1
 
     # GPU int8 test
-    solver_int8 = DSB(G, n_iter=n_iter, backend='gpu-int8')
+    solver_int8 = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
     solver_int8.x = x.copy()
     solver_int8.y = y.copy()
     solver_int8.update()
@@ -265,7 +271,7 @@ def test_dSB_gpu():
     assert np.abs(cut_int8 - cut_cpu) / np.abs(cut_cpu) < 0.1
 
     # GPU int8 + external field test
-    solver_int8_h = DSB(G, h=h, n_iter=n_iter, backend='gpu-int8')
+    solver_int8_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
     solver_int8_h.x = x.copy()
     solver_int8_h.y = y.copy()
     solver_int8_h.update()
