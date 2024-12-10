@@ -17,13 +17,12 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from .QAIA import QAIA
-
 from mindquantum.utils.type_value_check import (
     _check_number_type,
     _check_value_should_not_less,
     _check_value_should_between_close_set,
 )
+from .QAIA import QAIA
 
 
 class SimCIM(QAIA):
