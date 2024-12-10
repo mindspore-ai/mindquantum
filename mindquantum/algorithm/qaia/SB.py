@@ -18,6 +18,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA, OverflowException
+from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less, _check_int_type
 
 try:
     from mindquantum import _qaia_sb
@@ -66,6 +67,13 @@ class SB(QAIA):
         xi=None,
     ):
         """Construct SB algorithm."""
+        _check_number_type("dt", dt)
+        _check_value_should_not_less("dt", 0, dt)
+
+        if xi is not None:
+            _check_number_type("xi", xi)
+            _check_value_should_not_less("xi", 0, xi)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         # positive detuning frequency
@@ -128,6 +136,8 @@ class ASB(SB):  # noqa: N801
         M=2,
     ):
         """Construct ASB algorithm."""
+        _check_int_type("M", M)
+        _check_value_should_not_less("M", 1, M)
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         # positive Kerr coefficient
         self.K = 1
@@ -190,7 +200,10 @@ class BSB(SB):  # noqa: N801
     ):
         """Construct BSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+
         valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
+        if not isinstance(backend, str):
+            raise TypeError(f"backend requires a string, but get {type(backend)}")
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
         if backend.startswith('gpu'):
@@ -272,6 +285,8 @@ class DSB(SB):  # noqa: N801
         """Construct DSB algorithm."""
         super().__init__(J, h, x, n_iter, batch_size, dt, xi)
         valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
+        if not isinstance(backend, str):
+            raise TypeError(f"backend requires a string, but get {type(backend)}")
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
         if backend.startswith('gpu'):

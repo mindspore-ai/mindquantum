@@ -15,6 +15,8 @@
 """The base class of QAIA."""
 # pylint: disable=invalid-name
 import numpy as np
+from scipy.sparse import csr_matrix
+from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
 
 
 class QAIA:
@@ -40,9 +42,33 @@ class QAIA:
     # pylint: disable=too-many-arguments
     def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1):
         """Construct a QAIA algorithm."""
+        if not isinstance(J, (np.ndarray, csr_matrix)):
+            raise TypeError(f"J requires numpy.array or scipy.sparse.csr_matrix, but get {type(J)}")
+        if len(J.shape) != 2 or J.shape[0] != J.shape[1]:
+            raise ValueError(f"J must be a square matrix, but got shape {J.shape}")
+
+        if h is not None:
+            if not isinstance(h, np.ndarray):
+                raise TypeError(f"h requires numpy.array, but get {type(h)}")
+            if h.shape != (J.shape[0],):
+                raise ValueError(f"h must have shape ({J.shape[0]},), but got {h.shape}")
+            if len(h.shape) < 2:
+                h = h[:, np.newaxis]
+
+        if x is not None:
+            if not isinstance(x, np.ndarray):
+                raise TypeError(f"x requires numpy.array, but get {type(x)}")
+            if len(x.shape) != 2:
+                raise ValueError(f"x must be a 2D array, but got shape {x.shape}")
+            if x.shape[0] != J.shape[0] or x.shape[1] != batch_size:
+                raise ValueError(f"x must have shape ({J.shape[0]}, {batch_size}), but got {x.shape}")
+
+        _check_int_type("n_iter", n_iter)
+        _check_value_should_not_less("n_iter", 1, n_iter)
+        _check_int_type("batch_size", batch_size)
+        _check_value_should_not_less("batch_size", 1, batch_size)
+
         self.J = J
-        if h is not None and len(h.shape) < 2:
-            h = h[:, np.newaxis]
         self.h = h
         self.x = x
         # The number of spins

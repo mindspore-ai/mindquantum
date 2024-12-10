@@ -19,6 +19,7 @@ from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA
 
+from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_between_close_set, _check_value_should_not_less
 
 class NMFA(QAIA):
     r"""
@@ -55,6 +56,12 @@ class NMFA(QAIA):
         sigma=0.15,
     ):
         """Construct NMFA algorithm."""
+        _check_number_type("alpha", alpha)
+        _check_value_should_between_close_set("alpha", 0, 1, alpha)
+
+        _check_number_type("sigma", sigma)
+        _check_value_should_not_less("sigma", 0, sigma)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         if self.h is None:

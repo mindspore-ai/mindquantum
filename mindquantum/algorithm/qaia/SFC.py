@@ -18,6 +18,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA, OverflowException
+from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less
 
 
 class SFC(QAIA):
@@ -55,6 +56,12 @@ class SFC(QAIA):
         k=0.2,
     ):
         """Construct SFC algorithm."""
+        _check_number_type("dt", dt)
+        _check_value_should_not_less("dt", 0, dt)
+
+        _check_number_type("k", k)
+        _check_value_should_not_less("k", 0, k)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         self.N = self.J.shape[0]

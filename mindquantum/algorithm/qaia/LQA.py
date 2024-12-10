@@ -19,6 +19,7 @@ from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA
 
+from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less, _check_value_should_between_close_set
 
 class LQA(QAIA):
     r"""
@@ -57,6 +58,15 @@ class LQA(QAIA):
         momentum=0.99,
     ):
         """Construct LQA algorithm."""
+        _check_number_type("gamma", gamma)
+        _check_value_should_not_less("gamma", 0, gamma)
+
+        _check_number_type("dt", dt)
+        _check_value_should_not_less("dt", 0, dt)
+
+        _check_number_type("momentum", momentum)
+        _check_value_should_between_close_set("momentum", 0, 1, momentum)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         self.gamma = gamma

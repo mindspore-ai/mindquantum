@@ -19,6 +19,12 @@ from scipy.sparse import csr_matrix
 
 from .QAIA import QAIA
 
+from mindquantum.utils.type_value_check import (
+    _check_number_type,
+    _check_value_should_not_less,
+    _check_value_should_between_close_set,
+)
+
 
 class SimCIM(QAIA):
     r"""
@@ -59,6 +65,18 @@ class SimCIM(QAIA):
         pt=6.5,
     ):
         """Construct SimCIM algorithm."""
+        _check_number_type("dt", dt)
+        _check_value_should_not_less("dt", 0, dt)
+
+        _check_number_type("momentum", momentum)
+        _check_value_should_between_close_set("momentum", 0, 1, momentum)
+
+        _check_number_type("sigma", sigma)
+        _check_value_should_not_less("sigma", 0, sigma)
+
+        _check_number_type("pt", pt)
+        _check_value_should_not_less("pt", 0, pt)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         self.dt = dt
