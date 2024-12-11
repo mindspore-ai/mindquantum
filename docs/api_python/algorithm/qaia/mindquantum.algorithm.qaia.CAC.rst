@@ -14,7 +14,7 @@ mindquantum.algorithm.qaia.CAC
     参数：
         - **J** (Union[numpy.array, scipy.sparse.spmatrix]) - 耦合矩阵，维度为 :math:`(N x N)`。
         - **h** (numpy.array) - 外场强度，维度为 :math:`(N, )`。
-        - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N x batch_size)`。会在优化过程中被修改。默认值： ``None``。
+        - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N x batch_size)`。会在优化过程中被修改。如果不提供（``None``），将被初始化为服从正态分布 N(0, 10^(-4)) 的随机值。默认值： ``None``。
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.075``。

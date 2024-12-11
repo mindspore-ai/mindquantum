@@ -48,7 +48,8 @@ class SB(QAIA):
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
-            Will be modified during optimization. Default: ``None``.
+            Will be modified during optimization. If not provided (``None``), will be initialized as 
+            random values uniformly distributed in [-0.01, 0.01]. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -115,7 +116,8 @@ class ASB(SB):  # noqa: N801
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
-            Will be modified during optimization. Default: ``None``.
+            Will be modified during optimization. If not provided (``None``), will be initialized as 
+            random values uniformly distributed in [-0.01, 0.01]. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -188,7 +190,8 @@ class BSB(SB):  # noqa: N801
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
-            Will be modified during optimization. Default: ``None``.
+            Will be modified during optimization. If not provided (``None``), will be initialized as 
+            random values uniformly distributed in [-0.01, 0.01]. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
@@ -303,7 +306,8 @@ class DSB(SB):  # noqa: N801
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
-            Will be modified during optimization. Default: ``None``.
+            Will be modified during optimization. If not provided (``None``), will be initialized as 
+            random values uniformly distributed in [-0.01, 0.01]. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
