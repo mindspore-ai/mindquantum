@@ -117,7 +117,7 @@ __global__ void update_tail(const int* __restrict__ tmp, int8_t* x, int* y, int 
         return;
     float y_new = static_cast<float>(y[idx])
                   + dt * (xi * static_cast<float>(tmp[idx] / 127) + beta * static_cast<float>(x[idx]));
-    int x_idx = static_cast<int>(x[idx]) + y_new * delta * dt;
+    int x_idx = static_cast<int>(x[idx]) + roundf(y_new * delta * dt);
     if (x_idx >= UP) {
         x[idx] = UP;
         y[idx] = 0;
@@ -126,7 +126,7 @@ __global__ void update_tail(const int* __restrict__ tmp, int8_t* x, int* y, int 
         y[idx] = 0;
     } else {
         x[idx] = x_idx;
-        y[idx] = static_cast<int>(y_new);
+        y[idx] = roundf(y_new);
     }
 }
 
@@ -137,7 +137,7 @@ __global__ void update_h_tail(const int* __restrict__ tmp, int8_t* x, int* y, in
         return;
     float y_new = static_cast<float>(y[idx])
                   + dt * (xi * static_cast<float>((tmp[idx] + h[idx]) / 127) + beta * static_cast<float>(x[idx]));
-    int x_idx = static_cast<int>(x[idx]) + y_new * delta * dt;
+    int x_idx = static_cast<int>(x[idx]) + roundf(y_new * delta * dt);
     if (x_idx >= UP) {
         x[idx] = UP;
         y[idx] = 0;
@@ -146,7 +146,7 @@ __global__ void update_h_tail(const int* __restrict__ tmp, int8_t* x, int* y, in
         y[idx] = 0;
     } else {
         x[idx] = x_idx;
-        y[idx] = static_cast<int>(y_new);
+        y[idx] = roundf(y_new);
     }
 }
 
