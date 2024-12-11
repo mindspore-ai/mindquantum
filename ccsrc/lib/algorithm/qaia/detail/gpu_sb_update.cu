@@ -50,9 +50,14 @@ void SBBase::dSB_update_int8(mindquantum::sparse::CsrBase<double> csr, double* x
 
     std::vector<int8_t> h_J(NN, 0);
     std::vector<int8_t> h_x(NB);
-    std::vector<int> h_y(NB);
 
     fill_J<int8_t>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+        }
+    }
 
     int8_t *d_J, *d_x, *signx;
     int *d_y, *tmp;
@@ -62,8 +67,8 @@ void SBBase::dSB_update_int8(mindquantum::sparse::CsrBase<double> csr, double* x
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(int)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&signx), NB * sizeof(int8_t)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(int8_t), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(int8_t), cudaMemcpyHostToDevice));
 
-    init_xy<int8_t><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<int><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -110,9 +115,14 @@ void SBBase::bSB_update_int8(mindquantum::sparse::CsrBase<double> csr, double* x
 
     std::vector<int8_t> h_J(NN, 0);
     std::vector<int8_t> h_x(NB);
-    std::vector<int> h_y(NB);
 
     fill_J<int8_t>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+        }
+    }
 
     int8_t *d_J, *d_x;
     int *d_y, *tmp;
@@ -121,8 +131,8 @@ void SBBase::bSB_update_int8(mindquantum::sparse::CsrBase<double> csr, double* x
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_y), NB * sizeof(int)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(int8_t), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(int8_t), cudaMemcpyHostToDevice));
 
-    init_xy<int8_t><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<int><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -165,9 +175,14 @@ void SBBase::bSB_update_fp16(mindquantum::sparse::CsrBase<double> csr, double* x
 
     std::vector<half> h_J(NN, 0);
     std::vector<half> h_x(NB);
-    std::vector<half> h_y(NB);
 
     fill_J<half>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[i * B + j] = static_cast<half>(x[i * B + j]);
+        }
+    }
 
     half *d_J, *d_x;
     half *d_y, *tmp;
@@ -176,8 +191,8 @@ void SBBase::bSB_update_fp16(mindquantum::sparse::CsrBase<double> csr, double* x
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_y), NB * sizeof(half)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(half), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
-    init_xy<half><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<half><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -223,9 +238,14 @@ void SBBase::dSB_update_fp16(mindquantum::sparse::CsrBase<double> csr, double* x
 
     std::vector<half> h_J(NN, 0);
     std::vector<half> h_x(NB);
-    std::vector<half> h_y(NB);
 
     fill_J<half>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[i * B + j] = static_cast<half>(x[i * B + j]);
+        }
+    }
 
     half *d_J, *d_x;
     half *d_y, *tmp, *signx;
@@ -235,8 +255,8 @@ void SBBase::dSB_update_fp16(mindquantum::sparse::CsrBase<double> csr, double* x
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(half)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&signx), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(half), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
-    init_xy<half><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<half><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -288,9 +308,14 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
 
     std::vector<int8_t> h_J(NN, 0);
     std::vector<int8_t> h_x(NB);
-    std::vector<int> h_y(NB);
 
     fill_J<int8_t>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+        }
+    }
 
     int8_t *d_J, *d_x, *signx;
     int *d_y, *tmp, *d_h;
@@ -300,6 +325,7 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(int)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&signx), NB * sizeof(int8_t)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(int8_t), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(int8_t), cudaMemcpyHostToDevice));
 
     std::vector<int> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
@@ -309,7 +335,6 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(int), cudaMemcpyHostToDevice));
 
-    init_xy<int8_t><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<int><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -361,9 +386,14 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
 
     std::vector<int8_t> h_J(NN, 0);
     std::vector<int8_t> h_x(NB);
-    std::vector<int> h_y(NB);
 
     fill_J<int8_t>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+        }
+    }
 
     int8_t *d_J, *d_x;
     int *d_y, *tmp, *d_h;
@@ -372,6 +402,7 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_y), NB * sizeof(int)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(int8_t), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(int8_t), cudaMemcpyHostToDevice));
 
     std::vector<int> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
@@ -381,7 +412,6 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(int)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(int), cudaMemcpyHostToDevice));
 
-    init_xy<int8_t><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<int><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -431,9 +461,14 @@ void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
 
     std::vector<half> h_J(NN, 0);
     std::vector<half> h_x(NB);
-    std::vector<half> h_y(NB);
 
     fill_J<half>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[i * B + j] = static_cast<half>(x[i * B + j]);
+        }
+    }
 
     half *d_J, *d_x;
     half *d_y, *tmp, *d_h;
@@ -442,6 +477,7 @@ void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_y), NB * sizeof(half)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(half), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
     std::vector<half> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
@@ -451,7 +487,6 @@ void SBBase::bSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
-    init_xy<half><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<half><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
@@ -503,9 +538,14 @@ void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
 
     std::vector<half> h_J(NN, 0);
     std::vector<half> h_x(NB);
-    std::vector<half> h_y(NB);
 
     fill_J<half>(indices, indptr, data, &h_J, N);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < B; j++) {
+            h_x[i * B + j] = static_cast<half>(x[i * B + j]);
+        }
+    }
 
     half *d_J, *d_x;
     half *d_y, *tmp, *d_h, *signx;
@@ -515,6 +555,7 @@ void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&tmp), NB * sizeof(half)));
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&signx), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_J, h_J.data(), NN * sizeof(half), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x, h_x.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
     std::vector<half> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
@@ -524,7 +565,6 @@ void SBBase::dSB_update_h_fp16(mindquantum::sparse::CsrBase<double> csr, double*
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(half)));
     HANDLE_ERROR(cudaMemcpy(d_h, h_h.data(), NB * sizeof(half), cudaMemcpyHostToDevice));
 
-    init_xy<half><<<(NB + 255) / 256, 256>>>(d_x, NB, time(NULL));
     init_xy<half><<<(NB + 255) / 256, 256>>>(d_y, NB, time(NULL));
 
     cublasHandle_t handle;
