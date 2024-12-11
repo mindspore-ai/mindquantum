@@ -62,6 +62,12 @@ void sb_update(const py::object& csr, const py::array_t<double>& x, const py::ar
     mindquantum::sparse::CsrBase<double> csr_matrix(N, nnz, raw_indptr, raw_indices, raw_data);
 
     double* raw_x = static_cast<double*>(x.request().ptr);
+    int x_size = x.size();
+    if (x_size != N * B) {
+        throw std::runtime_error("Input x must have length N * batch_size(" + std::to_string(N * B)
+                                 + "), but got length " + std::to_string(x_size));
+    }
+
     mindquantum::algorithm::qaia::detail::Para paras(B, xi, delta, dt, n_iter);
 
     double* raw_h = static_cast<double*>(h.request().ptr);
