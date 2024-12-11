@@ -1,12 +1,12 @@
 mindquantum.algorithm.error_mitigation.virtual_distillation
 ============================================================
 
-.. py:function:: mindquantum.algorithm.error_mitigation.virtual_distillation(circ: Circuit, executor: typing.Callable[[Circuit], dict[str, int]], little_endian: bool = True, **kwargs)
+.. py:function:: mindquantum.algorithm.error_mitigation.virtual_distillation(circ: Circuit, executor: Callable[[Circuit], Dict[str, int]], little_endian: bool = True, **kwargs)
 
     基于虚拟蒸馏的误差缓解算法（arXiv:2011.07064）。
 
     该算法用于计算每个量子比特i上 :math:`Z_i` 泡利算符的误差缓解期望值。要测量其他泡利算符( :math:`X_i` 或 :math:`Y_i`` )的期望值，需要在输入电路末尾添加适当的基矢旋转门：
-    
+
     - 对于 :math:`X_i` 测量：在量子比特i上添加H门
     - 对于 :math:`Y_i` 测量：在量子比特i上添加RX(π/2)门
 
