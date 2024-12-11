@@ -33,10 +33,9 @@ def qjpeg(n_qubits: int, m_qubits: int) -> Tuple[Circuit, List[int], List[int]]:
         be not less than the m_qubits. Please refer to arXiv:2306.09323v2 for more information.
 
     Returns:
-        Tuple[Circuit, List[int], List[int]]:
-            - Circuit: The QJPEG circuit for quantum image compression
-            - List[int]: List of indices for remainder qubits that carry the compressed quantum image information
-            - List[int]: List of indices for discarded qubits
+        - Circuit, The QJPEG circuit for quantum image compression
+        - List[int], List of indices for remainder qubits that carry the compressed quantum image information
+        - List[int], List of indices for discarded qubits
 
     Examples:
         >>> from mindquantum import Simulator, normalize

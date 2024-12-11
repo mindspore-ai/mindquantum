@@ -29,6 +29,7 @@ def virtual_distillation(
     The algorithm calculates error-mitigated expectation values of Z_i Pauli operators
     for each qubit i. To measure expectation values of other Pauli operators (X_i or Y_i),
     appropriate basis rotation gates should be added at the end of the input circuit:
+
     - For X_i measurements: Add H gate on qubit i
     - For Y_i measurements: Add RX(π/2) gate on qubit i
 
@@ -42,11 +43,11 @@ def virtual_distillation(
         **kwargs: Additional arguments to be passed to the executor.
 
     Returns:
-        np.ndarray: Error-mitigated expectation values <Z_i> for each qubit i. To obtain
-                   expectation values of other Pauli operators, add appropriate basis
-                   rotation gates to the input circuit before calling this function.
+        np.ndarray, Error-mitigated expectation values <Z_i> for each qubit i. To obtain
+        expectation values of other Pauli operators, add appropriate basis
+        rotation gates to the input circuit before calling this function.
 
-    Example:
+    Examples:
         >>> circ = Circuit([X.on(0), RY(1).on(1)])
         >>> sim = Simulator('mqvector', 4)  # Double number of qubits
         >>> def executor(circ):
