@@ -55,7 +55,7 @@ void SBBase::dSB_update_int8(mindquantum::sparse::CsrBase<double> csr, double* x
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < B; j++) {
-            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+            h_x[j * N + i] = static_cast<int8_t>(round(x[i * B + j] * 127.0));
         }
     }
 
@@ -120,7 +120,7 @@ void SBBase::bSB_update_int8(mindquantum::sparse::CsrBase<double> csr, double* x
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < B; j++) {
-            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+            h_x[j * N + i] = static_cast<int8_t>(round(x[i * B + j] * 127.0));
         }
     }
 
@@ -313,7 +313,7 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < B; j++) {
-            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+            h_x[j * N + i] = static_cast<int8_t>(round(x[i * B + j] * 127.0));
         }
     }
 
@@ -329,7 +329,7 @@ void SBBase::dSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
 
     std::vector<int> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
-        h_h[i] = static_cast<int>(h[i] * 127);
+        h_h[i] = static_cast<int>(round(h[i] * 127.0));
     }
 
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(int)));
@@ -391,7 +391,7 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < B; j++) {
-            h_x[j * N + i] = static_cast<int8_t>(x[i * B + j] * 127.0);
+            h_x[j * N + i] = static_cast<int8_t>(round(x[i * B + j] * 127.0));
         }
     }
 
@@ -406,7 +406,7 @@ void SBBase::bSB_update_h_int8(mindquantum::sparse::CsrBase<double> csr, double*
 
     std::vector<int> h_h(NB, 0);
     for (int i = 0; i < NB; i++) {
-        h_h[i] = static_cast<int>(h[i] * 127);
+        h_h[i] = static_cast<int>(round(h[i] * 127.0));
     }
 
     HANDLE_ERROR(cudaMalloc(reinterpret_cast<void**>(&d_h), NB * sizeof(int)));
