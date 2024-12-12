@@ -2049,7 +2049,7 @@ def gene_univ_two_params_gate(name, matrix_generator, diff_matrix_generator_1, d
             to generate the derivative of matrix with respect to second parameter.
 
     Returns:
-        _ParamNonHerm, a customer parameterized gate with two parameters.
+        _TwoParamNonHerm, a customer parameterized gate with two parameters.
 
     Examples:
         >>> import numpy as np

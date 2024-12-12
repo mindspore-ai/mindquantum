@@ -476,44 +476,57 @@ class MQSim(BackendBase):
         return res
 
     def set_qs(self, quantum_state: np.ndarray):
-        """Set quantum state of simulator."""
-        if isinstance(quantum_state, list):
-            quantum_state = np.array(quantum_state)
-        if not isinstance(quantum_state, np.ndarray):
-            raise TypeError(f"quantum state must be a ndarray, but get {type(quantum_state)}")
+        """Set quantum state of simulator.
+
+        Args:
+            quantum_state: Input quantum state as numpy array. For mqmatrix simulator,
+                can be either 1D vector or 2D density matrix. For mqvector simulator,
+                must be 1D vector.
+        """
+        try:
+            quantum_state = np.asarray(quantum_state)
+        except (TypeError, ValueError) as e:
+            raise TypeError(f"quantum_state must be convertible to numpy array, but got {type(quantum_state)}") from e
+
         n_qubits = np.log2(quantum_state.shape[0])
         if n_qubits % 1 != 0:
             raise ValueError(f"vec size {quantum_state.shape[0]} is not power of 2")
-        n_qubits = int(n_qubits)
-        if self.n_qubits != n_qubits:
-            raise ValueError(f"{n_qubits} qubits vec does not match with simulation qubits ({self.n_qubits})")
+        if self.n_qubits != int(n_qubits):
+            raise ValueError(f"{int(n_qubits)} qubits vec does not match with simulation qubits ({self.n_qubits})")
+
         if self.name == "mqmatrix":
-            if len(quantum_state.shape) == 1:
-                norm_factor = np.sqrt(np.sum(np.abs(quantum_state) ** 2))
-                if norm_factor == 0.0:
-                    raise ValueError("Wrong quantum state.")
-                self.sim.set_qs(quantum_state / norm_factor)
-            elif len(quantum_state.shape) == 2:
-                if not np.allclose(quantum_state, quantum_state.T.conj(), atol=1e-6):
-                    raise ValueError("density matrix must be hermitian.")
-                if (quantum_state.diagonal() < 0).any():
-                    raise ValueError("the diagonal terms in density matrix cannot be negative.")
-                norm_factor = np.real(np.trace(quantum_state))
-                if norm_factor == 0.0:
-                    raise ValueError("Wrong quantum state.")
-                self.sim.set_dm(quantum_state / norm_factor)
-            else:
-                raise ValueError(
-                    f"vec requires a 1-dimensional array, density matrix requires \
-                        a 2-dimensional array, but get {quantum_state.shape}"
-                )
+            self._set_matrix_state(quantum_state)
         else:
-            if len(quantum_state.shape) != 1:
-                raise ValueError(f"vec requires a 1-dimensional array, but get {quantum_state.shape}")
-            norm_factor = np.sqrt(np.sum(np.abs(quantum_state) ** 2))
+            self._set_vector_state(quantum_state)
+
+    def _set_matrix_state(self, state: np.ndarray):
+        """Set state for matrix simulator."""
+        if len(state.shape) == 1:
+            norm_factor = np.sqrt(np.sum(np.abs(state) ** 2))
             if norm_factor == 0.0:
                 raise ValueError("Wrong quantum state.")
-            self.sim.set_qs(quantum_state / norm_factor)
+            self.sim.set_qs(state / norm_factor)
+        elif len(state.shape) == 2:
+            # Validate density matrix properties
+            if not np.allclose(state, state.T.conj(), atol=1e-6):
+                raise ValueError("density matrix must be hermitian.")
+            if (state.diagonal() < 0).any():
+                raise ValueError("the diagonal terms in density matrix cannot be negative.")
+            norm_factor = np.real(np.trace(state))
+            if norm_factor == 0.0:
+                raise ValueError("Wrong quantum state.")
+            self.sim.set_dm(state / norm_factor)
+        else:
+            raise ValueError("State must be 1D vector or 2D density matrix")
+
+    def _set_vector_state(self, state: np.ndarray):
+        """Set state for vector simulator."""
+        if len(state.shape) != 1:
+            raise ValueError(f"vec requires a 1-dimensional array, but get {state.shape}")
+        norm_factor = np.sqrt(np.sum(np.abs(state) ** 2))
+        if norm_factor == 0.0:
+            raise ValueError("Wrong quantum state.")
+        self.sim.set_qs(state / norm_factor)
 
     def get_partial_trace(self, obj_qubits) -> np.ndarray:
         """Get partial trace of density matrix."""
