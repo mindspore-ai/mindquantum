@@ -255,11 +255,24 @@ def test_custom_gate(config):  # pylint: disable=too-many-locals
             assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
 
 
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
+
+try:
+    importlib_metadata.import_module("numba")
+    _HAS_NUMBA = True
+except ImportError:
+    _HAS_NUMBA = False
+
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_two_params_gate(config):  # pylint: disable=too-many-locals
     """
     Description: test custom two parameters gate
@@ -348,18 +361,6 @@ def test_custom_two_params_gate(config):  # pylint: disable=too-many-locals
             assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1e-6)
         else:
             assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
-
-
-try:
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    import importlib_metadata
-
-try:
-    importlib_metadata.import_module("numba")
-    _HAS_NUMBA = True
-except ImportError:
-    _HAS_NUMBA = False
 
 
 @pytest.mark.level0
@@ -917,7 +918,8 @@ def test_two_qubit_gate_order(config, gate):  # pylint: disable=too-many-locals
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_two_params_gate_expectation_with_grad(config):
     """
-    Test the expectation value and gradient calculation of a custom quantum gate with two parameters
+    Description: test the expectation value and gradient calculation of custom two parameters gate
+    Expectation: success.
     """
     virtual_qc, dtype = config
     for n in (1, 2):

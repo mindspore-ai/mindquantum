@@ -1958,6 +1958,83 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
     return _ParamNonHerm
 
 
+class MultiParamsGate(ParameterGate):
+    """Gate with multi intrinsic parameters."""
+
+    def __init__(self, name: str, n_qubits: int, prs: List[ParameterResolver]):
+        """Initialize a MultiParamsGate object."""
+        super().__init__(pr=None, name=name, n_qubits=n_qubits, obj_qubits=None, ctrl_qubits=None)
+        self.prs = prs
+
+    def __type_specific_str__(self) -> str:
+        """Get parameter string."""
+        return ', '.join([pr.expression() for pr in self.prs])
+
+    def __call__(self, prs: List[ParameterResolver]) -> "MultiParamsGate":
+        """Generate new one with given parameters."""
+        new = copy.deepcopy(self)
+        new.prs = [ParameterResolver(i) for i in prs]
+        return new
+
+    def __params_prop__(self) -> Tuple[List[str], List[str], List[str]]:
+        """Get properties of all parameters.
+
+        Returns:
+            (List[str], List[str], List[str]), a tuple with first element is all
+            parameters, second one is all ansatz parameters, and the third one is
+            all encoder parameters.
+        """
+
+        def extend(x, y):
+            """Extend element."""
+            x.extend(y)
+            return x
+
+        keys = []
+        ansatz_params = []
+        encoder_parameters = []
+        reduce(extend, [list(pr.keys()) for pr in self.prs], keys)
+        reduce(extend, [list(pr.ansatz_parameters) for pr in self.prs], ansatz_params)
+        reduce(extend, [list(pr.encoder_parameters) for pr in self.prs], encoder_parameters)
+        return keys, ansatz_params, encoder_parameters
+
+    @property
+    def parameterized(self) -> bool:
+        """Check whether this gate is a parameterized gate."""
+        for pr in self.prs:
+            if not pr.is_const():
+                return True
+        return False
+
+    def get_parameters(self) -> List[ParameterResolver]:
+        """Return a list of parameters of parameterized gate."""
+        return self.prs
+
+    def no_grad(self):
+        """Set all parameters do not require gradient."""
+        for pr in self.prs:
+            pr.no_grad()
+        return self
+
+    def requires_grad(self):
+        """Set all parameters require gradient."""
+        for pr in self.prs:
+            pr.requires_grad()
+        return self
+
+    def requires_grad_part(self, names: List[str]):
+        """Set part of parameters require gradient."""
+        for pr in self.prs:
+            pr.requires_grad_part(names)
+        return self
+
+    def no_grad_part(self, names: List[str]):
+        """Set part of parameters not require gradient."""
+        for pr in self.prs:
+            pr.no_grad_part(names)
+        return self
+
+
 def gene_univ_two_params_gate(name, matrix_generator, diff_matrix_generator_1, diff_matrix_generator_2):
     """
     Generate a customer parameterized gate with two parameters.
@@ -2009,7 +2086,7 @@ def gene_univ_two_params_gate(name, matrix_generator, diff_matrix_generator_1, d
     diff2 = diff_matrix_generator_2(0.123, 0.456)
     if not all(isinstance(m, np.ndarray) and m.dtype == complex for m in [matrix, diff1, diff2]):
         raise ValueError("All generators should return complex numpy arrays")
-    if not (matrix.shape == diff1.shape == diff2.shape):
+    if not matrix.shape == diff1.shape == diff2.shape:
         raise ValueError("All matrices should have the same shape")
 
     n_qubits = int(np.log2(matrix.shape[0]))
@@ -2145,83 +2222,6 @@ def gene_univ_two_params_gate(name, matrix_generator, diff_matrix_generator_1, d
             )
 
     return _TwoParamNonHerm
-
-
-class MultiParamsGate(ParameterGate):
-    """Gate with multi intrinsic parameters."""
-
-    def __init__(self, name: str, n_qubits: int, prs: List[ParameterResolver]):
-        """Initialize a MultiParamsGate object."""
-        super().__init__(pr=None, name=name, n_qubits=n_qubits, obj_qubits=None, ctrl_qubits=None)
-        self.prs = prs
-
-    def __type_specific_str__(self) -> str:
-        """Get parameter string."""
-        return ', '.join([pr.expression() for pr in self.prs])
-
-    def __call__(self, prs: List[ParameterResolver]) -> "MultiParamsGate":
-        """Generate new one with given parameters."""
-        new = copy.deepcopy(self)
-        new.prs = [ParameterResolver(i) for i in prs]
-        return new
-
-    def __params_prop__(self) -> Tuple[List[str], List[str], List[str]]:
-        """Get properties of all parameters.
-
-        Returns:
-            (List[str], List[str], List[str]), a tuple with first element is all
-            parameters, second one is all ansatz parameters, and the third one is
-            all encoder parameters.
-        """
-
-        def extend(x, y):
-            """Extend element."""
-            x.extend(y)
-            return x
-
-        keys = []
-        ansatz_params = []
-        encoder_parameters = []
-        reduce(extend, [list(pr.keys()) for pr in self.prs], keys)
-        reduce(extend, [list(pr.ansatz_parameters) for pr in self.prs], ansatz_params)
-        reduce(extend, [list(pr.encoder_parameters) for pr in self.prs], encoder_parameters)
-        return keys, ansatz_params, encoder_parameters
-
-    @property
-    def parameterized(self) -> bool:
-        """Check whether this gate is a parameterized gate."""
-        for pr in self.prs:
-            if not pr.is_const():
-                return True
-        return False
-
-    def get_parameters(self) -> List[ParameterResolver]:
-        """Return a list of parameters of parameterized gate."""
-        return self.prs
-
-    def no_grad(self):
-        """Set all parameters do not require gradient."""
-        for pr in self.prs:
-            pr.no_grad()
-        return self
-
-    def requires_grad(self):
-        """Set all parameters require gradient."""
-        for pr in self.prs:
-            pr.requires_grad()
-        return self
-
-    def requires_grad_part(self, names: List[str]):
-        """Set part of parameters require gradient."""
-        for pr in self.prs:
-            pr.requires_grad_part(names)
-        return self
-
-    def no_grad_part(self, names: List[str]):
-        """Set part of parameters not require gradient."""
-        for pr in self.prs:
-            pr.no_grad_part(names)
-        return self
 
 
 class Rn(MultiParamsGate):
