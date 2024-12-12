@@ -255,6 +255,101 @@ def test_custom_gate(config):  # pylint: disable=too-many-locals
             assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", [x for x in SUPPORTED_SIMULATOR if isinstance(x, list) and x[0] == 'mqvector'])
+def test_custom_two_params_gate(config):  # pylint: disable=too-many-locals
+    """
+    Description: test custom two parameters gate
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    for n in (1, 2):
+        if n == 1:
+
+            def matrix(theta1, theta2):
+                return np.array(
+                    [
+                        [np.cos(theta1), -1j * np.sin(theta1) * np.exp(-1j * theta2)],
+                        [-1j * np.sin(theta1) * np.exp(1j * theta2), np.cos(theta1)],
+                    ]
+                )
+
+            def diff_matrix1(theta1, theta2):
+                return np.array(
+                    [
+                        [-np.sin(theta1), -1j * np.cos(theta1) * np.exp(-1j * theta2)],
+                        [-1j * np.cos(theta1) * np.exp(1j * theta2), -np.sin(theta1)],
+                    ]
+                )
+
+            def diff_matrix2(theta1, theta2):
+                return np.array(
+                    [[0, -np.sin(theta1) * np.exp(-1j * theta2)], [np.sin(theta1) * np.exp(1j * theta2), 0]]
+                )
+
+        else:
+
+            def matrix(theta1, theta2):
+                m1 = np.cos(theta1)
+                m2 = -1j * np.sin(theta1) * np.exp(-1j * theta2)
+                return np.array(
+                    [
+                        [1.0 + 0.0j, 0.0j, 0.0j, 0.0j],
+                        [0.0j, m1, m2, 0.0j],
+                        [0.0j, m2, m1, 0.0j],
+                        [0.0j, 0.0j, 0.0j, 1.0 + 0.0j],
+                    ]
+                )
+
+            def diff_matrix1(theta1, theta2):
+                m1 = -np.sin(theta1)
+                m2 = -1j * np.cos(theta1) * np.exp(-1j * theta2)
+                return np.array(
+                    [[0.0j, 0.0j, 0.0j, 0.0j], [0.0j, m1, m2, 0.0j], [0.0j, m2, m1, 0.0j], [0.0j, 0.0j, 0.0j, 0.0j]]
+                )
+
+            def diff_matrix2(theta1, theta2):
+                m2 = -np.sin(theta1) * np.exp(-1j * theta2)
+                return np.array(
+                    [[0.0j, 0.0j, 0.0j, 0.0j], [0.0j, 0, m2, 0.0j], [0.0j, -m2, 0, 0.0j], [0.0j, 0.0j, 0.0j, 0.0j]]
+                )
+
+        g = G.gene_univ_two_params_gate('custom', matrix, diff_matrix1, diff_matrix2)
+        dim = 2 ** (n + 1)
+        g_dim = 2**n
+        pr1, pr2 = np.random.rand(2) * 2 * np.pi
+        g = g('a', 'b').on(list(range(n)))
+
+        # Test basic gate operations
+        init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
+        sim = Simulator(virtual_qc, n + 1, dtype=dtype)
+        sim.set_qs(init_state)
+        sim.apply_gate(g, {'a': pr1, 'b': pr2})
+        ref_qs = np.kron(np.eye(2), g.matrix({'a': pr1, 'b': pr2})) @ (init_state / np.linalg.norm(init_state))
+        if virtual_qc.startswith("mqmatrix"):
+            assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()), atol=1e-6)
+        else:
+            assert np.allclose(sim.get_qs(), ref_qs, atol=1e-6)
+
+        # Test controlled gate operations
+        c_g = g.on(list(range(n)), n)
+        c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
+        c_sim = Simulator(virtual_qc, n + 2, dtype=dtype)
+        c_sim.set_qs(c_init_state)
+        c_sim.apply_gate(c_g, {'a': pr1, 'b': pr2})
+        m = np.block(
+            [[np.eye(g_dim), np.zeros((g_dim, g_dim))], [np.zeros((g_dim, g_dim)), g.matrix({'a': pr1, 'b': pr2})]]
+        )
+        c_ref_qs = np.kron(np.eye(2), m) @ (c_init_state / np.linalg.norm(c_init_state))
+        if virtual_qc.startswith("mqmatrix"):
+            assert np.allclose(c_sim.get_qs(), np.outer(c_ref_qs, c_ref_qs.conj()), atol=1e-6)
+        else:
+            assert np.allclose(c_sim.get_qs(), c_ref_qs, atol=1e-6)
+
+
 try:
     import importlib.metadata as importlib_metadata
 except ImportError:
@@ -812,3 +907,130 @@ def test_two_qubit_gate_order(config, gate):  # pylint: disable=too-many-locals
         assert np.allclose(sim.get_qs(), np.outer(ref_qs, ref_qs.conj()), atol=1e-6)
     else:
         assert np.allclose(sim.get_qs(), ref_qs, atol=1e-6)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", [x for x in SUPPORTED_SIMULATOR if isinstance(x, list) and x[0] == 'mqvector'])
+@pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
+def test_custom_two_params_gate_expectation_with_grad(config):
+    """
+    Test the expectation value and gradient calculation of a custom quantum gate with two parameters
+    """
+    virtual_qc, dtype = config
+    for n in (1, 2):
+        if n == 1:
+
+            def matrix(theta1, theta2):
+                return np.array(
+                    [
+                        [np.cos(theta1), -1j * np.sin(theta1) * np.exp(-1j * theta2)],
+                        [-1j * np.sin(theta1) * np.exp(1j * theta2), np.cos(theta1)],
+                    ]
+                )
+
+            def diff_matrix1(theta1, theta2):
+                return np.array(
+                    [
+                        [-np.sin(theta1), -1j * np.cos(theta1) * np.exp(-1j * theta2)],
+                        [-1j * np.cos(theta1) * np.exp(1j * theta2), -np.sin(theta1)],
+                    ]
+                )
+
+            def diff_matrix2(theta1, theta2):
+                return np.array(
+                    [[0, -np.sin(theta1) * np.exp(-1j * theta2)], [np.sin(theta1) * np.exp(1j * theta2), 0]]
+                )
+
+        else:
+
+            def matrix(theta1, theta2):
+                m1 = np.cos(theta1)
+                m2 = -1j * np.sin(theta1) * np.exp(-1j * theta2)
+                return np.array(
+                    [
+                        [1.0 + 0.0j, 0.0j, 0.0j, 0.0j],
+                        [0.0j, m1, m2, 0.0j],
+                        [0.0j, -np.conj(m2), m1, 0.0j],
+                        [0.0j, 0.0j, 0.0j, 1.0 + 0.0j],
+                    ]
+                )
+
+            def diff_matrix1(theta1, theta2):
+                m1 = -np.sin(theta1)
+                m2 = -1j * np.cos(theta1) * np.exp(-1j * theta2)
+                return np.array(
+                    [
+                        [0.0j, 0.0j, 0.0j, 0.0j],
+                        [0.0j, m1, m2, 0.0j],
+                        [0.0j, -np.conj(m2), m1, 0.0j],
+                        [0.0j, 0.0j, 0.0j, 0.0j],
+                    ]
+                )
+
+            def diff_matrix2(theta1, theta2):
+                m2 = -np.sin(theta1) * np.exp(-1j * theta2)
+                return np.array(
+                    [
+                        [0.0j, 0.0j, 0.0j, 0.0j],
+                        [0.0j, 0, m2, 0.0j],
+                        [0.0j, np.conj(m2), 0, 0.0j],
+                        [0.0j, 0.0j, 0.0j, 0.0j],
+                    ]
+                )
+
+        g = G.gene_univ_two_params_gate('custom', matrix, diff_matrix1, diff_matrix2)
+        dim = 2 ** (n + 1)
+        g = g('a', 'b').on(list(range(n)))
+
+        g = G.gene_univ_two_params_gate('custom', matrix, diff_matrix1, diff_matrix2)
+        dim = 2 ** (n + 1)
+        g = g('a', 'b').on(list(range(n)))
+
+        # Initialize random quantum state
+        init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
+        init_state = init_state / np.linalg.norm(init_state)
+
+        # Set Hamiltonian
+        ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+
+        # Create simulator and calculate expectation value and gradient
+        sim = Simulator(virtual_qc, n + 1, dtype=dtype)
+        sim.set_qs(init_state)
+        grad_ops = sim.get_expectation_with_grad(ham, Circuit(g))
+
+        # Random parameters
+        pr1, pr2 = np.random.rand(2) * 2 * np.pi
+        f, grad = grad_ops([pr1, pr2])
+
+        # Calculate reference value
+        ref_f = (
+            init_state.T.conj()
+            @ np.kron(np.eye(2), g.hermitian().matrix({'a': pr1, 'b': pr2}))
+            @ ham.hamiltonian.matrix(n + 1)
+            @ np.kron(np.eye(2), g.matrix({'a': pr1, 'b': pr2}))
+            @ init_state
+        )
+
+        # Calculate reference gradient
+        ref_grad1 = (
+            init_state.T.conj()
+            @ np.kron(np.eye(2), g.hermitian().matrix({'a': pr1, 'b': pr2}))
+            @ ham.hamiltonian.matrix(n + 1)
+            @ np.kron(np.eye(2), diff_matrix1(pr1, pr2))
+            @ init_state
+        ).real * 2
+
+        ref_grad2 = (
+            init_state.T.conj()
+            @ np.kron(np.eye(2), g.hermitian().matrix({'a': pr1, 'b': pr2}))
+            @ ham.hamiltonian.matrix(n + 1)
+            @ np.kron(np.eye(2), diff_matrix2(pr1, pr2))
+            @ init_state
+        ).real * 2
+
+        # Verify results
+        assert np.allclose(f, ref_f, atol=1e-6)
+        assert np.allclose(grad, [ref_grad1, ref_grad2], atol=1e-6)
