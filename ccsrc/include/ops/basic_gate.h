@@ -497,5 +497,47 @@ class CustomGate : public Parameterizable {
     NumbaMatFunWrapper numba_param_diff_matrix_;
     tensor::Matrix base_matrix_;
 };
+
+class CustomTwoParamGate : public Parameterizable {
+ public:
+    CustomTwoParamGate(const std::string& name, uint64_t m_addr, uint64_t dm_addr1, uint64_t dm_addr2, int dim,
+                       const parameter::ParameterResolver pr1, const parameter::ParameterResolver pr2,
+                       const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
+        : Parameterizable(GateID::CUSTOM_TWO_PARAM, {pr1, pr2}, obj_qubits, ctrl_qubits)
+        , name_(name)
+        , numba_param_matrix_(m_addr, dim)
+        , numba_param_diff_matrix1_(dm_addr1, dim)
+        , numba_param_diff_matrix2_(dm_addr2, dim) {
+        if (!this->Parameterized()) {
+            auto coeffs = this->GetCoeffs();
+            base_matrix_ = this->numba_param_matrix_(
+                tensor::ops::cpu::to_vector<double>(coeffs[0].const_value)[0],
+                tensor::ops::cpu::to_vector<double>(coeffs[1].const_value)[0]);
+        }
+    }
+
+    const tensor::Matrix& GetBaseMatrix() const {
+        return base_matrix_;
+    }
+
+    const NumbaTwoParamMatFunWrapper& GetMatrixWrapper() const {
+        return numba_param_matrix_;
+    }
+
+    const NumbaTwoParamMatFunWrapper& GetDiffMatrix1Wrapper() const {
+        return numba_param_diff_matrix1_;
+    }
+
+    const NumbaTwoParamMatFunWrapper& GetDiffMatrix2Wrapper() const {
+        return numba_param_diff_matrix2_;
+    }
+
+ private:
+    std::string name_;
+    tensor::Matrix base_matrix_;
+    NumbaTwoParamMatFunWrapper numba_param_matrix_;
+    NumbaTwoParamMatFunWrapper numba_param_diff_matrix1_;
+    NumbaTwoParamMatFunWrapper numba_param_diff_matrix2_;
+};
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_GATE_basic_gate_H_

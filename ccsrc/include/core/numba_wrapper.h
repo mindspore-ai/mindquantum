@@ -48,5 +48,29 @@ struct NumbaMatFunWrapper {
     int dim;
     tensor::TDtype dtype = tensor::TDtype::Complex128;
 };
+
+struct NumbaTwoParamMatFunWrapper {
+    using mat_t = void (*)(double, double, std::complex<double>*);
+
+    NumbaTwoParamMatFunWrapper() = default;
+
+    NumbaTwoParamMatFunWrapper(uint64_t addr, int dim, tensor::TDtype dtype = tensor::TDtype::Complex128)
+        : fun(reinterpret_cast<mat_t>(addr)), dim(dim), dtype(dtype) {
+    }
+
+    auto operator()(double param1, double param2) const {
+        auto tmp = tensor::ops::init(dim * dim, tensor::TDtype::Complex128, tensor::TDevice::CPU);
+        fun(param1, param2, reinterpret_cast<std::complex<double>*>(tmp.data));
+        auto out = tensor::Matrix(std::move(tmp), dim, dim);
+        if (this->dtype != tensor::TDtype::Complex128) {
+            out = tensor::Matrix(out.astype(this->dtype), dim, dim);
+        }
+        return out;
+    }
+
+    mat_t fun;
+    int dim;
+    tensor::TDtype dtype = tensor::TDtype::Complex128;
+};
 }  // namespace mindquantum
 #endif

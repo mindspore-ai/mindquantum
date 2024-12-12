@@ -66,6 +66,7 @@ enum class GateID : uint8_t {
     KRAUS,        // Kraus channel
     TR,           // thermal relaxation channel
     CUSTOM,       //
+    CUSTOM_TWO_PARAM,//
     HOLDER,       // for extended gate id.
 };
 
@@ -110,6 +111,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(GateID, {{GateID::I, "I"},
                                       {GateID::KRAUS, "KRAUS"},
                                       {GateID::TR, "TR"},
                                       {GateID::CUSTOM, "CUSTOM"},
+                                      {GateID::CUSTOM_TWO_PARAM, "CUSTOM_TWO_PARAM"},  // 添加对应的序列化支持
                                       {GateID::PauliString, "PauliString"},
                                       {GateID::RPS, "RotPauliString"}});
 }  // namespace mindquantum
@@ -136,6 +138,8 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return fmt::format_to(ctx.out(), "M");
             case mindquantum::GateID::CUSTOM:
                 return fmt::format_to(ctx.out(), "CUSTOM");
+            case mindquantum::GateID::CUSTOM_TWO_PARAM:
+                return fmt::format_to(ctx.out(), "CUSTOM_TWO_PARAM");
             case mindquantum::GateID::SWAPalpha:
                 return fmt::format_to(ctx.out(), "SWAPalpha");
             case mindquantum::GateID::PauliString:

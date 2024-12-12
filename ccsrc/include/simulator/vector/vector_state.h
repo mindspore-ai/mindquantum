@@ -148,6 +148,11 @@ class VectorState {
     virtual tensor::Matrix ExpectDiffFSim(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                           const std::shared_ptr<BasicGate>& gate,
                                           const parameter::ParameterResolver& pr, index_t dim) const;
+
+    virtual tensor::Matrix ExpectDiffCustomTwoParam(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                    const std::shared_ptr<BasicGate>& gate,
+                                                    const parameter::ParameterResolver& pr, index_t dim) const;
+
     //! Apply a quantum circuit on this quantum state
     virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr
                                                                            = parameter::ParameterResolver());

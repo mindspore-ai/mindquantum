@@ -198,6 +198,12 @@ void BindTypeDependentGate(py::module &module) {  // NOLINT(runtime/references)
             "name"_a, "m_addr"_a, "dm_addr"_a, "dim"_a, "pr"_a, "obj_qubits"_a, "ctrl_qubits"_a = VT<Index>())
         .def(py::init<std::string, const tensor::Matrix &, const qbits_t &, const qbits_t &>(), "name"_a, "mat"_a,
              "obj_qubits"_a, "ctrl_qubits"_a);
+    py::class_<mindquantum::CustomTwoParamGate, mindquantum::BasicGate,
+               std::shared_ptr<mindquantum::CustomTwoParamGate>>(module, "CustomTwoParamGate")
+        .def(py::init<std::string, uint64_t, uint64_t, uint64_t, int, const ParameterResolver, const ParameterResolver,
+                      const qbits_t &, const qbits_t &>(),
+             "name"_a, "m_addr"_a, "dm_addr1"_a, "dm_addr2"_a, "dim"_a, "pr1"_a, "pr2"_a, "obj_qubits"_a,
+             "ctrl_qubits"_a = VT<Index>());
 }
 template <typename T>
 auto BindOther(py::module &module) {
@@ -300,7 +306,8 @@ PYBIND11_MODULE(mqbackend, m) {
                        .value("PD", mindquantum::GateID::PD)
                        .value("KRAUS", mindquantum::GateID::KRAUS)
                        .value("TR", mindquantum::GateID::TR)
-                       .value("CUSTOM", mindquantum::GateID::CUSTOM);
+                       .value("CUSTOM", mindquantum::GateID::CUSTOM)
+                       .value("CUSTOM_TWO_PARAM", mindquantum::GateID::CUSTOM_TWO_PARAM);
     gate_id.attr("__repr__") = pybind11::cpp_function(
         [](const mindquantum::GateID &id) -> pybind11::str { return fmt::format("GateID.{}", id); },
         pybind11::name("name"), pybind11::is_method(gate_id));

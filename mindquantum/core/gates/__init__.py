@@ -68,6 +68,7 @@ from .basicgate import (
     Z,
     ZGate,
     gene_univ_parameterized_gate,
+    gene_univ_two_params_gate,
 )
 from .channel import (
     AmplitudeDampingChannel,
@@ -98,6 +99,7 @@ __all__ = [
     "YGate",
     "ZGate",
     "gene_univ_parameterized_gate",
+    "gene_univ_two_params_gate",
     "UnivMathGate",
     "SWAPGate",
     "ISWAPGate",
