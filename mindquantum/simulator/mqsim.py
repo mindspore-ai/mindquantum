@@ -21,6 +21,7 @@ from scipy.linalg import eigvals
 import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
+from mindquantum.core.gates.basicgate import MultiParamsGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.dtype import complex128
@@ -134,7 +135,10 @@ class MQSim(BackendBase):
             if gate.parameterized:
                 if pr is None:
                     raise ValueError("apply a parameterized gate needs a parameter_resolver")
-                pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
+                if isinstance(gate, MultiParamsGate):
+                    pr = _check_and_generate_pr_type(pr, list(set(sum([p.params_name for p in gate.prs], []))))
+                else:
+                    pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
             else:
                 pr = ParameterResolver()
             if isinstance(gate, Measure):
