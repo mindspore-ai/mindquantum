@@ -259,7 +259,7 @@ def test_custom_gate(config):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", [x for x in SUPPORTED_SIMULATOR if isinstance(x, list) and x[0] == 'mqvector'])
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_custom_two_params_gate(config):  # pylint: disable=too-many-locals
     """
     Description: test custom two parameters gate
@@ -913,7 +913,7 @@ def test_two_qubit_gate_order(config, gate):  # pylint: disable=too-many-locals
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-@pytest.mark.parametrize("config", [x for x in SUPPORTED_SIMULATOR if isinstance(x, list) and x[0] == 'mqvector'])
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 @pytest.mark.skipif(not _HAS_NUMBA, reason='Numba is not installed')
 def test_custom_two_params_gate_expectation_with_grad(config):
     """

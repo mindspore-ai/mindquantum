@@ -122,8 +122,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_da
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const Hamiltonian<calc_type>& ham, index_t dim)
-    -> qs_data_p_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::HamiltonianMatrix(const Hamiltonian<calc_type>& ham,
+                                                                         index_t dim) -> qs_data_p_t {
     if (ham.how_to_ == ORIGIN) {
         return TermsToMatrix(ham.ham_, dim);
     } else if (ham.how_to_ == BACKEND) {
@@ -483,22 +483,23 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(
     calc_type res_real = 0, res_imag = 0;
     THRESHOLD_OMP(
         MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-            for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim); a++) {
-                if (((a & ctrl_mask) == ctrl_mask) && ((a & obj_mask) == 0)) {
-                    qs_data_t this_res = 0;
-                    for (index_t col = 0; col < dim; col++) {
-                        for (size_t i = 0; i < m_dim; i++) {
-                            qs_data_t tmp = 0;
-                            for (size_t j = 0; j < m_dim; j++) {
-                                tmp += m[i][j] * GetValue(qs, obj_masks[j] | a, col);
-                            }
-                            this_res += tmp * GetValue(ham_matrix, col, obj_masks[i] | a);
-                        }
-                    }
-                    res_real += this_res.real();
-                    res_imag += this_res.imag();
-                }
-            });
+                                             for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(dim); a++) {
+                                                 if (((a & ctrl_mask) == ctrl_mask) && ((a & obj_mask) == 0)) {
+                                                     qs_data_t this_res = 0;
+                                                     for (index_t col = 0; col < dim; col++) {
+                                                         for (size_t i = 0; i < m_dim; i++) {
+                                                             qs_data_t tmp = 0;
+                                                             for (size_t j = 0; j < m_dim; j++) {
+                                                                 tmp += m[i][j] * GetValue(qs, obj_masks[j] | a, col);
+                                                             }
+                                                             this_res += tmp
+                                                                         * GetValue(ham_matrix, col, obj_masks[i] | a);
+                                                         }
+                                                     }
+                                                     res_real += this_res.real();
+                                                     res_imag += this_res.imag();
+                                                 }
+                                             });
     if (will_free) {
         derived::FreeState(&qs);
     }
@@ -509,19 +510,16 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(
 };
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(const qs_data_p_t& qs,
-                                                                            const qs_data_p_t& ham_matrix,
-                                                                            const qbits_t& objs, const qbits_t& ctrls,
-                                                                            const matrix_t& diff_m,
-                                                                            const matrix_t& herm_m, index_t dim)
-    -> qs_data_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::ExpectDiffMatrixGate(
+    const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs, const qbits_t& ctrls,
+    const matrix_t& gate_m, const matrix_t& diff_m, index_t dim) -> qs_data_t {
     if (objs.size() == 1) {
-        return derived::ExpectDiffSingleQubitMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
+        return derived::ExpectDiffSingleQubitMatrix(qs, ham_matrix, objs, ctrls, gate_m, diff_m, dim);
     }
     if (objs.size() == 2) {
-        return derived::ExpectDiffTwoQubitsMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
+        return derived::ExpectDiffTwoQubitsMatrix(qs, ham_matrix, objs, ctrls, gate_m, diff_m, dim);
     }
-    return derived::ExpectDiffNQubitsMatrix(qs, ham_matrix, objs, ctrls, diff_m, herm_m, dim);
+    return derived::ExpectDiffNQubitsMatrix(qs, ham_matrix, objs, ctrls, gate_m, diff_m, dim);
 }
 
 template <typename derived_, typename calc_type_>

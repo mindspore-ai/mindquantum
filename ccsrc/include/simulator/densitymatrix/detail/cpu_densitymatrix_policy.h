@@ -234,7 +234,7 @@ struct CPUDensityMatrixPolicyBase {
                                              const qbits_t& objs, const qbits_t& ctrls, const matrix_t& gate_m,
                                              const matrix_t& diff_m, index_t dim);
     static qs_data_t ExpectDiffMatrixGate(const qs_data_p_t& qs, const qs_data_p_t& ham_matrix, const qbits_t& objs,
-                                          const qbits_t& ctrls, const matrix_t& diff_m, const matrix_t& herm_m,
+                                          const qbits_t& ctrls, const matrix_t& gate_m, const matrix_t& diff_m,
                                           index_t dim);
     static qs_data_t ExpectDiffRX(const qs_data_p_t& qs_out, const qs_data_p_t& ham_matrix_out, const qbits_t& objs,
                                   const qbits_t& ctrls, index_t dim);
