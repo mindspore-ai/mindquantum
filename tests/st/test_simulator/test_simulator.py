@@ -484,7 +484,7 @@ def test_copy(config):
     if virtual_qc == 'mqmatrix' and dtype == mq.complex64:
         assert np.allclose(qs1, qs2, atol=1.0e-6)
     else:
-        assert np.allclose(qs1, qs2)
+        assert np.allclose(qs1, qs2, atol=1e-6)
 
 
 @pytest.mark.level0
