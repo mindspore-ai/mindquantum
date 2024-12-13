@@ -420,19 +420,21 @@ class Simulator:
         """
         Sample the measure qubit in circuit.
 
-        Sampling does not change the origin quantum state of this simulator.
+        Sampling does not change the original quantum state of this simulator. The sampling results are represented
+        in little-endian order by default (e.g., '01' means q1=0, q0=1). If big-endian order is needed, use
+        MeasureResult.reverse_endian() method.
 
         Args:
-            circuit (Circuit): The circuit that you want to evolution and do sampling.
+            circuit (Circuit): The circuit that you want to evolve and sample.
             pr (Union[None, dict, ParameterResolver]): The parameter
                 resolver for this circuit, if this circuit is a parameterized circuit.
                 Default: ``None``.
-            shots (int): How many shots you want to sampling this circuit. Default: ``1``.
+            shots (int): How many shots you want to sample this circuit. Default: ``1``.
             seed (int): Random seed for random sampling. If ``None``, seed will be a random
                 int number. Default: ``None``.
 
         Returns:
-            MeasureResult, the measure result of sampling.
+            MeasureResult, the measure result of sampling. The bit strings in the result are in little-endian order.
 
         Examples:
             >>> from mindquantum.core.circuit import Circuit

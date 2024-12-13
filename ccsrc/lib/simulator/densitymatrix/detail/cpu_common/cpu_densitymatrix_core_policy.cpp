@@ -153,10 +153,10 @@ void CPUDensityMatrixPolicyBase<derived_, calc_type_>::SetQS(qs_data_p_t* qs_p, 
         qs = derived::InitState(dim);
     }
     THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-            for (index_t j = 0; j <= i; j++) {
-                qs[IdxMap(i, j)] = vec_out[i] * std::conj(vec_out[j]);
-            }
+        dim, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>((dim * dim + dim) / 2); i++) {
+            int x = static_cast<int>((-1.0 + std::sqrt(1.0 + 8.0 * i)) / 2.0);
+            int y = i - (x * (x + 1)) / 2;
+            qs[i] = vec_out[x] * std::conj(vec_out[y]);
         })
 }
 
@@ -256,8 +256,8 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetPartialTrace(const qs_
 }
 
 template <typename derived_, typename calc_type_>
-auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_data_p_t& qs, index_t dim)
-    -> py_qs_datas_t {
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_data_p_t& qs,
+                                                                       index_t dim) -> py_qs_datas_t {
     auto p = Purity(qs, dim);
     if (1 - p > 1e-6) {
         throw(std::runtime_error("PureStateVector(): Cannot transform mixed density matrix to vector."));
