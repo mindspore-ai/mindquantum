@@ -21,6 +21,8 @@ from mindquantum.dtype import complex64, complex128
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.error import SimNotAvailableError
 
+GPU_DISABLED_REASON = None
+
 try:
     from mindquantum import _mq_vector_gpu
 
@@ -28,9 +30,10 @@ try:
     _mq_vector_gpu.double.mqvector_gpu(1).apply_gate(mqbackend.gate.HGate([0]))
     MQVECTOR_GPU_SUPPORTED = True
 except ImportError as err:
+    GPU_DISABLED_REASON = f"Unable to import mqvector_gpu backend. This backend requires CUDA 11 or higher."
     MQVECTOR_GPU_SUPPORTED = False
 except RuntimeError as err:
-    warnings.warn(f"Disable mqvector gpu backend due to: {err}", stacklevel=2)
+    GPU_DISABLED_REASON = f"Disable mqvector gpu backend due to: {err}"
     MQVECTOR_GPU_SUPPORTED = False
 
 
@@ -74,6 +77,8 @@ class _AvailableSimulator:
 
     def c_module(self, sim: str, dtype=None):
         """Get available simulator c module."""
+        if sim == 'mqvector_gpu' and not MQVECTOR_GPU_SUPPORTED:
+            warnings.warn(f"{GPU_DISABLED_REASON}", stacklevel=3)
         if dtype is None:
             if sim not in self.base_module:
                 raise SimNotAvailableError(sim)
