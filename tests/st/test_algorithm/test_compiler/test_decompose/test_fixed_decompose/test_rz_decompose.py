@@ -15,7 +15,7 @@
 import numpy as np
 import pytest
 
-from mindquantum.algorithm.compiler.decompose import crz_decompose
+from mindquantum.algorithm.compiler.decompose import crz_decompose, cnrz_decompose
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RZ
 
@@ -38,3 +38,14 @@ def test_crz():
     crz = RZ(1.23).on(1, 0)
     for solution in crz_decompose(crz):
         circuit_equal_test(crz, solution)
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_cnrz():
+    """
+    Description: Test cnrz decompose
+    Expectation: success
+    """
+    cnrz = RZ(1.23).on(2, [0, 1])
+    for solution in cnrz_decompose(cnrz):
+        circuit_equal_test(cnrz, solution)

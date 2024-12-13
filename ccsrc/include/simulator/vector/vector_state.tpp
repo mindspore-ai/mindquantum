@@ -407,6 +407,24 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                                          tensor::ops::cpu::to_vector<py_qs_data_t>(mat), dim);
             break;
         }
+        case GateID::CUSTOM_TWO_PARAM: {
+            if (diff) {
+                std::runtime_error(
+                    "Can not apply differential format of custom two param gate on quantum states currently.");
+            }
+            auto custom_gate = static_cast<CustomTwoParamGate*>(gate.get());
+            tensor::Matrix m;
+            if (!custom_gate->Parameterized()) {
+                m = custom_gate->GetBaseMatrix();
+            } else {
+                auto param1 = custom_gate->GetCoeffs()[0].Combination(pr).const_value;
+                auto param2 = custom_gate->GetCoeffs()[1].Combination(pr).const_value;
+                m = custom_gate->GetMatrixWrapper()(tensor::ops::cpu::to_vector<double>(param1)[0],
+                                                    tensor::ops::cpu::to_vector<double>(param2)[0]);
+            }
+            qs_policy_t::ApplyMatrixGate(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
+                                         tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        } break;
         default:
             throw std::invalid_argument(fmt::format("Apply of gate {} not implement.", id));
     }
@@ -704,8 +722,8 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
-                                               const circuit_t& circ_left, const parameter::ParameterResolver& pr) const
-    -> py_qs_data_t {
+                                               const circuit_t& circ_left,
+                                               const parameter::ParameterResolver& pr) const -> py_qs_data_t {
     py_qs_data_t out;
     auto sub_seed_bra = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
     auto sub_seed_ket = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
@@ -754,8 +772,8 @@ auto VectorState<qs_policy_t_>::astype(unsigned seed) const -> VectorState<polic
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                                const std::shared_ptr<BasicGate>& gate,
-                                               const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                               const parameter::ParameterResolver& pr,
+                                               index_t dim) const -> tensor::Matrix {
     auto id = gate->GetID();
     auto g = static_cast<Parameterizable*>(gate.get());
     auto val = tensor::ops::cpu::to_vector<calc_type>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
@@ -819,6 +837,9 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
             return ExpectDiffRn(bra, ket, gate, pr, dim);
         case GateID::FSim:
             return ExpectDiffFSim(bra, ket, gate, pr, dim);
+        case GateID::CUSTOM_TWO_PARAM: {
+            return ExpectDiffCustomTwoParam(bra, ket, gate, pr, dim);
+        }
         default:
             throw std::invalid_argument(fmt::format("Expectation of gate {} not implement.", id));
     }
@@ -827,8 +848,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                              const std::shared_ptr<BasicGate>& gate,
-                                             const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                             const parameter::ParameterResolver& pr,
+                                             index_t dim) const -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0, 0};
     auto u3 = static_cast<U3*>(gate.get());
     if (u3->Parameterized()) {
@@ -861,8 +882,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& bra, const qs_da
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                              const std::shared_ptr<BasicGate>& gate,
-                                             const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                             const parameter::ParameterResolver& pr,
+                                             index_t dim) const -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0, 0};
     auto rn = static_cast<Rn*>(gate.get());
     if (rn->Parameterized()) {
@@ -895,8 +916,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& bra, const qs_da
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffFSim(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                                const std::shared_ptr<BasicGate>& gate,
-                                               const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                               const parameter::ParameterResolver& pr,
+                                               index_t dim) const -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0};
     auto fsim = static_cast<FSim*>(gate.get());
     if (fsim->Parameterized()) {
@@ -948,8 +969,8 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr) const
-    -> VVT<py_qs_data_t> {
+auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ,
+                                                 const parameter::ParameterResolver& pr) const -> VVT<py_qs_data_t> {
     VVT<CT<calc_type>> out((static_cast<uint64_t>(1) << n_qubits),
                            VT<CT<calc_type>>((static_cast<uint64_t>(1) << n_qubits), 0));
     for (size_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits); i++) {
@@ -1114,6 +1135,11 @@ auto VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti(
                     }
                     case (GateID::CUSTOM): {
                         tmp_gate = CONVERT_GATE(CustomGate, p_gate);
+                        break;
+                    }
+                    case (GateID::CUSTOM_TWO_PARAM): {
+                        tmp_gate = CONVERT_GATE(CustomTwoParamGate, p_gate);
+                        is_multi_pr = true;
                         break;
                     }
                     default:
@@ -1339,6 +1365,36 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
         count++;
     }
     return out;
+}
+
+template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::ExpectDiffCustomTwoParam(const qs_data_p_t& bra, const qs_data_p_t& ket,
+                                                         const std::shared_ptr<BasicGate>& gate,
+                                                         const parameter::ParameterResolver& pr,
+                                                         index_t dim) const -> tensor::Matrix {
+    VT<py_qs_data_t> grad = {0, 0};
+    auto custom_gate = static_cast<CustomTwoParamGate*>(gate.get());
+    if (custom_gate->Parameterized()) {
+        tensor::Matrix m;
+        auto param1 = custom_gate->GetCoeffs()[0];
+        auto param2 = custom_gate->GetCoeffs()[1];
+        auto param1_const = tensor::ops::cpu::to_vector<calc_type>(param1.Combination(pr).const_value)[0];
+        auto param2_const = tensor::ops::cpu::to_vector<calc_type>(param2.Combination(pr).const_value)[0];
+
+        if (param1.data_.size() != param1.no_grad_parameters_.size()) {
+            m = custom_gate->GetDiffMatrix1Wrapper()(param1_const, param2_const);
+            grad[0] = qs_policy_t::ExpectDiffMatrixGate(bra, ket, custom_gate->GetObjQubits(),
+                                                               custom_gate->GetCtrlQubits(),
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        }
+        if (param2.data_.size() != param2.no_grad_parameters_.size()) {
+            m = custom_gate->GetDiffMatrix2Wrapper()(param1_const, param2_const);
+            grad[1] = qs_policy_t::ExpectDiffMatrixGate(bra, ket, custom_gate->GetObjQubits(),
+                                                               custom_gate->GetCtrlQubits(),
+                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        }
+    }
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
 }
 }  // namespace mindquantum::sim::vector::detail
 

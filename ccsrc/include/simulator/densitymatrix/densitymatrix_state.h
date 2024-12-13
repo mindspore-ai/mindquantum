@@ -137,6 +137,10 @@ class DensityMatrixState {
                                           const std::shared_ptr<BasicGate>& gate,
                                           const parameter::ParameterResolver& pr, index_t dim) const;
 
+    virtual tensor::Matrix ExpectDiffCustomTwoParam(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
+                                                    const std::shared_ptr<BasicGate>& gate,
+                                                    const parameter::ParameterResolver& pr, index_t dim) const;
+
     virtual py_qs_data_t GetStateExpectation(const qs_data_p_t& qs_out, const Hamiltonian<calc_type>& ham,
                                              index_t dim) const;
 

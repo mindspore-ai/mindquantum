@@ -432,6 +432,24 @@ index_t DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicG
                                          tensor::ops::cpu::to_vector<py_qs_data_t>(mat), dim);
             break;
         }
+        case GateID::CUSTOM_TWO_PARAM: {
+            if (diff) {
+                std::runtime_error(
+                    "Can not apply differential format of custom two param gate on quantum states currently.");
+            }
+            auto custom_gate = static_cast<CustomTwoParamGate*>(gate.get());
+            tensor::Matrix m;
+            if (!custom_gate->Parameterized()) {
+                m = custom_gate->GetBaseMatrix();
+            } else {
+                auto param1 = custom_gate->GetCoeffs()[0].Combination(pr).const_value;
+                auto param2 = custom_gate->GetCoeffs()[1].Combination(pr).const_value;
+                m = custom_gate->GetMatrixWrapper()(tensor::ops::cpu::to_vector<double>(param1)[0],
+                                                    tensor::ops::cpu::to_vector<double>(param2)[0]);
+            }
+            qs_policy_t::ApplyMatrixGate(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
+                                         tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+        } break;
         default:
             throw std::invalid_argument(fmt::format("Apply of gate {} not implement.", id));
     }
@@ -514,8 +532,8 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
                                                       const std::shared_ptr<BasicGate>& gate,
-                                                      const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                                      const parameter::ParameterResolver& pr,
+                                                      index_t dim) const -> tensor::Matrix {
     auto id = gate->GetID();
     auto obj_qubits = gate->GetObjQubits();
     auto ctrl_qubits = gate->GetCtrlQubits();
@@ -584,6 +602,9 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& dens_ma
             return ExpectDiffRn(dens_matrix, ham_matrix, gate, pr, dim);
         case GateID::FSim:
             return ExpectDiffFSim(dens_matrix, ham_matrix, gate, pr, dim);
+        case GateID::CUSTOM_TWO_PARAM: {
+            return ExpectDiffCustomTwoParam(dens_matrix, ham_matrix, gate, pr, dim);
+        }
         default:
             throw std::invalid_argument(fmt::format("Expectation of gate {} not implement.", id));
     }
@@ -592,8 +613,8 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& dens_ma
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
                                                     const std::shared_ptr<BasicGate>& gate,
-                                                    const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                                    const parameter::ParameterResolver& pr,
+                                                    index_t dim) const -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0, 0};
     auto u3 = static_cast<U3*>(gate.get());
     auto theta = u3->GetTheta();
@@ -625,8 +646,8 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& dens_matr
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
                                                     const std::shared_ptr<BasicGate>& gate,
-                                                    const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                                    const parameter::ParameterResolver& pr,
+                                                    index_t dim) const -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0, 0};
     auto rn = static_cast<Rn*>(gate.get());
     auto alpha = rn->GetAlpha();
@@ -662,8 +683,8 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& dens_matr
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
                                                       const std::shared_ptr<BasicGate>& gate,
-                                                      const parameter::ParameterResolver& pr, index_t dim) const
-    -> tensor::Matrix {
+                                                      const parameter::ParameterResolver& pr,
+                                                      index_t dim) const -> tensor::Matrix {
     py_qs_datas_t grad = {0, 0};
     auto fsim = static_cast<FSim*>(gate.get());
     auto theta = fsim->GetTheta();
@@ -676,6 +697,38 @@ auto DensityMatrixState<qs_policy_t_>::ExpectDiffFSim(const qs_data_p_t& dens_ma
         if (phi.data_.size() != phi.no_grad_parameters_.size()) {
             grad[1] = qs_policy_t::ExpectDiffFSimPhi(dens_matrix, ham_matrix, fsim->GetObjQubits(),
                                                      fsim->GetCtrlQubits(), dim);
+        }
+    }
+    return tensor::Matrix(VVT<py_qs_data_t>{grad});
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::ExpectDiffCustomTwoParam(const qs_data_p_t& dens_matrix,
+                                                                const qs_data_p_t& ham_matrix,
+                                                                const std::shared_ptr<BasicGate>& gate,
+                                                                const parameter::ParameterResolver& pr,
+                                                                index_t dim) const -> tensor::Matrix {
+    VT<py_qs_data_t> grad = {0, 0};
+    auto custom_gate = static_cast<CustomTwoParamGate*>(gate.get());
+    if (custom_gate->Parameterized()) {
+        tensor::Matrix diff_m;
+        auto param1 = custom_gate->GetCoeffs()[0];
+        auto param2 = custom_gate->GetCoeffs()[1];
+        auto param1_const = tensor::ops::cpu::to_vector<calc_type>(param1.Combination(pr).const_value)[0];
+        auto param2_const = tensor::ops::cpu::to_vector<calc_type>(param2.Combination(pr).const_value)[0];
+        auto m = custom_gate->GetMatrixWrapper()(param1_const, param2_const);
+
+        if (param1.data_.size() != param1.no_grad_parameters_.size()) {
+            diff_m = custom_gate->GetDiffMatrix1Wrapper()(param1_const, param2_const);
+            grad[0] = qs_policy_t::ExpectDiffMatrixGate(
+                dens_matrix, ham_matrix, custom_gate->GetObjQubits(), custom_gate->GetCtrlQubits(),
+                tensor::ops::cpu::to_vector<py_qs_data_t>(m), tensor::ops::cpu::to_vector<py_qs_data_t>(diff_m), dim);
+        }
+        if (param2.data_.size() != param2.no_grad_parameters_.size()) {
+            diff_m = custom_gate->GetDiffMatrix2Wrapper()(param1_const, param2_const);
+            grad[1] = qs_policy_t::ExpectDiffMatrixGate(
+                dens_matrix, ham_matrix, custom_gate->GetObjQubits(), custom_gate->GetCtrlQubits(),
+                tensor::ops::cpu::to_vector<py_qs_data_t>(m), tensor::ops::cpu::to_vector<py_qs_data_t>(diff_m), dim);
         }
     }
     return tensor::Matrix(VVT<py_qs_data_t>{grad});
@@ -888,12 +941,9 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithReversibleGradMultiMult
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(const Hamiltonian<calc_type>& ham,
-                                                                         const circuit_t& circ,
-                                                                         const circuit_t& herm_circ,
-                                                                         const parameter::ParameterResolver& pr,
-                                                                         const MST<size_t>& p_map) const
-    -> py_qs_datas_t {
+auto DensityMatrixState<qs_policy_t_>::GetExpectationWithNoiseGradOneOne(
+    const Hamiltonian<calc_type>& ham, const circuit_t& circ, const circuit_t& herm_circ,
+    const parameter::ParameterResolver& pr, const MST<size_t>& p_map) const -> py_qs_datas_t {
     if (circ.size() != herm_circ.size()) {
         std::runtime_error("In density matrix mode, circ and herm_circ must be the same size.");
     }

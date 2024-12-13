@@ -17,6 +17,11 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 
+from mindquantum.utils.type_value_check import (
+    _check_number_type,
+    _check_value_should_not_less,
+    _check_value_should_between_close_set,
+)
 from .QAIA import QAIA
 
 
@@ -27,15 +32,33 @@ class LQA(QAIA):
     Reference: `Quadratic Unconstrained Binary Optimization via Quantum-Inspired
     Annealing <https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.18.034016>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
-        J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
+        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+            Will be modified during optimization. If not provided (``None``), will be initialized as
+            random values uniformly distributed in [-0.1, 0.1]. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
         gamma (float): The coupling strength. Default: ``0.1``.
         momentum (float): Momentum factor. Default: ``0.99``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import LQA
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = LQA(J, batch_size=5)
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
     """
 
     # pylint: disable=too-many-arguments
@@ -51,6 +74,15 @@ class LQA(QAIA):
         momentum=0.99,
     ):
         """Construct LQA algorithm."""
+        _check_number_type("gamma", gamma)
+        _check_value_should_not_less("gamma", 0, gamma)
+
+        _check_number_type("dt", dt)
+        _check_value_should_not_less("dt", 0, dt)
+
+        _check_number_type("momentum", momentum)
+        _check_value_should_between_close_set("momentum", 0, 1, momentum)
+
         super().__init__(J, h, x, n_iter, batch_size)
         self.J = csr_matrix(self.J)
         self.gamma = gamma

@@ -15,6 +15,7 @@
 """Test QAIA algorithm."""
 # pylint: disable=invalid-name
 from pathlib import Path
+import subprocess
 
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -22,7 +23,17 @@ from scipy.sparse import coo_matrix
 from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC
 from mindquantum.utils.fdopen import fdopen
 
+import pytest
 
+try:
+    subprocess.check_output('nvidia-smi')
+    _HAS_GPU = True
+except FileNotFoundError:
+    _HAS_GPU = False
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def read_gset(filename, negate=True):
     """
     Reading Gset and transform it into sparse matrix
@@ -62,9 +73,11 @@ def read_gset(filename, negate=True):
     return out
 
 
-G = read_gset(str(Path(__file__).parent.parent.parent / 'G1.txt'))
+G = read_gset(str(Path(__file__).parent.parent.parent / 'G43.txt'))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_aSB():
     """
     Description: Test ASB
@@ -84,6 +97,8 @@ def test_aSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_bSB():
     """
     Description: Test BSB
@@ -103,6 +118,78 @@ def test_bSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_bSB_gpu():
+    """
+    Description: Test BSB GPU implementation end-to-end performance
+    Expectation: success
+    """
+    N = G.shape[0]
+    np.random.seed(666)
+    n_iter = 1000  # Increase the number of iterations for end-to-end testing
+    batch_size = 100
+    dt = 0.9
+    xi = 0.1
+
+    # Initialize the same random state
+    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
+    y = 0.01 * (np.random.rand(N, batch_size) - 0.5)
+
+    # CPU float32 baseline test
+    solver_cpu = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
+    solver_cpu.x = x.copy()
+    solver_cpu.y = y.copy()
+    solver_cpu.update()
+    cut_cpu = np.mean(solver_cpu.calc_cut())
+
+    # GPU float16 test
+    solver_gpu_fp16 = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
+    solver_gpu_fp16.x = x.copy()
+    solver_gpu_fp16.y = y.copy()
+    solver_gpu_fp16.update()
+    cut_gpu_fp16 = np.mean(solver_gpu_fp16.calc_cut())
+
+    # Compare cut values, allowing some error
+    assert np.abs(cut_gpu_fp16 - cut_cpu) / np.abs(cut_cpu) < 0.1  # Allow 10% relative error
+
+    # Use external field for testing
+    h = np.random.rand(N, 1)
+    solver_cpu_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
+    solver_gpu_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
+
+    solver_cpu_h.x = x.copy()
+    solver_cpu_h.y = y.copy()
+    solver_gpu_h.x = x.copy()
+    solver_gpu_h.y = y.copy()
+
+    solver_cpu_h.update()
+    solver_gpu_h.update()
+    cut_cpu_h = np.mean(solver_cpu_h.calc_cut())
+    cut_gpu_h = np.mean(solver_gpu_h.calc_cut())
+    assert np.abs(cut_gpu_h - cut_cpu_h) / np.abs(cut_cpu_h) < 0.1
+
+    # GPU int8 test
+    solver_int8 = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
+    solver_int8.x = x.copy()
+    solver_int8.y = y.copy()
+    solver_int8.update()
+    cut_int8 = np.mean(solver_int8.calc_cut())
+    assert np.abs(cut_int8 - cut_cpu) / np.abs(cut_cpu) < 0.1
+
+    # GPU int8 + external field test
+    solver_int8_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
+    solver_int8_h.x = x.copy()
+    solver_int8_h.y = y.copy()
+    solver_int8_h.update()
+    cut_int8_h = np.mean(solver_int8_h.calc_cut())
+    assert np.abs(cut_int8_h - cut_cpu_h) / np.abs(cut_cpu_h) < 0.1
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_dSB():
     """
     Description: Test DSB
@@ -122,6 +209,78 @@ def test_dSB():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_GPU, reason="Machine does not has GPU.")
+def test_dSB_gpu():
+    """
+    Description: Test DSB GPU implementation end-to-end performance
+    Expectation: success
+    """
+    N = G.shape[0]
+    np.random.seed(666)
+    n_iter = 1000  # Increase the number of iterations for end-to-end testing
+    batch_size = 100
+    dt = 0.9
+    xi = 0.1
+
+    # Initialize the same random state
+    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
+    y = 0.01 * (np.random.rand(N, batch_size) - 0.5)
+
+    # CPU float32 baseline test
+    solver_cpu = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
+    solver_cpu.x = x.copy()
+    solver_cpu.y = y.copy()
+    solver_cpu.update()
+    cut_cpu = np.mean(solver_cpu.calc_cut())
+
+    # GPU float16 test
+    solver_gpu_fp16 = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
+    solver_gpu_fp16.x = x.copy()
+    solver_gpu_fp16.y = y.copy()
+    solver_gpu_fp16.update()
+    cut_gpu_fp16 = np.mean(solver_gpu_fp16.calc_cut())
+
+    # Compare cut values, allowing some error
+    assert np.abs(cut_gpu_fp16 - cut_cpu) / np.abs(cut_cpu) < 0.1  # Allow 10% relative error
+
+    # Use external field for testing
+    h = np.random.rand(N, 1)
+    solver_cpu_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
+    solver_gpu_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
+
+    solver_cpu_h.x = x.copy()
+    solver_cpu_h.y = y.copy()
+    solver_gpu_h.x = x.copy()
+    solver_gpu_h.y = y.copy()
+
+    solver_cpu_h.update()
+    solver_gpu_h.update()
+    cut_cpu_h = np.mean(solver_cpu_h.calc_cut())
+    cut_gpu_h = np.mean(solver_gpu_h.calc_cut())
+    assert np.abs(cut_gpu_h - cut_cpu_h) / np.abs(cut_cpu_h) < 0.1
+
+    # GPU int8 test
+    solver_int8 = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
+    solver_int8.x = x.copy()
+    solver_int8.y = y.copy()
+    solver_int8.update()
+    cut_int8 = np.mean(solver_int8.calc_cut())
+    assert np.abs(cut_int8 - cut_cpu) / np.abs(cut_cpu) < 0.1
+
+    # GPU int8 + external field test
+    solver_int8_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
+    solver_int8_h.x = x.copy()
+    solver_int8_h.y = y.copy()
+    solver_int8_h.update()
+    cut_int8_h = np.mean(solver_int8_h.calc_cut())
+    assert np.abs(cut_int8_h - cut_cpu_h) / np.abs(cut_cpu_h) < 0.1
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_LQA():
     """
     Description: Test LQA
@@ -154,6 +313,8 @@ def test_LQA():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_CAC():
     """
     Description: Test CAC
@@ -172,6 +333,8 @@ def test_CAC():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_CFC():
     """
     Description: Test CFC
@@ -191,6 +354,8 @@ def test_CFC():
     np.allclose(x, solver.x)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_SFC():
     """
     Description: Test SFC

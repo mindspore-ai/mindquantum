@@ -22,6 +22,7 @@ Encoder
     :template: classtemplate.rst
 
     mindquantum.algorithm.nisq.IQPEncoding
+    mindquantum.algorithm.nisq.QuantumNeuron
 
 Ansatz
 -----------

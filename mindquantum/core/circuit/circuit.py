@@ -388,9 +388,10 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         """Return a shallow copy of the circuit."""
         return copy.copy(self)
 
-    def __eq__(self, other:"Circuit"):
+    def __eq__(self, other: "Circuit"):
         """Whether equal to the other Circuit."""
         from mindquantum.core.gates import BarrierGate
+
         _check_input_type("other", Circuit, other)
         if len(self) != len(other):
             return False
@@ -410,7 +411,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 return False
         return True
 
-    def __ne__(self, other:"Circuit"):
+    def __ne__(self, other: "Circuit"):
         """Whether not equal to the other Circuit."""
         return not self.__eq__(other)
 
@@ -680,11 +681,11 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             return max(self.all_qubits.keys()) + 1
         return 0
 
-    def depth(self, with_single:bool=False, with_barrier:bool=False) -> int:
+    def depth(self, with_single: bool = True, with_barrier: bool = False) -> int:
         """Get the depth of the circuit.
 
         Args:
-            with_single(bool): whether to include single-qubit gates. Default: ``False``.
+            with_single(bool): whether to include single-qubit gates. Default: ``True``.
             with_barrier(bool): whether to align quantum gates to barrier gates. Default: ``False``.
 
         Examples:
@@ -712,10 +713,11 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             2
         """
         from mindquantum.core.gates import NoiseGate, BarrierGate, Measure
+
         depth_stack = {i: 0 for i in range(self.n_qubits)}
         if not depth_stack:
             return 0
-        for gate in self: # type: ignore
+        for gate in self:  # type: ignore
             if isinstance(gate, (NoiseGate, Measure)):
                 continue
             qubits = gate.obj_qubits + gate.ctrl_qubits
@@ -1194,56 +1196,63 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
 
     def to_openqasm(self, file_name: Optional[str] = None, version: str = '2.0') -> str:
         """
-        Convert a MindQuantum circuit to OpenQASM format string or file.
+        Convert a MindQuantum circuit to OpenQASM format string and optionally save to a file.
 
         Args:
-            file_name (str): File name if you want to save OpenQASM. If it is ``None``, we
-                will return the string. Otherwise, we will save to given file.
-                Default: ``None``.
+            file_name (str): File name if you want to save OpenQASM. Default: ``None``.
             version (str): The OpenQASM version you want to use. Default: ``'2.0'``.
+
+        Returns:
+            str, The OpenQASM format string representation of the circuit.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import OpenQASM
 
-        if file_name is None:
-            return OpenQASM().to_string(self, version=version)
-        OpenQASM().to_file(file_name, self, version=version)
-        return ""
+        qasm_str = OpenQASM().to_string(self, version=version)
+        if file_name is not None:
+            OpenQASM().to_file(file_name, self, version=version)
+        return qasm_str
 
     def to_hiqasm(self, file_name: Optional[str] = None, version: str = '0.1') -> str:
         """
-        Convert a MindQuantum circuit to HiQASM format string or file.
+        Convert a MindQuantum circuit to HiQASM format string and optionally save to a file.
 
         Args:
-            file_name (str): File name if you want to save HiQASM. If it is ``None``, we
-                will return the string. Otherwise, we will save to given file.
-                Default: ``None``.
+            file_name (str): File name if you want to save HiQASM. Default: ``None``.
             version (str): The HiQASM version you want to use. Default: ``'0.1'``.
+
+        Returns:
+            str, The HiQASM format string representation of the circuit.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import HiQASM
 
-        if file_name is None:
-            return HiQASM().to_string(self, version=version)
-        HiQASM().to_file(file_name, self, version=version)
-        return ""
+        hiqasm_str = HiQASM().to_string(self, version=version)
+        if file_name is not None:
+            HiQASM().to_file(file_name, self, version=version)
+        return hiqasm_str
 
-    def to_qcis(self, file_name: Optional[str] = None) -> str:
+    def to_qcis(self, file_name: Optional[str] = None, parametric: bool = True) -> str:
         """
-        Convert a MindQuantum circuit to QCIS format string or file.
+        Convert a MindQuantum circuit to QCIS format string and optionally save to a file.
 
         Args:
-            file_name (str): File name if you want to save QCIS. If it is ``None``, we
-                will return the string. Otherwise, we will save to given file.
-                Default: ``None``.
+            file_name (str): File name if you want to save QCIS. Default: ``None``.
+            parametric (bool): Whether to keep the parameters in gates. If it is ``False``
+                , we will discard all parameters and rotation gates with zero angles. The
+                remaining angles will be restricted to the interval [-pi, pi].
+                Default: ``True``.
+
+        Returns:
+            str, The QCIS format string representation of the circuit.
         """
         # pylint: disable=import-outside-toplevel
         from mindquantum.io.qasm import QCIS
 
-        if file_name is None:
-            return QCIS().to_string(self)
-        QCIS().to_file(file_name, self)
-        return ""
+        qcis_str = QCIS().to_string(self, parametric)
+        if file_name is not None:
+            QCIS().to_file(file_name, self, parametric)
+        return qcis_str
 
     def sx(self, obj_qubits, ctrl_qubits=None, hermitian=False):
         """

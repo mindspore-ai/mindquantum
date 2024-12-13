@@ -190,3 +190,33 @@ def _check_mq_type(dtype):
 
     if dtype not in mq_number_type:
         raise ValueError(f"dtype only support {mq_number_type}, but get {dtype}")
+
+
+def _check_numba_validation():
+    """
+    Check if numba is installed with correct version.
+
+    Returns:
+        numba module if validation passes.
+    """
+    try:
+        import numba as nb
+
+        try:
+            import importlib.metadata as importlib_metadata
+        except ImportError:
+            import importlib_metadata
+        import packaging.version
+
+        nb_version = importlib_metadata.version('numba')
+        nb_requires = packaging.version.parse('0.53.1')
+
+        if packaging.version.parse(nb_version) < nb_requires:
+            raise ImportError(
+                "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
+            )
+        return nb
+    except ImportError as exc:
+        raise ImportError(
+            "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
+        ) from exc

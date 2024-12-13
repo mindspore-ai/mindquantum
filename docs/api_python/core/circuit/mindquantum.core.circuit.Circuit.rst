@@ -63,7 +63,7 @@ mindquantum.core.circuit.Circuit
 
         返回该量子线路的浅拷贝。
 
-    .. py:method:: depth(with_single:bool=False, with_barrier:bool=False)
+    .. py:method:: depth(with_single: bool = True, with_barrier: bool = False)
 
         获取整个量子线路的深度。
 
@@ -476,23 +476,33 @@ mindquantum.core.circuit.Circuit
         将 MindQuantum 中的量子线路转化为 HiQASM 字符串或者文件。
 
         参数：
-            - **file_name** (str) - 保存成 HiQASM 文件的文件名。如果为 ``None``，则直接输出 HiQASM 字符串，否者将保存为文件。默认值： ``None``。
+            - **file_name** (str) - 保存成 HiQASM 文件的文件名。默认值： ``None``。
             - **version** (str) - HiQASM 版本。默认值： ``0.1``。
+
+        返回：
+            str，HiQASM格式的量子线路字符串。
 
     .. py:method:: to_openqasm(file_name: Optional[str] = None, version: str = '2.0')
 
         将 MindQuantum 中的量子线路转化为 OpenQASM 字符串或者文件。
 
         参数：
-            - **file_name** (str) - 保存成 OpenQASM 文件的文件名。如果为 ``None``，则直接输出 OpenQASM 字符串，否者将保存为文件。默认值： ``None``。
+            - **file_name** (str) - 保存成 OpenQASM 文件的文件名。默认值： ``None``。
             - **version** (str) - OpenQASM 版本。默认值： ``2.0``。
 
-    .. py:method:: to_qcis(file_name: Optional[str] = None)
+        返回：
+            str，OpenQASM格式的量子线路字符串。
+
+    .. py:method:: to_qcis(file_name: Optional[str] = None,  parametric: bool = True)
 
         将 MindQuantum 中的量子线路转化为 QCIS 字符串或者文件。
 
         参数：
-            - **file_name** (str) - 保存成 QCIS 文件的文件名。如果为 ``None``，则直接输出 QCIS 字符串，否者将保存为文件。默认值： ``None``。
+            - **file_name** (str) - 保存成 QCIS 文件的文件名。默认值： ``None``。
+            - **parametric** (bool) - 是否保留参数。如果为 ``False``，则会丢弃所有参数，以及参数值为 0 的参数门，参数门的角度也会被限制在区间 [-pi, pi]。默认值： ``True``。
+
+        返回：
+            str，QCIS格式的量子线路字符串。
 
     .. py:method:: u3(theta, phi, lamda, obj_qubits, ctrl_qubits=None)
 

@@ -32,7 +32,7 @@ from mindquantum import _math
 from mindquantum import mqbackend as mb
 from mindquantum.config.config import _GLOBAL_MAT_VALUE
 from mindquantum.utils.f import is_power_of_two
-from mindquantum.utils.type_value_check import _check_gate_type, _check_input_type
+from mindquantum.utils.type_value_check import _check_gate_type, _check_input_type, _check_numba_validation
 
 from ..parameterresolver import ParameterResolver
 from .basic import (
@@ -1806,26 +1806,7 @@ class Power(NoneParamNonHermMat):
 
 def wrapper_numba(compiled_fun, dim):
     """Wrap a compiled function with numba."""
-    try:
-        import numba as nb
-
-        try:
-            import importlib.metadata as importlib_metadata
-        except ImportError:
-            import importlib_metadata
-        import packaging.version
-
-        nb_version = importlib_metadata.version('numba')
-
-        nb_requires = packaging.version.parse('0.53.1')
-        if packaging.version.parse(nb_version) < nb_requires:
-            raise ImportError(
-                "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
-            )
-    except ImportError as exc:
-        raise ImportError(
-            "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
-        ) from exc
+    nb = _check_numba_validation()
 
     @nb.cfunc(nb.types.void(nb.types.double, nb.types.CPointer(nb.types.complex128)))
     def fun(theta, out_):
@@ -1895,26 +1876,8 @@ def gene_univ_parameterized_gate(name, matrix_generator, diff_matrix_generator):
         array([0.70710678+0.j        , 0.06752269-0.20781347j,
                0.63958409+0.20781347j, 0.        +0.j        ])
     """
-    try:
-        import numba as nb
+    nb = _check_numba_validation()
 
-        try:
-            import importlib.metadata as importlib_metadata
-        except ImportError:
-            import importlib_metadata
-        import packaging.version
-
-        nb_version = importlib_metadata.version('numba')
-
-        nb_requires = packaging.version.parse('0.53.1')
-        if packaging.version.parse(nb_version) < nb_requires:
-            raise ImportError(
-                "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
-            )
-    except ImportError as exc:
-        raise ImportError(
-            "To use customized parameterized gate, please install numba with 'pip install \"numba>=0.53.1\"'."
-        ) from exc
     matrix_sig = signature(matrix_generator)
     diff_matrix_sig = signature(diff_matrix_generator)
     if len(matrix_sig.parameters) != 1:
@@ -2070,6 +2033,195 @@ class MultiParamsGate(ParameterGate):
         for pr in self.prs:
             pr.no_grad_part(names)
         return self
+
+
+def gene_univ_two_params_gate(name, matrix_generator, diff_matrix_generator_1, diff_matrix_generator_2):
+    """
+    Generate a customer parameterized gate with two parameters.
+
+    Args:
+        name (str): The name of this gate.
+        matrix_generator (Union[FunctionType, MethodType]): A function that takes two arguments
+            to generate a unitary matrix.
+        diff_matrix_generator_1 (Union[FunctionType, MethodType]): A function that takes two arguments
+            to generate the derivative of matrix with respect to first parameter.
+        diff_matrix_generator_2 (Union[FunctionType, MethodType]): A function that takes two arguments
+            to generate the derivative of matrix with respect to second parameter.
+
+    Returns:
+        _TwoParamNonHerm, a customer parameterized gate with two parameters.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.core.gates import gene_univ_two_params_gate
+        >>> from mindquantum.core.circuit import Circuit
+        >>> def matrix(a, b):
+        ...     ep = 0.5 * (1 + np.exp(1j * a * b))
+        ...     em = 0.5 * (1 - np.exp(1j * a * b))
+        ...     return np.array([[ep, em], [em, ep]])
+        >>> def diff_matrix1(a, b):
+        ...     m = 0.5j * b * np.exp(1j * a * b)
+        ...     return np.array([[m, -m], [-m, m]])
+        >>> def diff_matrix2(a, b):
+        ...     m = 0.5j * a * np.exp(1j * a * b)
+        ...     return np.array([[m, -m], [-m, m]])
+        >>> TestGate = gene_univ_two_params_gate('Test', matrix, diff_matrix1, diff_matrix2)
+        >>> circ = Circuit().x(0)
+        >>> circ += TestGate('a', 'b').on(0)
+        >>> circ.get_qs(pr={'a': 1.2, 'b': 0.8})
+        array([0.21324001-0.40959578j, 0.78675999+0.40959578j])
+    """
+    nb = _check_numba_validation()
+
+    matrix_sig = signature(matrix_generator)
+    diff1_sig = signature(diff_matrix_generator_1)
+    diff2_sig = signature(diff_matrix_generator_2)
+    if len(matrix_sig.parameters) != 2:
+        raise ValueError(f"matrix_generator must have two arguments, but got {len(matrix_sig.parameters)}")
+    if len(diff1_sig.parameters) != 2 or len(diff2_sig.parameters) != 2:
+        raise ValueError("diff_matrix_generators must have two arguments")
+
+    matrix = matrix_generator(0.123, 0.456)
+    diff1 = diff_matrix_generator_1(0.123, 0.456)
+    diff2 = diff_matrix_generator_2(0.123, 0.456)
+    if not all(isinstance(m, np.ndarray) and m.dtype == complex for m in [matrix, diff1, diff2]):
+        raise ValueError("All generators should return complex numpy arrays")
+    if not matrix.shape == diff1.shape == diff2.shape:
+        raise ValueError("All matrices should have the same shape")
+
+    n_qubits = int(np.log2(matrix.shape[0]))
+
+    c_sig = nb.types.Array(nb.types.complex128, 2, 'C')(nb.types.double, nb.types.double)
+    c_matrix_generator = nb.cfunc(c_sig)(matrix_generator)
+    c_diff1_generator = nb.cfunc(c_sig)(diff_matrix_generator_1)
+    c_diff2_generator = nb.cfunc(c_sig)(diff_matrix_generator_2)
+
+    def wrapper_numba_two_params(compiled_fun, dim):
+        """Wrap a compiled two-parameter function."""
+
+        @nb.cfunc(nb.types.void(nb.types.double, nb.types.double, nb.types.CPointer(nb.types.complex128)))
+        def fun(theta1, theta2, out_):
+            out = nb.carray(out_, (dim, dim))
+            matrix = compiled_fun(theta1, theta2)
+            for i in range(dim):
+                for j in range(dim):
+                    out[i][j] = matrix[i][j]
+
+        return fun.address
+
+    def herm_matrix_generator(x, y):
+        """Generate hermitian conjugate matrix."""
+        return np.conj(c_matrix_generator(x, y)).T.copy()
+
+    def herm_diff1_generator(x, y):
+        """Generate hermitian conjugate diff matrix with respect to first parameter."""
+        return np.conj(c_diff1_generator(x, y)).T.copy()
+
+    def herm_diff2_generator(x, y):
+        """Generate hermitian conjugate diff matrix with respect to second parameter."""
+        return np.conj(c_diff2_generator(x, y)).T.copy()
+
+    matrix_addr = wrapper_numba_two_params(c_matrix_generator, 1 << n_qubits)
+    diff1_addr = wrapper_numba_two_params(c_diff1_generator, 1 << n_qubits)
+    diff2_addr = wrapper_numba_two_params(c_diff2_generator, 1 << n_qubits)
+    herm_matrix_addr = wrapper_numba_two_params(nb.cfunc(c_sig)(herm_matrix_generator), 1 << n_qubits)
+    herm_diff1_addr = wrapper_numba_two_params(nb.cfunc(c_sig)(herm_diff1_generator), 1 << n_qubits)
+    herm_diff2_addr = wrapper_numba_two_params(nb.cfunc(c_sig)(herm_diff2_generator), 1 << n_qubits)
+
+    class _TwoParamNonHerm(MultiParamsGate):
+        """Customer parameterized gate with two parameters."""
+
+        def __init__(self, param1: ParameterResolver, param2: ParameterResolver):
+            """Initialize a two parameter gate."""
+            prs = [ParameterResolver(param1), ParameterResolver(param2)]
+            super().__init__(name=name, n_qubits=n_qubits, prs=prs)
+            self.matrix_generator = matrix_generator
+            self.diff_matrix_generator_1 = diff_matrix_generator_1
+            self.diff_matrix_generator_2 = diff_matrix_generator_2
+            self.hermitianed = False
+
+        def __call__(self, param1: ParameterResolver, param2: ParameterResolver) -> "_TwoParamNonHerm":
+            """Call the gate with new parameters."""
+            param1 = ParameterResolver(param1)
+            param2 = ParameterResolver(param2)
+            prs = [param1, param2]
+            return super().__call__(prs)
+
+        @property
+        def param1(self) -> ParameterResolver:
+            """Get first parameter."""
+            return self.prs[0]
+
+        @property
+        def param2(self) -> ParameterResolver:
+            """Get second parameter."""
+            return self.prs[1]
+
+        def __deepcopy__(self, memo):
+            """Deep copy this gate."""
+            copied_gate = _TwoParamNonHerm(self.param1, self.param2)
+            copied_gate.obj_qubits = self.obj_qubits
+            copied_gate.ctrl_qubits = self.ctrl_qubits
+            copied_gate.hermitianed = self.hermitianed
+            return copied_gate
+
+        def hermitian(self) -> "_TwoParamNonHerm":
+            """Get hermitian conjugate gate."""
+            hermitian_gate = _TwoParamNonHerm(self.param1, self.param2)
+            hermitian_gate.obj_qubits = self.obj_qubits
+            hermitian_gate.ctrl_qubits = self.ctrl_qubits
+            hermitian_gate.hermitianed = not self.hermitianed
+            if hermitian_gate.hermitianed:
+                hermitian_gate.matrix_generator = herm_matrix_generator
+                hermitian_gate.diff_matrix_generator_1 = herm_diff1_generator
+                hermitian_gate.diff_matrix_generator_2 = herm_diff2_generator
+            return hermitian_gate
+
+        def matrix(self, pr: ParameterResolver = None, full=False) -> np.ndarray:
+            """Get the matrix of this gate."""
+            _check_input_type('full', bool, full)
+            if full:
+                from mindquantum.core.circuit import Circuit
+
+                return Circuit([self]).matrix(pr=pr)
+
+            param1 = self.param1
+            param2 = self.param2
+            if self.parameterized:
+                if pr is None:
+                    raise ValueError("Parameterized gate need a parameter resolver to get matrix.")
+                param1 = param1.combination(pr)
+                param2 = param2.combination(pr)
+                if not param1.is_const():
+                    raise ValueError("First parameter not set completed.")
+                if not param2.is_const():
+                    raise ValueError("Second parameter not set completed.")
+
+            return self.matrix_generator(param1.const, param2.const)
+
+        def get_cpp_obj(self):
+            """Get cpp object."""
+            m_addr = matrix_addr
+            d1_addr = diff1_addr
+            d2_addr = diff2_addr
+            if self.hermitianed:
+                m_addr = herm_matrix_addr
+                d1_addr = herm_diff1_addr
+                d2_addr = herm_diff2_addr
+
+            return mb.gate.CustomTwoParamGate(
+                self.name,
+                m_addr,
+                d1_addr,
+                d2_addr,
+                1 << n_qubits,
+                self.param1,
+                self.param2,
+                self.obj_qubits,
+                self.ctrl_qubits,
+            )
+
+    return _TwoParamNonHerm
 
 
 class Rn(MultiParamsGate):

@@ -7,10 +7,14 @@ mindquantum.algorithm.qaia.SFC
 
     参考文献：`Coherent Ising machines with optical error correction circuits <https://onlinelibrary.wiley.com/doi/full/10.1002/qute.202100077>`_。
 
+    .. note::
+        为了内存效率，输入数组 'x' 不会被复制，并且会在优化过程中被原地修改。
+        如果需要保留原始数据，请使用 `x.copy()` 传入副本。
+
     参数：
-        - **J** (Union[numpy.array, csr_matrix]) - 耦合矩阵，维度为 :math:`(N x N)`。
+        - **J** (Union[numpy.array, scipy.sparse.spmatrix]) - 耦合矩阵，维度为 :math:`(N x N)`。
         - **h** (numpy.array) - 外场强度，维度为 :math:`(N, )`。
-        - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N x batch_size)`。默认值： ``None``。
+        - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N x batch_size)`。会在优化过程中被修改。如果不提供（``None``），将被初始化为服从正态分布 N(0, 0.1) 的随机值。默认值： ``None``。
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.1``。

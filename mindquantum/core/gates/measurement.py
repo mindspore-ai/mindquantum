@@ -372,6 +372,9 @@ class MeasureResult:
         Returns:
             str, JSON representation of the object.
         """
+        if filename is not None:
+            _check_input_type('filename', str, filename)
+
         data = {
             "keys": self.keys,
             "data": self.data,

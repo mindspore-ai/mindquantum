@@ -16,7 +16,7 @@
 import numpy as np
 import pytest
 
-from mindquantum.algorithm.compiler.decompose import cry_decompose
+from mindquantum.algorithm.compiler.decompose import cry_decompose, cnry_decompose
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RY
 
@@ -39,3 +39,15 @@ def test_cry():
     cry = RY(1.23).on(1, 0)
     for solution in cry_decompose(cry):
         circuit_equal_test(cry, solution)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_cnry():
+    """
+    Description: Test cnry decompose
+    Expectation: success
+    """
+    cnry = RY(1.23).on(2, [0, 1])
+    for solution in cnry_decompose(cnry):
+        circuit_equal_test(cnry, solution)
