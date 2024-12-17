@@ -284,7 +284,7 @@ def random_insert_gates(
         yield circ
 
 
-def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None):
+def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None, dtype=None):
     """
     Generate a random Pauli Hamiltonian.
 
@@ -292,6 +292,7 @@ def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None):
         n_qubits (int): Number of qubits
         n_terms (int): Number of Pauli terms
         seed (int, optional): Random seed. Defaults to None.
+        dtype (mindquantum.dtype): data type of hamiltonian. Default: ``None``.
 
     Returns:
         Hamiltonian, Randomly generated Hamiltonian
@@ -328,7 +329,7 @@ def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None):
 
         coeff = np.random.uniform(-2, 2)
         ham += QubitOperator(term.strip(), coeff)
-    return Hamiltonian(ham)
+    return Hamiltonian(ham, dtype=dtype)
 
 
 def _check_num_array(vec, name):

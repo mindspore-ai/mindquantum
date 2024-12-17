@@ -24,7 +24,7 @@ import mindquantum as mq
 from mindquantum.core import gates as G
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
-from mindquantum.utils import random_circuit
+from mindquantum.utils import random_circuit, random_hamiltonian
 
 _HAS_GPU = False
 
@@ -73,7 +73,7 @@ def test_get_expectation(virtual_qc, dtype):
     sim_left = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
     sim_left.set_qs(init_state_left)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -146,7 +146,7 @@ def test_non_hermitian_get_expectation_with_grad(virtual_qc, dtype):
     sim.set_qs(init_state)
     sim_left.set_qs(init_state_left)
     pr = np.random.rand(2) * 2 * np.pi
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -218,7 +218,7 @@ def test_parameter_shift_rule(virtual_qc, dtype):  # pylint: disable=too-many-lo
     circ += G.U3('u3_theta_1', 'u3_phi_1', 1).on(0)
     circ += random_circuit(3, 10)
     sim = Simulator(virtual_qc, 3, dtype=dtype)
-    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+    ham = random_hamiltonian(3, 10, dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ, pr_shift=True)
     pr = np.random.rand(len(circ.all_paras)) * 2 * np.pi
     f, g = grad_ops(pr)
@@ -270,7 +270,7 @@ def test_parameter_shift_rule_finite_diff_case(virtual_qc, dtype):  # pylint: di
     circ += custom_gate('a').on(0)
     circ += random_circuit(3, 10)
     sim = Simulator(virtual_qc, 3, dtype=dtype)
-    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+    ham = random_hamiltonian(3, 10, dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ, pr_shift=True)
     pr = np.random.rand(len(circ.all_paras)) * 2 * np.pi
     f, g = grad_ops(pr)
