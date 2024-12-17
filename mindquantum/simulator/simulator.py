@@ -299,6 +299,8 @@ class Simulator:
             (-0.25463350745693886+0.8507316752782879j)
         """
         if self.backend.name == "stabilizer":
+            if any([circ_right, circ_left, simulator_left, pr]):
+                raise ValueError("Stabilizer backend only supports hamiltonian parameter for get_expectation.")
             return self.backend.get_expectation(hamiltonian)
         return self.backend.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
 

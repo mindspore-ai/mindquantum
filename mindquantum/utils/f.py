@@ -300,10 +300,9 @@ def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None, dtype=None
     Examples:
         >>> ham = random_hamiltonian(4, 5, seed=42)
         >>> print(ham)
-        -0.423 [Z0] + 0.312 [X1 Y2] + 0.156 [Y1 Z3] + 0.891 [X0 Z2 Y3] + 0.267 [Z1 X2]
+        -0.5018 [Z0] + 1.8029 [X0 X1] + 0.928 [Y0 X1 Y2] + 0.3946 [Z2 X3] - 1.3759 [Z1 Y3]
     """
     import random
-    import numpy as np
     from mindquantum.core.operators import QubitOperator, Hamiltonian
 
     _check_int_type('n_qubits', n_qubits)

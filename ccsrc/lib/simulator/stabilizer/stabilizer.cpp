@@ -596,7 +596,6 @@ double StabilizerTableau::GetExpectation(const VT<PauliTerm<double>>& ham_termli
     StabilizerTableau new_state = this->copy();
     new_state.AddQubit();
     for (const auto& term : ham_termlist) {
-        // 如果是空的Pauli串(只有I算符),直接加上系数
         if (term.first.empty()) {
             expectation += term.second;
             continue;
