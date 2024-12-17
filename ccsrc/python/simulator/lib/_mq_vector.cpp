@@ -102,7 +102,8 @@ PYBIND11_MODULE(_mq_vector, module) {
         .def("reset", &StabilizerTableau::Reset)
         .def("sampling", &StabilizerTableau::Sampling)
         .def("sampling_measure_ending_without_noise", &StabilizerTableau::SamplingMeasurementEndingWithoutNoise)
-        .def("__eq__", [](const StabilizerTableau& lhs, const StabilizerTableau& rhs) { return lhs == rhs; });
+        .def("__eq__", [](const StabilizerTableau& lhs, const StabilizerTableau& rhs) { return lhs == rhs; })
+        .def("get_expectation", &StabilizerTableau::GetExpectation, "ham_termlist"_a);
     stabilizer.def("query_single_qubit_clifford_elem", &QuerySingleQubitCliffordElem, "idx"_a);
     stabilizer.def("query_double_qubits_clifford_elem", &QueryDoubleQubitsCliffordElem, "idx"_a);
     stabilizer.def("generate_single_qubit_rb_circ", &SingleQubitRBCircuit, "len"_a, "seed"_a);
