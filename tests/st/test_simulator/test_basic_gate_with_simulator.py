@@ -25,7 +25,7 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
-from mindquantum.utils import random_circuit
+from mindquantum.utils import random_circuit, random_hamiltonian
 
 none_parameter_gate = [
     G.HGate,
@@ -161,7 +161,7 @@ def test_single_parameter_gate_expectation_with_grad(config, gate):  # pylint: d
     g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     init_state = init_state / np.linalg.norm(init_state)
-    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+    ham = random_hamiltonian(g.n_qubits, 10, dtype=dtype)
     sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
     sim.set_qs(init_state)
     grad_ops = sim.get_expectation_with_grad(ham, Circuit(g))
@@ -454,7 +454,7 @@ def test_custom_gate_expectation_with_grad(config):  # pylint: disable=too-many-
         g = g('a').on(list(range(n)))
         init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
         init_state = init_state / np.linalg.norm(init_state)
-        ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+        ham = random_hamiltonian(n + 1, 10, dtype=dtype)
         sim = Simulator(virtual_qc, n + 1, dtype=dtype)
         sim.set_qs(init_state)
         grad_ops = sim.get_expectation_with_grad(ham, Circuit(g))
@@ -525,7 +525,7 @@ def test_u3_expectation_with_grad(config):  # pylint: disable=R0914
     ref_g = [i.on(list(range(g.n_qubits))) for i in ref_g]
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     init_state = init_state / np.linalg.norm(init_state)
-    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+    ham = random_hamiltonian(g.n_qubits, 10, dtype=dtype)
     sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
     sim.set_qs(init_state)
     grad_ops = sim.get_expectation_with_grad(ham, Circuit(g))
@@ -594,7 +594,7 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
     g = g.on(list(range(g.n_qubits)))
     init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
     init_state = init_state / np.linalg.norm(init_state)
-    ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+    ham = random_hamiltonian(g.n_qubits, 10, dtype=dtype)
     sim = Simulator(virtual_qc, g.n_qubits, dtype=dtype)
     sim.set_qs(init_state)
     grad_ops = sim.get_expectation_with_grad(ham, Circuit(g))
@@ -823,11 +823,7 @@ def test_rot_pauli_string_gate_gradient(config):  # pylint: disable=too-many-loc
         p0 = np.random.uniform(-3, 3, size=(1,))
         g = G.RotPauliString(pauli_string, 'a').on(obj_qubits, ctrl_qubits)
         circ = g.__decompose__()
-        ham = Hamiltonian(
-            QubitOperator(
-                ' '.join(f"{p}{idx}" for idx, p in enumerate(np.random.choice(['X', 'Y', 'Z'], n_qubits)))
-            ).astype(dtype)
-        )
+        ham = random_hamiltonian(n_qubits, 10, dtype=dtype)
         sim1 = Simulator(virtual_qc, n_qubits, dtype=dtype)
         sim2 = Simulator(virtual_qc, n_qubits, dtype=dtype)
         rand_circ = random_circuit(n_qubits, 20)
@@ -996,7 +992,7 @@ def test_custom_two_params_gate_expectation_with_grad(config):
         init_state = init_state / np.linalg.norm(init_state)
 
         # Set Hamiltonian
-        ham = Hamiltonian(QubitOperator('X0') + QubitOperator('Z0'), dtype=dtype)
+        ham = random_hamiltonian(n + 1, 10, dtype=dtype)
 
         # Create simulator and calculate expectation value and gradient
         sim = Simulator(virtual_qc, n + 1, dtype=dtype)

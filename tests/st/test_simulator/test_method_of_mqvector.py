@@ -24,7 +24,7 @@ import mindquantum as mq
 from mindquantum.core import gates as G
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
-from mindquantum.utils import random_circuit
+from mindquantum.utils import random_circuit, random_hamiltonian
 
 _HAS_GPU = False
 
@@ -73,7 +73,7 @@ def test_get_expectation(virtual_qc, dtype):
     sim_left = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
     sim_left.set_qs(init_state_left)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -146,7 +146,7 @@ def test_non_hermitian_get_expectation_with_grad(virtual_qc, dtype):
     sim.set_qs(init_state)
     sim_left.set_qs(init_state_left)
     pr = np.random.rand(2) * 2 * np.pi
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):

@@ -24,6 +24,7 @@ import numpy as np
 from mindquantum import _mq_vector
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import MeasureResult, S, X
+from mindquantum.core.operators import Hamiltonian
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.type_value_check import (
     _check_input_type,
@@ -109,6 +110,31 @@ class Stabilizer(BackendBase):
         samples = np.array(sampler(circuit.get_cpp_obj(), shots, res.keys_map, seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
+
+    def get_expectation(self, hamiltonian: "Hamiltonian") -> float:
+        """
+        Calculate the expectation value of the given Hamiltonian.
+
+        Args:
+            hamiltonian (Hamiltonian): The Hamiltonian operator for which to calculate the expectation value.
+
+        Returns:
+            float: The expectation value of the Hamiltonian.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.simulator import Simulator
+            >>> ham = Hamiltonian(QubitOperator('Z0', 0.5) + QubitOperator('X1', 0.3))
+            >>> sim = Simulator('stabilizer', 2)
+            >>> sim.apply_circuit(Circuit().x(0))
+            >>> sim.get_expectation(ham)
+            -0.5
+        """
+        if not isinstance(hamiltonian, Hamiltonian):
+            raise TypeError(f"hamiltonian must be of type Hamiltonian, but got {type(hamiltonian)}")
+
+        return self.sim.get_expectation(hamiltonian.ham_termlist)
 
 
 def decompose_stabilizer(sim: Simulator | Stabilizer) -> Circuit:
