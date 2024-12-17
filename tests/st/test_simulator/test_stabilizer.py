@@ -28,7 +28,7 @@ from mindquantum.simulator import (
     get_stabilizer_string,
     get_tableau_string,
 )
-from mindquantum.utils import random_clifford_circuit
+from mindquantum.utils import random_clifford_circuit, random_hamiltonian
 
 
 def test_stabilizer():
@@ -95,3 +95,18 @@ def test_stabilizer_sampling():
         dis1 = np.array([res_clifford.data.get(key, 0) for key in keys]) / res_clifford.shots
         dis2 = np.array([res_state_vector.data.get(key, 0) for key in keys]) / res_state_vector.shots
         assert entropy(dis1, dis2) < 0.01
+
+def test_stabilizer_expectation():
+    """
+    Description: Test expectation of stabilizer simulator.
+    Expectation:
+    """
+    sim = Simulator('stabilizer', 4)
+    ref_sim = Simulator('mqvector', 4)
+    rc = random_clifford_circuit(4, 20)
+    rh = random_hamiltonian(4, 20)
+    sim.apply_circuit(rc)
+    ref_sim.apply_circuit(rc)
+    exp_val = sim.get_expectation(rh)
+    ref_exp_val = ref_sim.get_expectation(rh)
+    assert np.allclose(exp_val, ref_exp_val)
