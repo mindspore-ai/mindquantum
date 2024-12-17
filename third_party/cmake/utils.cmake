@@ -205,17 +205,8 @@ macro(__do_fetch_content pkg_name pkg_url)
   message(STATUS "Fetching content for ${pkg_name} using ${pkg_url} in ${${pkg_name}_SOURCE_DIR}")
 
   if(NOT ${pkg_name}_POPULATED)
-    FetchContent_MakeAvailable(${pkg_name})
-    
-    if(TARGET ${pkg_name})
-      install(TARGETS ${pkg_name}
-              EXPORT mindquantumTargets
-              LIBRARY DESTINATION lib
-              ARCHIVE DESTINATION lib
-              RUNTIME DESTINATION bin
-              INCLUDES DESTINATION include)
-    endif()
-    
+    FetchContent_Populate(${pkg_name})
+
     string(TOLOWER ${pkg_name} _pkg_name)
     set(${pkg_name}_SOURCE_DIR
         ${${_pkg_name}_SOURCE_DIR}
