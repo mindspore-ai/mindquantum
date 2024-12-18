@@ -31,9 +31,9 @@ class QAIA:
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
-        h (numpy.array): The external field with shape :math:`(N x 1)`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
+        h (numpy.array): The external field with shape (N x 1).
+        x (numpy.array): The initialized spin value with shape (N x batch_size).
             Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
@@ -86,7 +86,7 @@ class QAIA:
         Calculate cut value.
 
         Args:
-            x (numpy.array): The spin value with shape :math:`(N x batch_size)`.
+            x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
         if x is None:
@@ -101,7 +101,7 @@ class QAIA:
         Calculate energy.
 
         Args:
-            x (numpy.array): The spin value with shape :math:`(N x batch_size)`.
+            x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
         if x is None:
