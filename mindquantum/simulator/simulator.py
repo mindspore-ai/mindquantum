@@ -264,6 +264,10 @@ class Simulator:
         and :math:`\left|\psi\right>` is the current quantum state of this simulator,
         and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
 
+        Note:
+            The input circuits only participate in the expectation calculation and will not change
+            the current quantum state of this simulator.
+
         Args:
             hamiltonian (Hamiltonian): The hamiltonian you want to get expectation.
             circ_right (Circuit): The :math:`U_r` circuit described above. If it is ``None``,
@@ -299,9 +303,9 @@ class Simulator:
             (-0.25463350745693886+0.8507316752782879j)
         """
         if self.backend.name == "stabilizer":
-            if any([circ_right, circ_left, simulator_left, pr]):
-                raise ValueError("Stabilizer backend only supports hamiltonian parameter for get_expectation.")
-            return self.backend.get_expectation(hamiltonian)
+            if any([circ_left, simulator_left, pr]):
+                raise ValueError("Stabilizer backend only supports hamiltonian and circ_right for get_expectation.")
+            return self.backend.get_expectation(hamiltonian, circ_right)
         return self.backend.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
 
     # pylint: disable=too-many-arguments
@@ -326,6 +330,10 @@ class Simulator:
         where :math:`U_l` is circ_left, :math:`U_r` is circ_right, :math:`H` is hams
         and :math:`\left|\psi\right>` is the current quantum state of this simulator,
         and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
+
+        Note:
+            The input circuits only participate in the expectation and gradient calculation and will not change
+            the current quantum state of this simulator.
 
         Args:
             hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
@@ -424,9 +432,11 @@ class Simulator:
         """
         Sample the measure qubit in circuit.
 
-        Sampling does not change the original quantum state of this simulator. The sampling results are represented
-        in little-endian order by default (e.g., '01' means q1=0, q0=1). If big-endian order is needed, use
-        MeasureResult.reverse_endian() method.
+        Note:
+            - The input circuit only participates in the sampling process and will not change
+              the current quantum state of this simulator.
+            - The sampling results are represented in little-endian order by default (e.g., '01' means q1=0, q0=1).
+              If big-endian order is needed, use ``MeasureResult.reverse_endian()`` method.
 
         Args:
             circuit (Circuit): The circuit that you want to evolve and sample.

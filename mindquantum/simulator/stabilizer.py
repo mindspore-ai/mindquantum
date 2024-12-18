@@ -87,6 +87,10 @@ class Stabilizer(BackendBase):
         """Return the tableau of stabilizer."""
         return np.array(self.sim.tableau_to_vector())
 
+    def reset(self):
+        """Reset the stabilizer."""
+        self.sim.reset()
+
     # pylint: disable=arguments-differ
     def sampling(self, circuit: Circuit, shots: int = 1, seed: int = None, *args, **kwargs):
         """Sample the quantum state."""
@@ -111,12 +115,13 @@ class Stabilizer(BackendBase):
         res.collect_data(samples)
         return res
 
-    def get_expectation(self, hamiltonian: "Hamiltonian") -> float:
+    def get_expectation(self, hamiltonian: Hamiltonian, circuit: Circuit) -> float:
         """
         Calculate the expectation value of the given Hamiltonian.
 
         Args:
             hamiltonian (Hamiltonian): The Hamiltonian operator for which to calculate the expectation value.
+            circuit (Circuit): The circuit to calculate the expectation value.
 
         Returns:
             float: The expectation value of the Hamiltonian.
@@ -127,14 +132,16 @@ class Stabilizer(BackendBase):
             >>> from mindquantum.simulator import Simulator
             >>> ham = Hamiltonian(QubitOperator('Z0', 0.5) + QubitOperator('X1', 0.3))
             >>> sim = Simulator('stabilizer', 2)
-            >>> sim.apply_circuit(Circuit().x(0))
-            >>> sim.get_expectation(ham)
+            >>> sim.get_expectation(ham, Circuit().x(0))
             -0.5
         """
-        if not isinstance(hamiltonian, Hamiltonian):
-            raise TypeError(f"hamiltonian must be of type Hamiltonian, but got {type(hamiltonian)}")
-
-        return self.sim.get_expectation(hamiltonian.ham_termlist)
+        _check_input_type("hamiltonian", Hamiltonian, hamiltonian)
+        if circuit is None:
+            circuit = Circuit()
+        _check_input_type("circuit", Circuit, circuit)
+        if self.n_qubits < circuit.n_qubits:
+            raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
+        return self.sim.get_expectation(hamiltonian.ham_termlist, circuit.get_cpp_obj())
 
 
 def decompose_stabilizer(sim: Simulator | Stabilizer) -> Circuit:

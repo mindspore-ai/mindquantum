@@ -15,6 +15,7 @@
 """Test stabilizer simulator."""
 import numpy as np
 from scipy.stats import entropy
+import pytest
 
 from mindquantum import _mq_vector
 from mindquantum.algorithm.error_mitigation import (
@@ -31,6 +32,7 @@ from mindquantum.simulator import (
 from mindquantum.utils import random_clifford_circuit, random_hamiltonian
 
 
+@pytest.mark.level0
 def test_stabilizer():
     """
     Test stabilizer simulator.
@@ -54,6 +56,7 @@ def test_stabilizer():
         assert clifford.backend == sim.backend
 
 
+@pytest.mark.level0
 def test_stabilizer_tableau():
     """
     Description: Test tableau string of stabilizer.
@@ -66,6 +69,7 @@ def test_stabilizer_tableau():
     assert tableau == tableau_exp
 
 
+@pytest.mark.level0
 def test_stabilizer_string():
     """
     Description: Test stabilizer string of stabilizer.
@@ -78,6 +82,7 @@ def test_stabilizer_string():
     assert stabilizer == stabilizer_exp
 
 
+@pytest.mark.level0
 def test_stabilizer_sampling():
     """
     Description: Test sampling of stabilizer simulator.
@@ -96,6 +101,8 @@ def test_stabilizer_sampling():
         dis2 = np.array([res_state_vector.data.get(key, 0) for key in keys]) / res_state_vector.shots
         assert entropy(dis1, dis2) < 0.01
 
+
+@pytest.mark.level0
 def test_stabilizer_expectation():
     """
     Description: Test expectation of stabilizer simulator.
@@ -105,8 +112,19 @@ def test_stabilizer_expectation():
     ref_sim = Simulator('mqvector', 4)
     rc = random_clifford_circuit(4, 20)
     rh = random_hamiltonian(4, 20)
-    sim.apply_circuit(rc)
-    ref_sim.apply_circuit(rc)
-    exp_val = sim.get_expectation(rh)
-    ref_exp_val = ref_sim.get_expectation(rh)
+    exp_val = sim.get_expectation(rh, rc)
+    ref_exp_val = ref_sim.get_expectation(rh, rc)
     assert np.allclose(exp_val, ref_exp_val)
+
+
+@pytest.mark.level0
+def test_stabilizer_reset():
+    """
+    Description: Test reset of stabilizer simulator.
+    Expectation:
+    """
+    sim = Simulator('stabilizer', 4)
+    zero_state = sim.get_qs()
+    sim.apply_circuit(Circuit().h(0).x(1, 0))
+    sim.reset()
+    assert np.allclose(sim.get_qs(), zero_state)

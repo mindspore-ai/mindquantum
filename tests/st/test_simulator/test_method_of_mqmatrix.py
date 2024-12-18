@@ -32,7 +32,6 @@ from mindquantum.utils import random_circuit, random_hamiltonian
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -57,7 +56,6 @@ def test_set_qs_and_dm(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -79,7 +77,6 @@ def test_get_partial_trace(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -99,7 +96,6 @@ def test_purity(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -334,7 +330,6 @@ def three_qubits_dm_evolution_in_py(dm, g, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -382,7 +377,6 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
@@ -406,7 +400,6 @@ def test_entropy(config):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config1", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
