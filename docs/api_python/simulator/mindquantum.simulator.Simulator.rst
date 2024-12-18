@@ -105,6 +105,9 @@ mindquantum.simulator.Simulator
 
         其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams，:math:`\left|\psi\right>` 是模拟器当前的量子态，:math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
 
+        .. note::
+            传入的线路仅参与期望值计算，不会改变模拟器当前的量子态。
+
         参数：
             - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
             - **circ_right** (Circuit) - 表示 :math:`U_r` 的线路。如果为 ``None``，则选择空线路。默认值： ``None``。
@@ -124,6 +127,9 @@ mindquantum.simulator.Simulator
             E = \left<\varphi\right|U_l^\dagger H U_r \left|\psi\right>
 
         其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams，:math:`\left|\psi\right>` 是模拟器当前的量子态，:math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
+
+        .. note::
+            传入的线路仅参与期望值和梯度的计算，不会改变模拟器当前的量子态。
 
         参数：
             - **hams** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 需要计算期望的 :class:`~.core.operators.Hamiltonian` 或者一组 :class:`~.core.operators.Hamiltonian`。
@@ -200,8 +206,11 @@ mindquantum.simulator.Simulator
 
     .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
 
-        在线路中对测量比特进行采样。采样不会改变模拟器的量子态。采样结果默认使用小端序表示（例如：'01'表示q1=0, q0=1）。
-        如果需要大端序表示，可以使用MeasureResult.reverse_endian()方法。
+        在线路中对测量比特进行采样。
+
+        .. note::
+            - 传入的线路仅参与采样过程，不会改变模拟器当前的量子态。
+            - 采样结果默认使用小端序表示（例如：'01'表示q1=0, q0=1）。如果需要大端序表示，可以使用 ``MeasureResult.reverse_endian()`` 方法。
 
         参数：
             - **circuit** (Circuit) - 要进行演化和采样的电路。

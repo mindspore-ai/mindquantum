@@ -105,8 +105,17 @@ def test_stabilizer_expectation():
     ref_sim = Simulator('mqvector', 4)
     rc = random_clifford_circuit(4, 20)
     rh = random_hamiltonian(4, 20)
-    sim.apply_circuit(rc)
-    ref_sim.apply_circuit(rc)
-    exp_val = sim.get_expectation(rh)
-    ref_exp_val = ref_sim.get_expectation(rh)
+    exp_val = sim.get_expectation(rh, rc)
+    ref_exp_val = ref_sim.get_expectation(rh, rc)
     assert np.allclose(exp_val, ref_exp_val)
+
+def test_stabilizer_reset():
+    """
+    Description: Test reset of stabilizer simulator.
+    Expectation:
+    """
+    sim = Simulator('stabilizer', 4)
+    zero_state = sim.get_qs()
+    sim.apply_circuit(Circuit().h(0).x(1, 0))
+    sim.reset()
+    assert np.allclose(sim.get_qs(), zero_state)

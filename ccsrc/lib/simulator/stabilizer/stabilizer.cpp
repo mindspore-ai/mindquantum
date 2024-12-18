@@ -591,9 +591,10 @@ bool StabilizerTableau::IsRandomMeasurement(size_t qubit) const {
     return false;
 }
 
-double StabilizerTableau::GetExpectation(const VT<PauliTerm<double>>& ham_termlist) const {
+double StabilizerTableau::GetExpectation(const VT<PauliTerm<double>>& ham_termlist, const stab_circ_t& circ) const {
     double expectation = 0.0;
     StabilizerTableau new_state = this->copy();
+    new_state.ApplyCircuit(circ);
     new_state.AddQubit();
     for (const auto& term : ham_termlist) {
         if (term.first.empty()) {

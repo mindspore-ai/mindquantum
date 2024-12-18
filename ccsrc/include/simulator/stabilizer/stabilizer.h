@@ -67,7 +67,7 @@ class StabilizerTableau {
     VVT<size_t> TableauToVector() const;
     bool operator==(const StabilizerTableau& other) const;
     bool IsRandomMeasurement(size_t qubit) const;
-    double GetExpectation(const VT<PauliTerm<double>>& ham_termlist) const;
+    double GetExpectation(const VT<PauliTerm<double>>& ham_termlist, const stab_circ_t& circ) const;
 
  private:
     StabilizerTableau(size_t n_qubits, unsigned seed, const std::vector<LongBits>& table, const LongBits& phase);
