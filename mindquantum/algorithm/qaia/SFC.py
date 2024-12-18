@@ -34,9 +34,9 @@ class SFC(QAIA):
         please pass a copy using `x.copy()`.
 
     Args:
-        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape :math:`(N x N)`.
-        h (numpy.array): The external field with shape :math:`(N, )`.
-        x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`.
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
+        h (numpy.array): The external field with shape (N, ).
+        x (numpy.array): The initialized spin value with shape (N x batch_size).
             Will be modified during optimization. If not provided (``None``), will be initialized as
             random values drawn from normal distribution N(0, 0.1). Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
