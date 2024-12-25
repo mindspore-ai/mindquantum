@@ -292,7 +292,7 @@ def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None, dtype=None
         n_qubits (int): Number of qubits
         n_terms (int): Number of Pauli terms
         seed (int, optional): Random seed. Defaults to None.
-        dtype (mindquantum.dtype): data type of hamiltonian. Default: ``None``.
+        dtype (mindquantum.dtype, optional): data type of hamiltonian. Default: ``None``.
 
     Returns:
         Hamiltonian, Randomly generated Hamiltonian

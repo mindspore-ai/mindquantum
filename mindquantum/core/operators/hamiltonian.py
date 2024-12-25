@@ -157,7 +157,12 @@ class Hamiltonian:
 
     @property
     def hamiltonian(self):
-        """Get the QubitOperator of the Hamiltonian."""
+        """
+        Get the QubitOperator of the Hamiltonian.
+
+        Raises:
+            ValueError: If this Hamiltonian was constructed from a sparse matrix, cannot get QubitOperator.
+        """
         if self.how_to == HowTo.FRONTEND:
             raise ValueError(
                 "Cannot get QubitOperator: "
@@ -168,7 +173,12 @@ class Hamiltonian:
 
     @property
     def ham_termlist(self):
-        """Get the Pauli term list of the Hamiltonian."""
+        """
+        Get the Pauli term list of the Hamiltonian.
+
+        Raises:
+            ValueError: If this Hamiltonian was constructed from a sparse matrix, cannot get Pauli term list.
+        """
         if self.how_to == HowTo.FRONTEND:
             raise ValueError(
                 "Cannot get Pauli term list: "
@@ -179,7 +189,12 @@ class Hamiltonian:
 
     @property
     def sparse_matrix(self):
-        """Get the sparse matrix representation of the Hamiltonian."""
+        """
+        Get the sparse matrix representation of the Hamiltonian.
+
+        Returns:
+            scipy.sparse.csr_matrix, the sparse matrix representation of Hamiltonian.
+        """
         if self.how_to != HowTo.FRONTEND:
             self._sparse_matrix = self._hamiltonian.matrix()
             return self._sparse_matrix
