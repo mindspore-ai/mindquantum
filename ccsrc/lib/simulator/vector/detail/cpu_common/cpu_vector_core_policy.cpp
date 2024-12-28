@@ -335,9 +335,10 @@ template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs_data_p_t& qs,
                                                                         const qbits_t& kept_qubits,
                                                                         index_t dim) -> VVT<py_qs_data_t> {
-    size_t n_qubits = static_cast<size_t>(std::log2(dim));
-    size_t n_kept = kept_qubits.size();
-    size_t dim_kept = (1UL << n_kept);
+    if (qs != nullptr) {
+        size_t n_qubits = static_cast<size_t>(std::log2(dim));
+        size_t n_kept = kept_qubits.size();
+        size_t dim_kept = (1UL << n_kept);
 
         VVT<py_qs_data_t> rho(dim_kept, VT<py_qs_data_t>(dim_kept, 0.0));
 
@@ -370,8 +371,13 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs
                 }
             }
         }
+        return rho;
+    } else {
+        size_t dim_kept = (1UL << kept_qubits.size());
+        VVT<py_qs_data_t> rho(dim_kept, VT<py_qs_data_t>(dim_kept, 0.0));
+        rho[0][0] = 1.0;
+        return rho;
     }
-    return rho;
 }
 
 #ifdef __x86_64__

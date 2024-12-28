@@ -121,15 +121,72 @@ def ket_string(state, tol=1e-7):
         if np.abs(i) < tol:
             continue
         if np.abs(np.real(i)) < tol:
-            string.append(f'{real_string_expression(np.imag(i))}j¦{bitstring}⟩')
+            string.append(f'{real_string_expression(np.imag(i), round_n=8)}j¦{bitstring}⟩')
             continue
         if np.abs(np.imag(i)) < tol:
-            string.append(f'{real_string_expression(np.real(i))}¦{bitstring}⟩')
+            string.append(f'{real_string_expression(np.real(i), round_n=8)}¦{bitstring}⟩')
             continue
-        i_real = real_string_expression(np.real(i))
-        i_imag = real_string_expression(np.imag(i))
+        i_real = real_string_expression(np.real(i), round_n=8)
+        i_imag = real_string_expression(np.imag(i), round_n=8)
         if i_imag.startswith('-'):
             string.append(f'({i_real}{i_imag}j)¦{bitstring}⟩')
         else:
             string.append(f'({i_real}+{i_imag}j)¦{bitstring}⟩')
     return string
+
+
+def density_matrix_ket_string(density_matrix, indent='    '):
+    """
+    Display density matrix in a ket format.
+
+    Args:
+        density_matrix (numpy.ndarray): Density matrix for n qubits
+        indent (str): Indentation for multiline display. Default: 4 spaces
+
+    Returns:
+        str: the ket format of density matrix
+    """
+    purity = np.real(np.trace(density_matrix @ density_matrix))
+
+    if abs(purity - 1.0) < 1e-6:
+        eigenvalues, eigenvectors = np.linalg.eigh(density_matrix)
+        max_idx = np.argmax(eigenvalues)
+        state_vector = eigenvectors[:, max_idx]
+
+        first_nonzero = np.nonzero(state_vector)[0][0]
+        if state_vector[first_nonzero].real < 0:
+            state_vector = -state_vector
+
+        components = ket_string(state_vector)
+        if len(components) > 3:
+            return (' +\n').join(components)
+        return ' + '.join(components)
+
+    eigenvalues, eigenvectors = np.linalg.eigh(density_matrix)
+    idx = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+
+    terms = []
+    for prob, state_vector in zip(eigenvalues, eigenvectors.T):
+        if abs(prob) > 1e-6:
+            components = ket_string(state_vector)
+            prob_str = real_string_expression(prob, round_n=8)
+            components = [c[1:] if c.startswith('1¦') else c for c in components]
+
+            total_len = sum(len(c) for c in components)
+            if len(components) > 3 or total_len > 50:
+                state_str = indent + (' +\n' + indent).join(components)
+                terms.append(f"{prob_str}(\n{state_str}\n)")
+            else:
+                state_str = ' + '.join(components)
+                if "+" in state_str:
+                    state_str = f"({state_str})"
+                terms.append(f"{prob_str}{state_str}")
+
+    if len(terms) > 1:
+        total_terms_len = sum(len(t) for t in terms)
+        if total_terms_len > 50:
+            return " +\n".join(terms) + " (mixed state)"
+        return " + ".join(terms) + " (mixed state)"
+    return terms[0] + " (mixed state)"

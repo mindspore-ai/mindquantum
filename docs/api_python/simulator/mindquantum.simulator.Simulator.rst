@@ -171,11 +171,34 @@ mindquantum.simulator.Simulator
 
         获取模拟器的当前量子态。
 
+        对于态矢量模拟器，返回态矢量的量子态表示。对于密度矩阵模拟器，返回密度矩阵的量子态表示。
+
+        可选择返回以ket（狄拉克符号）形式表示的量子态。
+        对于密度矩阵模拟器，如果是混态，则会通过各个纯态的概率加权和来表示。
+
         参数：
             - **ket** (bool) - 是否以ket格式返回量子态。默认值： ``False``。
 
         返回：
-            numpy.ndarray，当前量子态。
+            Union[numpy.ndarray, str]，当前量子态。
+            如果ket为True，返回ket格式的字符串表示。
+            对于态矢量模拟器，返回一维数组或态矢量的ket字符串。
+            对于密度矩阵模拟器，返回二维数组或密度矩阵的ket字符串。
+
+    .. py:method:: get_qs_of_qubits(qubits, ket=False)
+
+        获取当前模拟器中指定量子比特的约化量子态。
+
+        约化量子态是通过对其他量子比特进行偏迹运算得到的。如果得到的是纯态，返回态矢量，混态则返回密度矩阵。
+
+        可选择返回以ket（狄拉克符号）形式表示的约化量子态，如果是混态，则会通过各个纯态的概率加权和来表示。
+
+        参数：
+            - **qubits** (Union[int, List[int]]) - 想要观察的量子比特。可以是单个整数或整数列表。
+            - **ket** (bool) - 是否以 ket 字符串格式返回量子态。默认值： ``False``。
+
+        返回：
+            Union[numpy.ndarray, str]，如果 ket 为 True，返回量子态的字符串表示。如果 ket 为 False 且状态为纯态，返回态矢量的 numpy 数组。如果状态为混态，返回密度矩阵。
 
     .. py:method:: get_reduced_density_matrix(kept_qubits)
 
