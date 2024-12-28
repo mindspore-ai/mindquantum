@@ -142,12 +142,12 @@ mindquantum.simulator.Simulator
         返回：
             GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
 
-    .. py:method:: get_partial_trace(obj_qubits)
+    .. py:method:: get_partial_trace(qubits_to_trace)
 
         计算当前密度矩阵的偏迹。
 
         参数：
-            - **obj_qubits** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
+            - **qubits_to_trace** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
 
         返回：
             numpy.ndarray，密度矩阵的偏迹。
@@ -176,6 +176,16 @@ mindquantum.simulator.Simulator
 
         返回：
             numpy.ndarray，当前量子态。
+
+    .. py:method:: get_reduced_density_matrix(kept_qubits)
+
+        通过对其余量子比特执行偏迹运算，得到指定量子比特的约化密度矩阵。
+
+        参数：
+            - **kept_qubits** (Union[int, List[int]]) - 想要获取约化密度矩阵的目标量子比特，可以指定单个量子比特或多个量子比特的列表。
+
+        返回：
+            numpy.ndarray，目标量子比特的约化密度矩阵。
 
     .. py:method:: n_qubits()
         :property:

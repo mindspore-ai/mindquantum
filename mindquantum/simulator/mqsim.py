@@ -541,6 +541,19 @@ class MQSim(BackendBase):
             raise ValueError(f"{self.name} simulator not support partial trace method.")
         return np.array(self.sim.get_partial_trace(obj_qubits))
 
+    def get_reduced_density_matrix(self, kept_qubits) -> np.ndarray:
+        """Get the reduced density matrix by keeping specified qubits."""
+        if isinstance(kept_qubits, int):
+            kept_qubits = [kept_qubits]
+        _check_input_type("kept_qubits", (int, Iterable), kept_qubits)
+        if len(set(kept_qubits)) != len(kept_qubits):
+            raise ValueError("kept_qubits cannot contain repeated indices.")
+        if len(kept_qubits) >= self.n_qubits:
+            raise ValueError("Number of kept qubits must be less than total number of qubits.")
+        if max(kept_qubits) >= self.n_qubits:
+            raise ValueError(f"Qubit index {max(kept_qubits)} is out of range for a {self.n_qubits}-qubit system.")
+        return np.array(self.sim.get_reduced_density_matrix(kept_qubits))
+
     def entropy(self) -> float:
         """Get the von-Neumann entropy of quantum state."""
         if self.name.startswith('mqvector'):

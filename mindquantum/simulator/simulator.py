@@ -504,12 +504,12 @@ class Simulator:
         """
         return self.backend.set_threads_number(number)
 
-    def get_partial_trace(self, obj_qubits):
+    def get_partial_trace(self, qubits_to_trace):
         """
         Calculate the partial trace of current density matrix.
 
         Args:
-            obj_qubits (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
+            qubits_to_trace (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
 
         Returns:
             numpy.ndarray, the partial trace of current density matrix.
@@ -525,7 +525,29 @@ class Simulator:
             array([[0.5-0.j, 0. -0.j],
                    [0. +0.j, 0.5-0.j]])
         """
-        return self.backend.get_partial_trace(obj_qubits)
+        return self.backend.get_partial_trace(qubits_to_trace)
+
+    def get_reduced_density_matrix(self, kept_qubits) -> np.ndarray:
+        """
+        Get the reduced density matrix of specified qubits by performing partial trace over other qubits.
+
+        Args:
+            kept_qubits (Union[int, List[int]]): The indices of qubits to keep, can be a single integer or a list of integers.
+
+        Returns:
+            numpy.ndarray: The reduced density matrix of the specified qubits.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 2)
+            >>> sim.apply_circuit(Circuit().h(0).x(1,0))
+            >>> # Get reduced density matrix of qubit 1
+            >>> rho_1 = sim.get_reduced_density_matrix([1])
+            >>> print(rho_1)
+            [[0.5+0.j 0.0+0.j]
+             [0.0+0.j 0.5+0.j]]
+        """
+        return self.backend.get_reduced_density_matrix(kept_qubits)
 
     def entropy(self):
         r"""

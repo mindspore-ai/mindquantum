@@ -383,6 +383,60 @@ VT<unsigned> GPUVectorPolicyBase<derived_, calc_type>::LowerBound(const VT<calc_
     return out;
 }
 
+template <typename derived_, typename calc_type_>
+auto GPUVectorPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs_data_p_t& qs,
+                                                                        const qbits_t& kept_qubits, index_t dim)
+    -> std::vector<std::vector<py_qs_data_t>> {
+    if (qs != nullptr) {
+        size_t n_qubits = static_cast<size_t>(std::log2(dim));
+        size_t n_kept = kept_qubits.size();
+        size_t dim_kept = (1UL << n_kept);
+
+        std::vector<std::vector<py_qs_data_t>> rho(dim_kept, std::vector<py_qs_data_t>(dim_kept, 0.0));
+
+        thrust::host_vector<qs_data_t> h_qs(dim);
+        cudaMemcpy(h_qs.data(), qs, sizeof(qs_data_t) * dim, cudaMemcpyDeviceToHost);
+
+        for (size_t i = 0; i < dim; i++) {
+            size_t i_kept = 0;
+            for (size_t k = 0; k < n_kept; k++) {
+                if ((i >> kept_qubits[k]) & 1) {
+                    i_kept |= (1UL << k);
+                }
+            }
+            for (size_t j = 0; j < dim; j++) {
+                size_t j_kept = 0;
+                // Extract bits for kept qubits
+                for (size_t k = 0; k < n_kept; k++) {
+                    if ((j >> kept_qubits[k]) & 1) {
+                        j_kept |= (1UL << k);
+                    }
+                }
+                bool same_traced = true;
+                for (size_t k = 0; k < n_qubits; k++) {
+                    if (std::find(kept_qubits.begin(), kept_qubits.end(), k) == kept_qubits.end()) {
+                        if (((i >> k) & 1) != ((j >> k) & 1)) {
+                            same_traced = false;
+                            break;
+                        }
+                    }
+                }
+                if (same_traced) {
+                    auto conj_val = thrust::conj(h_qs[i]);
+                    auto prod = conj_val * h_qs[j];
+                    rho[i_kept][j_kept] += py_qs_data_t(prod.real(), prod.imag());
+                }
+            }
+        }
+        return rho;
+    } else {
+        size_t dim_kept = (1UL << kept_qubits.size());
+        std::vector<std::vector<py_qs_data_t>> rho(dim_kept, std::vector<py_qs_data_t>(dim_kept, 0.0));
+        rho[0][0] = 1.0;
+        return rho;
+    }
+}
+
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 

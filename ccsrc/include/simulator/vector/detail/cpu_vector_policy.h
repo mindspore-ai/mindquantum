@@ -80,6 +80,7 @@ struct CPUVectorPolicyBase {
     static py_qs_data_t ExpectationOfTerms(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                            const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static qs_data_p_t Copy(const qs_data_p_t& qs, index_t dim);
+    static VVT<py_qs_data_t> GetReducedDensityMatrix(const qs_data_p_t& qs, const qbits_t& kept_qubits, index_t dim);
     template <index_t mask, index_t condi>
     static py_qs_data_t ConditionVdot(const qs_data_p_t& bra, const qs_data_p_t& ket_p, index_t dim);
     static py_qs_data_t OneStateVdot(const qs_data_p_t& bra, const qs_data_p_t& ket, qbit_t obj_qubit, index_t dim);
