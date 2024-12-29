@@ -54,6 +54,7 @@ class QuantumNeuron:
     Examples:
         >>> from mindquantum.simulator import Simulator
         >>> from mindquantum import Circuit, H,X
+        >>> from mindquantum.algorithm import QuantumNeuron
         >>> # Create 2-qubit input state
         >>> circ = Circuit()
         >>> circ += H.on(0)

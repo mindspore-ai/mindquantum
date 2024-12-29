@@ -99,6 +99,8 @@ class VectorState {
     //! Set the quantum state value
     virtual void SetQS(const VT<py_qs_data_t>& qs_out);
 
+    virtual VVT<py_qs_data_t> GetReducedDensityMatrix(const qbits_t& kept_qubits) const;
+
     /*!
      * \brief Apply a quantum gate on this quantum state, quantum gate can be
      * normal quantum gate, measurement gate and noise channel

@@ -99,6 +99,9 @@ class DensityMatrixState {
     //! Get the partial trace of density matrix
     virtual matrix_t GetPartialTrace(const qbits_t& objs) const;
 
+    //! Get the reduced density matrix
+    virtual matrix_t GetReducedDensityMatrix(const qbits_t& kept_qubits) const;
+
     //! Transform to vector from a pure density matrix (with an unknown global phase)
     virtual py_qs_datas_t PureStateVector();
 
