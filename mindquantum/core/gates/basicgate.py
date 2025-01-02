@@ -2039,6 +2039,10 @@ def gene_univ_two_params_gate(name, matrix_generator, diff_matrix_generator_1, d
     """
     Generate a customer parameterized gate with two parameters.
 
+    Note:
+        The elements in the matrix need to be explicitly written in complex number form,
+        especially for multi qubits gate.
+
     Args:
         name (str): The name of this gate.
         matrix_generator (Union[FunctionType, MethodType]): A function that takes two arguments
