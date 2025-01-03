@@ -918,14 +918,15 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
     @property
     def is_measure_end(self):
         """
-        Check whether each qubit has a measurement as its last operation.
+        Check if all measurements in the circuit are at the end.
 
-        Check whether the circuit is end with measurement gate that there is at most one measurement
-        gate that act on each qubit, and this measurement gate should be at end of gate serial of
-        this qubit.
+        A circuit satisfies this when:
+        1. At least one measurement exists
+        2. Each qubit has at most one measurement
+        3. If a qubit has a measurement, it must be its last operation
 
         Returns:
-            bool, whether the circuit is end with measurement.
+            bool, True if all measurements are at the end of their qubits.
         """
         circ = self.remove_barrier()
         high = [0 for i in range(self.n_qubits)]
@@ -938,7 +939,8 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                 measure_num[m_idx] += 1
                 if high[m_idx] != circ.all_qubits.map[m_idx]:
                     return False
-        return all(x == 1 for x in measure_num)
+
+        return sum(measure_num) > 0 and max(measure_num) == 1
 
     def matrix(self, pr=None, big_end=False, backend='mqvector', seed=None, dtype=None):
         """
