@@ -204,10 +204,15 @@ mindquantum.core.circuit.Circuit
     .. py:method:: is_measure_end
         :property:
 
-        检查线路是否以测量门结束，每个量子比特上最多有一个测量门，并且该测量门应位于该量子比特门序列的末尾。
+        检查线路中的测量门是否都在末端。
+
+        满足以下条件时返回True：
+        1. 至少存在一个测量门
+        2. 每个量子比特最多有一个测量门
+        3. 如果量子比特有测量门，则必须是其最后一个操作
 
         返回：
-            bool，线路是否以测量门结束。
+            bool，线路中的测量门是否都在末端。
 
     .. py:method:: is_noise_circuit
         :property:
