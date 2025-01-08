@@ -24,6 +24,7 @@ import numpy as np
 from mindquantum import _mq_vector
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import MeasureResult, S, X
+from mindquantum.core.operators import Hamiltonian
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.type_value_check import (
     _check_input_type,
@@ -86,6 +87,10 @@ class Stabilizer(BackendBase):
         """Return the tableau of stabilizer."""
         return np.array(self.sim.tableau_to_vector())
 
+    def reset(self):
+        """Reset the stabilizer."""
+        self.sim.reset()
+
     # pylint: disable=arguments-differ
     def sampling(self, circuit: Circuit, shots: int = 1, seed: int = None, *args, **kwargs):
         """Sample the quantum state."""
@@ -109,6 +114,34 @@ class Stabilizer(BackendBase):
         samples = np.array(sampler(circuit.get_cpp_obj(), shots, res.keys_map, seed)).reshape((shots, -1))
         res.collect_data(samples)
         return res
+
+    def get_expectation(self, hamiltonian: Hamiltonian, circuit: Circuit) -> float:
+        """
+        Calculate the expectation value of the given Hamiltonian.
+
+        Args:
+            hamiltonian (Hamiltonian): The Hamiltonian operator for which to calculate the expectation value.
+            circuit (Circuit): The circuit to calculate the expectation value.
+
+        Returns:
+            float: The expectation value of the Hamiltonian.
+
+        Examples:
+            >>> from mindquantum.core.operators import QubitOperator, Hamiltonian
+            >>> from mindquantum.core.circuit import Circuit
+            >>> from mindquantum.simulator import Simulator
+            >>> ham = Hamiltonian(QubitOperator('Z0', 0.5) + QubitOperator('X1', 0.3))
+            >>> sim = Simulator('stabilizer', 2)
+            >>> sim.get_expectation(ham, Circuit().x(0))
+            -0.5
+        """
+        _check_input_type("hamiltonian", Hamiltonian, hamiltonian)
+        if circuit is None:
+            circuit = Circuit()
+        _check_input_type("circuit", Circuit, circuit)
+        if self.n_qubits < circuit.n_qubits:
+            raise ValueError(f"Circuit has {circuit.n_qubits} qubits, which is more than simulator qubits.")
+        return self.sim.get_expectation(hamiltonian.ham_termlist, circuit.get_cpp_obj())
 
 
 def decompose_stabilizer(sim: Simulator | Stabilizer) -> Circuit:

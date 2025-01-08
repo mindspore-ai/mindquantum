@@ -36,6 +36,15 @@ StabilizerTableau::StabilizerTableau(size_t n_qubits, unsigned seed) : n_qubits(
     std::uniform_real_distribution<double> dist(0., 1.);
     rng_ = std::bind(dist, std::ref(rnd_eng_));
 }
+StabilizerTableau::StabilizerTableau(size_t n_qubits, unsigned seed, const std::vector<LongBits>& table,
+                                     const LongBits& phase)
+    : n_qubits(n_qubits), seed(seed), table(table), phase(phase), rnd_eng_(seed) {
+    std::uniform_real_distribution<double> dist(0., 1.);
+    rng_ = std::bind(dist, std::ref(rnd_eng_));
+}
+StabilizerTableau StabilizerTableau::copy() const {
+    return StabilizerTableau(n_qubits, seed, table, phase);
+}
 
 void StabilizerTableau::Reset() {
     phase = LongBits(2 * n_qubits);
@@ -49,6 +58,33 @@ void StabilizerTableau::SetSeed(unsigned new_seed) {
     this->rnd_eng_ = RndEngine(new_seed);
     std::uniform_real_distribution<double> dist(0., 1.);
     this->rng_ = std::bind(dist, std::ref(this->rnd_eng_));
+}
+void StabilizerTableau::AddQubit() {
+    size_t old_n = n_qubits;
+    n_qubits += 1;
+
+    LongBits new_phase(2 * n_qubits);
+    for (size_t i = 0; i < old_n; i++) {
+        new_phase.SetBit(i, phase.GetBit(i));
+        new_phase.SetBit(i + n_qubits, phase.GetBit(i + old_n));
+    }
+    phase = new_phase;
+
+    for (auto& row : table) {
+        LongBits new_row(2 * n_qubits);
+        for (size_t i = 0; i < old_n; i++) {
+            new_row.SetBit(i, row.GetBit(i));
+            new_row.SetBit(i + n_qubits, row.GetBit(i + old_n));
+        }
+        row = new_row;
+    }
+    LongBits new_destabilizer(2 * n_qubits);
+    new_destabilizer.SetBit(old_n, 1);
+    table.insert(table.begin() + old_n, new_destabilizer);
+
+    LongBits new_stabilizer(2 * n_qubits);
+    new_stabilizer.SetBit(2 * old_n + 1, 1);
+    table.insert(table.begin() + 2 * old_n + 1, new_stabilizer);
 }
 // -----------------------------------------------------------------------------
 
@@ -544,5 +580,58 @@ stab_circ_t CliffordCircDagger(const stab_circ_t& circ) {
     }
     std::reverse(out.begin(), out.end());
     return out;
+}
+
+bool StabilizerTableau::IsRandomMeasurement(size_t qubit) const {
+    for (size_t p = n_qubits; p < 2 * n_qubits; ++p) {
+        if (GetElement(p, qubit) == 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+double StabilizerTableau::GetExpectation(const VT<PauliTerm<double>>& ham_termlist, const stab_circ_t& circ) const {
+    double expectation = 0.0;
+    StabilizerTableau new_state = this->copy();
+    new_state.ApplyCircuit(circ);
+    new_state.AddQubit();
+    for (const auto& term : ham_termlist) {
+        if (term.first.empty()) {
+            expectation += term.second;
+            continue;
+        }
+
+        StabilizerTableau state = new_state.copy();
+        size_t anc = state.n_qubits - 1;
+
+        for (const auto& [qubit, pauli] : term.first) {
+            switch (pauli) {
+                case 'Z':
+                    state.ApplyCNOT(anc, qubit);
+                    break;
+                case 'X':
+                    state.ApplyH(qubit);
+                    state.ApplyCNOT(anc, qubit);
+                    state.ApplyH(qubit);
+                    break;
+                case 'Y':
+                    state.ApplySdag(qubit);
+                    state.ApplyH(anc);
+                    state.ApplyCNOT(qubit, anc);
+                    state.ApplySGate(qubit);
+                    state.ApplyH(anc);
+                    break;
+                default:
+                    throw std::runtime_error("Invalid Pauli operator.");
+            }
+        }
+
+        if (!state.IsRandomMeasurement(anc)) {
+            size_t result = state.ApplyMeasurement(anc);
+            expectation += (result == 0 ? 1 : -1) * term.second;
+        }
+    }
+    return expectation;
 }
 }  // namespace mindquantum::stabilizer

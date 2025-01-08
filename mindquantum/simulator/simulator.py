@@ -264,6 +264,10 @@ class Simulator:
         and :math:`\left|\psi\right>` is the current quantum state of this simulator,
         and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
 
+        Note:
+            The input circuits only participate in the expectation calculation and will not change
+            the current quantum state of this simulator.
+
         Args:
             hamiltonian (Hamiltonian): The hamiltonian you want to get expectation.
             circ_right (Circuit): The :math:`U_r` circuit described above. If it is ``None``,
@@ -298,6 +302,10 @@ class Simulator:
             >>> inner_product(sim2, sim1)
             (-0.25463350745693886+0.8507316752782879j)
         """
+        if self.backend.name == "stabilizer":
+            if any([circ_left, simulator_left, pr]):
+                raise ValueError("Stabilizer backend only supports hamiltonian and circ_right for get_expectation.")
+            return self.backend.get_expectation(hamiltonian, circ_right)
         return self.backend.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
 
     # pylint: disable=too-many-arguments
@@ -322,6 +330,10 @@ class Simulator:
         where :math:`U_l` is circ_left, :math:`U_r` is circ_right, :math:`H` is hams
         and :math:`\left|\psi\right>` is the current quantum state of this simulator,
         and :math:`\left|\varphi\right>` is the quantum state of `simulator_left`.
+
+        Note:
+            The input circuits only participate in the expectation and gradient calculation and will not change
+            the current quantum state of this simulator.
 
         Args:
             hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
@@ -384,12 +396,21 @@ class Simulator:
         """
         Get current quantum state of this simulator.
 
+        For state vector simulator, returns quantum state in state vector representation.
+        For density matrix simulator, returns quantum state in density matrix representation.
+
+        The quantum state can optionally be returned in ket (Dirac notation) format.
+        For mixed states, it will be represented as a probability weighted sum of pure states.
+
         Args:
             ket (bool): Whether to return the quantum state in ket format or not.
                 Default: ``False``.
 
         Returns:
-            numpy.ndarray, the current quantum state.
+            Union[numpy.ndarray, str]: The current quantum state.
+            If ket is True, returns string representation in ket notation.
+            For state vector simulator, returns 1D array or ket string of state vector.
+            For density matrix simulator, returns 2D array or ket string of density matrix.
 
         Examples:
             >>> from mindquantum.algorithm.library import qft
@@ -420,9 +441,11 @@ class Simulator:
         """
         Sample the measure qubit in circuit.
 
-        Sampling does not change the original quantum state of this simulator. The sampling results are represented
-        in little-endian order by default (e.g., '01' means q1=0, q0=1). If big-endian order is needed, use
-        MeasureResult.reverse_endian() method.
+        Note:
+            - The input circuit only participates in the sampling process and will not change
+              the current quantum state of this simulator.
+            - The sampling results are represented in little-endian order by default (e.g., '01' means q1=0, q0=1).
+              If big-endian order is needed, use ``MeasureResult.reverse_endian()`` method.
 
         Args:
             circuit (Circuit): The circuit that you want to evolve and sample.
@@ -490,12 +513,12 @@ class Simulator:
         """
         return self.backend.set_threads_number(number)
 
-    def get_partial_trace(self, obj_qubits):
+    def get_partial_trace(self, qubits_to_trace):
         """
         Calculate the partial trace of current density matrix.
 
         Args:
-            obj_qubits (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
+            qubits_to_trace (Union[int, list[int]]): Specific which qubits (subsystems) to trace over.
 
         Returns:
             numpy.ndarray, the partial trace of current density matrix.
@@ -511,7 +534,30 @@ class Simulator:
             array([[0.5-0.j, 0. -0.j],
                    [0. +0.j, 0.5-0.j]])
         """
-        return self.backend.get_partial_trace(obj_qubits)
+        return self.backend.get_partial_trace(qubits_to_trace)
+
+    def get_reduced_density_matrix(self, kept_qubits) -> np.ndarray:
+        """
+        Get the reduced density matrix of specified qubits by performing partial trace over other qubits.
+
+        Args:
+            kept_qubits (Union[int, List[int]]): The indices of qubits to keep,
+                can be a single integer or a list of integers.
+
+        Returns:
+            numpy.ndarray: The reduced density matrix of the specified qubits.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 2)
+            >>> sim.apply_circuit(Circuit().h(0).x(1,0))
+            >>> # Get reduced density matrix of qubit 1
+            >>> rho_1 = sim.get_reduced_density_matrix([1])
+            >>> print(rho_1)
+            [[0.5+0.j 0.0+0.j]
+             [0.0+0.j 0.5+0.j]]
+        """
+        return self.backend.get_reduced_density_matrix(kept_qubits)
 
     def entropy(self):
         r"""
@@ -586,6 +632,44 @@ class Simulator:
             array([0.70710678+0.j, 0.70710678+0.j])
         """
         return self.backend.get_pure_state_vector()
+
+    def get_qs_of_qubits(self, qubits, ket=False) -> np.ndarray:
+        """
+        Get current reduced quantum state of specified qubits in this simulator.
+
+        The reduced quantum state is obtained by performing partial trace over other qubits.
+        If the resulting state is pure, it returns state vector, while for mixed states,
+        it returns density matrix.
+
+        It can optionally be returned in ket (Dirac notation) format.
+        For mixed states, it will be represented as a probability weighted sum of pure states.
+
+        Args:
+            qubits (Union[int, List[int]]): The qubits to observe. Can be a single
+                integer or a list of integers.
+            ket (bool): Whether to return the quantum state in ket notation string.
+                Default: False.
+
+        Returns:
+            Union[np.ndarray, str]: If ket is True, return string representation of
+                quantum state. If ket is False and the state is pure, return state
+                vector as numpy array. If the state is mixed, return density matrix.
+
+        Examples:
+            >>> from mindquantum.simulator import Simulator
+            >>> sim = Simulator('mqvector', 2)
+            >>> sim.apply_circuit(Circuit().h(0).x(1,0))
+            >>> # Get state vector of qubit 0
+            >>> state_0 = sim.get_qs_of_qubits(0)
+            >>> state_0
+            array([[0.5+0.j, 0. +0.j],
+                  [0. +0.j, 0.5+0.j]])
+            >>> # Get ket string representation of qubit 1
+            >>> state_1 = sim.get_qs_of_qubits(1, ket=True)
+            >>> state_1
+            '1/2¦1⟩ + 1/2¦0⟩ (mixed state)'
+        """
+        return self.backend.get_qs_of_qubits(qubits, ket)
 
 
 def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):

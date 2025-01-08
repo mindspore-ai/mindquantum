@@ -401,7 +401,7 @@ def test_non_hermitian_grad_ops2(config):
     sim = Simulator(virtual_qc, 1, dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circuit2, circuit1)
     f, _ = grad_ops(np.array([1, 2]))
-    f_exp = np.conj(G.RX(2).matrix().T) @ ham.sparse_mat.toarray() @ G.RY(1).matrix()
+    f_exp = np.conj(G.RX(2).matrix().T) @ ham.sparse_matrix.toarray() @ G.RY(1).matrix()
     f_exp = f_exp[0, 0]
     assert np.allclose(f, f_exp)
 
@@ -423,7 +423,7 @@ def test_csr_ham(config):
     sim = Simulator(virtual_qc, 1, dtype=dtype)
     grad_ops = sim.get_expectation_with_grad(ham, circ)
     f, g = grad_ops(np.array([1, 2]))
-    f_exp = np.conj(circ.matrix(np.array([1, 2])).T) @ ham.sparse_mat.toarray() @ circ.matrix(np.array([1, 2]))
+    f_exp = np.conj(circ.matrix(np.array([1, 2])).T) @ ham.sparse_matrix.toarray() @ circ.matrix(np.array([1, 2]))
     f_exp = f_exp[0, 0]
     assert np.allclose(f, f_exp)
     if virtual_qc == 'mqmatrix':
@@ -434,7 +434,7 @@ def test_csr_ham(config):
     sim.apply_circuit(circ, np.array([1, 2]))
     sim.apply_hamiltonian(ham)
     qs = sim.get_qs()
-    qs_exp = ham.sparse_mat.toarray() @ circ.matrix(np.array([1, 2])) @ np.array([1, 0])
+    qs_exp = ham.sparse_matrix.toarray() @ circ.matrix(np.array([1, 2])) @ np.array([1, 0])
     if virtual_qc == 'mqmatrix':
         assert np.allclose(qs, np.outer(qs_exp, qs_exp.conj()))
     else:

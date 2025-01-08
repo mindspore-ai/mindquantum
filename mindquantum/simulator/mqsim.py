@@ -41,7 +41,7 @@ from mindquantum.utils.type_value_check import (
 )
 
 # This import is required to register some of the C++ types (e.g. ParameterResolver)
-from ..utils.string_utils import ket_string
+from ..utils.string_utils import ket_string, density_matrix_ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
 
@@ -431,6 +431,8 @@ class MQSim(BackendBase):
             raise TypeError(f"ket requires a bool, but get {type(ket)}")
         state = np.array(self.sim.get_qs())
         if ket:
+            if len(state.shape) == 2:  # density matrix
+                return density_matrix_ket_string(state)
             return '\n'.join(ket_string(state))
         return state
 
@@ -541,6 +543,19 @@ class MQSim(BackendBase):
             raise ValueError(f"{self.name} simulator not support partial trace method.")
         return np.array(self.sim.get_partial_trace(obj_qubits))
 
+    def get_reduced_density_matrix(self, kept_qubits) -> np.ndarray:
+        """Get the reduced density matrix by keeping specified qubits."""
+        if isinstance(kept_qubits, int):
+            kept_qubits = [kept_qubits]
+        _check_input_type("kept_qubits", (int, Iterable), kept_qubits)
+        if len(set(kept_qubits)) != len(kept_qubits):
+            raise ValueError("kept_qubits cannot contain repeated indices.")
+        if len(kept_qubits) >= self.n_qubits:
+            raise ValueError("Number of kept qubits must be less than total number of qubits.")
+        if max(kept_qubits) >= self.n_qubits:
+            raise ValueError(f"Qubit index {max(kept_qubits)} is out of range for a {self.n_qubits}-qubit system.")
+        return np.array(self.sim.get_reduced_density_matrix(kept_qubits))
+
     def entropy(self) -> float:
         """Get the von-Neumann entropy of quantum state."""
         if self.name.startswith('mqvector'):
@@ -567,3 +582,33 @@ class MQSim(BackendBase):
         if 1 - self.purity() > 1e-6:
             raise ValueError("Cannot transform mixed density matrix to vector.")
         return np.array(self.sim.pure_state_vector())
+
+    def get_qs_of_qubits(self, qubits, ket=False) -> np.ndarray:
+        """Get reduced quantum state of specified qubits."""
+        if isinstance(qubits, int):
+            qubits = [qubits]
+
+        if not isinstance(qubits, (list, tuple)):
+            raise TypeError(f"qubits requires an int or a list/tuple of ints, but get {type(qubits)}")
+        if not all(isinstance(q, int) for q in qubits):
+            raise TypeError("all elements in qubits must be integers")
+        if not all(0 <= q < self.n_qubits for q in qubits):
+            raise ValueError(f"qubit indices must be between 0 and {self.n_qubits-1}")
+        if len(set(qubits)) == self.n_qubits:
+            return self.get_qs(ket=ket)
+
+        reduced_dm = self.get_reduced_density_matrix(qubits)
+
+        if ket:
+            return density_matrix_ket_string(reduced_dm)
+
+        purity = np.real(np.trace(reduced_dm @ reduced_dm))
+        if abs(purity - 1.0) < 1e-6:
+            eigenvalues, eigenvectors = np.linalg.eigh(reduced_dm)
+            max_idx = np.argmax(eigenvalues)
+            state_vector = eigenvectors[:, max_idx]
+            first_nonzero = np.nonzero(state_vector)[0][0]
+            if state_vector[first_nonzero].real < 0:
+                state_vector = -state_vector
+            return state_vector
+        return reduced_dm

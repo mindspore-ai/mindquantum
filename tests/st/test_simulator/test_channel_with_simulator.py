@@ -40,7 +40,6 @@ shots = 100000
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
@@ -71,7 +70,6 @@ def test_flip_and_damping_channel(config, channel):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
@@ -101,7 +99,6 @@ def test_pauli_channel(config):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
@@ -133,7 +130,6 @@ def test_depolarizing_channel(config):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
@@ -167,13 +163,12 @@ def test_kraus_channel(config):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_grouped_pauli_channel(config):
     """
-    Description: Test thermal relaxation channel
+    Description: Test grouped pauli channel
     Expectation: success.
     """
     virtual_qc, dtype = config
@@ -201,7 +196,6 @@ def test_grouped_pauli_channel(config):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))

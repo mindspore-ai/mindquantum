@@ -21,6 +21,7 @@ from .f import (
     random_circuit,
     random_clifford_circuit,
     random_insert_gates,
+    random_hamiltonian,
     random_state,
 )
 from .fdopen import fdopen
@@ -35,6 +36,7 @@ __all__ = [
     'random_insert_gates',
     'ket_string',
     'random_circuit',
+    'random_hamiltonian',
     'TwoLoopsProgress',
     'SingleLoopProgress',
     'random_clifford_circuit',

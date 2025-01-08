@@ -105,6 +105,9 @@ mindquantum.simulator.Simulator
 
         其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams，:math:`\left|\psi\right>` 是模拟器当前的量子态，:math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
 
+        .. note::
+            传入的线路仅参与期望值计算，不会改变模拟器当前的量子态。
+
         参数：
             - **hamiltonian** (Hamiltonian) - 想得到期望的hamiltonian。
             - **circ_right** (Circuit) - 表示 :math:`U_r` 的线路。如果为 ``None``，则选择空线路。默认值： ``None``。
@@ -125,6 +128,9 @@ mindquantum.simulator.Simulator
 
         其中 :math:`U_l` 是circ_left，:math:`U_r` 是circ_right，:math:`H` 是hams，:math:`\left|\psi\right>` 是模拟器当前的量子态，:math:`\left|\varphi\right>` 是 `simulator_left` 的量子态。
 
+        .. note::
+            传入的线路仅参与期望值和梯度的计算，不会改变模拟器当前的量子态。
+
         参数：
             - **hams** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 需要计算期望的 :class:`~.core.operators.Hamiltonian` 或者一组 :class:`~.core.operators.Hamiltonian`。
             - **circ_right** (:class:`~.core.circuit.Circuit`) - 上述 :math:`U_r` 电路。
@@ -136,12 +142,12 @@ mindquantum.simulator.Simulator
         返回：
             GradOpsWrapper，一个包含生成梯度算子信息的梯度算子包装器。
 
-    .. py:method:: get_partial_trace(obj_qubits)
+    .. py:method:: get_partial_trace(qubits_to_trace)
 
         计算当前密度矩阵的偏迹。
 
         参数：
-            - **obj_qubits** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
+            - **qubits_to_trace** (Union[int, list[int]]) - 对哪些量子比特（子系统）求偏迹。
 
         返回：
             numpy.ndarray，密度矩阵的偏迹。
@@ -165,11 +171,44 @@ mindquantum.simulator.Simulator
 
         获取模拟器的当前量子态。
 
+        对于态矢量模拟器，返回态矢量的量子态表示。对于密度矩阵模拟器，返回密度矩阵的量子态表示。
+
+        可选择返回以ket（狄拉克符号）形式表示的量子态。
+        对于密度矩阵模拟器，如果是混态，则会通过各个纯态的概率加权和来表示。
+
         参数：
             - **ket** (bool) - 是否以ket格式返回量子态。默认值： ``False``。
 
         返回：
-            numpy.ndarray，当前量子态。
+            Union[numpy.ndarray, str]，当前量子态。
+            如果ket为True，返回ket格式的字符串表示。
+            对于态矢量模拟器，返回一维数组或态矢量的ket字符串。
+            对于密度矩阵模拟器，返回二维数组或密度矩阵的ket字符串。
+
+    .. py:method:: get_qs_of_qubits(qubits, ket=False)
+
+        获取当前模拟器中指定量子比特的约化量子态。
+
+        约化量子态是通过对其他量子比特进行偏迹运算得到的。如果得到的是纯态，返回态矢量，混态则返回密度矩阵。
+
+        可选择返回以ket（狄拉克符号）形式表示的约化量子态，如果是混态，则会通过各个纯态的概率加权和来表示。
+
+        参数：
+            - **qubits** (Union[int, List[int]]) - 想要观察的量子比特。可以是单个整数或整数列表。
+            - **ket** (bool) - 是否以 ket 字符串格式返回量子态。默认值： ``False``。
+
+        返回：
+            Union[numpy.ndarray, str]，如果 ket 为 True，返回量子态的字符串表示。如果 ket 为 False 且状态为纯态，返回态矢量的 numpy 数组。如果状态为混态，返回密度矩阵。
+
+    .. py:method:: get_reduced_density_matrix(kept_qubits)
+
+        通过对其余量子比特执行偏迹运算，得到指定量子比特的约化密度矩阵。
+
+        参数：
+            - **kept_qubits** (Union[int, List[int]]) - 想要获取约化密度矩阵的目标量子比特，可以指定单个量子比特或多个量子比特的列表。
+
+        返回：
+            numpy.ndarray，目标量子比特的约化密度矩阵。
 
     .. py:method:: n_qubits()
         :property:
@@ -200,8 +239,11 @@ mindquantum.simulator.Simulator
 
     .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
 
-        在线路中对测量比特进行采样。采样不会改变模拟器的量子态。采样结果默认使用小端序表示（例如：'01'表示q1=0, q0=1）。
-        如果需要大端序表示，可以使用MeasureResult.reverse_endian()方法。
+        在线路中对测量比特进行采样。
+
+        .. note::
+            - 传入的线路仅参与采样过程，不会改变模拟器当前的量子态。
+            - 采样结果默认使用小端序表示（例如：'01'表示q1=0, q0=1）。如果需要大端序表示，可以使用 ``MeasureResult.reverse_endian()`` 方法。
 
         参数：
             - **circuit** (Circuit) - 要进行演化和采样的电路。

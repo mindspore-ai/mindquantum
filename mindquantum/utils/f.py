@@ -37,7 +37,7 @@ from .type_value_check import (
 if TYPE_CHECKING:
     from mindquantum.core import BasicGate, Circuit
 
-__all__ = ['random_circuit', 'random_insert_gates', 'mod', 'normalize', 'random_state']
+__all__ = ['random_circuit', 'random_insert_gates', 'mod', 'normalize', 'random_state', 'random_hamiltonian']
 
 
 # pylint:disable=too-many-locals
@@ -282,6 +282,53 @@ def random_insert_gates(
                         qubit = np.random.choice(sample)
                         circ += gates[j].on(int(qubit))
         yield circ
+
+
+def random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None, dtype=None):
+    """
+    Generate a random Pauli Hamiltonian.
+
+    Args:
+        n_qubits (int): Number of qubits
+        n_terms (int): Number of Pauli terms
+        seed (int, optional): Random seed. Defaults to None.
+        dtype (mindquantum.dtype, optional): data type of hamiltonian. Default: ``None``.
+
+    Returns:
+        Hamiltonian, Randomly generated Hamiltonian
+
+    Examples:
+        >>> ham = random_hamiltonian(4, 5, seed=42)
+        >>> print(ham)
+        -0.5018 [Z0] + 1.8029 [X0 X1] + 0.928 [Y0 X1 Y2] + 0.3946 [Z2 X3] - 1.3759 [Z1 Y3]
+    """
+    import random
+    from mindquantum.core.operators import QubitOperator, Hamiltonian
+
+    _check_int_type('n_qubits', n_qubits)
+    _check_int_type('n_terms', n_terms)
+    _check_value_should_not_less('n_qubits', 1, n_qubits)
+    _check_value_should_not_less('n_terms', 1, n_terms)
+    if seed is not None:
+        _check_seed(seed)
+
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    pauli_ops = ['X', 'Y', 'Z', 'I']
+    ham = QubitOperator()
+
+    for _ in range(n_terms):
+        n_qubits_this_term = random.randint(1, n_qubits)
+        qubits = random.sample(range(n_qubits), n_qubits_this_term)
+        term = ''
+        for q in sorted(qubits):
+            term += random.choice(pauli_ops) + str(q) + ' '
+
+        coeff = np.random.uniform(-2, 2)
+        ham += QubitOperator(term.strip(), coeff)
+    return Hamiltonian(ham, dtype=dtype)
 
 
 def _check_num_array(vec, name):

@@ -66,6 +66,7 @@ Functional Gate
 
     mindquantum.core.gates.UnivMathGate
     mindquantum.core.gates.gene_univ_parameterized_gate
+    mindquantum.core.gates.gene_univ_two_params_gate
     mindquantum.core.gates.BarrierGate
 
 pre-instantiated gate

@@ -33,8 +33,10 @@ class QuantumNeuron:
     - Measurement result '1' triggers recovery operation and repeats until success
 
     Note:
-        - Based on empirical testing, the RUS circuit requires at least one failure (measurement '1')
-          followed by a success (measurement '0') to correctly apply the non-linear function.
+        - For input qubits in superposition states, the output state has a functional
+          relationship with the number of failures (measurement '1') before the final
+          success (measurement '0') in the RUS circuit. See Appendix in arXiv:1711.11240
+          for detailed mathematical derivation.
         - The recovery rotation angle in the original paper (arXiv:1711.11240) is RY(-π/2), but our
           implementation uses RY(π/2) based on experimental validation. Users are advised to carefully
           verify the behavior in their specific use cases.
@@ -54,6 +56,7 @@ class QuantumNeuron:
     Examples:
         >>> from mindquantum.simulator import Simulator
         >>> from mindquantum import Circuit, H,X
+        >>> from mindquantum.algorithm import QuantumNeuron
         >>> # Create 2-qubit input state
         >>> circ = Circuit()
         >>> circ += H.on(0)

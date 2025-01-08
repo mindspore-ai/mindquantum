@@ -65,6 +65,8 @@ struct GPUVectorPolicyBase {
     static void QSMulValue(const qs_data_p_t& src, qs_data_p_t* des_p, qs_data_t value, index_t dim);
     static qs_data_t ConditionalCollect(const qs_data_p_t& qs, index_t mask, index_t condi, bool abs, index_t dim);
     static py_qs_datas_t GetQS(const qs_data_p_t& qs, index_t dim);
+    static std::vector<std::vector<py_qs_data_t>> GetReducedDensityMatrix(const qs_data_p_t& qs,
+                                                                          const qbits_t& kept_qubits, index_t dim);
     static void SetQS(qs_data_p_t* qs_p, const py_qs_datas_t& qs_out, index_t dim);
     static qs_data_p_t ApplyTerms(qs_data_p_t* qs_p, const std::vector<PauliTerm<calc_type>>& ham, index_t dim);
     static void ApplyPauliString(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, index_t dim);
@@ -153,7 +155,7 @@ struct GPUVectorPolicyBase {
     static void ApplyRyz(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
                          bool diff = false);
     static void ApplyGivens(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                         bool diff = false);
+                            bool diff = false);
     // gate_expec
     // ========================================================================================================
     static qs_data_t ExpectDiffRPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const PauliMask& pauli_mask,
@@ -186,7 +188,7 @@ struct GPUVectorPolicyBase {
     static qs_data_t ExpectDiffRyz(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                    const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffGivens(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
-                                   const qbits_t& ctrls, calc_type val, index_t dim);
+                                      const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffSWAPalpha(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                          const qbits_t& ctrls, calc_type val, index_t dim);
     static qs_data_t ExpectDiffPS(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,

@@ -69,10 +69,11 @@ class Hamiltonian:
                 )
             if np.log2(hamiltonian.shape[0]) % 1 != 0:
                 raise ValueError(f"size of hamiltonian sparse matrix should be power of 2, but get {hamiltonian.shape}")
-            self.hamiltonian = HiQOperator('')
-            self.sparse_mat = hamiltonian
+            self._hamiltonian = None
+            self._ham_termlist = None
+            self._sparse_matrix = hamiltonian
             self.how_to = HowTo.FRONTEND
-            self.n_qubits = int(np.log2(self.sparse_mat.shape[0]))
+            self.n_qubits = int(np.log2(self._sparse_matrix.shape[0]))
         else:
             hamiltonian: HiQOperator
             if dtype is None:
@@ -81,23 +82,23 @@ class Hamiltonian:
                 if dtype != hamiltonian.dtype:
                     hamiltonian = hamiltonian.astype(dtype)
             self.ham_dtype = dtype
-            self.hamiltonian = hamiltonian
-            self.sparse_mat = sp.csr_matrix(np.eye(2, dtype=np.complex64))
+            self._hamiltonian = hamiltonian
+            self._sparse_matrix = None
             self.how_to = HowTo.ORIGIN
             self.n_qubits = count_qubits(hamiltonian)
-        self.ham_termlist = []
-        has_warned = False
-        for i, j in self.hamiltonian.terms.items():
-            if not j.is_const():
-                raise ValueError("Hamiltonian cannot be parameterized.")
-            if abs(j.const.imag) > 1e-8 and not has_warned:
-                warnings.warn(
-                    f"Hamiltonian coefficients must be real numbers. Imaginary part will be discarded.",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                has_warned = True
-            self.ham_termlist.append((i, j.const.real))
+            has_warned = False
+            self._ham_termlist = []
+            for i, j in self._hamiltonian.terms.items():
+                if not j.is_const():
+                    raise ValueError("Hamiltonian cannot be parameterized.")
+                if abs(j.const.imag) > 1e-8 and not has_warned:
+                    warnings.warn(
+                        f"Hamiltonian coefficients must be real numbers. Imaginary part will be discarded.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                    has_warned = True
+                self._ham_termlist.append((i, j.const.real))
 
         self.ham_cpp = None
         self.herm_ham_cpp = None
@@ -105,14 +106,14 @@ class Hamiltonian:
     def __str__(self):
         """Return a string representation of the object."""
         if self.how_to == HowTo.FRONTEND:
-            return self.sparse_mat.__str__()
-        return self.hamiltonian.__str__()
+            return self._sparse_matrix.__str__()
+        return self._hamiltonian.__str__()
 
     def __repr__(self):
         """Return a string representation of the object."""
         if self.how_to == HowTo.FRONTEND:
-            return self.sparse_mat.__str__()
-        return self.hamiltonian.__repr__()
+            return self._sparse_matrix.__str__()
+        return self._hamiltonian.__repr__()
 
     def __getstate__(self):
         """Create a dictionary that will be pickled."""
@@ -154,6 +155,51 @@ class Hamiltonian:
         """Get hamiltonian data type."""
         return self.ham_dtype
 
+    @property
+    def hamiltonian(self):
+        """
+        Get the QubitOperator of the Hamiltonian.
+
+        Raises:
+            ValueError: If this Hamiltonian was constructed from a sparse matrix, cannot get QubitOperator.
+        """
+        if self.how_to == HowTo.FRONTEND:
+            raise ValueError(
+                "Cannot get QubitOperator: "
+                "this Hamiltonian was constructed from a sparse matrix. "
+                "To work with QubitOperator, please construct the Hamiltonian using QubitOperator instead."
+            )
+        return self._hamiltonian
+
+    @property
+    def ham_termlist(self):
+        """
+        Get the Pauli term list of the Hamiltonian.
+
+        Raises:
+            ValueError: If this Hamiltonian was constructed from a sparse matrix, cannot get Pauli term list.
+        """
+        if self.how_to == HowTo.FRONTEND:
+            raise ValueError(
+                "Cannot get Pauli term list: "
+                "this Hamiltonian was constructed from a sparse matrix. "
+                "To work with Pauli term list, please construct the Hamiltonian using QubitOperator instead."
+            )
+        return self._ham_termlist
+
+    @property
+    def sparse_matrix(self):
+        """
+        Get the sparse matrix representation of the Hamiltonian.
+
+        Returns:
+            scipy.sparse.csr_matrix, the sparse matrix representation of Hamiltonian.
+        """
+        if self.how_to != HowTo.FRONTEND:
+            self._sparse_matrix = self._hamiltonian.matrix()
+            return self._sparse_matrix
+        return self._sparse_matrix
+
     def astype(self, dtype):
         """
         Convert hamiltonian to other type.
@@ -162,8 +208,8 @@ class Hamiltonian:
             dtype (mindquantum.dtype): the new type of hamiltonian.
         """
         if self.how_to == HowTo.FRONTEND:
-            return Hamiltonian(self.sparse_mat, dtype)
-        return Hamiltonian(self.hamiltonian, dtype)
+            return Hamiltonian(self._sparse_matrix, dtype)
+        return Hamiltonian(self._hamiltonian, dtype)
 
     def get_cpp_obj(self, hermitian=False):
         """
@@ -179,14 +225,14 @@ class Hamiltonian:
         if not hermitian:
             if self.ham_cpp is None:
                 if self.how_to == HowTo.ORIGIN:
-                    ham = backend_module.hamiltonian(self.ham_termlist)
+                    ham = backend_module.hamiltonian(self._ham_termlist)
                 elif self.how_to == HowTo.BACKEND:
-                    ham = backend_module.hamiltonian(self.ham_termlist, self.n_qubits)
+                    ham = backend_module.hamiltonian(self._ham_termlist, self.n_qubits)
                 else:
-                    dim = self.sparse_mat.shape[0]
-                    nnz = self.sparse_mat.nnz
+                    dim = self._sparse_matrix.shape[0]
+                    nnz = self._sparse_matrix.nnz
                     csr_mat = backend_module.csr_hd_matrix(
-                        dim, nnz, self.sparse_mat.indptr, self.sparse_mat.indices, self.sparse_mat.data
+                        dim, nnz, self._sparse_matrix.indptr, self._sparse_matrix.indices, self._sparse_matrix.data
                     )
                     ham = backend_module.hamiltonian(csr_mat, self.n_qubits)
                 self.ham_cpp = ham
@@ -194,7 +240,9 @@ class Hamiltonian:
         if self.how_to in (HowTo.BACKEND, HowTo.ORIGIN):
             return self.get_cpp_obj()
         if self.herm_ham_cpp is None:
-            herm_sparse_mat = self.sparse_mat.conjugate().T.tocsr()
+            if self.how_to != HowTo.FRONTEND:
+                raise ValueError("Hamiltonian is not a sparse matrix, cannot get hermitian cpp object.")
+            herm_sparse_mat = self._sparse_matrix.conjugate().T.tocsr()
             dim = herm_sparse_mat.shape[0]
             nnz = herm_sparse_mat.nnz
             csr_mat = backend_module.csr_hd_matrix(

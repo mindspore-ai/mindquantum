@@ -101,6 +101,10 @@ class BackendBase:
         """Get quantum state."""
         raise NotImplementedError(f"get_qs not implemented for {self.device_name()}")
 
+    def get_qs_of_qubits(self, qubits, ket=False) -> np.ndarray:
+        """Get reduced quantum state of specified qubits."""
+        raise NotImplementedError(f"get_qs_of_qubits not implemented for {self.device_name()}")
+
     def reset(self):
         """Reset backend to quantum zero state."""
         raise NotImplementedError(f"reset not implemented for {self.device_name()}")
@@ -126,6 +130,10 @@ class BackendBase:
     def get_partial_trace(self, obj_qubits):
         """Get partial trace of density matrix."""
         raise NotImplementedError(f"get_partial_trace not implemented for {self.device_name()}")
+
+    def get_reduced_density_matrix(self, kept_qubits):
+        """Get reduced density matrix."""
+        raise NotImplementedError(f"get_reduced_density_matrix not implemented for {self.device_name()}")
 
     def entropy(self):
         """Get the von-Neumann entropy of quantum state."""

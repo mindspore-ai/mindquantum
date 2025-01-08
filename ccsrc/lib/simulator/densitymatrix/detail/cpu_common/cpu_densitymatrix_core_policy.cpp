@@ -256,6 +256,56 @@ auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetPartialTrace(const qs_
 }
 
 template <typename derived_, typename calc_type_>
+auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs_data_p_t& qs,
+                                                                               const qbits_t& kept_qubits,
+                                                                               index_t dim) -> matrix_t {
+    qs_data_p_t tmp = qs;
+    bool will_free = false;
+    if (tmp == nullptr) {
+        tmp = derived::InitState(dim);
+        will_free = true;
+    }
+    qs_data_p_t out = nullptr;
+    index_t out_dim = dim;
+
+    // Calculate which qubits to trace out
+    qbits_t trace_out_qubits;
+    for (Index i = 0; i < std::log2(dim); i++) {
+        if (std::find(kept_qubits.begin(), kept_qubits.end(), i) == kept_qubits.end()) {
+            trace_out_qubits.push_back(i);
+        }
+    }
+    std::sort(trace_out_qubits.begin(), trace_out_qubits.end(), std::greater<Index>());
+
+    // Process each qubit to be traced out
+    for (Index i = 0; i < trace_out_qubits.size(); i++) {
+        SingleQubitGateMask mask({trace_out_qubits[i]}, {});
+        out_dim = out_dim >> 1;
+        out = derived::InitState(out_dim, false);
+        THRESHOLD_OMP_FOR(
+            dim, DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(out_dim); a++) {  // loop on the row
+                auto r0 = ((a & mask.obj_high_mask) << 1) + (a & mask.obj_low_mask);
+                auto r1 = r0 + mask.obj_mask;
+                for (index_t b = 0; b <= a; b++) {  // loop on the column
+                    auto c0 = ((b & mask.obj_high_mask) << 1) + (b & mask.obj_low_mask);
+                    auto c1 = c0 + mask.obj_mask;
+                    auto value = tmp[IdxMap(r0, c0)] + tmp[IdxMap(r1, c1)];
+                    out[IdxMap(a, b)] = value;
+                }
+            })
+        if (i != 0) {
+            FreeState(&tmp);
+        } else if (will_free) {
+            FreeState(&tmp);
+        }
+        tmp = out;
+    }
+    auto res = GetQS(out, out_dim);
+    FreeState(&out);
+    return res;
+}
+
+template <typename derived_, typename calc_type_>
 auto CPUDensityMatrixPolicyBase<derived_, calc_type_>::PureStateVector(const qs_data_p_t& qs,
                                                                        index_t dim) -> py_qs_datas_t {
     auto p = Purity(qs, dim);

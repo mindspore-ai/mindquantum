@@ -28,11 +28,10 @@ from mindquantum.core.circuit import UN, Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator, fidelity
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
-from mindquantum.utils import random_circuit
+from mindquantum.utils import random_circuit, random_hamiltonian
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -57,7 +56,6 @@ def test_set_qs_and_dm(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -79,7 +77,6 @@ def test_get_partial_trace(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -99,7 +96,6 @@ def test_purity(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -190,7 +186,7 @@ def test_get_expectation(config):
     circ = random_circuit(3, 100)
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -221,7 +217,7 @@ def test_get_expectation_with_grad(config):
     circ = circ0 + pr_gate + circ1
     sim = Simulator(virtual_qc, 3, dtype=dtype)
     sim.set_qs(init_state)
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -334,7 +330,6 @@ def three_qubits_dm_evolution_in_py(dm, g, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("virtual_qc", ['mqmatrix'])
@@ -352,7 +347,7 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
     circ1 = random_circuit(3, 100, 1.0, 0.0)
     circ = circ0 + G.RX({'a': 1, 'b': 2}).on(0) + circ1
     circ = circ.with_noise()
-    ham0 = Hamiltonian(QubitOperator('X0 Y1') + QubitOperator('Z0'), dtype=dtype)
+    ham0 = random_hamiltonian(3, 10, dtype=dtype)
     ham1 = ham0.sparse(3)
     ham2 = Hamiltonian(csr_matrix(ham0.hamiltonian.matrix(3)), dtype=dtype)
     for ham in (ham0, ham1, ham2):
@@ -382,7 +377,6 @@ def test_noise_get_expectation_with_grad(virtual_qc, dtype):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
@@ -406,7 +400,6 @@ def test_entropy(config):
 
 
 @pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
 @pytest.mark.parametrize("config1", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))

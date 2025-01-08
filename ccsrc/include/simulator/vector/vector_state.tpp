@@ -153,6 +153,11 @@ auto VectorState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
 }
 
 template <typename qs_policy_t_>
+auto VectorState<qs_policy_t_>::GetReducedDensityMatrix(const qbits_t& kept_qubits) const -> VVT<py_qs_data_t> {
+    return qs_policy_t::GetReducedDensityMatrix(qs, kept_qubits, dim);
+}
+
+template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs_out) {
     qs_policy_t::SetQS(&qs, qs_out, dim);
 }

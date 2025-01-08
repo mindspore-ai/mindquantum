@@ -158,6 +158,11 @@ auto DensityMatrixState<qs_policy_t_>::GetPartialTrace(const qbits_t& objs) cons
 }
 
 template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::GetReducedDensityMatrix(const qbits_t& kept_qubits) const -> matrix_t {
+    return qs_policy_t::GetReducedDensityMatrix(qs, kept_qubits, dim);
+}
+
+template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::PureStateVector() -> py_qs_datas_t {
     return qs_policy_t::PureStateVector(qs, dim);
 }

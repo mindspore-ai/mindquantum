@@ -33,6 +33,7 @@ class StabilizerTableau {
 
  public:
     StabilizerTableau() = default;
+    StabilizerTableau copy() const;
     explicit StabilizerTableau(size_t n_qubits, unsigned seed = 42);
 
     // -----------------------------------------------------------------------------
@@ -44,6 +45,7 @@ class StabilizerTableau {
 
     size_t GetElement(size_t row, size_t col) const;
     void SetElement(size_t row, size_t col, size_t val);
+    void AddQubit();
     void Reset();
     void ApplyX(size_t idx);
     void ApplyY(size_t idx);
@@ -64,8 +66,11 @@ class StabilizerTableau {
     stab_circ_t Decompose() const;
     VVT<size_t> TableauToVector() const;
     bool operator==(const StabilizerTableau& other) const;
+    bool IsRandomMeasurement(size_t qubit) const;
+    double GetExpectation(const VT<PauliTerm<double>>& ham_termlist, const stab_circ_t& circ) const;
 
  private:
+    StabilizerTableau(size_t n_qubits, unsigned seed, const std::vector<LongBits>& table, const LongBits& phase);
     size_t n_qubits = 1;
     std::vector<LongBits> table;
     LongBits phase;

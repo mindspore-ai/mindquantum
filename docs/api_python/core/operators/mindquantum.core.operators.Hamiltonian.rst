@@ -28,9 +28,33 @@ mindquantum.core.operators.Hamiltonian
         参数：
             - **hermitian** (bool) - 返回的cpp对象是否是原始哈密顿量的厄米共轭。
 
+    .. py:method:: ham_termlist
+        :property:
+
+        获取哈密顿量的泡利项列表。
+
+        异常：
+            - **ValueError** - 如果哈密顿量是由稀疏矩阵构造的，则无法获取泡利项列表。
+
+    .. py:method:: hamiltonian
+        :property:
+
+        获取哈密顿量的QubitOperator。
+
+        异常：
+            - **ValueError** - 如果哈密顿量是由稀疏矩阵构造的，则无法获取QubitOperator。
+
     .. py:method:: sparse(n_qubits=1)
 
         在后台计算哈密顿量的稀疏矩阵。
 
         参数：
             - **n_qubits** (int) - 哈密顿量的总量子比特数，仅在模式为'frontend'时需要。默认值： ``1``。
+
+    .. py:method:: sparse_matrix
+        :property:
+
+        获取哈密顿量的稀疏矩阵表示。
+
+        返回：
+            scipy.sparse.csr_matrix，哈密顿量的稀疏矩阵表示。
