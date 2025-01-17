@@ -340,26 +340,28 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs
         size_t n_kept = kept_qubits.size();
         size_t dim_kept = (1UL << n_kept);
 
+        qbits_t sorted_qubits = kept_qubits;
+        std::sort(sorted_qubits.begin(), sorted_qubits.end());
+
         VVT<py_qs_data_t> rho(dim_kept, VT<py_qs_data_t>(dim_kept, 0.0));
 
         for (size_t i = 0; i < dim; i++) {
             size_t i_kept = 0;
             for (size_t k = 0; k < n_kept; k++) {
-                if ((i >> kept_qubits[k]) & 1) {
+                if ((i >> sorted_qubits[k]) & 1) {
                     i_kept |= (1UL << k);
                 }
             }
             for (size_t j = 0; j < dim; j++) {
                 size_t j_kept = 0;
-                // Extract bits for kept qubits
                 for (size_t k = 0; k < n_kept; k++) {
-                    if ((j >> kept_qubits[k]) & 1) {
+                    if ((j >> sorted_qubits[k]) & 1) {
                         j_kept |= (1UL << k);
                     }
                 }
                 bool same_traced = true;
                 for (size_t k = 0; k < n_qubits; k++) {
-                    if (std::find(kept_qubits.begin(), kept_qubits.end(), k) == kept_qubits.end()) {
+                    if (std::find(sorted_qubits.begin(), sorted_qubits.end(), k) == sorted_qubits.end()) {
                         if (((i >> k) & 1) != ((j >> k) & 1)) {
                             same_traced = false;
                             break;
@@ -367,7 +369,7 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs
                     }
                 }
                 if (same_traced) {
-                    rho[i_kept][j_kept] += std::conj(qs[i]) * qs[j];
+                    rho[i_kept][j_kept] += qs[i] * std::conj(qs[j]);
                 }
             }
         }
