@@ -38,6 +38,7 @@ from .transform import Transform
 from .uccsd import generate_uccsd
 from .uccsd0 import uccsd0_singlet_generator
 from .unitary_cc import UCCAnsatz
+from .sg_ansatz import SGAnsatz, SGAnsatz2D
 
 __all__ = [
     'Transform',
@@ -58,6 +59,8 @@ __all__ = [
     'PCHeaXYZ1F',
     'PCHeaXYZ2F',
     'ASWAP',
+    'SGAnsatz',
+    'SGAnsatz2D',
 ]
 
 __all__.sort()
