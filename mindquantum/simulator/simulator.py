@@ -540,6 +540,11 @@ class Simulator:
         """
         Get the reduced density matrix of specified qubits by performing partial trace over other qubits.
 
+        Note:
+            - The order of qubits in the input list does not affect the result.
+            - The returned density matrix follows little-endian ordering (e.g., for a 2-qubit state,
+              the basis states are ordered as ¦00⟩, ¦01⟩, ¦10⟩, ¦11⟩ where ¦01⟩ means q1=0, q0=1).
+
         Args:
             kept_qubits (Union[int, List[int]]): The indices of qubits to keep,
                 can be a single integer or a list of integers.
@@ -643,6 +648,11 @@ class Simulator:
 
         It can optionally be returned in ket (Dirac notation) format.
         For mixed states, it will be represented as a probability weighted sum of pure states.
+
+        Note:
+            - The order of qubits in the input list does not affect the result.
+            - The returned quantum state follows little-endian ordering (e.g., in ket notation,
+              ¦01⟩ means q1=0, q0=1).
 
         Args:
             qubits (Union[int, List[int]]): The qubits to observe. Can be a single
