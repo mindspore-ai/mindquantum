@@ -16,6 +16,7 @@
 # pylint: disable=invalid-name
 """Test method of mqmatrix simulator."""
 
+import itertools
 import numpy as np
 import pytest
 from scipy.linalg import logm, sqrtm
@@ -426,3 +427,162 @@ def test_fidelity(config1, config2):
         qs2 = np.outer(qs2, qs2.conj().T)
     ref_f = np.trace(sqrtm(sqrtm(qs1) @ qs2 @ sqrtm(qs1))).real ** 2
     assert np.allclose(f, ref_f, atol=1e-3)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+def test_get_reduced_density_matrix(config):
+    """
+    Description: test getting reduced density matrix functionality
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+
+    def partial_trace(rho, keep_qubits, n_qubits):
+        """Implementation of partial trace"""
+        trace_qubits = sorted(list(set(range(n_qubits)) - set(keep_qubits)))
+        keep_dim = 2 ** len(keep_qubits)
+        result = np.zeros((keep_dim, keep_dim), dtype=rho.dtype)
+        steps = [2**k for k in keep_qubits]
+        for i in range(keep_dim):
+            for j in range(keep_dim):
+                i_bits = [(i >> b) & 1 for b in range(len(keep_qubits))]
+                j_bits = [(j >> b) & 1 for b in range(len(keep_qubits))]
+
+                row_idx = sum(bit * step for bit, step in zip(i_bits, steps))
+                col_idx = sum(bit * step for bit, step in zip(j_bits, steps))
+
+                block_size = 2 ** len(trace_qubits)
+
+                for k in range(block_size):
+                    k_bits = [(k >> b) & 1 for b in range(len(trace_qubits))]
+                    row_offset = sum(bit * (2**q) for bit, q in zip(k_bits, trace_qubits))
+                    col_offset = row_offset
+                    result[i, j] += rho[row_idx + row_offset, col_idx + col_offset]
+
+        return result
+
+    # Test basic functionality
+    sim = Simulator(virtual_qc, 3, dtype=dtype)
+
+    # Test 1: Simple Bell state
+    circ = Circuit([G.H.on(0), G.CNOT.on(1, 0)])
+    sim.apply_circuit(circ)
+    qs = sim.get_qs()
+    # Convert to density matrix if state vector
+    if len(qs.shape) == 1:
+        full_dm = np.outer(qs, qs.conj())
+    else:
+        full_dm = qs
+
+    # Verify single qubit reduction
+    rdm_0 = sim.get_reduced_density_matrix([0])
+    ref_rdm_0 = partial_trace(full_dm, [0], 3)
+    assert np.allclose(rdm_0, ref_rdm_0, atol=1e-6)
+    assert rdm_0.shape == (2, 2)
+    assert np.allclose(np.trace(rdm_0), 1.0, atol=1e-6)
+
+    # Verify two qubit reduction
+    rdm_01 = sim.get_reduced_density_matrix([0, 1])
+    ref_rdm_01 = partial_trace(full_dm, [0, 1], 3)
+    assert np.allclose(rdm_01, ref_rdm_01, atol=1e-6)
+    assert rdm_01.shape == (4, 4)
+    assert np.allclose(np.trace(rdm_01), 1.0, atol=1e-6)
+
+    # Test 2: Random circuit
+    sim.reset()
+    random_circ = random_circuit(3, 10)
+    sim.apply_circuit(random_circ)
+    qs = sim.get_qs()
+    # Convert to density matrix if state vector
+    if len(qs.shape) == 1:
+        full_dm = np.outer(qs, qs.conj())
+    else:
+        full_dm = qs
+
+    # Test all possible qubit combinations
+    for n_qubits in range(1, 3):
+        for qubits in itertools.combinations(range(3), n_qubits):
+            rdm = sim.get_reduced_density_matrix(list(qubits))
+            ref_rdm = partial_trace(full_dm, list(qubits), 3)
+            assert np.allclose(rdm, ref_rdm, atol=1e-6)
+            assert rdm.shape == (2 ** len(qubits), 2 ** len(qubits))
+            assert np.allclose(np.trace(rdm), 1.0, atol=1e-6)
+            # Verify reduced density matrix is Hermitian
+            assert np.allclose(rdm, rdm.conj().T, atol=1e-6)
+            # Verify reduced density matrix is positive semidefinite
+            eigenvals = np.linalg.eigvalsh(rdm)
+            assert np.all(eigenvals >= -1e-6)
+
+    # Test error cases
+    with pytest.raises(ValueError):
+        sim.get_reduced_density_matrix([0, 0])  # Duplicate qubits
+    with pytest.raises(ValueError):
+        sim.get_reduced_density_matrix([0, 1, 2, 3])  # Out of range qubits
+    with pytest.raises(ValueError):
+        sim.get_reduced_density_matrix([3])  # Invalid qubit index
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
+def test_get_qs_of_qubits(config):
+    """
+    Description: test getting quantum state of specified qubits
+    Expectation: success.
+    """
+    virtual_qc, dtype = config
+    # Prepare a 3-qubit system
+    sim = Simulator(virtual_qc, 3, dtype=dtype)
+
+    # Prepare a pure state where some subsystems are mixed
+    # |ψ⟩ = |1⟩(|00⟩ + |11⟩)/√2
+    circ_pure = Circuit([G.H.on(0), G.CNOT.on(1, 0), G.X.on(2)])
+    sim.apply_circuit(circ_pure)
+
+    # Test reduced state of single qubit (should be mixed)
+    state_0 = sim.get_qs_of_qubits(0)
+    assert len(state_0.shape) == 2  # Should return density matrix
+    assert state_0.shape == (2, 2)
+    assert np.allclose(np.trace(state_0), 1.0, atol=1e-6)
+    # Verify it's a mixed state
+    purity = np.real(np.trace(state_0 @ state_0))
+    assert np.allclose(purity, 0.5, atol=1e-6)
+
+    # Test reduced state of two entangled qubits (should be pure)
+    state_01 = sim.get_qs_of_qubits([0, 1])
+    assert len(state_01.shape) == 1  # Should return state vector
+    assert state_01.shape[0] == 4
+    # Verify it's indeed Bell state (|00⟩ + |11⟩)/√2
+    expected_state = np.array([1, 0, 0, 1]) / np.sqrt(2)
+    assert np.allclose(np.abs(state_01), np.abs(expected_state), atol=1e-6)
+
+    # Test mixed state case (only for mqmatrix)
+    if not virtual_qc.startswith('mqvector'):
+        circ_mixed = circ_pure.with_noise(G.DepolarizingChannel(0.1))
+        sim.reset()
+        sim.apply_circuit(circ_mixed)
+        state_mixed = sim.get_qs_of_qubits([0, 1])
+        assert len(state_mixed.shape) == 2
+        assert state_mixed.shape == (4, 4)
+        assert np.allclose(np.trace(state_mixed), 1.0, atol=1e-6)
+        # Verify it's a mixed state
+        purity = np.real(np.trace(state_mixed @ state_mixed))
+        assert purity < 0.99  # Purity should be less than 1 due to noise
+
+    # Test ket format output
+    state_str = sim.get_qs_of_qubits([1, 2], ket=True)
+    assert isinstance(state_str, str)
+    assert "(mixed state)" in state_str
+    assert "¦10⟩" in state_str
+    assert "¦11⟩" in state_str
+
+    # Test error cases
+    with pytest.raises(TypeError):
+        sim.get_qs_of_qubits("0")  # Wrong input type
+    with pytest.raises(ValueError):
+        sim.get_qs_of_qubits([3])  # Invalid qubit index
