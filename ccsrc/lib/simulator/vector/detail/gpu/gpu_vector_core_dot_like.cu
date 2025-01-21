@@ -74,7 +74,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionVdot(const qs_data_p_t&
     thrust::counting_iterator<size_t> i(0);
     return thrust::transform_reduce(
         i, i + dim,
-        [=] __device__(size_t i) {
+        [=] __host__ __device__(size_t i) {
             if ((i & mask) == condi) {
                 return thrust::conj(bra[i]) * ket[i];
             } else {
@@ -97,7 +97,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::OneStateVdot(const qs_data_p_t& 
     thrust::counting_iterator<size_t> l(0);
     return thrust::transform_reduce(
         l, l + dim / 2,
-        [=] __device__(size_t l) {
+        [=] __host__ __device__(size_t l) {
             auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask) + obj_mask;
             return thrust::conj(bra[i]) * ket[i];
         },
@@ -124,7 +124,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ZeroStateVdot(const qs_data_p_t&
     thrust::counting_iterator<size_t> l(0);
     return thrust::transform_reduce(
         l, l + dim / 2,
-        [=] __device__(size_t l) {
+        [=] __host__ __device__(size_t l) {
             auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
             return thrust::conj(bra[i]) * ket[i];
         },

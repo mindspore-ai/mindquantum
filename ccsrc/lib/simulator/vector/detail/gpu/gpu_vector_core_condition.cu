@@ -131,7 +131,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionalCollect(const qs_data
     if (abs) {
         res = thrust::transform_reduce(
             l, l + dim,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 if ((l & mask) == condi) {
                     return thrust::conj(qs[l]) * qs[l];
                 }
@@ -141,7 +141,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ConditionalCollect(const qs_data
     } else {
         res = thrust::transform_reduce(
             l, l + dim,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 if ((l & mask) == condi) {
                     return thrust::conj(qs[l]) * qs[l];
                 }

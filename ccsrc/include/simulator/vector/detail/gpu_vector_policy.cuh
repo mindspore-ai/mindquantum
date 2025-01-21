@@ -24,6 +24,9 @@
 #include <vector>
 
 #include <thrust/transform_reduce.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/execution_policy.h>
+#include <cuda/functional>
 
 #include "core/mq_base_types.h"
 #include "core/sparse/csrhdmatrix.h"
