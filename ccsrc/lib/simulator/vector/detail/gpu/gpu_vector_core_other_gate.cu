@@ -16,7 +16,6 @@
 #include <thrust/transform_reduce.h>
 
 #include "config/openmp.h"
-#include "ops/gates.h"
 #include "simulator/utils.h"
 #include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"

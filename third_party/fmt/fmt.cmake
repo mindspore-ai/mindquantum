@@ -18,17 +18,17 @@
 
 # cmake-lint: disable=C0103
 
-set(VER 9.1.0)
+set(VER 10.2.1)
 
 if(DEFINED ENV{CODEHUB_CI} AND "$ENV{CODEHUB_CI}" STREQUAL "1")
   set(REQ_URL "$ENV{CODEHUB_PKG_URL}/fmt-${VER}.tar.gz")
-  set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
+  set(MD5 "dc09168c94f90ea890257995f2c497a5")
 elseif(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors_trending/fmt/repository/archive/${VER}.tar.gz")
-  set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
+  set(MD5 "dc09168c94f90ea890257995f2c497a5")
 else()
   set(REQ_URL "https://github.com/fmtlib/fmt/archive/${VER}.tar.gz")
-  set(MD5 "21fac48cae8f3b4a5783ae06b443973a")
+  set(MD5 "dc09168c94f90ea890257995f2c497a5")
 endif()
 
 set(CMAKE_OPTION -DFMT_TEST=OFF -DFMT_DOC=OFF -DFMT_SYSTEM_HEADERS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -54,6 +54,7 @@ mindquantum_add_pkg(
   MD5 ${MD5}
   CMAKE_PKG_NO_COMPONENTS
   CMAKE_OPTION ${CMAKE_OPTION}
+  FORCE_LOCAL_PKG
   TARGET_ALIAS 3 mindquantum::fmt fmt::fmt-header-only fmt::fmt)
 
 get_target_property(_aliased_target mindquantum::fmt ALIASED_TARGET)

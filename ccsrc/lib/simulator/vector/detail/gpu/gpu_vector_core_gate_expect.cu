@@ -53,7 +53,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
     if (!ctrl_mask) {
         res = thrust::transform_reduce(
             i, i + dim,
-            [=] __device__(size_t i) {
+            MQ_PROCLAIM_RETURN_TYPE(qs_data_t, [=] __device__(size_t i) {
                 auto j = i ^ mask_f;
                 if (i <= j) {
                     auto axis2power = __popcll(i & mask_z);
@@ -77,12 +77,12 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
                 } else {
                     return qs_data_t(0, 0);
                 }
-            },
+            }),
             qs_data_t(0, 0), thrust::plus<qs_data_t>());
     } else {
         res = thrust::transform_reduce(
             i, i + dim,
-            [=] __device__(size_t i) {
+            MQ_PROCLAIM_RETURN_TYPE(qs_data_t, [=] __device__(size_t i) {
                 if ((i & ctrl_mask) == ctrl_mask) {
                     auto j = i ^ mask_f;
                     if (i <= j) {
@@ -110,7 +110,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
                 } else {
                     return qs_data_t(0, 0);
                 }
-            },
+            }),
             qs_data_t(0, 0), thrust::plus<qs_data_t>());
     }
     if (will_free_bra) {
@@ -171,7 +171,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs
     thrust::counting_iterator<size_t> l(0);
     auto res = thrust::transform_reduce(
         l, l + dim,
-        [=] __device__(size_t l) {
+        [=] __host__ __device__(size_t l) {
             qs_data_t res = 0;
             if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
                 for (size_t i = 0; i < m_dim; i++) {
@@ -240,7 +240,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(const 
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -260,7 +260,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(const 
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -321,7 +321,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(cons
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 2,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
                 auto j = i + obj_mask;
                 auto t1 = m00 * ket[i] + m01 * ket[j];
@@ -345,7 +345,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(cons
         auto second_high_mask = ~second_low_mask;
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
                 i = ((i & second_high_mask) << 1) + (i & second_low_mask) + ctrl_mask;
                 auto j = i + obj_mask;
@@ -358,7 +358,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(cons
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 2,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
                 if ((i & ctrl_mask) != ctrl_mask) {
                     return qs_data_t(0, 0);
@@ -459,7 +459,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_data_p_t&
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -479,7 +479,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -540,7 +540,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxy(const qs_data_p_t&
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -560,7 +560,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxy(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -621,7 +621,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxz(const qs_data_p_t&
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -641,7 +641,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxz(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -702,7 +702,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyz(const qs_data_p_t&
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -722,7 +722,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyz(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -783,7 +783,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t&
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -803,7 +803,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -866,7 +866,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_data_p_t&
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto m = i + obj_mask;
@@ -882,7 +882,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -938,7 +938,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGivens(const qs_data_p
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto j = i + obj_min_mask;
@@ -953,7 +953,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGivens(const qs_data_p
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {
@@ -1015,7 +1015,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
     if (!(mask.ctrl_mask)) {
         res = thrust::transform_reduce(
             l, l + dim / 2,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
                 auto j = i + obj_mask;
                 auto this_res = thrust::conj(bra[j]) * ket[j] * e;
@@ -1037,7 +1037,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
         auto second_high_mask = ~second_low_mask;
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
                 i = ((i & second_high_mask) << 1) + (i & second_low_mask) + ctrl_mask;
                 auto j = i + obj_mask;
@@ -1048,7 +1048,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 2,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 auto i = ((l & obj_high_mask) << 1) + (l & obj_low_mask);
                 if ((i & ctrl_mask) != ctrl_mask) {
                     return qs_data_t(0, 0);
@@ -1102,7 +1102,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const qs_dat
     if (!mask.ctrl_mask) {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 auto j = i + obj_min_mask;
@@ -1117,7 +1117,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const qs_dat
     } else {
         res = thrust::transform_reduce(
             l, l + dim / 4,
-            [=] __device__(size_t l) {
+            [=] __host__ __device__(size_t l) {
                 index_t i;
                 SHIFT_BIT_TWO(obj_low_mask, obj_rev_low_mask, obj_high_mask, obj_rev_high_mask, l, i);
                 if ((i & ctrl_mask) != ctrl_mask) {

@@ -505,6 +505,7 @@ ext_modules = [
     CMakeExtension(pymod='mindquantum._mq_matrix'),
     CMakeExtension(pymod='mindquantum._math'),
     CMakeExtension(pymod='mindquantum._qaia_sb', optional=True),
+    CMakeExtension(pymod='mindquantum._mq_stabilizer'),
 ]
 
 
