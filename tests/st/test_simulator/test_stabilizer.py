@@ -17,7 +17,7 @@ import numpy as np
 from scipy.stats import entropy
 import pytest
 
-from mindquantum import _mq_vector
+from mindquantum import _mq_stabilizer
 from mindquantum.algorithm.error_mitigation import (
     query_double_qubits_clifford_elem,
     query_single_qubit_clifford_elem,
@@ -39,7 +39,7 @@ def test_stabilizer():
     Description: Test stabilizer simulator.
     Expectation:
     """
-    _mq_vector.stabilizer.verify()  # pylint: disable=no-member
+    _mq_stabilizer.verify()  # pylint: disable=no-member
 
     for i in range(11520):
         clifford = query_double_qubits_clifford_elem(i)

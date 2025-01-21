@@ -16,7 +16,7 @@
 # pylint:disable=no-member
 import numpy as np
 
-from mindquantum import _mq_vector
+from mindquantum import _mq_stabilizer
 from mindquantum.core.circuit import Circuit
 from mindquantum.simulator import Simulator, decompose_stabilizer
 from mindquantum.simulator.stabilizer import Stabilizer
@@ -50,7 +50,7 @@ def query_single_qubit_clifford_elem(idx: int) -> Simulator:
     """
     _check_int_type('idx', idx)
     _check_value_should_not_less("idx", 0, idx)
-    clifford = Stabilizer(_mq_vector.stabilizer.query_single_qubit_clifford_elem(idx), n_qubits=1, internal=True)
+    clifford = Stabilizer(_mq_stabilizer.query_single_qubit_clifford_elem(idx), n_qubits=1, internal=True)
     sim = Simulator('stabilizer', 1)
     sim.backend = clifford
     return sim
@@ -82,7 +82,7 @@ def query_double_qubits_clifford_elem(idx: int) -> Simulator:
     """
     _check_int_type('idx', idx)
     _check_value_should_not_less("idx", 0, idx)
-    clifford = Stabilizer(_mq_vector.stabilizer.query_double_qubits_clifford_elem(idx), n_qubits=2, internal=True)
+    clifford = Stabilizer(_mq_stabilizer.query_double_qubits_clifford_elem(idx), n_qubits=2, internal=True)
     sim = Simulator('stabilizer', 2)
     sim.backend = clifford
     return sim
@@ -121,7 +121,7 @@ def generate_single_qubit_rb_circ(length: int, seed: int = None) -> Circuit:
         seed = int(np.random.randint(1, 2 << 20))
     _check_seed(seed)
 
-    stabs = _mq_vector.stabilizer.generate_single_qubit_rb_circ(length, seed)
+    stabs = _mq_stabilizer.generate_single_qubit_rb_circ(length, seed)
     circ = Circuit()
     for stab in stabs:
         circ.barrier()
@@ -174,7 +174,7 @@ def generate_double_qubits_rb_circ(length: int, seed: int = None) -> Circuit:
         seed = int(np.random.randint(1, 2 << 20))
     _check_seed(seed)
 
-    stabs = _mq_vector.stabilizer.generate_double_qubits_rb_circ(length, seed)
+    stabs = _mq_stabilizer.generate_double_qubits_rb_circ(length, seed)
     circ = Circuit()
     for stab in stabs:
         circ.barrier()
