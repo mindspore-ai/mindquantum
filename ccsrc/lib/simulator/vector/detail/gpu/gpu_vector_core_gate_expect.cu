@@ -53,7 +53,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
     if (!ctrl_mask) {
         res = thrust::transform_reduce(
             i, i + dim,
-            cuda::proclaim_return_type<qs_data_t>([=] __device__(size_t i) {
+            MQ_PROCLAIM_RETURN_TYPE(qs_data_t, [=] __device__(size_t i) {
                 auto j = i ^ mask_f;
                 if (i <= j) {
                     auto axis2power = __popcll(i & mask_z);
@@ -82,7 +82,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
     } else {
         res = thrust::transform_reduce(
             i, i + dim,
-            cuda::proclaim_return_type<qs_data_t>([=] __device__(size_t i) {
+            MQ_PROCLAIM_RETURN_TYPE(qs_data_t, [=] __device__(size_t i) {
                 if ((i & ctrl_mask) == ctrl_mask) {
                     auto j = i ^ mask_f;
                     if (i <= j) {

@@ -54,6 +54,7 @@ mindquantum_add_pkg(
   MD5 ${MD5}
   CMAKE_PKG_NO_COMPONENTS
   CMAKE_OPTION ${CMAKE_OPTION}
+  FORCE_LOCAL_PKG
   TARGET_ALIAS 3 mindquantum::fmt fmt::fmt-header-only fmt::fmt)
 
 get_target_property(_aliased_target mindquantum::fmt ALIASED_TARGET)

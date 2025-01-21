@@ -146,7 +146,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfTerms(const qs_data
         thrust::counting_iterator<index_t> i(0);
         out += thrust::transform_reduce(
             i, i + dim,
-            cuda::proclaim_return_type<qs_data_t>([=] __device__(index_t i) {
+            MQ_PROCLAIM_RETURN_TYPE(qs_data_t, [=] __device__(index_t i) {
                 auto j = (i ^ mask_f);
                 qs_data_t tmp = 0.0;
                 if (i <= j) {
@@ -307,7 +307,7 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::GroundStateOfZZs(const std::map<
 
     auto res = thrust::transform_reduce(
         l, l + (static_cast<uint64_t>(1) << n_qubits),
-        cuda::proclaim_return_type<calc_type>([=] __device__(size_t l) {
+        MQ_PROCLAIM_RETURN_TYPE(calc_type, [=] __device__(size_t l) {
             calc_type ith_energy = 0;
             for (int i = 0; i < n_mask; i++) {
                 if (__popcll(l & mask_ptr[i]) & 1) {
