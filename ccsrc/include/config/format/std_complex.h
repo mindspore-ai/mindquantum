@@ -27,15 +27,21 @@ template <typename float_t, typename char_type>
 struct fmt::formatter<std::complex<float_t>, char_type> : public fmt::formatter<float_t, char_type> {
     using base = fmt::formatter<float_t, char_type>;
     fmt::detail::dynamic_format_specs<char_type> specs_;
-    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-        using handler_type = fmt::detail::dynamic_specs_handler<format_parse_context>;
-        auto type = fmt::detail::type_constant<float_t, char_type>::value;
-        fmt::detail::specs_checker<handler_type> handler(handler_type(specs_, ctx), type);
-        parse_format_specs(ctx.begin(), ctx.end(), handler);
-        return base::parse(ctx);
+
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        auto it = ctx.begin();
+        if (it != ctx.end() && *it != '}') {
+            auto end = it;
+            while (end != ctx.end() && *end != '}') ++end;
+            specs_ = fmt::detail::dynamic_format_specs<char_type>();
+            fmt::detail::parse_format_specs(it, end, specs_);
+            it = end;
+        }
+        return it;
     }
-    template <typename FormatCtx>
-    auto format(const std::complex<float_t>& number, FormatCtx& ctx) const -> decltype(ctx.out()) {
+
+    template <typename FormatContext>
+    auto format(const std::complex<float_t>& number, FormatContext& ctx) const -> decltype(ctx.out()) {
         const auto& real = number.real();
         const auto& imag = number.imag();
         if (real && !imag) {
@@ -49,7 +55,7 @@ struct fmt::formatter<std::complex<float_t>, char_type> : public fmt::formatter<
         fmt::format_to(ctx.out(), "(");
         base::format(real, ctx);
         if (imag) {
-            if (number.real() && number.imag() >= 0 && specs_.sign != sign::plus) {
+            if (number.real() && number.imag() >= 0 && specs_.sign != fmt::sign::plus) {
                 fmt::format_to(ctx.out(), "+");
             }
             base::format(imag, ctx);
