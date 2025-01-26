@@ -25,6 +25,8 @@ from mindquantum.algorithm.compiler import (
     CZToCX,
     CZBasedChipCompiler,
     DAGCircuit,
+    SingleQubitGateFusion,
+    DecomposeU3,
 )
 from mindquantum.algorithm.compiler.decompose.utils import is_equiv_unitary
 from mindquantum.utils import random_circuit
@@ -140,3 +142,42 @@ def test_cz_based_chip_compiler():
     rule.do(dag_circ)
     new_circ = dag_circ.to_circuit()
     assert is_equiv_unitary(new_circ.matrix(), circ.matrix())
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_single_qubit_fusion():
+    """
+    Feature: Single-qubit Gate Fusion
+    Description: Test the correctness of single-qubit gate fusion
+    Expectation: success.
+    """
+    circ = random_circuit(3, 100, 1.0, 0.2)
+    dag_circ = DAGCircuit(circ)
+    rule = SingleQubitGateFusion()
+    rule.do(dag_circ)
+    fused_circ = dag_circ.to_circuit()
+    assert is_equiv_unitary(circ.matrix(), fused_circ.matrix())
+
+    circ = random_circuit(3, 100, 1.0, 0.2)
+    dag_circ = DAGCircuit(circ)
+    rule = SingleQubitGateFusion(with_global_phase=True)
+    rule.do(dag_circ)
+    fused_circ = dag_circ.to_circuit()
+    assert is_equiv_unitary(circ.matrix(), fused_circ.matrix())
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_decompose_u3():
+    """
+    Feature: U3 Gate Decomposition
+    Description: Test the correctness of decomposing U3 gates
+    Expectation: success.
+    """
+    circ = random_circuit(3, 100, 1.0, 0.2)
+    dag_circ = DAGCircuit(circ)
+    SingleQubitGateFusion().do(dag_circ)
+    DecomposeU3().do(dag_circ)
+    u3_circ = dag_circ.to_circuit()
+    assert is_equiv_unitary(circ.matrix(), u3_circ.matrix())

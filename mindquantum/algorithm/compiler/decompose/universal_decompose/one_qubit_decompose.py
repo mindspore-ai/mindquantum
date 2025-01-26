@@ -14,9 +14,11 @@
 # ============================================================================
 """One-qubit gate decomposition."""
 
+import numpy as np
 from mindquantum.core import gates
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import QuantumGate
+from mindquantum.core.gates import QuantumGate, U3, RX, RZ
+from mindquantum.utils.type_value_check import _check_input_type
 
 from ..utils import params_u3, params_zyz
 
@@ -56,4 +58,41 @@ def euler_decompose(gate: QuantumGate, basis: str = 'zyz', with_phase: bool = Tr
             circ += gates.GlobalPhase(-phase).on(tq)
     else:
         raise ValueError(f'{basis} is not a supported decomposition method of {optional_basis}')
+    return circ
+
+
+def u3_decompose(gate: U3):
+    """
+    Decompose a U3 gate into a sequence of Z-X-Z-X-Z rotations.
+
+    The decomposition follows:
+    U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)
+
+    When any rotation angle is a constant value and equals to 0, the corresponding RZ gate will be omitted.
+
+    Args:
+        gate (U3): The U3 gate to be decomposed.
+
+    Returns:
+        Circuit: A quantum circuit implementing the U3 gate using ZXZXZ sequence.
+    """
+    _check_input_type('gate', U3, gate)
+
+    theta, phi, lamda = gate.theta, gate.phi, gate.lamda
+    qubits = gate.obj_qubits
+    circ = Circuit()
+
+    if not (lamda.is_const() and np.isclose(lamda.const, 0.0, atol=1e-8)):
+        circ += RZ(lamda).on(qubits[0])
+
+    circ += RX(np.pi / 2).on(qubits[0])
+
+    if not (theta.is_const() and np.isclose(theta.const, 0.0, atol=1e-8)):
+        circ += RZ(theta).on(qubits[0])
+
+    circ += RX(-np.pi / 2).on(qubits[0])
+
+    if not (phi.is_const() and np.isclose(phi.const, 0.0, atol=1e-8)):
+        circ += RZ(phi).on(qubits[0])
+
     return circ

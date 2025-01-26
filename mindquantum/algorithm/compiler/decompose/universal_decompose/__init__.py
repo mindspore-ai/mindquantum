@@ -14,7 +14,7 @@
 # ============================================================================
 """Universal unitary gate decomposition."""
 
-from .one_qubit_decompose import euler_decompose
+from .one_qubit_decompose import euler_decompose, u3_decompose
 from .qs_and_cu_decompose import cu_decompose, qs_decompose
 from .two_qubit_decompose import abc_decompose, kak_decompose, tensor_product_decompose
 
@@ -26,4 +26,5 @@ __all__ = [
     'kak_decompose',
     'qs_and_cu_decompose',
     'cu_decompose',
+    'u3_decompose',
 ]

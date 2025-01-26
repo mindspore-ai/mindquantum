@@ -111,3 +111,24 @@ def test_kak_decomposition():
     circ_original = Circuit() + g
     circ_decomposed = decompose.kak_decompose(g)
     assert_equivalent_unitary(circ_original.matrix(), circ_decomposed.matrix())
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_u3_decomposition():
+    """
+    Feature: U3 gate decomposition into RZ and RX gates
+    Description: Test U3 gate decomposition into ZXZXZ sequence.
+    Expectation: success.
+    """
+    # Test general case
+    g = gates.U3(1.2, 0.5, 0.8).on(0)
+    circ_original = Circuit() + g
+    circ_decomposed = decompose.u3_decompose(g)
+    assert_equivalent_unitary(circ_original.matrix(), circ_decomposed.matrix())
+
+    # Test special case with zero angles
+    g = gates.U3(0.0, 0.0, 0.0).on(0)
+    circ_original = Circuit() + g
+    circ_decomposed = decompose.u3_decompose(g)
+    assert_equivalent_unitary(circ_original.matrix(), circ_decomposed.matrix())
