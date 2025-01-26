@@ -427,7 +427,9 @@ class DecomposeU3(BasicCompilerRule):
                     decompose_dag_circ = DAGCircuit(u3_decompose(node.gate))
                     if decompose_dag_circ:
                         compiled = True
-                        CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level)
+                        CLog.log(
+                            f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level
+                        )
                         dag_circuit.replace_node_with_dag_circuit(node, decompose_dag_circ)
 
         if compiled:

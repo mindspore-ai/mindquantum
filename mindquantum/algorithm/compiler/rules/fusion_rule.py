@@ -118,6 +118,22 @@ class SingleQubitGateFusion(BasicCompilerRule):
         rule_name (str): Name of this compiler rule. Default: "SingleQubitGateFusion"
         log_level (int): Display log level. Default: 0
         with_global_phase (bool): Whether to include global phase gate. Default: False
+
+    Examples:
+        >>> from mindquantum.algorithm.compiler import SingleQubitGateFusion, DAGCircuit
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit().rx(1.0, 0).ry(0.5, 0).rz(0.7, 0)
+        >>> circ
+              ┏━━━━━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ RX(1) ┠─┨ RY(1/2) ┠─┨ RZ(0.7) ┠───
+              ┗━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━┛
+        >>> dag_circ = DAGCircuit(circ)
+        >>> compiler = SingleQubitGateFusion()
+        >>> compiler.do(dag_circ)
+        >>> dag_circ.to_circuit()
+              ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+        q0: ──┨ U3(θ=1.0768, φ=-0.5722, λ=0.995) ┠───
+              ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
     """
 
     def __init__(self, rule_name="SingleQubitGateFusion", log_level=0, with_global_phase=False):
