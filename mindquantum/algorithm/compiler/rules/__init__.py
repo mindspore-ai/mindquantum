@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Compiler rules."""
-from .basic_decompose import BasicDecompose
+from .basic_decompose import BasicDecompose, DecomposeU3
 from .basic_rule import (
     BasicCompilerRule,
     KroneckerSeqCompiler,
@@ -24,12 +24,14 @@ from .compiler_logger import CompileLog, LogIndentation
 from .device_based import CZBasedChipCompiler
 from .gate_replacer import CXToCZ, CZToCX, GateReplacer
 from .neighbor_canceler import FullyNeighborCanceler, SimpleNeighborCanceler
+from .fusion_rule import SingleQubitGateFusion
 
 __all__ = [
     'BasicCompilerRule',
     'KroneckerSeqCompiler',
     'SequentialCompiler',
     'BasicDecompose',
+    'DecomposeU3',
     'CZBasedChipCompiler',
     'CXToCZ',
     'CZToCX',
@@ -37,4 +39,5 @@ __all__ = [
     'FullyNeighborCanceler',
     'SimpleNeighborCanceler',
     'compile_circuit',
+    'SingleQubitGateFusion',
 ]

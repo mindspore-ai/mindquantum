@@ -29,6 +29,7 @@ from mindquantum.core.gates import (
     SGate,
     SWAPGate,
     TGate,
+    U3,
     UnivMathGate,
     XGate,
     YGate,
@@ -54,6 +55,7 @@ from ..decompose import (
     rxx_decompose,
     ryy_decompose,
     rzz_decompose,
+    u3_decompose,
 )
 from .basic_rule import BasicCompilerRule
 from .compiler_logger import CompileLog as CLog
@@ -371,6 +373,62 @@ class BasicDecompose(BasicCompilerRule):
                     with LogIndentation() as _:
                         self.do(decompose_dag_circ)
                     dag_circuit.replace_node_with_dag_circuit(node, decompose_dag_circ)
+
+        if compiled:
+            CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfully compiled')}.", 1, self.log_level)
+        else:
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing happened.", 1, self.log_level)
+        return compiled
+
+
+class DecomposeU3(BasicCompilerRule):
+    """
+    Decompose U3 gate into a sequence of Z-X-Z-X-Z rotations.
+
+    The decomposition follows:
+    U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)
+
+    Examples:
+        >>> from mindquantum.algorithm.compiler import DecomposeU3, DAGCircuit
+        >>> from mindquantum.core import gates as G
+        >>> from mindquantum.core.circuit import Circuit
+        >>> circ = Circuit([G.U3('theta', 'phi', 'lambda').on(0)])
+        >>> circ
+              ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+        q0: ──┨ U3(θ=theta, φ=phi, λ=lambda) ┠───
+              ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+        >>> dag_circ = DAGCircuit(circ)
+        >>> compiler = DecomposeU3()
+        >>> compiler.do(dag_circ)
+        >>> dag_circ.to_circuit()
+              ┏━━━━━━━━━━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━━━┓ ┏━━━━━━━━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ RZ(lambda) ┠─┨ RX(π/2) ┠─┨ RZ(theta) ┠─┨ RX(-π/2) ┠─┨ RZ(phi) ┠───
+              ┗━━━━━━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━━━┛ ┗━━━━━━━━━━┛ ┗━━━━━━━━━┛
+    """
+
+    def __init__(self):
+        """Initialize U3 decomposition rule."""
+        super().__init__("DecomposeU3")
+
+    def do(self, dag_circuit: DAGCircuit) -> bool:
+        """
+        Execute U3 gate decomposition rule.
+
+        Args:
+            dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): DAG graph of quantum circuit.
+        """
+        _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
+        compiled = False
+        all_node = dag_circuit.find_all_gate_node()
+        CLog.log(f"Running {CLog.R1(self.rule_name)}.", 1, self.log_level)
+        with LogIndentation() as _:
+            for node in all_node:
+                if isinstance(node.gate, U3) and not node.gate.ctrl_qubits:
+                    decompose_dag_circ = DAGCircuit(u3_decompose(node.gate))
+                    if decompose_dag_circ:
+                        compiled = True
+                        CLog.log(f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level)
+                        dag_circuit.replace_node_with_dag_circuit(node, decompose_dag_circ)
 
         if compiled:
             CLog.log(f"{CLog.R1(self.rule_name)}: {CLog.P('successfully compiled')}.", 1, self.log_level)
