@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Single qubit gate fusion rule."""
+"""Single qubit gate to U3 fusion and conversion rule."""
 
 import numpy as np
 from mindquantum.core.gates import U3, GlobalPhase
@@ -106,21 +106,23 @@ def _matrix_to_u3_params(unitary):
     return theta, phi, lambda_, np.angle(phase_factor)
 
 
-class SingleQubitGateFusion(BasicCompilerRule):
+class U3Fusion(BasicCompilerRule):
     """
     Fuse consecutive single qubit gates into one U3 gate.
 
     This rule scans through the circuit and combines consecutive single qubit gates
-    acting on the same qubit into a single U3 gate. Optionally, it can also track
-    and include the global phase.
+    acting on the same qubit into a single U3 gate. For standalone single qubit gates,
+    they will also be converted to U3 form.
+
+    Optionally, it can also track and include the global phase.
 
     Args:
-        rule_name (str): Name of this compiler rule. Default: "SingleQubitGateFusion"
+        rule_name (str): Name of this compiler rule. Default: "U3Fusion"
         log_level (int): Display log level. Default: 0
         with_global_phase (bool): Whether to include global phase gate. Default: False
 
     Examples:
-        >>> from mindquantum.algorithm.compiler import SingleQubitGateFusion, DAGCircuit
+        >>> from mindquantum.algorithm.compiler import U3Fusion, DAGCircuit
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit().rx(1.0, 0).ry(0.5, 0).rz(0.7, 0)
         >>> circ
@@ -128,7 +130,7 @@ class SingleQubitGateFusion(BasicCompilerRule):
         q0: ──┨ RX(1) ┠─┨ RY(1/2) ┠─┨ RZ(0.7) ┠───
               ┗━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━┛
         >>> dag_circ = DAGCircuit(circ)
-        >>> compiler = SingleQubitGateFusion()
+        >>> compiler = U3Fusion()
         >>> compiler.do(dag_circ)
         >>> dag_circ.to_circuit()
               ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -136,20 +138,26 @@ class SingleQubitGateFusion(BasicCompilerRule):
               ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
     """
 
-    def __init__(self, rule_name="SingleQubitGateFusion", log_level=0, with_global_phase=False):
-        """Initialize a SingleQubitGateFusion compiler rule."""
+    def __init__(self, rule_name="U3Fusion", log_level=0, with_global_phase=False):
+        """Initialize a U3Fusion compiler rule."""
         super().__init__(rule_name, log_level)
         self.with_global_phase = with_global_phase
 
     def _fuse_gates(self, gates_to_fuse, qubit):
         """
-        Fuse a sequence of single qubit gates into U3.
+        Fuse and convert single qubit gates to U3.
 
         Returns:
             bool: True if fusion was performed, False otherwise
         """
-        if len(gates_to_fuse) <= 1:
+        if not gates_to_fuse:
             return False
+
+        for gate in gates_to_fuse:
+            if gate.gate.parameterized:
+                raise ValueError(
+                    "U3Fusion cannot handle parameterized gates. Please assign values to all parameters before fusion."
+                )
 
         matrix = gates_to_fuse[0].gate.matrix()
         for gate in gates_to_fuse[1:]:
@@ -227,6 +235,6 @@ class SingleQubitGateFusion(BasicCompilerRule):
                 self.log_level,
             )
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing to fuse", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing to change", 1, self.log_level)
 
         return compiled

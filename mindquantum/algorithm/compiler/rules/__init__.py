@@ -24,7 +24,7 @@ from .compiler_logger import CompileLog, LogIndentation
 from .device_based import CZBasedChipCompiler
 from .gate_replacer import CXToCZ, CZToCX, GateReplacer
 from .neighbor_canceler import FullyNeighborCanceler, SimpleNeighborCanceler
-from .fusion_rule import SingleQubitGateFusion
+from .fusion_rule import U3Fusion
 
 __all__ = [
     'BasicCompilerRule',
@@ -38,6 +38,6 @@ __all__ = [
     'GateReplacer',
     'FullyNeighborCanceler',
     'SimpleNeighborCanceler',
+    'U3Fusion',
     'compile_circuit',
-    'SingleQubitGateFusion',
 ]

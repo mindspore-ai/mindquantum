@@ -138,4 +138,4 @@ class LogIndentation:
     def __exit__(self, exc_type, exc_value, traceback):
         """Exit context and decrease tab."""
         CompileLog.DecreaseHeadBlock()
-        return True
+        return False
