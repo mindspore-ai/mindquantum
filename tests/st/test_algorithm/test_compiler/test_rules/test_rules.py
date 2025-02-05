@@ -171,12 +171,25 @@ def test_u3_fusion():
 def test_decompose_u3():
     """
     Feature: U3 Gate Decomposition
-    Description: Test the correctness of decomposing U3 gates
+    Description: Test the correctness of decomposing U3 gates with both standard and alternative methods
     Expectation: success.
     """
+    # Test standard decomposition method
     circ = random_circuit(3, 100, 1.0, 0.2)
     dag_circ = DAGCircuit(circ)
     U3Fusion().do(dag_circ)
-    DecomposeU3().do(dag_circ)
+    DecomposeU3(method='standard').do(dag_circ)
     u3_circ = dag_circ.to_circuit()
     assert is_equiv_unitary(circ.matrix(), u3_circ.matrix())
+
+    # Test alternative decomposition method
+    circ = random_circuit(3, 100, 1.0, 0.2)
+    dag_circ = DAGCircuit(circ)
+    U3Fusion().do(dag_circ)
+    DecomposeU3(method='alternative').do(dag_circ)
+    u3_circ = dag_circ.to_circuit()
+    assert is_equiv_unitary(circ.matrix(), u3_circ.matrix())
+
+    # Test invalid method
+    with pytest.raises(ValueError, match="method must be either 'standard' or 'alternative'"):
+        DecomposeU3(method='invalid')

@@ -16,10 +16,12 @@
 
 import numpy as np
 from mindquantum.core.gates import U3, GlobalPhase
+from mindquantum.core.gates.basic import FunctionalGate
 from mindquantum.utils.type_value_check import _check_input_type
 from .basic_rule import BasicCompilerRule
 from ..dag import DAGCircuit, GateNode
 from .compiler_logger import CompileLog as CLog
+from .compiler_logger import LogIndentation
 
 
 def _matrix_to_u3_params(unitary):
@@ -203,6 +205,10 @@ class U3Fusion(BasicCompilerRule):
         _check_input_type('dag_circuit', DAGCircuit, dag_circuit)
 
         compiled = False
+        fusion_count = 0
+        total_gates_before = 0
+        total_gates_after = 0
+
         CLog.log(f"Running {CLog.R1(self.rule_name)}", 1, self.log_level)
 
         for qubit, head in dag_circuit.head_node.items():
@@ -216,21 +222,50 @@ class U3Fusion(BasicCompilerRule):
                     isinstance(next_node, GateNode)
                     and len(next_node.gate.obj_qubits) == 1
                     and not next_node.gate.ctrl_qubits
+                    and not isinstance(next_node.gate, FunctionalGate)
                 ):
                     gates_to_fuse.append(next_node)
+                    total_gates_before += 1
                 else:
-                    if self._fuse_gates(gates_to_fuse, qubit):
-                        compiled = True
+                    if gates_to_fuse:
+                        CLog.log(
+                            f"{CLog.R1(self.rule_name)}: Found {CLog.B(len(gates_to_fuse))} consecutive single qubit gates on qubit {CLog.B(qubit)}",
+                            2,
+                            self.log_level,
+                        )
+                        with LogIndentation() as _:
+                            CLog.log(
+                                f"Gates to fuse: {CLog.B([node.gate for node in gates_to_fuse])}", 2, self.log_level
+                            )
+
+                        if self._fuse_gates(gates_to_fuse, qubit):
+                            compiled = True
+                            fusion_count += 1
+                            total_gates_after += 1
                     gates_to_fuse = []
 
                 current = next_node
 
-            if self._fuse_gates(gates_to_fuse, qubit):
-                compiled = True
+            if gates_to_fuse:
+                CLog.log(
+                    f"{CLog.R1(self.rule_name)}: Found {CLog.B(len(gates_to_fuse))} consecutive single qubit gates on qubit {CLog.B(qubit)}",
+                    2,
+                    self.log_level,
+                )
+                with LogIndentation() as _:
+                    CLog.log(f"Gates to fuse: {CLog.B([node.gate for node in gates_to_fuse])}", 2, self.log_level)
+
+                if self._fuse_gates(gates_to_fuse, qubit):
+                    compiled = True
+                    fusion_count += 1
+                    total_gates_after += 1
 
         if compiled:
+            reduction = total_gates_before - total_gates_after
             CLog.log(
-                f"{CLog.R1(self.rule_name)}: {CLog.P('successfully fused single qubit gates into U3')}",
+                f"{CLog.R1(self.rule_name)}: {CLog.P('successfully fused')} {CLog.B(fusion_count)} groups of gates, "
+                f"reduced gate count from {CLog.B(total_gates_before)} to {CLog.B(total_gates_after)} "
+                f"({CLog.B(reduction)} gates reduction)",
                 1,
                 self.log_level,
             )

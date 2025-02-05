@@ -118,17 +118,29 @@ def test_kak_decomposition():
 def test_u3_decomposition():
     """
     Feature: U3 gate decomposition into RZ and RX gates
-    Description: Test U3 gate decomposition into ZXZXZ sequence.
+    Description: Test U3 gate decomposition into ZXZXZ sequence with both standard and alternative methods.
     Expectation: success.
     """
-    # Test general case
+    # Test standard decomposition method
     g = gates.U3(1.2, 0.5, 0.8).on(0)
     circ_original = Circuit() + g
-    circ_decomposed = decompose.u3_decompose(g)
+    circ_decomposed = decompose.u3_decompose(g, method='standard')
     assert_equivalent_unitary(circ_original.matrix(), circ_decomposed.matrix())
 
-    # Test special case with zero angles
+    # Test alternative decomposition method
+    circ_decomposed_alt = decompose.u3_decompose(g, method='alternative')
+    assert_equivalent_unitary(circ_original.matrix(), circ_decomposed_alt.matrix())
+
+    # Test special case with zero angles (standard method)
     g = gates.U3(0.0, 0.0, 0.0).on(0)
     circ_original = Circuit() + g
-    circ_decomposed = decompose.u3_decompose(g)
+    circ_decomposed = decompose.u3_decompose(g, method='standard')
     assert_equivalent_unitary(circ_original.matrix(), circ_decomposed.matrix())
+
+    # Test special case with zero angles (alternative method)
+    circ_decomposed_alt = decompose.u3_decompose(g, method='alternative')
+    assert_equivalent_unitary(circ_original.matrix(), circ_decomposed_alt.matrix())
+
+    # Test invalid method
+    with pytest.raises(ValueError, match="method must be either 'standard' or 'alternative'"):
+        decompose.u3_decompose(g, method='invalid')
