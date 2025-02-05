@@ -228,11 +228,12 @@ class U3Fusion(BasicCompilerRule):
                     total_gates_before += 1
                 else:
                     if gates_to_fuse:
-                        CLog.log(
-                            f"{CLog.R1(self.rule_name)}: Found {CLog.B(len(gates_to_fuse))} consecutive single qubit gates on qubit {CLog.B(qubit)}",
-                            2,
-                            self.log_level,
+                        msg = (
+                            f"{CLog.R1(self.rule_name)}: Found "
+                            f"{CLog.B(len(gates_to_fuse))} consecutive single qubit gates "
+                            f"on qubit {CLog.B(qubit)}"
                         )
+                        CLog.log(msg, 2, self.log_level)
                         with LogIndentation() as _:
                             CLog.log(
                                 f"Gates to fuse: {CLog.B([node.gate for node in gates_to_fuse])}", 2, self.log_level
@@ -247,11 +248,12 @@ class U3Fusion(BasicCompilerRule):
                 current = next_node
 
             if gates_to_fuse:
-                CLog.log(
-                    f"{CLog.R1(self.rule_name)}: Found {CLog.B(len(gates_to_fuse))} consecutive single qubit gates on qubit {CLog.B(qubit)}",
-                    2,
-                    self.log_level,
+                msg = (
+                    f"{CLog.R1(self.rule_name)}: Found "
+                    f"{CLog.B(len(gates_to_fuse))} consecutive single qubit gates "
+                    f"on qubit {CLog.B(qubit)}"
                 )
+                CLog.log(msg, 2, self.log_level)
                 with LogIndentation() as _:
                     CLog.log(f"Gates to fuse: {CLog.B([node.gate for node in gates_to_fuse])}", 2, self.log_level)
 

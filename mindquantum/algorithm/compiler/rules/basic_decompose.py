@@ -413,9 +413,9 @@ class DecomposeU3(BasicCompilerRule):
         >>> compiler = DecomposeU3(method='alternative')
         >>> compiler.do(dag_circ)
         >>> dag_circ.to_circuit()
-              ┏━━━━━━━━━━━━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━━━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━┓
-        q0: ──┨ RZ(lambda-π) ┠─┨ RX(π/2) ┠─┨ RZ(π-theta) ┠─┨ RX(π/2) ┠─┨ RZ(phi) ┠───
-              ┗━━━━━━━━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━┛
+              ┏━━━━━━━━━━━━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━━━━━━━━┓ ┏━━━━━━━━━┓ ┏━━━━━━━━━┓
+        q0: ──┨ RZ(lambda-π) ┠─┨ RX(π/2) ┠─┨ RZ(-theta + π) ┠─┨ RX(π/2) ┠─┨ RZ(phi) ┠───
+              ┗━━━━━━━━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━┛
     """
 
     def __init__(self, method='standard'):
@@ -447,8 +447,9 @@ class DecomposeU3(BasicCompilerRule):
                         CLog.log(
                             f"{CLog.R1(self.rule_name)}: gate {CLog.B(node.gate)} will be compiled.", 2, self.log_level
                         )
+                        gates_str = CLog.B([i for i in decomposed_circuit])
                         CLog.log(
-                            f"{CLog.R1(self.rule_name)}: decomposed into gates: {CLog.B([i for i in decomposed_circuit])}",
+                            f"{CLog.R1(self.rule_name)}: decomposed into gates: {gates_str}",
                             2,
                             self.log_level,
                         )
