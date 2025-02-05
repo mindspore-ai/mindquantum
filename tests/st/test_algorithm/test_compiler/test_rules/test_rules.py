@@ -25,7 +25,7 @@ from mindquantum.algorithm.compiler import (
     CZToCX,
     CZBasedChipCompiler,
     DAGCircuit,
-    SingleQubitGateFusion,
+    U3Fusion,
     DecomposeU3,
 )
 from mindquantum.algorithm.compiler.decompose.utils import is_equiv_unitary
@@ -146,22 +146,21 @@ def test_cz_based_chip_compiler():
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-def test_single_qubit_fusion():
+def test_u3_fusion():
     """
-    Feature: Single-qubit Gate Fusion
-    Description: Test the correctness of single-qubit gate fusion
-    Expectation: success.
+    Description: Test U3Fusion
+    Expectation: success
     """
     circ = random_circuit(3, 100, 1.0, 0.2)
     dag_circ = DAGCircuit(circ)
-    rule = SingleQubitGateFusion()
+    rule = U3Fusion()
     rule.do(dag_circ)
     fused_circ = dag_circ.to_circuit()
     assert is_equiv_unitary(circ.matrix(), fused_circ.matrix())
 
     circ = random_circuit(3, 100, 1.0, 0.2)
     dag_circ = DAGCircuit(circ)
-    rule = SingleQubitGateFusion(with_global_phase=True)
+    rule = U3Fusion(with_global_phase=True)
     rule.do(dag_circ)
     fused_circ = dag_circ.to_circuit()
     assert is_equiv_unitary(circ.matrix(), fused_circ.matrix())
@@ -172,12 +171,25 @@ def test_single_qubit_fusion():
 def test_decompose_u3():
     """
     Feature: U3 Gate Decomposition
-    Description: Test the correctness of decomposing U3 gates
+    Description: Test the correctness of decomposing U3 gates with both standard and alternative methods
     Expectation: success.
     """
+    # Test standard decomposition method
     circ = random_circuit(3, 100, 1.0, 0.2)
     dag_circ = DAGCircuit(circ)
-    SingleQubitGateFusion().do(dag_circ)
-    DecomposeU3().do(dag_circ)
+    U3Fusion().do(dag_circ)
+    DecomposeU3(method='standard').do(dag_circ)
     u3_circ = dag_circ.to_circuit()
     assert is_equiv_unitary(circ.matrix(), u3_circ.matrix())
+
+    # Test alternative decomposition method
+    circ = random_circuit(3, 100, 1.0, 0.2)
+    dag_circ = DAGCircuit(circ)
+    U3Fusion().do(dag_circ)
+    DecomposeU3(method='alternative').do(dag_circ)
+    u3_circ = dag_circ.to_circuit()
+    assert is_equiv_unitary(circ.matrix(), u3_circ.matrix())
+
+    # Test invalid method
+    with pytest.raises(ValueError, match="method must be either 'standard' or 'alternative'"):
+        DecomposeU3(method='invalid')

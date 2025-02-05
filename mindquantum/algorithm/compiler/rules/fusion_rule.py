@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Single qubit gate fusion rule."""
+"""Single qubit gate to U3 fusion and conversion rule."""
 
 import numpy as np
 from mindquantum.core.gates import U3, GlobalPhase
+from mindquantum.core.gates.basic import FunctionalGate
 from mindquantum.utils.type_value_check import _check_input_type
 from .basic_rule import BasicCompilerRule
 from ..dag import DAGCircuit, GateNode
 from .compiler_logger import CompileLog as CLog
+from .compiler_logger import LogIndentation
 
 
 def _matrix_to_u3_params(unitary):
@@ -106,21 +108,23 @@ def _matrix_to_u3_params(unitary):
     return theta, phi, lambda_, np.angle(phase_factor)
 
 
-class SingleQubitGateFusion(BasicCompilerRule):
+class U3Fusion(BasicCompilerRule):
     """
     Fuse consecutive single qubit gates into one U3 gate.
 
     This rule scans through the circuit and combines consecutive single qubit gates
-    acting on the same qubit into a single U3 gate. Optionally, it can also track
-    and include the global phase.
+    acting on the same qubit into a single U3 gate. For standalone single qubit gates,
+    they will also be converted to U3 form.
+
+    Optionally, it can also track and include the global phase.
 
     Args:
-        rule_name (str): Name of this compiler rule. Default: "SingleQubitGateFusion"
+        rule_name (str): Name of this compiler rule. Default: "U3Fusion"
         log_level (int): Display log level. Default: 0
         with_global_phase (bool): Whether to include global phase gate. Default: False
 
     Examples:
-        >>> from mindquantum.algorithm.compiler import SingleQubitGateFusion, DAGCircuit
+        >>> from mindquantum.algorithm.compiler import U3Fusion, DAGCircuit
         >>> from mindquantum.core.circuit import Circuit
         >>> circ = Circuit().rx(1.0, 0).ry(0.5, 0).rz(0.7, 0)
         >>> circ
@@ -128,7 +132,7 @@ class SingleQubitGateFusion(BasicCompilerRule):
         q0: ──┨ RX(1) ┠─┨ RY(1/2) ┠─┨ RZ(0.7) ┠───
               ┗━━━━━━━┛ ┗━━━━━━━━━┛ ┗━━━━━━━━━┛
         >>> dag_circ = DAGCircuit(circ)
-        >>> compiler = SingleQubitGateFusion()
+        >>> compiler = U3Fusion()
         >>> compiler.do(dag_circ)
         >>> dag_circ.to_circuit()
               ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -136,20 +140,26 @@ class SingleQubitGateFusion(BasicCompilerRule):
               ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
     """
 
-    def __init__(self, rule_name="SingleQubitGateFusion", log_level=0, with_global_phase=False):
-        """Initialize a SingleQubitGateFusion compiler rule."""
+    def __init__(self, rule_name="U3Fusion", log_level=0, with_global_phase=False):
+        """Initialize a U3Fusion compiler rule."""
         super().__init__(rule_name, log_level)
         self.with_global_phase = with_global_phase
 
     def _fuse_gates(self, gates_to_fuse, qubit):
         """
-        Fuse a sequence of single qubit gates into U3.
+        Fuse and convert single qubit gates to U3.
 
         Returns:
             bool: True if fusion was performed, False otherwise
         """
-        if len(gates_to_fuse) <= 1:
+        if not gates_to_fuse:
             return False
+
+        for gate in gates_to_fuse:
+            if gate.gate.parameterized:
+                raise ValueError(
+                    "U3Fusion cannot handle parameterized gates. Please assign values to all parameters before fusion."
+                )
 
         matrix = gates_to_fuse[0].gate.matrix()
         for gate in gates_to_fuse[1:]:
@@ -195,6 +205,10 @@ class SingleQubitGateFusion(BasicCompilerRule):
         _check_input_type('dag_circuit', DAGCircuit, dag_circuit)
 
         compiled = False
+        fusion_count = 0
+        total_gates_before = 0
+        total_gates_after = 0
+
         CLog.log(f"Running {CLog.R1(self.rule_name)}", 1, self.log_level)
 
         for qubit, head in dag_circuit.head_node.items():
@@ -208,25 +222,56 @@ class SingleQubitGateFusion(BasicCompilerRule):
                     isinstance(next_node, GateNode)
                     and len(next_node.gate.obj_qubits) == 1
                     and not next_node.gate.ctrl_qubits
+                    and not isinstance(next_node.gate, FunctionalGate)
                 ):
                     gates_to_fuse.append(next_node)
+                    total_gates_before += 1
                 else:
-                    if self._fuse_gates(gates_to_fuse, qubit):
-                        compiled = True
+                    if gates_to_fuse:
+                        msg = (
+                            f"{CLog.R1(self.rule_name)}: Found "
+                            f"{CLog.B(len(gates_to_fuse))} consecutive single qubit gates "
+                            f"on qubit {CLog.B(qubit)}"
+                        )
+                        CLog.log(msg, 2, self.log_level)
+                        with LogIndentation() as _:
+                            CLog.log(
+                                f"Gates to fuse: {CLog.B([node.gate for node in gates_to_fuse])}", 2, self.log_level
+                            )
+
+                        if self._fuse_gates(gates_to_fuse, qubit):
+                            compiled = True
+                            fusion_count += 1
+                            total_gates_after += 1
                     gates_to_fuse = []
 
                 current = next_node
 
-            if self._fuse_gates(gates_to_fuse, qubit):
-                compiled = True
+            if gates_to_fuse:
+                msg = (
+                    f"{CLog.R1(self.rule_name)}: Found "
+                    f"{CLog.B(len(gates_to_fuse))} consecutive single qubit gates "
+                    f"on qubit {CLog.B(qubit)}"
+                )
+                CLog.log(msg, 2, self.log_level)
+                with LogIndentation() as _:
+                    CLog.log(f"Gates to fuse: {CLog.B([node.gate for node in gates_to_fuse])}", 2, self.log_level)
+
+                if self._fuse_gates(gates_to_fuse, qubit):
+                    compiled = True
+                    fusion_count += 1
+                    total_gates_after += 1
 
         if compiled:
+            reduction = total_gates_before - total_gates_after
             CLog.log(
-                f"{CLog.R1(self.rule_name)}: {CLog.P('successfully fused single qubit gates into U3')}",
+                f"{CLog.R1(self.rule_name)}: {CLog.P('successfully fused')} {CLog.B(fusion_count)} groups of gates, "
+                f"reduced gate count from {CLog.B(total_gates_before)} to {CLog.B(total_gates_after)} "
+                f"({CLog.B(reduction)} gates reduction)",
                 1,
                 self.log_level,
             )
         else:
-            CLog.log(f"{CLog.R1(self.rule_name)}: nothing to fuse", 1, self.log_level)
+            CLog.log(f"{CLog.R1(self.rule_name)}: nothing to change", 1, self.log_level)
 
         return compiled

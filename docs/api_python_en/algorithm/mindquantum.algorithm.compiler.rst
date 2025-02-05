@@ -65,7 +65,7 @@ Compiler rules
     mindquantum.algorithm.compiler.GateReplacer
     mindquantum.algorithm.compiler.FullyNeighborCanceler
     mindquantum.algorithm.compiler.SimpleNeighborCanceler
-    mindquantum.algorithm.compiler.SingleQubitGateFusion
+    mindquantum.algorithm.compiler.U3Fusion
     mindquantum.algorithm.compiler.compile_circuit
 
 DAG circuit

@@ -61,38 +61,59 @@ def euler_decompose(gate: QuantumGate, basis: str = 'zyz', with_phase: bool = Tr
     return circ
 
 
-def u3_decompose(gate: U3):
+def u3_decompose(gate: U3, method: str = 'standard'):
     """
     Decompose a U3 gate into a sequence of Z-X-Z-X-Z rotations.
 
-    The decomposition follows:
-    U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)
+    The decomposition follows one of two methods:
+    1. standard: U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)
+    2. alternative: U3(θ,φ,λ) = Rz(φ)Rx(π/2)Rz(π-θ)Rx(π/2)Rz(λ-π)
 
     When any rotation angle is a constant value and equals to 0, the corresponding RZ gate will be omitted.
 
     Args:
         gate (U3): The U3 gate to be decomposed.
+        method (str): The decomposition method to use, either 'standard' or 'alternative'. Default: 'standard'
 
     Returns:
         Circuit: A quantum circuit implementing the U3 gate using ZXZXZ sequence.
+
+    Raises:
+        ValueError: If the method is not 'standard' or 'alternative'.
     """
     _check_input_type('gate', U3, gate)
+    if method not in ['standard', 'alternative']:
+        raise ValueError("method must be either 'standard' or 'alternative'")
 
     theta, phi, lamda = gate.theta, gate.phi, gate.lamda
     qubits = gate.obj_qubits
     circ = Circuit()
 
-    if not (lamda.is_const() and np.isclose(lamda.const, 0.0, atol=1e-8)):
-        circ += RZ(lamda).on(qubits[0])
+    if method == 'standard':
+        if not (lamda.is_const() and np.isclose(lamda.const, 0.0, atol=1e-8)):
+            circ += RZ(lamda).on(qubits[0])
 
-    circ += RX(np.pi / 2).on(qubits[0])
+        circ += RX(np.pi / 2).on(qubits[0])
 
-    if not (theta.is_const() and np.isclose(theta.const, 0.0, atol=1e-8)):
-        circ += RZ(theta).on(qubits[0])
+        if not (theta.is_const() and np.isclose(theta.const, 0.0, atol=1e-8)):
+            circ += RZ(theta).on(qubits[0])
 
-    circ += RX(-np.pi / 2).on(qubits[0])
+        circ += RX(-np.pi / 2).on(qubits[0])
 
-    if not (phi.is_const() and np.isclose(phi.const, 0.0, atol=1e-8)):
-        circ += RZ(phi).on(qubits[0])
+        if not (phi.is_const() and np.isclose(phi.const, 0.0, atol=1e-8)):
+            circ += RZ(phi).on(qubits[0])
+    else:  # alternative method
+        if not (lamda.is_const() and np.isclose(lamda.const - np.pi, 0.0, atol=1e-8)):
+            circ += RZ(lamda - np.pi).on(qubits[0])
+
+        circ += RX(np.pi / 2).on(qubits[0])
+
+        if not (theta.is_const() and np.isclose(np.pi - theta.const, 0.0, atol=1e-8)):
+            circ += RZ(np.pi - theta).on(qubits[0])
+
+        circ += RX(np.pi / 2).on(qubits[0])
+
+        if not (phi.is_const() and np.isclose(phi.const, 0.0, atol=1e-8)):
+            circ += RZ(phi).on(qubits[0])
 
     return circ
