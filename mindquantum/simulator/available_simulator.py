@@ -16,7 +16,7 @@
 import typing
 import warnings
 
-from mindquantum import _mq_matrix, _mq_vector, mqbackend
+from mindquantum import _mq_matrix, _mq_vector, _mq_stabilizer, mqbackend
 from mindquantum.dtype import complex64, complex128
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.error import SimNotAvailableError
@@ -45,7 +45,7 @@ class _AvailableSimulator:
         self.base_module = {
             'mqvector': _mq_vector,
             'mqmatrix': _mq_matrix,
-            'stabilizer': _mq_vector,
+            'stabilizer': _mq_stabilizer,
         }
         self.sims = {
             'mqvector': {
@@ -56,7 +56,7 @@ class _AvailableSimulator:
                 complex64: _mq_matrix.float,
                 complex128: _mq_matrix.double,
             },
-            'stabilizer': _mq_vector.stabilizer,
+            'stabilizer': _mq_stabilizer,
         }
         if MQVECTOR_GPU_SUPPORTED:
             self.base_module['mqvector_gpu'] = _mq_vector_gpu

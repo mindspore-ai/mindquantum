@@ -24,8 +24,12 @@
 
 template <typename T>
 struct fmt::formatter<std::optional<T>> : fmt::formatter<T> {
-    template <typename format_context_t>
-    auto format(const std::optional<T>& opt, format_context_t& ctx) {
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return fmt::formatter<T>::parse(ctx);
+    }
+
+    template <typename FormatContext>
+    auto format(const std::optional<T>& opt, FormatContext& ctx) const -> decltype(ctx.out()) {
         if (opt) {
             return fmt::formatter<T>::format(*opt, ctx);
         }

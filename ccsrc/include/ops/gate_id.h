@@ -24,50 +24,50 @@
 namespace mindquantum {
 enum class GateID : uint8_t {
     null,
-    I,            //
-    X,            //
-    Y,            //
-    Z,            //
-    RX,           //
-    RY,           //
-    RZ,           //
-    Rxx,          //
-    Ryy,          //
-    Rzz,          //
-    Rxy,          //
-    Rxz,          //
-    Ryz,          //
-    Givens,       //
-    Rn,           //
-    H,            //
-    SWAP,         //
-    ISWAP,        //
-    SWAPalpha,    //
-    T,            //
-    S,            //
-    SX,           //
-    SXdag,        //
-    Tdag,         //
-    Sdag,         //
-    CNOT,         //
-    CZ,           //
-    GP,           //
-    PauliString,  //
-    RPS,          // Rot-PauliString
-    PS,           //
-    U3,           //
-    FSim,         //
-    M,            //
-    PL,           // Pauli channel
-    GPL,          // Groupued Pauli channel
-    DEP,          // depolarizing channel
-    AD,           // amplitude damping channel
-    PD,           // phase damping channel
-    KRAUS,        // Kraus channel
-    TR,           // thermal relaxation channel
-    CUSTOM,       //
-    CUSTOM_TWO_PARAM,//
-    HOLDER,       // for extended gate id.
+    I,                 //
+    X,                 //
+    Y,                 //
+    Z,                 //
+    RX,                //
+    RY,                //
+    RZ,                //
+    Rxx,               //
+    Ryy,               //
+    Rzz,               //
+    Rxy,               //
+    Rxz,               //
+    Ryz,               //
+    Givens,            //
+    Rn,                //
+    H,                 //
+    SWAP,              //
+    ISWAP,             //
+    SWAPalpha,         //
+    T,                 //
+    S,                 //
+    SX,                //
+    SXdag,             //
+    Tdag,              //
+    Sdag,              //
+    CNOT,              //
+    CZ,                //
+    GP,                //
+    PauliString,       //
+    RPS,               // Rot-PauliString
+    PS,                //
+    U3,                //
+    FSim,              //
+    M,                 //
+    PL,                // Pauli channel
+    GPL,               // Groupued Pauli channel
+    DEP,               // depolarizing channel
+    AD,                // amplitude damping channel
+    PD,                // phase damping channel
+    KRAUS,             // Kraus channel
+    TR,                // thermal relaxation channel
+    CUSTOM,            //
+    CUSTOM_TWO_PARAM,  //
+    HOLDER,            // for extended gate id.
 };
 
 // NOLINTNEXTLINE(*avoid-c-arrays,readability-identifier-length)
@@ -117,12 +117,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(GateID, {{GateID::I, "I"},
 }  // namespace mindquantum
 template <typename char_t>
 struct fmt::formatter<mindquantum::GateID, char_t> {
-    FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {  // NOLINT(runtime/references)
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {  // NOLINT(runtime/references)
         return ctx.begin();
     }
-    template <typename format_context_t>
-    auto format_one(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
-        -> decltype(ctx.out()) {
+
+    template <typename FormatContext>
+    auto format_one(const mindquantum::GateID& value,
+                    FormatContext& ctx) const -> decltype(ctx.out()) {  // NOLINT(runtime/references)
         switch (value) {
             case mindquantum::GateID::Givens:
                 return fmt::format_to(ctx.out(), "Givens");
@@ -150,9 +151,10 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return fmt::format_to(ctx.out(), "Invalid <mindquantum::GateID>");
         }
     }
-    template <typename format_context_t>
-    auto format_two(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
-        -> decltype(ctx.out()) {
+
+    template <typename FormatContext>
+    auto format_two(const mindquantum::GateID& value,
+                    FormatContext& ctx) const -> decltype(ctx.out()) {  // NOLINT(runtime/references)
         switch (value) {
             case mindquantum::GateID::PL:
                 return fmt::format_to(ctx.out(), "PL");
@@ -172,9 +174,10 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return format_one(value, ctx);
         }
     }
-    template <typename format_context_t>
-    auto format_three(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
-        -> decltype(ctx.out()) {
+
+    template <typename FormatContext>
+    auto format_three(const mindquantum::GateID& value,
+                      FormatContext& ctx) const -> decltype(ctx.out()) {  // NOLINT(runtime/references)
         switch (value) {
             case mindquantum::GateID::RX:
                 return fmt::format_to(ctx.out(), "RX");
@@ -200,9 +203,10 @@ struct fmt::formatter<mindquantum::GateID, char_t> {
                 return format_two(value, ctx);
         }
     }
-    template <typename format_context_t>
-    auto format(const mindquantum::GateID& value, format_context_t& ctx) const  // NOLINT(runtime/references)
-        -> decltype(ctx.out()) {
+
+    template <typename FormatContext>
+    auto format(const mindquantum::GateID& value,
+                FormatContext& ctx) const -> decltype(ctx.out()) {  // NOLINT(runtime/references)
         switch (value) {
             case mindquantum::GateID::I:
                 return fmt::format_to(ctx.out(), "I");

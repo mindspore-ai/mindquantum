@@ -39,6 +39,7 @@ Universal decompose rules
     :template: classtemplate.rst
 
     mindquantum.algorithm.compiler.euler_decompose
+    mindquantum.algorithm.compiler.u3_decompose
     mindquantum.algorithm.compiler.cu_decompose
     mindquantum.algorithm.compiler.qs_decompose
     mindquantum.algorithm.compiler.abc_decompose
@@ -57,12 +58,14 @@ Compiler rules
     mindquantum.algorithm.compiler.KroneckerSeqCompiler
     mindquantum.algorithm.compiler.SequentialCompiler
     mindquantum.algorithm.compiler.BasicDecompose
+    mindquantum.algorithm.compiler.DecomposeU3
     mindquantum.algorithm.compiler.CZBasedChipCompiler
     mindquantum.algorithm.compiler.CXToCZ
     mindquantum.algorithm.compiler.CZToCX
     mindquantum.algorithm.compiler.GateReplacer
     mindquantum.algorithm.compiler.FullyNeighborCanceler
     mindquantum.algorithm.compiler.SimpleNeighborCanceler
+    mindquantum.algorithm.compiler.U3Fusion
     mindquantum.algorithm.compiler.compile_circuit
 
 DAG circuit

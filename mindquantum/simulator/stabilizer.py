@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from mindquantum import _mq_vector
+from mindquantum import _mq_stabilizer
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import MeasureResult, S, X
 from mindquantum.core.operators import Hamiltonian
@@ -47,7 +47,7 @@ class Stabilizer(BackendBase):
             self.sim = name
             self.name = 'stabilizer'
         else:
-            self.sim = _mq_vector.stabilizer.StabilizerTableau(n_qubits, seed)
+            self.sim = _mq_stabilizer.StabilizerTableau(n_qubits, seed)
 
     def __str__(self):
         """Return a string representation of the object."""
@@ -80,7 +80,7 @@ class Stabilizer(BackendBase):
     def __eq__(self, other: Stabilizer) -> bool:
         """Check whether two stabilizers are equal or not."""
         _check_input_type('other', Stabilizer, other)
-        return _mq_vector.stabilizer.StabilizerTableau.__eq__(self.sim, other.sim)
+        return self.sim.__eq__(other.sim)
 
     # pylint: disable=arguments-differ
     def get_qs(self, *args, **kwargs):
@@ -256,3 +256,11 @@ def get_stabilizer_string(sim: Simulator | Stabilizer) -> str:
     elif not isinstance(sim, Stabilizer):
         raise TypeError(f'sim require a type of Simulator or Stabilizer, but get {type(sim)}.')
     return sim.sim.stabilizer_to_string()
+
+
+__all__ = [
+    'Stabilizer',
+    'decompose_stabilizer',
+    'get_tableau_string',
+    'get_stabilizer_string',
+]

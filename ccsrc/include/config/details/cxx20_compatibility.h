@@ -24,6 +24,11 @@
 #    endif
 #endif
 
+// Check C++20 support
+#if __cplusplus > 201703L && defined(__cpp_lib_concepts) && __cpp_lib_concepts >= 201907L
+    // Full C++20 support, no compatibility implementation needed
+#else
+
 #if MQ_HAS_CONCEPTS
 #    include <concepts>
 #endif
@@ -95,5 +100,7 @@ constexpr T* launder(T* t) noexcept {
 #endif  // !MQ_HAS_STD_LAUNDER
 
 }  // namespace std
+
+#endif // End of C++20 compatibility checks
 
 #endif /* CORE_CXX20_COMPATIBILITY_HPP */

@@ -24,6 +24,17 @@
 #include <vector>
 
 #include <thrust/transform_reduce.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/execution_policy.h>
+
+// CUDA version compatibility
+#include <cuda_runtime.h>
+#if CUDART_VERSION >= 12000
+#include <cuda/functional>
+#define MQ_PROCLAIM_RETURN_TYPE(T, lambda) cuda::proclaim_return_type<T>(lambda)
+#else
+#define MQ_PROCLAIM_RETURN_TYPE(T, lambda) lambda
+#endif
 
 #include "core/mq_base_types.h"
 #include "core/sparse/csrhdmatrix.h"

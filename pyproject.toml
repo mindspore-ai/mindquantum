@@ -121,6 +121,7 @@ skip-string-normalization = true
       'mindquantum._mq_matrix',
       'mindquantum._math',
       'mindquantum._qaia_sb',
+      'mindquantum._mq_stabilizer',
     ]
     extension-pkg-allow-list = [
       'mindquantum.mqbackend',
@@ -129,6 +130,7 @@ skip-string-normalization = true
       'mindquantum._mq_matrix',
       'mindquantum._math',
       'mindquantum._qaia_sb',
+      'mindquantum._mq_stabilizer',
     ]
 
     init-hook = '''from pylint.config import find_default_config_files;\
