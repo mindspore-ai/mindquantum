@@ -45,7 +45,7 @@
 
 #### Compiler
 
-- [STABLE] [`U3Fusion`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.SingleQubitGateFusion.html): Added compilation rule for fusing consecutive single-qubit gates into a single U3 gate. This rule scans the circuit and combines consecutive single-qubit gates acting on the same qubit into a single U3 gate. For standalone single-qubit gates, they are also converted to U3 form. Global phase tracking and inclusion is optional.
+- [STABLE] [`U3Fusion`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.U3Fusion.html): Added compilation rule for fusing consecutive single-qubit gates into a single U3 gate. This rule scans the circuit and combines consecutive single-qubit gates acting on the same qubit into a single U3 gate. For standalone single-qubit gates, they are also converted to U3 form. Global phase tracking and inclusion is optional.
 - [STABLE] [`u3_decompose`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.u3_decompose.html): Added functionality to decompose U3 gates into Z-X-Z-X-Z rotation sequences. Supports both standard decomposition (U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)) and alternative decomposition (U3(θ,φ,λ) = Rz(φ)Rx(π/2)Rz(π-θ)Rx(π/2)Rz(λ-π)). When any rotation angle is constant and equals zero, the corresponding RZ gate will be omitted.
 - [STABLE] [`DecomposeU3`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.DecomposeU3.html): Added compilation rule for U3 gate decomposition, breaking down U3 gates into Z-X-Z-X-Z rotation sequences. Supports both standard and alternative decomposition methods.
 

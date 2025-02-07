@@ -45,7 +45,7 @@
 
 #### Compiler
 
-- [STABLE] [`U3Fusion`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.SingleQubitGateFusion.html): 新增将连续的单量子比特门融合为一个U3门的编译规则。该规则扫描电路并将作用在同一量子比特上的连续单量子比特门组合成单个U3门。对于独立的单量子比特门，也会被转换为U3形式。可选择是否跟踪和包含全局相位。
+- [STABLE] [`U3Fusion`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.U3Fusion.html): 新增将连续的单量子比特门融合为一个U3门的编译规则。该规则扫描电路并将作用在同一量子比特上的连续单量子比特门组合成单个U3门。对于独立的单量子比特门，也会被转换为U3形式。可选择是否跟踪和包含全局相位。
 - [STABLE] [`u3_decompose`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.u3_decompose.html): 新增将U3门分解为Z-X-Z-X-Z旋转序列的功能。支持标准分解（U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)）和替代分解（U3(θ,φ,λ) = Rz(φ)Rx(π/2)Rz(π-θ)Rx(π/2)Rz(λ-π)）两种方法。当任何旋转角度为常数且等于0时，相应的RZ门将被省略。
 - [STABLE] [`DecomposeU3`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.DecomposeU3.html): 新增U3门分解的编译规则，将U3门分解为Z-X-Z-X-Z旋转序列。支持标准和替代两种分解方法。
 
