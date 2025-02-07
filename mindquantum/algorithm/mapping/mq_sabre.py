@@ -14,7 +14,6 @@
 # ============================================================================
 
 """MQSABRE algorithm to implement qubit mapping."""
-import typing
 from typing import List, Tuple
 
 from ...core.circuit import Circuit
@@ -26,25 +25,60 @@ from ...mqbackend.device import MQ_SABRE as MQ_SABRE_  # pylint: disable=import-
 # pylint: disable=too-few-public-methods
 class MQSABRE:
     """
-    MQSABRE algorithm to implement qubit mapping.
+    MQSABRE algorithm for hardware-aware qubit mapping optimization.
 
-    This mapping alrogrthm considered the cnot error and executing time in quantum chip.
+    MQSABRE extends the SABRE (SWAP-based BidiREctional heuristic search) algorithm by incorporating
+    hardware-specific characteristics into the mapping optimization process. The algorithm performs
+    initial mapping and routing optimization in three phases:
+
+    1. Initial mapping: Uses a graph-center-based approach to generate an initial mapping that
+       minimizes the average distance between frequently interacting qubits.
+    2. Mapping optimization: Employs bidirectional heuristic search with a hardware-aware cost function.
+    3. Circuit transformation: Inserts SWAP gates and transforms the circuit to be compatible with
+       hardware constraints.
+
+    The algorithm uses a weighted cost function that combines three metrics:
+    H = α₁D + α₂K + α₃T
+    where:
+
+    - D: Shortest path distance between qubits in the coupling graph
+    - K: Error rate metric derived from CNOT and SWAP success rates
+    - T: Gate execution time metric considering CNOT and SWAP durations
+    - α₁, α₂, α₃: Weight parameters for balancing different optimization objectives
 
     Args:
-        circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
-            support circuit constructed by one or two qubits gate, control qubit included.
-        topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Currently we only support
-            connected coupling graph.
-        cnoterrorandlength (List[Tuple[Tuple[int, int], List[float]]]): The error and gate length of a cnot gate. The
-            first two integers are qubit node id in topology. The list of float has two element, with first one be the
-            error of cnot and second one be the gate length.
+        circuit (:class:`~.core.circuit.Circuit`): The quantum circuit to be mapped. Currently only supports
+            circuits composed of single-qubit gates and two-qubit gates (including controlled gates).
+        topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Must be a connected
+            coupling graph.
+        cnoterrorandlength (List[Tuple[Tuple[int, int], List[float]]]): Hardware-specific CNOT characteristics.
+            Each entry contains a tuple (i, j) specifying the physical qubit pair in the topology, and a list
+            [error_rate, gate_time] where error_rate is the CNOT error rate between qubits i and j (range: [0, 1]),
+            and gate_time is the CNOT execution time in arbitrary units.
+
+    Raises:
+        ValueError: If the topology is not a connected graph.
 
     Examples:
         >>> from mindquantum.algorithm.mapping import MQSABRE
-        >>> cnot=[((5, 6), [8.136e-4, 248.88]), ((6, 10), [9.136e-4, 248.88]), ((8, 9), [9.136e-4, 248.88])]
-        >>> topology = GridQubits(6,6)
-        >>> mqsaber = MQSABRE(circuit, topology, cnot)
-        >>> new_circ, init_mapping, final_mapping = masaber.solve(1, 0.3, 0.2, 0.1)
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import RX, X
+        >>> from mindquantum.device import GridQubits
+        >>> # Create a quantum circuit
+        >>> circ = Circuit()
+        >>> circ += RX('a').on(0)
+        >>> circ += RX('b').on(1)
+        >>> circ += X.on(1, 0)
+        >>> # Define hardware characteristics
+        >>> cnot_data = [
+        ...     ((0, 1), [0.001, 250.0]),  # CNOT 0->1: 0.1% error, 250ns
+        ...     ((1, 2), [0.002, 300.0]),  # CNOT 1->2: 0.2% error, 300ns
+        ... ]
+        >>> # Create a linear topology: 0-1-2
+        >>> topology = GridQubits(1, 3)
+        >>> # Initialize and run MQSABRE
+        >>> solver = MQSABRE(circ, topology, cnot_data)
+        >>> new_circ, init_map, final_map = solver.solve()
     """
 
     def __init__(
@@ -65,7 +99,7 @@ class MQSABRE:
                 return False
             edges = topology.edges_with_id()
             graph = {qid: [] for qid in qids}
-            for (x, y) in edges:
+            for x, y in edges:
                 graph[x].append(y)
                 graph[y].append(x)
 
@@ -87,21 +121,41 @@ class MQSABRE:
             )
 
     def solve(
-        self, w: float, alpha1: float, alpha2: float, alpha3: float
-    ) -> typing.Union[Circuit, typing.List[int], typing.List[int]]:
+        self, w: float = 0.5, alpha1: float = 0.3, alpha2: float = 0.2, alpha3: float = 0.1
+    ) -> Tuple[Circuit, List[int], List[int]]:
         """
-        Solve qubit mapping problem with MQSABRE algorithm.
+        Solve the qubit mapping problem using the MQSABRE algorithm.
+
+        The method performs three main steps:
+        1. Constructs the distance matrix D using Floyd-Warshall algorithm
+        2. Computes hardware-specific matrices K (error rates) and T (gate times)
+        3. Performs heuristic search to optimize the mapping while considering the combined cost function
 
         Args:
-            w (float): The w parameter. For more detail, please refers to the paper.
-            alpha1 (float): The alpha1 parameter. For more detail, please refers to the paper.
-            alpha2 (float): The alpha2 parameter. For more detail, please refers to the paper.
-            alpha3 (float): The alpha3 parameter. For more detail, please refers to the paper.
+            w (float, optional): Look-ahead weight parameter that balances between current and future
+                gate operations in the heuristic search. Range: [0, 1].
+                When w > 0.5, it favors future operations, potentially reducing circuit depth.
+                When w < 0.5, it prioritizes current operations, potentially reducing total gate count.
+                Defaults: 0.5.
+            alpha1 (float, optional): Weight for the distance metric (D) in the cost function.
+                Higher values prioritize minimizing qubit distances. Defaults: 0.3.
+            alpha2 (float, optional): Weight for the error rate metric (K).
+                Higher values prioritize connections with lower error rates. Defaults: 0.2.
+            alpha3 (float, optional): Weight for the gate time metric (T).
+                Higher values prioritize faster gate execution paths. Defaults: 0.1.
 
         Returns:
-            Tuple[:class:`~.core.circuit.Circuit`, List[int], List[int]], a quantum
-                circuit that can execute on given device, the initial mapping order,
-                and the final mapping order.
+            - mapped_circuit (:class:`~.core.circuit.Circuit`): The transformed circuit with inserted SWAP gates
+            - initial_mapping (List[int]): Initial mapping from logical to physical qubits
+            - final_mapping (List[int]): Final mapping from logical to physical qubits
+
+        Examples:
+            >>> # Use default parameters
+            >>> new_circ, init_map, final_map = solver.solve()
+            >>> # Prioritize error rate optimization
+            >>> new_circ, init_map, final_map = solver.solve(alpha2=0.5)
+            >>> # Focus on circuit depth reduction
+            >>> new_circ, init_map, final_map = solver.solve(w=0.7)
         """
         gate_info, (init_map, final_map) = self.cpp_solver.solve(w, alpha1, alpha2, alpha3)
         new_circ = Circuit()

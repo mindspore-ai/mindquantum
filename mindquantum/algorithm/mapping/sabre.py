@@ -24,16 +24,41 @@ from ...mqbackend.device import SABRE as SABRE_  # pylint: disable=import-error
 # pylint: disable=too-few-public-methods
 class SABRE:
     """
-    SABRE algorithm to implement qubit mapping.
+    SABRE (SWAP-based BidiREctional heuristic search) algorithm for qubit mapping optimization.
 
-    For more detail of SABRE algorithm, please refer to
-    `Tackling the Qubit Mapping Problem for NISQ-Era Quantum Devices <https://arxiv.org/abs/1809.02573>`_.
+    Due to physical constraints in real quantum hardware, not all qubits can directly interact with each other.
+    SABRE algorithm enables arbitrary quantum circuits to run on specific quantum hardware topologies by inserting
+    SWAP gates and remapping qubits. It employs a bidirectional heuristic search method that minimizes a cost
+    function considering both current and future gate operations to find optimal mapping solutions.
+
+    Reference:
+        Gushu Li, Yufei Ding, Yuan Xie: "Tackling the Qubit Mapping Problem for NISQ-Era Quantum Devices",
+        ASPLOS 2019. https://arxiv.org/abs/1809.02573
 
     Args:
-        circuit (:class:`~.core.circuit.Circuit`): The quantum circuit you need to do qubit mapping. Currently we only
-            support circuit constructed by one or two qubits gate, control qubit included.
-        topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Currently we only support
-            connected coupling graph.
+        circuit (:class:`~.core.circuit.Circuit`): The quantum circuit to be mapped. Currently only supports
+            circuits composed of single-qubit gates and two-qubit gates (including controlled gates).
+        topology (:class:`~.device.QubitsTopology`): The hardware qubit topology. Currently only supports
+            connected coupling graphs.
+
+    Examples:
+        >>> from mindquantum.core.circuit import Circuit
+        >>> from mindquantum.core.gates import RX, X
+        >>> from mindquantum.device import GridQubits
+        >>> from mindquantum.algorithm.mapping import SABRE
+        >>> # Create a simple quantum circuit
+        >>> circ = Circuit()
+        >>> circ += RX('a').on(0)
+        >>> circ += RX('b').on(1)
+        >>> circ += RX('c').on(2)
+        >>> circ += X.on(1, 0)
+        >>> circ += X.on(2, 1)
+        >>> circ += X.on(0, 2)
+        >>> # Create a 2x2 grid topology
+        >>> topo = GridQubits(2, 2)
+        >>> # Use SABRE for mapping
+        >>> solver = SABRE(circ, topo)
+        >>> new_circ, init_map, final_map = solver.solve()
     """
 
     def __init__(self, circuit: Circuit, topology: QubitsTopology):
@@ -49,7 +74,7 @@ class SABRE:
                 return False
             edges = topology.edges_with_id()
             graph = {qid: [] for qid in qids}
-            for (x, y) in edges:
+            for x, y in edges:
                 graph[x].append(y)
                 graph[y].append(x)
 
@@ -71,21 +96,41 @@ class SABRE:
             )
 
     def solve(
-        self, iter_num: int, w: float, delta1: float, delta2: float
+        self, iter_num: int = 5, w: float = 0.5, delta1: float = 0.3, delta2: float = 0.2
     ) -> typing.Union[Circuit, typing.List[int], typing.List[int]]:
         """
-        Solve qubit mapping problem with SABRE algorithm.
+        Solve the qubit mapping problem using the SABRE algorithm.
+
+        The method employs bidirectional heuristic search to find optimal qubit mapping solutions.
+        Key steps include:
+        1. Generate random initial mapping
+        2. Execute forward-backward-forward traversal to optimize initial mapping
+        3. Perform final forward traversal with optimized mapping to generate physical circuit with SWAP gates
 
         Args:
-            iter_num (int): The iteration number for when solving mapping problem.
-            w (float): The w parameter. For more detail, please refers to the paper.
-            delta1 (float): The delta1 parameter. For more detail, please refers to the paper.
-            delta2 (float): The delta2 parameter. For more detail, please refers to the paper.
+            iter_num (int, optional): Number of forward-backward-forward traversal iterations. Each iteration
+                starts with a different initial mapping. Default: 5.
+            w (float, optional): Weight parameter in cost function H = H_current + w * H_future.
+                Larger w (>0.5) favors future operations, potentially reducing circuit depth;
+                Smaller w (<0.5) favors current operations, potentially reducing total gate count.
+                Default: 0.5.
+            delta1 (float, optional): Decay parameter for single-qubit gates. Affects how algorithm updates
+                decay values after single-qubit operations. Default: 0.3.
+            delta2 (float, optional): Decay parameter for two-qubit gates (CNOT, SWAP). Controls how algorithm
+                distributes SWAP operations in space and time. Since one SWAP equals three CNOTs, SWAP operations
+                add 3*delta2 to decay values. Default: 0.2.
 
         Returns:
-            Tuple[:class:`~.core.circuit.Circuit`, List[int], List[int]], a quantum
-                circuit that can execute on given device, the initial mapping order,
-                and the final mapping order.
+            - mapped_circuit (:class:`~.core.circuit.Circuit`): Quantum circuit compatible with hardware
+                topology after adding SWAP gates
+            - initial_mapping (List[int]): Mapping from logical to physical qubits at the start of execution
+            - final_mapping (List[int]): Mapping from logical to physical qubits at the end of execution
+
+        Examples:
+            >>> # Use default parameters
+            >>> new_circ, init_map, final_map = solver.solve()
+            >>> # Or customize parameters
+            >>> new_circ, init_map, final_map = solver.solve(iter_num=10, w=0.7)
         """
         gate_info, (init_map, final_map) = self.cpp_solver.solve(iter_num, w, delta1, delta2)
         new_circ = Circuit()
