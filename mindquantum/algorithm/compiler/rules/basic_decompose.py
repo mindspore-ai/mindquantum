@@ -431,6 +431,9 @@ class DecomposeU3(BasicCompilerRule):
 
         Args:
             dag_circuit (:class:`~.algorithm.compiler.DAGCircuit`): DAG graph of quantum circuit.
+
+        Returns:
+            bool, True if any decomposition was performed, False otherwise.
         """
         _check_input_type("dag_circuit", DAGCircuit, dag_circuit)
         compiled = False

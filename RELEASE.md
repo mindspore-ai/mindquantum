@@ -10,6 +10,8 @@
 
 - [BETA] [`virtual_distillation`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/error_mitigation/mindquantum.algorithm.error_mitigation.virtual_distillation.html): Added error mitigation algorithm based on virtual distillation, which reduces quantum noise by creating virtual copies of quantum states and performing measurements on an entangled system.
 - [BETA] [`QuantumNeuron`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/nisq/mindquantum.algorithm.nisq.QuantumNeuron.html): Added quantum neuron implementation based on Repeat-Until-Success (RUS) strategy, which simulates classical neuron behavior through quantum circuits by applying non-linear function rotations.
+- [STABLE] [`SGAnsatz`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/nisq/mindquantum.algorithm.nisq.SGAnsatz.html): Added sequentially generated variational quantum circuit that can efficiently generate matrix product states with fixed bond dimension. The ansatz naturally adapts to one-dimensional quantum many-body problems by applying parameterized quantum circuit blocks to adjacent qubits.
+- [STABLE] [`SGAnsatz2D`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/nisq/mindquantum.algorithm.nisq.SGAnsatz2D.html): Added two-dimensional sequentially generated variational quantum circuit that can generate string-bond states. Supports automatic generation of traversal paths by specifying 2D grid dimensions or construction of specific types of string-bond states through custom line sets.
 - [STABLE] [`qjpeg`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/library/mindquantum.algorithm.library.qjpeg.html): Added quantum image compression algorithm based on quantum Fourier transform, which can compress quantum images by reducing the number of qubits while preserving key information in the frequency domain.
 - [STABLE] [`cnry_decompose`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.cnry_decompose.html): Added decomposition for CnRY gate.
 - [STABLE] [`cnrz_decompose`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.cnrz_decompose.html): Added decomposition for CnRZ gate.
@@ -34,9 +36,26 @@
 - [STABLE] Added `__eq__` and `__ne__` methods for circuit comparison
 - [STABLE] [`Circuit.depth()`](https://www.mindspore.cn/mindquantum/docs/en/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.depth): Added function to calculate quantum circuit depth with options to include single-qubit gates and align gates to barriers.
 
+#### Simulator
+
+- [STABLE] [`get_reduced_density_matrix`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_reduced_density_matrix): Added functionality to obtain the reduced density matrix of specified qubits by performing partial trace over other qubits.
+- [STABLE] [`get_qs_of_qubits`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_qs_of_qubits): Added functionality to obtain the quantum state of specified qubits. Returns state vector for pure states and density matrix for mixed states. Supports returning quantum states in ket (Dirac) notation.
+- [STABLE] When using "stabilizer" as simulator backend, added support for [`reset`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.reset) to reset quantum states.
+- [STABLE] When using "stabilizer" as simulator backend, added support for [`get_expectation`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation) to calculate the expectation value of a given Hamiltonian in the current quantum state.
+
+#### Compiler
+
+- [STABLE] [`U3Fusion`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.U3Fusion.html): Added compilation rule for fusing consecutive single-qubit gates into a single U3 gate. This rule scans the circuit and combines consecutive single-qubit gates acting on the same qubit into a single U3 gate. For standalone single-qubit gates, they are also converted to U3 form. Global phase tracking and inclusion is optional.
+- [STABLE] [`u3_decompose`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.u3_decompose.html): Added functionality to decompose U3 gates into Z-X-Z-X-Z rotation sequences. Supports both standard decomposition (U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)) and alternative decomposition (U3(θ,φ,λ) = Rz(φ)Rx(π/2)Rz(π-θ)Rx(π/2)Rz(λ-π)). When any rotation angle is constant and equals zero, the corresponding RZ gate will be omitted.
+- [STABLE] [`DecomposeU3`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/compiler/mindquantum.algorithm.compiler.DecomposeU3.html): Added compilation rule for U3 gate decomposition, breaking down U3 gates into Z-X-Z-X-Z rotation sequences. Supports both standard and alternative decomposition methods.
+
 #### IO
 
 - [STABLE] [`QCIS`](https://www.mindspore.cn/mindquantum/docs/en/master/io/mindquantum.io.QCIS.html): Added quantum circuit and QCIS format conversion class
+
+#### Utilities
+
+- [STABLE] [`random_hamiltonian`](https://www.mindspore.cn/mindquantum/docs/en/master/utils/mindquantum.utils.random_hamiltonian.html): Added random Pauli Hamiltonian generation functionality. Supports specifying the number of qubits and Pauli terms, with optional random seed for reproducibility. Generated Hamiltonians can be used for quantum algorithm testing and benchmarking.
 
 ### Breaking Changes
 

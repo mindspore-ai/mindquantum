@@ -10,6 +10,8 @@
 
 - [BETA] [`virtual_distillation`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/error_mitigation/mindquantum.algorithm.error_mitigation.virtual_distillation.html): 新增基于虚拟蒸馏的误差缓解算法，通过创建量子态的虚拟副本并在纠缠系统上进行测量来减少量子噪声。
 - [BETA] [`QuantumNeuron`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/nisq/mindquantum.algorithm.nisq.QuantumNeuron.html): 新增基于重复直到成功（RUS）策略的量子神经元实现，通过量子电路模拟经典神经元行为，应用非线性函数旋转。
+- [STABLE] [`SGAnsatz`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/nisq/mindquantum.algorithm.nisq.SGAnsatz.html): 新增序列生成变分量子线路，可高效生成具有固定键维度的矩阵乘积态。该ansatz通过在相邻量子比特上应用参数化量子线路块，自然适应一维量子多体问题。
+- [STABLE] [`SGAnsatz2D`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/nisq/mindquantum.algorithm.nisq.SGAnsatz2D.html): 新增二维序列生成变分量子线路，可生成字符串键态。支持通过指定二维网格尺寸自动生成遍历路径，或通过自定义线路集合构建特定类型的string-bond态。
 - [STABLE] [`qjpeg`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/library/mindquantum.algorithm.library.qjpeg.html): 新增基于量子傅里叶变换的量子图像压缩算法，可以通过减少量子比特数量来压缩量子图像，同时保留频域中的关键信息。
 - [STABLE] [`cnry_decompose`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.cnry_decompose.html): 新增对CnRY门的分解。
 - [STABLE] [`cnrz_decompose`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.cnrz_decompose.html): 新增对CnRZ门的分解。
@@ -34,9 +36,26 @@
 - [STABLE] 新增`__eq__`和`__ne__`方法，支持电路对象比较。
 - [STABLE] [`Circuit.depth()`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/core/circuit/mindquantum.core.circuit.Circuit.html#mindquantum.core.circuit.Circuit.depth): 新增获取量子线路深度的功能，支持考虑单比特门和栅栏门对电路深度的影响，帮助用户更好地评估和优化量子线路的复杂度。
 
+#### Simulator
+
+- [STABLE] [`get_reduced_density_matrix`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_reduced_density_matrix): 新增获取指定量子比特约化密度矩阵的功能，通过对其他量子比特执行部分迹运算来实现。
+- [STABLE] [`get_qs_of_qubits`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_qs_of_qubits): 新增获取指定量子比特量子态的功能。如果结果态是纯态，则返回态矢量；如果是混态，则返回密度矩阵。支持以 ket 记号（狄拉克记号）格式返回量子态。
+- [STABLE] 模拟器后端选择"stabilizer"时，支持使用[`reset`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.reset)重置量子态。
+- [STABLE] 模拟器后端选择"stabilizer"时，支持使用[`get_expectation`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html#mindquantum.simulator.Simulator.get_expectation)计算给定哈密顿量在当前量子态下的期望值。
+
+#### Compiler
+
+- [STABLE] [`U3Fusion`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.U3Fusion.html): 新增将连续的单量子比特门融合为一个U3门的编译规则。该规则扫描电路并将作用在同一量子比特上的连续单量子比特门组合成单个U3门。对于独立的单量子比特门，也会被转换为U3形式。可选择是否跟踪和包含全局相位。
+- [STABLE] [`u3_decompose`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.u3_decompose.html): 新增将U3门分解为Z-X-Z-X-Z旋转序列的功能。支持标准分解（U3(θ,φ,λ) = Rz(φ)Rx(-π/2)Rz(θ)Rx(π/2)Rz(λ)）和替代分解（U3(θ,φ,λ) = Rz(φ)Rx(π/2)Rz(π-θ)Rx(π/2)Rz(λ-π)）两种方法。当任何旋转角度为常数且等于0时，相应的RZ门将被省略。
+- [STABLE] [`DecomposeU3`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/compiler/mindquantum.algorithm.compiler.DecomposeU3.html): 新增U3门分解的编译规则，将U3门分解为Z-X-Z-X-Z旋转序列。支持标准和替代两种分解方法。
+
 #### IO
 
 - [STABLE] [`QCIS`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/io/mindquantum.io.QCIS.html): 新增量子电路与QCIS格式转换类。
+
+#### Utilities
+
+- [STABLE] [`random_hamiltonian`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/utils/mindquantum.utils.random_hamiltonian.html): 新增随机泡利哈密顿量生成功能。支持指定量子比特数量和泡利项数量，可设置随机种子以保证结果可重现。生成的哈密顿量可用于量子算法测试和基准测试。
 
 ### 破坏性改动
 
