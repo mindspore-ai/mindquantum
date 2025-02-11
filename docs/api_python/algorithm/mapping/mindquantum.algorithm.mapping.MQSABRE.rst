@@ -24,11 +24,11 @@ mindquantum.algorithm.mapping.MQSABRE
         - **circuit** (:class:`~.core.circuit.Circuit`) - 需要映射的量子线路。当前仅支持由单量子比特门和双量子比特门（包括受控门）组成的线路。
         - **topology** (:class:`~.device.QubitsTopology`) - 硬件量子比特拓扑结构。必须是连通的耦合图。
         - **cnoterrorandlength** (List[Tuple[Tuple[int, int], List[float]]]) - 硬件特定的 CNOT 特性。
-            每个条目包含一个元组 (i, j) 指定拓扑中的物理量子比特对，和一个列表 [error_rate, gate_time]，
-            其中 error_rate 是量子比特 i 和 j 之间的 CNOT 错误率（范围：[0, 1]），gate_time 是 CNOT 执行时间（任意单位）。
+          每个条目包含一个元组 (i, j) 指定拓扑中的物理量子比特对，和一个列表 [error_rate, gate_time]，
+          其中 error_rate 是量子比特 i 和 j 之间的 CNOT 错误率（范围：[0, 1]），gate_time 是 CNOT 执行时间（任意单位）。
 
     异常：
-        ValueError：如果拓扑不是连通图。
+        - **ValueError** - 如果拓扑不是连通图。
 
     .. py:method:: solve(w: float = 0.5, alpha1: float = 0.3, alpha2: float = 0.2, alpha3: float = 0.1)
 
@@ -40,13 +40,13 @@ mindquantum.algorithm.mapping.MQSABRE
         3. 执行启发式搜索以优化映射，同时考虑组合代价函数
 
         参数：
-            - **w** (float) - 前瞻权重参数，用于在启发式搜索中平衡当前和未来门操作。范围：[0, 1]。
-                当 w > 0.5 时，偏向未来操作，可能减少电路深度；
-                当 w < 0.5 时，优先考虑当前操作，可能减少总门数。
-                默认值：0.5。
-            - **alpha1** (float) - 代价函数中距离度量（D）的权重。较高的值优先考虑最小化量子比特距离。默认值：0.3。
-            - **alpha2** (float) - 错误率度量（K）的权重。较高的值优先考虑错误率较低的连接。默认值：0.2。
-            - **alpha3** (float) - 门时间度量（T）的权重。较高的值优先考虑更快的门执行路径。默认值：0.1。
+            - **w** (float，可选) - 前瞻权重参数，用于在启发式搜索中平衡当前和未来门操作。范围：[0, 1]。
+              当 w > 0.5 时，偏向未来操作，可能减少电路深度；
+              当 w < 0.5 时，优先考虑当前操作，可能减少总门数。
+              默认值：0.5。
+            - **alpha1** (float，可选) - 代价函数中距离度量（D）的权重。较高的值优先考虑最小化量子比特距离。默认值：0.3。
+            - **alpha2** (float，可选) - 错误率度量（K）的权重。较高的值优先考虑错误率较低的连接。默认值：0.2。
+            - **alpha3** (float，可选) - 门时间度量（T）的权重。较高的值优先考虑更快的门执行路径。默认值：0.1。
 
         返回：
             - mapped_circuit (:class:`~.core.circuit.Circuit`)：插入 SWAP 门后的转换电路
