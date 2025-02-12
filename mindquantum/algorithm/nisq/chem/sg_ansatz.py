@@ -179,7 +179,6 @@ class SGAnsatz2D(Ansatz):
         >>> sg = SGAnsatz2D.from_grid(nrow=2, ncol=3, k=2)
         >>> print(len(sg.circuit))  # Number of quantum gates in the ansatz
         32
-
         >>> # Method 2: Create with custom line set
         >>> line_set = SGAnsatz2D.generate_line_set(2, 3)  # [[0,3,4,1,2,5], [0,1,2,5,4,3]]
         >>> sg = SGAnsatz2D(nqubits=6, k=2, line_set=line_set)
