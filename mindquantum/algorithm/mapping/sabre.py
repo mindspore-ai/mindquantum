@@ -122,7 +122,7 @@ class SABRE:
 
         Returns:
             - mapped_circuit (:class:`~.core.circuit.Circuit`): Quantum circuit compatible with hardware
-                topology after adding SWAP gates
+              topology after adding SWAP gates
             - initial_mapping (List[int]): Mapping from logical to physical qubits at the start of execution
             - final_mapping (List[int]): Mapping from logical to physical qubits at the end of execution
 
