@@ -143,7 +143,7 @@ def qudit_symmetric_decoding(qubit: np.ndarray, n_qubits: int = 1) -> np.ndarray
         \end{align}
 
     The symmetry requires that states in the same symmetric subspace must have equal amplitudes.
-    For example, states |01⟩ and |10⟩ belong to the same symmetric subspace and must have equal amplitudes.
+    For example, states ¦01⟩ and ¦10⟩ belong to the same symmetric subspace and must have equal amplitudes.
 
     Args:
         qubit (np.ndarray): the qubit symmetric state or matrix that needs to be decoded,
@@ -485,9 +485,9 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
 
     For a single qutrit (mapped to 2 qubits), the symmetric subspaces are:
 
-    - {|00⟩} for qutrit state |0⟩
-    - {(|01⟩+|10⟩)/√2} for qutrit state |1⟩
-    - {|11⟩} for qutrit state |2⟩
+    - {¦00⟩} for qutrit state ¦0⟩
+    - {(¦01⟩+¦10⟩)/√2} for qutrit state ¦1⟩
+    - {¦11⟩} for qutrit state ¦2⟩
 
     Reference: `Synthesis of multivalued quantum logic circuits by elementary gates
     <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.87.012325>`_,
