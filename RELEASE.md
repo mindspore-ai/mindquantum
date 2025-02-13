@@ -90,6 +90,14 @@
 - Enhanced clarity of warning messages when MindSpore is not installed.
 - Changed `pip` source to Tsinghua mirror.
 
+### Contributor
+
+Thanks to the following developers for their contributions:
+
+Arapat Ablimit, Chufan Lyu, GhostArtyom, LuoJianing, Mr1G, Waikikilick, donghufeng, dsdsdshe, xuxusheng, yuhan, zengqg, zhouyuanyang2024, 王上, 杨金元, 糖醋排骨.
+
+Welcome contributions to the project in any form!
+
 ## MindQuantum 0.9.11 Release Notes
 
 ### Major Feature and Improvements
