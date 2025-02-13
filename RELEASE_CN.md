@@ -90,6 +90,14 @@
 - 提升了未安装 **MindSpore** 时警告信息的清晰度。
 - 将 `pip` 源更改为清华镜像源。
 
+### 贡献者
+
+感谢以下开发者做出的贡献：
+
+Arapat Ablimit, Chufan Lyu, GhostArtyom, LuoJianing, Mr1G, Waikikilick, donghufeng, dsdsdshe, xuxusheng, yuhan, zengqg, zhouyuanyang2024, 王上, 杨金元, 糖醋排骨.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindQuantum 0.9.11 Release Notes
 
 ### 主要特性和增强
