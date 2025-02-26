@@ -11,7 +11,7 @@ mindquantum.algorithm.library.qutrit_symmetric_ansatz
     对于单个qutrit(映射到2个qubit),对称子空间为:
 
     - :math:`\{|00\rangle\}` 对应qutrit态 :math:`|0\rangle`
-    - :math:`\{|01\rangle, |10\rangle\}` 对应qutrit态 :math:`|1\rangle`
+    - :math:`\{(|01\rangle+|10\rangle)/\sqrt{2}\}` 对应qutrit态 :math:`|1\rangle`
     - :math:`\{|11\rangle\}` 对应qutrit态 :math:`|2\rangle`
 
     参考文献：

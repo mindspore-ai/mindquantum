@@ -486,7 +486,7 @@ def qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: 
     For a single qutrit (mapped to 2 qubits), the symmetric subspaces are:
 
     - {|00⟩} for qutrit state |0⟩
-    - {|01⟩, |10⟩} for qutrit state |1⟩
+    - {(|01⟩+|10⟩)/√2} for qutrit state |1⟩
     - {|11⟩} for qutrit state |2⟩
 
     Reference: `Synthesis of multivalued quantum logic circuits by elementary gates
