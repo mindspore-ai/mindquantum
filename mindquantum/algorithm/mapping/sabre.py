@@ -63,7 +63,7 @@ class SABRE:
 
     def __init__(self, circuit: Circuit, topology: QubitsTopology):
         """Initialize a sabre qubit mapping solver."""
-        self.circuit = circuit
+        self.circuit = circuit.remove_barrier()
         self.topology = topology
         self.cpp_solver = SABRE_(self.circuit.get_cpp_obj(), self.topology.__get_cpp_obj__())
 
