@@ -63,7 +63,7 @@ class SABRE:
 
     def __init__(self, circuit: Circuit, topology: QubitsTopology):
         """Initialize a sabre qubit mapping solver."""
-        self.circuit = circuit
+        self.circuit = circuit.remove_barrier()
         self.topology = topology
         self.cpp_solver = SABRE_(self.circuit.get_cpp_obj(), self.topology.__get_cpp_obj__())
 
@@ -122,7 +122,7 @@ class SABRE:
 
         Returns:
             - mapped_circuit (:class:`~.core.circuit.Circuit`): Quantum circuit compatible with hardware
-                topology after adding SWAP gates
+              topology after adding SWAP gates
             - initial_mapping (List[int]): Mapping from logical to physical qubits at the start of execution
             - final_mapping (List[int]): Mapping from logical to physical qubits at the end of execution
 

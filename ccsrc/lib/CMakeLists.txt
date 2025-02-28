@@ -16,7 +16,7 @@
 #
 # ==============================================================================
 
-add_subdirectory(algorithm)
+# add_subdirectory(algorithm)
 add_subdirectory(mq_base)
 add_subdirectory(simulator)
 add_subdirectory(device)

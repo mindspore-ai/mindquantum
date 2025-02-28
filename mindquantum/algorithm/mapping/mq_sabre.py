@@ -85,7 +85,7 @@ class MQSABRE:
         self, circuit: Circuit, topology: QubitsTopology, cnoterrorandlength: List[Tuple[Tuple[int, int], List[float]]]
     ):
         """Initialize a sabre qubit mapping solver."""
-        self.circuit = circuit
+        self.circuit = circuit.remove_barrier()
         self.topology = topology
         self.cnoterrorandlength = cnoterrorandlength
         self.cpp_solver = MQ_SABRE_(
