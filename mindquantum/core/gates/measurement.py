@@ -195,10 +195,60 @@ class MeasureResult:
     def __init__(self):
         """Initialize a MeasureResult object."""
         self.measures = []
-        self.keys = []
-        self.samples = np.array([])
+        self._keys = []
+        self._samples = np.array([])
         self.bit_string_data = {}
         self.shots = 0
+
+    @property
+    def keys(self):
+        """
+        Get the list of measurement keys.
+
+        .. note::
+            The variable `MeasureResult.keys` has been unified to little-endian order in version 0.10,
+            which means the order of keys has been reversed from the previous big-endian format.
+            If you used this variable in version 0.9, please review and adjust your code carefully.
+        """
+        import warnings
+
+        warnings.warn(
+            "The variable `MeasureResult.keys` has been unified to little-endian order in version 0.10, "
+            "which means the order of keys has been reversed from the previous big-endian format. "
+            "If you used this variable in version 0.9, please review and adjust your code carefully.",
+            UserWarning,
+            stacklevel=2,
+        )
+        return self._keys
+
+    @keys.setter
+    def keys(self, value):
+        self._keys = value
+
+    @property
+    def samples(self):
+        """
+        Get the sampling result array.
+
+        .. note::
+            The variable `MeasureResult.samples` has been unified to little-endian order in version 0.10,
+            which means the columns of the samples array have been reversed from the previous big-endian format.
+            If you used this variable in version 0.9, please review and adjust your code carefully.
+        """
+        import warnings
+
+        warnings.warn(
+            "The variable `MeasureResult.samples` has been unified to little-endian order in version 0.10, "
+            "which means the columns of the samples array have been reversed from the previous big-endian format. "
+            "If you used this variable in version 0.9, please review and adjust your code carefully.",
+            UserWarning,
+            stacklevel=2,
+        )
+        return self._samples
+
+    @samples.setter
+    def samples(self, value):
+        self._samples = value
 
     def add_measure(self, measure):
         """
@@ -215,15 +265,15 @@ class MeasureResult:
             if not isinstance(meas, Measure):
                 raise ValueError("Measurement gates need to be objects of class 'Measurement' ")
         for meas in reversed(measure):
-            if meas.key in self.keys:
+            if meas.key in self._keys:
                 raise ValueError(f"Measure key {meas.key} already defined.")
             self.measures.append(meas)
-            self.keys.append(meas.key)
+            self._keys.append(meas.key)
 
     @property
     def keys_map(self):
         """Reverse mapping for the keys."""
-        return {i: j for j, i in enumerate(self.keys)}
+        return {i: j for j, i in enumerate(self._keys)}
 
     def collect_data(self, samples):
         """
@@ -235,9 +285,9 @@ class MeasureResult:
                 times, and M represents the number of keys in this measurement container
         """
         out = {}
-        self.samples = samples
-        self.shots = len(self.samples)
-        for string in self.samples:
+        self._samples = samples
+        self.shots = len(self._samples)
+        for string in self._samples:
             string = ''.join([str(i) for i in string])
             if string in out:
                 out[string] += 1
@@ -284,11 +334,11 @@ class MeasureResult:
             {'00': 127, '01': 107, '10': 136, '11': 130}
         """
         for key in keys:
-            if key not in self.keys:
+            if key not in self._keys:
                 raise ValueError(f'{key} not in this measure result.')
         keys_map = self.keys_map
         idx = [keys_map[key] for key in keys]
-        samples = self.samples[:, idx]
+        samples = self._samples[:, idx]
         res = MeasureResult()
         res.add_measure([self.measures[i] for i in idx])
         res.collect_data(samples)
@@ -376,7 +426,7 @@ class MeasureResult:
             _check_input_type('filename', str, filename)
 
         data = {
-            "keys": self.keys,
+            "keys": self._keys,
             "data": self.data,
             "shots": self.shots,
         }
@@ -397,9 +447,9 @@ class MeasureResult:
             MeasureResult, A new MeasureResult object with reversed endian.
         """
         new_result = MeasureResult()
-        new_result.keys = self.keys[::-1]
+        new_result.keys = self._keys[::-1]
         new_result.measures = self.measures[::-1]
         new_result.bit_string_data = {bit_string[::-1]: count for bit_string, count in self.bit_string_data.items()}
-        new_result.samples = np.fliplr(self.samples)
+        new_result.samples = np.fliplr(self._samples)
         new_result.shots = self.shots
         return new_result
