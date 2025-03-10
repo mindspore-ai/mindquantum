@@ -27,6 +27,15 @@ mindquantum.core.gates.MeasureResult
         返回：
             dict，采样数据。
 
+    .. py:method:: keys
+        :property:
+
+        获取测量键的列表。
+
+        .. note::
+            从0.10版本开始，`MeasureResult.keys` 变量已统一为小端序，这意味着键的顺序与之前的大端格式相比已经反转。
+            如果您在0.9版本中使用了此变量，请仔细地检查并调整您的代码。
+
     .. py:method:: keys_map
         :property:
 
@@ -40,6 +49,15 @@ mindquantum.core.gates.MeasureResult
 
         返回：
             MeasureResult，一个新的 MeasureResult 对象，具有反转的字节序。
+
+    .. py:method:: samples
+        :property:
+
+        获取采样结果数组。
+
+        .. note::
+            从0.10版本开始，`MeasureResult.samples` 变量已统一为小端序，这意味着样本数组的列与之前的大端格式相比已经反转。
+            如果您在0.9版本中使用了此变量，请仔细地检查并调整您的代码。
 
     .. py:method:: select_keys(*keys)
 
