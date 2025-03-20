@@ -318,7 +318,7 @@ mindquantum.core.circuit.Circuit
         移除某些量子比特上所有的测量门。
 
         参数：
-            - **qubit** (Union[int, list[int]]) - 需要删除测量门的量子比特。
+            - **qubits** (Union[int, list[int]]) - 需要删除测量门的量子比特。
 
     .. py:method:: remove_noise()
 

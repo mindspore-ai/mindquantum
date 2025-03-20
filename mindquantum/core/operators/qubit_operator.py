@@ -54,7 +54,7 @@ class QubitOperator(QubitOperator_):
     operators = ('X', 'Y', 'Z'), different_indices_commute = True.
 
     Args:
-        term (Union[str, QubitOperator]): The input term of qubit operator. Default: ``None``.
+        terms (Union[str, QubitOperator]): The input term of qubit operator. Default: ``None``.
         coefficient (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]): The
             coefficient of this qubit operator, could be a number or a variable
             represent by a string or a symbol or a parameter resolver. Default: ``1.0``.
