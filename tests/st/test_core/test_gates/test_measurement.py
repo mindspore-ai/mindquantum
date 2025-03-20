@@ -32,15 +32,15 @@ def test_measure_result_reverse_endian():
     sim = Simulator("mqvector", 10)
     res = sim.sampling(circ, shots=100)
 
-    original_keys = res.keys.copy()
+    original_keys = res._keys.copy()
     original_data = res.data.copy()
     reversed_res = res.reverse_endian()
 
-    assert reversed_res.keys == original_keys[::-1]
+    assert reversed_res._keys == original_keys[::-1]
 
     for bit_string, count in original_data.items():
         reversed_string = bit_string[::-1]
         assert reversed_res.data[reversed_string] == count
 
     assert reversed_res.shots == res.shots
-    assert np.array_equal(reversed_res.samples, np.fliplr(res.samples))
+    assert np.array_equal(reversed_res._samples, np.fliplr(res._samples))

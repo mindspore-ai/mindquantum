@@ -125,7 +125,7 @@ measure cout[0] -> ans[4];
     sim = Simulator('mqvector', circ.n_qubits)
     s_1 = sim.sampling(init + circ, shots=50, seed=42)
     s_2 = sim.sampling(init + exp_circ, shots=50, seed=42)
-    assert np.all(s_1.samples == s_2.samples)
+    assert np.all(s_1._samples == s_2._samples)
 
 
 # pylint: disable=invalid-name
@@ -178,4 +178,4 @@ measure q -> c;
     sim = Simulator('mqvector', circ.n_qubits)
     s_1 = sim.sampling(init + circ, shots=50, seed=42)
     s_2 = sim.sampling(init + exp_circ, shots=50, seed=42)
-    assert np.all(s_1.samples == s_2.samples)
+    assert np.all(s_1._samples == s_2._samples)
