@@ -17,6 +17,7 @@
 """Test gate."""
 
 from mindquantum.utils import random_circuit
+from mindquantum.core.circuit import Circuit
 from mindquantum.simulator import Simulator
 import numpy as np
 
@@ -44,3 +45,16 @@ def test_measure_result_reverse_endian():
 
     assert reversed_res.shots == res.shots
     assert np.array_equal(reversed_res._samples, np.fliplr(res._samples))
+
+def test_measure_result_select_keys():
+    """
+    Description: Test select_keys method of MeasureResult
+    Expectation: success.
+    """
+    circ = Circuit().x(0).x(1).x(2).x(2).measure_all()
+    sim = Simulator("mqvector", 3)
+    res = sim.sampling(circ, shots=10)
+    new_res = res.select_keys('q1', 'q2')
+    assert new_res._keys == ['q2', 'q1']
+    assert np.all(new_res._samples == res._samples[:, [0, 1]])
+    assert new_res.data == {'01': 10}
