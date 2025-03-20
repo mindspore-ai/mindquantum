@@ -13,7 +13,7 @@ mindquantum.core.operators.QubitOperator
     QubitOperator的属性设置如下：operators = ('X', 'Y', 'Z')，different_indices_commute = True。
 
     参数：
-        - **term** (Union[str, QubitOperator]) - 量子比特运算符的输入项。默认值： ``None``。
+        - **terms** (Union[str, QubitOperator]) - 量子比特运算符的输入项。默认值： ``None``。
         - **coefficient** (Union[numbers.Number, str, Dict[str, numbers.Number], ParameterResolver]) - 此量子比特运算符的系数，可以是由字符串、符号或参数解析器表示的数字或变量。默认值： ``1.0``。
         - **internal** (bool) - 第一个参数是否为泡利算符对象的内部c++类。默认值： ``False``。
 
