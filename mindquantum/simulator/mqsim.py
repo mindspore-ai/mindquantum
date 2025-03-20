@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Mindquantum simulator."""
+import warnings
 from typing import Dict, Iterable, List, Union
 
 import numpy as np
@@ -109,6 +110,12 @@ class MQSim(BackendBase):
             if pr is None:
                 raise ValueError("Applying a parameterized circuit needs a parameter_resolver.")
             pr = _check_and_generate_pr_type(pr, circuit.params_name)
+            if pr.is_complex:
+                warnings.warn(
+                    "Simulator does not support complex number, the imaginary part will be ignored",
+                    UserWarning,
+                    stacklevel=3,
+                )
         else:
             pr = ParameterResolver()
         res = self.sim.apply_circuit(circuit.get_cpp_obj(), pr)
@@ -139,6 +146,12 @@ class MQSim(BackendBase):
                     pr = _check_and_generate_pr_type(pr, list(set(sum([p.params_name for p in gate.prs], []))))
                 else:
                     pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
+                if pr.is_complex:
+                    warnings.warn(
+                        "Simulator does not support complex number, the imaginary part will be ignored",
+                        UserWarning,
+                        stacklevel=3,
+                    )
             else:
                 pr = ParameterResolver()
             if isinstance(gate, Measure):
