@@ -338,7 +338,7 @@ class MeasureResult:
                 raise ValueError(f'{key} not in this measure result.')
         keys_map = self.keys_map
         idx = [keys_map[key] for key in keys]
-        samples = self._samples[:, idx]
+        samples = self._samples[:, idx[::-1]] # little endian
         res = MeasureResult()
         res.add_measure([self.measures[i] for i in idx])
         res.collect_data(samples)
