@@ -1069,7 +1069,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Remove all measure gate on some certain qubits.
 
         Args:
-            qubit (Union[int, list[int]]): The qubits you want to remove measure.
+            qubits (Union[int, list[int]]): The qubits you want to remove measure.
 
         Examples:
             >>> from mindquantum.core.circuit import UN

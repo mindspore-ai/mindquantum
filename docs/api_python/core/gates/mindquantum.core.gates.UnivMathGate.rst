@@ -9,7 +9,7 @@ mindquantum.core.gates.UnivMathGate
 
     参数：
         - **name** (str) - 此门的名称。
-        - **mat** (np.ndarray) - 此门的矩阵值。
+        - **matrix_value** (np.ndarray) - 此门的矩阵值。
 
     .. py:method:: get_cpp_obj()
 
