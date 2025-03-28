@@ -49,6 +49,13 @@ tensor::Matrix FSimMatrix(tensor::Tensor theta, tensor::Tensor phi) {
 tensor::Matrix RnMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tensor gamma) {
     auto cmplx = tensor::ToComplexType(alpha.dtype);
     auto c = tensor::ops::sqrt(alpha * alpha + beta * beta + gamma * gamma);
+
+    if (tensor::ops::is_all_zero(c)) {
+        auto one = tensor::ops::ones(1, cmplx);
+        auto zero = tensor::ops::zeros(1, cmplx);
+        return tensor::Matrix(tensor::ops::gather({one, zero, zero, one}), 2, 2);
+    }
+
     auto cx = (alpha / c).astype(cmplx);
     auto cy = (beta / c).astype(cmplx);
     auto cz = (gamma / c).astype(cmplx);
@@ -61,9 +68,15 @@ tensor::Matrix RnMatrix(tensor::Tensor alpha, tensor::Tensor beta, tensor::Tenso
     auto m = v1 - v2 * im * sc_2;
     return tensor::Matrix(std::move(m), 2, 2);
 }
+
 tensor::Matrix RnDiffAlphaMatrix(tensor::Tensor a, tensor::Tensor b, tensor::Tensor c) {
     auto cmplx = tensor::ToComplexType(a.dtype);
     auto f = tensor::ops::sqrt(a * a + b * b + c * c);
+
+    if (tensor::ops::is_all_zero(f)) {
+        return tensor::Matrix(tensor::ops::zeros(4, cmplx), 2, 2);
+    }
+
     auto fa = a / f;
     auto cc_2 = tensor::ops::cos(f / 2.0).astype(c.dtype);
     auto sc_2 = tensor::ops::sin(f / 2.0).astype(c.dtype);
@@ -81,6 +94,11 @@ tensor::Matrix RnDiffAlphaMatrix(tensor::Tensor a, tensor::Tensor b, tensor::Ten
 tensor::Matrix RnDiffBetaMatrix(tensor::Tensor a, tensor::Tensor b, tensor::Tensor c) {
     auto cmplx = tensor::ToComplexType(a.dtype);
     auto f = tensor::ops::sqrt(a * a + b * b + c * c);
+
+    if (tensor::ops::is_all_zero(f)) {
+        return tensor::Matrix(tensor::ops::zeros(4, cmplx), 2, 2);
+    }
+
     auto fb = b / f;
     auto cc_2 = tensor::ops::cos(f / 2.0).astype(c.dtype);
     auto sc_2 = tensor::ops::sin(f / 2.0).astype(c.dtype);
@@ -98,6 +116,11 @@ tensor::Matrix RnDiffBetaMatrix(tensor::Tensor a, tensor::Tensor b, tensor::Tens
 tensor::Matrix RnDiffGammaMatrix(tensor::Tensor a, tensor::Tensor b, tensor::Tensor c) {
     auto cmplx = tensor::ToComplexType(a.dtype);
     auto f = tensor::ops::sqrt(a * a + b * b + c * c);
+
+    if (tensor::ops::is_all_zero(f)) {
+        return tensor::Matrix(tensor::ops::zeros(4, cmplx), 2, 2);
+    }
+
     auto fc = c / f;
     auto cc_2 = tensor::ops::cos(f / 2.0).astype(c.dtype);
     auto sc_2 = tensor::ops::sin(f / 2.0).astype(c.dtype);
