@@ -59,7 +59,7 @@ class UnivMathGate(NoneParamNonHermMat):
 
     Args:
         name (str): the name of this gate.
-        mat (np.ndarray): the matrix value of this gate.
+        matrix_value (np.ndarray): the matrix value of this gate.
 
     Examples:
         >>> from mindquantum.core.gates import UnivMathGate
@@ -1757,7 +1757,7 @@ class Power(NoneParamNonHermMat):
     Power operator on a non parameterized gate.
 
     Args:
-        gates (:class:`~.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
+        gate (:class:`~.core.gates.NoneParameterGate`): The basic gate you need to apply power operator.
         exponent (int, float): The exponent. Default: ``0.5``.
 
     Examples:

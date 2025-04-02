@@ -21,6 +21,7 @@ import os
 from collections.abc import Iterable
 from types import FunctionType, MethodType
 from typing import List, Optional
+import warnings
 
 import numpy as np
 from rich.box import ROUNDED
@@ -972,6 +973,12 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         if pr is None:
             pr = ParameterResolver()
         pr = _check_and_generate_pr_type(pr, self.params_name)
+        if pr.is_complex:
+            warnings.warn(
+                "Simulator does not support complex number, the imaginary part will be ignored",
+                UserWarning,
+                stacklevel=2,
+            )
         if self.has_measure_gate:
             raise ValueError("This circuit cannot have measurement gate.")
         if self.is_noise_circuit:
@@ -1069,7 +1076,7 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
         Remove all measure gate on some certain qubits.
 
         Args:
-            qubit (Union[int, list[int]]): The qubits you want to remove measure.
+            qubits (Union[int, list[int]]): The qubits you want to remove measure.
 
         Examples:
             >>> from mindquantum.core.circuit import UN

@@ -11,6 +11,9 @@ mindquantum.algorithm.qaia.DSB
         为了内存效率，输入数组 'x' 不会被复制，并且会在优化过程中被原地修改。
         如果需要保留原始数据，请使用 `x.copy()` 传入副本。
 
+        当使用backend='gpu-int8'时，请注意该后端可能在稠密图或具有连续系数的图上表现不佳。
+        在这些情况下，可以尝试调整参数或考虑使用'cpu-float32'或'gpu-float16'后端。
+
     参数：
         - **J** (Union[numpy.array, scipy.sparse.spmatrix]) - 耦合矩阵，维度为 :math:`(N \times N)`。
         - **h** (numpy.array) - 外场强度，维度为 :math:`(N, )`。

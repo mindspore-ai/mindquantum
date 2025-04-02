@@ -192,6 +192,10 @@ class BSB(SB):  # noqa: N801
         in-place during optimization. If you need to preserve the original data,
         please pass a copy using `x.copy()`.
 
+        When using backend='gpu-int8', be aware that it may not perform well on dense graphs
+        or graphs with continuous coefficients. Please try adjusting parameters or consider
+        using 'cpu-float32' or 'gpu-float16' in these cases.
+
     Args:
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
         h (numpy.array): The external field with shape (N, ).
@@ -307,6 +311,10 @@ class DSB(SB):  # noqa: N801
         For memory efficiency, the input array 'x' is not copied and will be modified
         in-place during optimization. If you need to preserve the original data,
         please pass a copy using `x.copy()`.
+
+        When using backend='gpu-int8', be aware that it may not perform well on dense graphs
+        or graphs with continuous coefficients. Please try adjusting parameters or consider
+        using 'cpu-float32' or 'gpu-float16' in these cases.
 
     Args:
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
