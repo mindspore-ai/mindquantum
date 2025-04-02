@@ -31,6 +31,8 @@ try:
 except FileNotFoundError:
     _HAS_GPU = False
 
+# Temporarily disable QAIA GPU module in version 0.10
+_HAS_GPU = False
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu

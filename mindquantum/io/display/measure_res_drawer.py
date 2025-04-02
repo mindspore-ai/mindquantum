@@ -37,7 +37,7 @@ def measure_text_drawer(res):  # pylint: disable=too-many-locals
     axis_mask = _res_text_drawer_config['axis_mask']
     split = _res_text_drawer_config['spilit']
     deci = _res_text_drawer_config['deci']
-    keys = res.keys
+    keys = res._keys # pylint: disable=protected-access
     max_shot = max(res.data.values())
     if res.shots != 0:
         max_prop = max_shot / res.shots
