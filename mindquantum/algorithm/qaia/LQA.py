@@ -113,17 +113,18 @@ class LQA(QAIA):
 
         for i in range(1, self.n_iter):
             t = i / self.n_iter
-            tmp = np.pi / 2 * np.tanh(self.x)
+            tanh_x = np.tanh(self.x)
+            tmp = np.pi / 2 * tanh_x
             z = np.sin(tmp)
             y = np.cos(tmp)
             if self.h is None:
-                dx = np.pi / 2 * (-t * self.gamma * self.J.dot(z) * y + (1 - t) * z) * (1 - np.tanh(self.x) ** 2)
+                dx = np.pi / 2 * (-t * self.gamma * self.J.dot(z) * y + (1 - t) * z) * (1 - tanh_x ** 2)
             else:
                 dx = (
                     np.pi
                     / 2
                     * (-t * self.gamma * (self.J.dot(z) + self.h) * y + (1 - t) * z)
-                    * (1 - np.tanh(self.x) ** 2)
+                    * (1 - tanh_x ** 2)
                 )
 
             # momentum beta1
