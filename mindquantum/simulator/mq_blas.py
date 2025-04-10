@@ -23,7 +23,7 @@ from .. import mqbackend  # noqa: F401  # pylint: disable=unused-import
 
 # isort: split
 
-from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR # pylint: disable=wrong-import-order
 
 from .mqsim import MQSim
 
