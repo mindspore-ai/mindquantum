@@ -18,6 +18,14 @@ import numpy as np
 from scipy import sparse as sp
 from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
 
+try:
+    import torch
+
+    assert torch.cuda.is_available()
+    _INSTALL_TORCH = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH = False
+
 
 class QAIA:
     r"""
@@ -37,10 +45,12 @@ class QAIA:
             Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1):
+    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, backend='cpu-float32'):
         """Construct a QAIA algorithm."""
         if not isinstance(J, (np.ndarray, sp.spmatrix)):
             raise TypeError(f"J requires numpy.array or scipy sparse matrix, but get {type(J)}")
@@ -63,10 +73,27 @@ class QAIA:
             if x.shape[0] != J.shape[0] or x.shape[1] != batch_size:
                 raise ValueError(f"x must have shape ({J.shape[0]}, {batch_size}), but got {x.shape}")
 
+        valid_backends = {'cpu-float32', 'gpu-float32'}
+        if not isinstance(backend, str):
+            raise TypeError(f"backend requires a string, but get {type(backend)}")
+        if backend not in valid_backends:
+            raise ValueError(f"backend must be one of {valid_backends}")
+
         _check_int_type("n_iter", n_iter)
         _check_value_should_not_less("n_iter", 1, n_iter)
         _check_int_type("batch_size", batch_size)
         _check_value_should_not_less("batch_size", 1, batch_size)
+
+        if backend == "gpu-float32" and _INSTALL_TORCH:
+            if J.layout != torch.sparse_csr:
+                J = J.to("cuda")
+                J = J.to_sparse_csr()
+            h = h.to("cuda")
+
+        elif backend == "gpu-float32" and not _INSTALL_TORCH:
+            raise ImportError(
+                "Please install pytorch before using qaia gpu version, ensure that the environment has any GPU."
+            )
 
         self.J = J
         self.h = h
@@ -75,11 +102,15 @@ class QAIA:
         self.N = self.J.shape[0]
         self.n_iter = n_iter
         self.batch_size = batch_size
+        self.backend = backend
 
     def initialize(self):
         """Randomly initialize spin values."""
         if self.x is None:
-            self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
+            if self.backend == "cpu-float32":
+                self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
+            elif self.backend == "gpu-float32":
+                self.x = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
 
     def calc_cut(self, x=None):
         r"""
@@ -89,12 +120,21 @@ class QAIA:
             x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
-        if x is None:
-            sign = np.sign(self.x)
-        else:
-            sign = np.sign(x)
+        if self.backend == "cpu-float32":
+            if x is None:
+                sign = np.sign(self.x)
+            else:
+                sign = np.sign(x)
+            return 0.25 * np.sum(self.J.dot(sign) * sign, axis=0) - 0.25 * self.J.sum()
 
-        return 0.25 * np.sum(self.J.dot(sign) * sign, axis=0) - 0.25 * self.J.sum()
+        if self.backend == "gpu-float32":
+            if x is None:
+                sign = torch.sign(self.x)
+            else:
+                sign = torch.sign(x)
+            return 0.25 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0) - 0.25 * self.J.sum()
+
+        raise ValueError("invalid backend")
 
     def calc_energy(self, x=None):
         r"""
@@ -104,14 +144,27 @@ class QAIA:
             x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
-        if x is None:
-            sign = np.sign(self.x)
-        else:
-            sign = np.sign(x)
+        if self.backend == "cpu-float32":
+            if x is None:
+                sign = np.sign(self.x)
+            else:
+                sign = np.sign(x)
 
-        if self.h is None:
-            return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0)
-        return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.T.dot(sign)
+            if self.h is None:
+                return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0)
+            return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.T.dot(sign)
+
+        if self.backend == "gpu-float32":
+            if x is None:
+                sign = torch.sign(self.x)
+            else:
+                sign = torch.sign(x)
+
+            if self.h is None:
+                return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0)
+            return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0, keepdim=True) - self.h.T.dot(sign)
+
+        raise ValueError("invalid backend")
 
 
 class OverflowException(Exception):

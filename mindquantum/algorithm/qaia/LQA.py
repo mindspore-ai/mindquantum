@@ -24,6 +24,13 @@ from mindquantum.utils.type_value_check import (
 )
 from .QAIA import QAIA
 
+try:
+    import torch
+
+    _INSTALL_TORCH = True
+except ImportError:
+    _INSTALL_TORCH = False
+
 
 class LQA(QAIA):
     r"""
@@ -48,6 +55,8 @@ class LQA(QAIA):
         dt (float): The step size. Default: ``1``.
         gamma (float): The coupling strength. Default: ``0.1``.
         momentum (float): Momentum factor. Default: ``0.99``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -63,15 +72,7 @@ class LQA(QAIA):
 
     # pylint: disable=too-many-arguments
     def __init__(
-        self,
-        J,
-        h=None,
-        x=None,
-        n_iter=1000,
-        batch_size=1,
-        gamma=0.1,
-        dt=1.0,
-        momentum=0.99,
+        self, J, h=None, x=None, n_iter=1000, batch_size=1, gamma=0.1, dt=1.0, momentum=0.99, backend='cpu-float32'
     ):
         """Construct LQA algorithm."""
         _check_number_type("gamma", gamma)
@@ -83,18 +84,26 @@ class LQA(QAIA):
         _check_number_type("momentum", momentum)
         _check_value_should_between_close_set("momentum", 0, 1, momentum)
 
-        super().__init__(J, h, x, n_iter, batch_size)
-        self.J = csr_matrix(self.J)
+        super().__init__(J, h, x, n_iter, batch_size, backend)
+        if self.backend == "cpu-float32":
+            self.J = csr_matrix(self.J)
+        elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
+            raise ImportError("Please install pytorch before use qaia gpu version.")
+
         self.gamma = gamma
         self.dt = dt
         self.momentum = momentum
+        self.backend = backend
 
         self.initialize()
 
     def initialize(self):
         """Initialize spin values."""
         if self.x is None:
-            self.x = 0.2 * (np.random.rand(self.N, self.batch_size) - 0.5)
+            if self.backend == "cpu-float32":
+                self.x = 0.2 * (np.random.rand(self.N, self.batch_size) - 0.5)
+            elif self.backend == "gpu-float32":
+                self.x = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
 
         if self.x.shape[0] != self.N:
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
@@ -111,27 +120,59 @@ class LQA(QAIA):
         m_dx = 0
         v_dx = 0
 
-        for i in range(1, self.n_iter):
-            t = i / self.n_iter
-            tmp = np.pi / 2 * np.tanh(self.x)
-            z = np.sin(tmp)
-            y = np.cos(tmp)
-            if self.h is None:
-                dx = np.pi / 2 * (-t * self.gamma * self.J.dot(z) * y + (1 - t) * z) * (1 - np.tanh(self.x) ** 2)
-            else:
-                dx = (
-                    np.pi
-                    / 2
-                    * (-t * self.gamma * (self.J.dot(z) + self.h) * y + (1 - t) * z)
-                    * (1 - np.tanh(self.x) ** 2)
-                )
+        if self.backend == "cpu-float32":
+            for i in range(1, self.n_iter):
+                t = i / self.n_iter
+                tmp = np.pi / 2 * np.tanh(self.x)
+                z = np.sin(tmp)
+                y = np.cos(tmp)
+                if self.h is None:
+                    dx = np.pi / 2 * (-t * self.gamma * self.J.dot(z) * y + (1 - t) * z) * (1 - np.tanh(self.x) ** 2)
+                else:
+                    dx = (
+                        np.pi
+                        / 2
+                        * (-t * self.gamma * (self.J.dot(z) + self.h) * y + (1 - t) * z)
+                        * (1 - np.tanh(self.x) ** 2)
+                    )
 
-            # momentum beta1
-            m_dx = beta1 * m_dx + (1 - beta1) * dx
-            # rms beta2
-            v_dx = beta2 * v_dx + (1 - beta2) * dx**2
-            # bias correction
-            m_dx_corr = m_dx / (1 - beta1**i)
-            v_dx_corr = v_dx / (1 - beta2**i)
+                # momentum beta1
+                m_dx = beta1 * m_dx + (1 - beta1) * dx
+                # rms beta2
+                v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                # bias correction
+                m_dx_corr = m_dx / (1 - beta1**i)
+                v_dx_corr = v_dx / (1 - beta2**i)
 
-            self.x = self.x - self.dt * m_dx_corr / (np.sqrt(v_dx_corr) + epsilon)
+                self.x = self.x - self.dt * m_dx_corr / (np.sqrt(v_dx_corr) + epsilon)
+
+        elif self.backend == "gpu-float32":
+            for i in range(1, self.n_iter):
+                t = i / self.n_iter
+                tmp = torch.pi / 2 * torch.tanh(self.x)
+                z = torch.sin(tmp)
+                y = torch.cos(tmp)
+                if self.h is None:
+                    dx = (
+                        torch.pi
+                        / 2
+                        * (-t * self.gamma * torch.sparse.mm(self.J, z) * y + (1 - t) * z)
+                        * (1 - torch.tanh(self.x) ** 2)
+                    )
+                else:
+                    dx = (
+                        np.pi
+                        / 2
+                        * (-t * self.gamma * (torch.sparse.mm(self.J, z) + self.h) * y + (1 - t) * z)
+                        * (1 - torch.tanh(self.x) ** 2)
+                    )
+
+                # momentum beta1
+                m_dx = beta1 * m_dx + (1 - beta1) * dx
+                # rms beta2
+                v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                # bias correction
+                m_dx_corr = m_dx / (1 - beta1**i)
+                v_dx_corr = v_dx / (1 - beta2**i)
+
+                self.x = self.x - self.dt * m_dx_corr / (torch.sqrt(v_dx_corr) + epsilon)

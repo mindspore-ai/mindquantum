@@ -20,6 +20,13 @@ from scipy.sparse import csr_matrix
 from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less
 from .QAIA import QAIA
 
+try:
+    import torch
+
+    _INSTALL_TORCH = True
+except ImportError:
+    _INSTALL_TORCH = False
+
 
 class CFC(QAIA):
     r"""
@@ -42,6 +49,8 @@ class CFC(QAIA):
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.1``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -56,20 +65,16 @@ class CFC(QAIA):
     """
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
-    def __init__(
-        self,
-        J,
-        h=None,
-        x=None,
-        n_iter=1000,
-        batch_size=1,
-        dt=0.1,
-    ):
+    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1, backend='cpu-float32'):
         """Construct CFC algorithm."""
         _check_number_type("dt", dt)
         _check_value_should_not_less("dt", 0, dt)
-        super().__init__(J, h, x, n_iter, batch_size)
-        self.J = csr_matrix(self.J)
+        super().__init__(J, h, x, n_iter, batch_size, backend)
+        if self.backend == "cpu-float32":
+            self.J = csr_matrix(self.J)
+        elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
+            raise ImportError("Please install pytorch before use qaia gpu version.")
+
         self.dt = dt
         # The number of first iterations
         self.Tr = int(0.9 * self.n_iter)
@@ -88,25 +93,49 @@ class CFC(QAIA):
 
     def initialize(self):
         """Initialize spin values and error variables."""
-        if self.x is None:
-            self.x = np.random.normal(0, 0.1, size=(self.N, self.batch_size))
+        if self.backend == "cpu-float32":
+            if self.x is None:
+                self.x = np.random.normal(0, 0.1, size=(self.N, self.batch_size))
 
-        if self.x.shape[0] != self.N:
-            raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
 
-        self.e = np.ones_like(self.x)
+            self.e = np.ones_like(self.x)
+
+        elif self.backend == "gpu-float32":
+            if self.x is None:
+                self.x = torch.normal(0, 0.1, size=(self.N, self.batch_size))
+
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+
+            self.e = torch.ones_like(self.x)
 
     # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution."""
-        for i in range(self.n_iter):
-            if self.h is None:
-                z = self.xi * self.e * (self.J @ self.x)
-            else:
-                z = self.xi * self.e * (self.J @ self.x + self.h)
-            self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
-            self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+        if self.backend == "cpu-float32":
+            for i in range(self.n_iter):
+                if self.h is None:
+                    z = self.xi * self.e * (self.J @ self.x)
+                else:
+                    z = self.xi * self.e * (self.J @ self.x + self.h)
+                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
 
-            cond = np.abs(self.x) > 1.5
-            self.x = np.where(cond, 1.5 * np.sign(self.x), self.x)
-            self.e = np.where(self.e < 0.01, 0.01, self.e)
+                cond = np.abs(self.x) > 1.5
+                self.x = np.where(cond, 1.5 * np.sign(self.x), self.x)
+                self.e = np.where(self.e < 0.01, 0.01, self.e)
+
+        elif self.backend == "gpu-float32":
+            for i in range(self.n_iter):
+                if self.h is None:
+                    z = self.xi * self.e * (torch.sparse.mm(self.J, self.x))
+                else:
+                    z = self.xi * self.e * (torch.sparse.mm(self.J, self.x) + self.h)
+                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+
+                cond = torch.abs(self.x) > 1.5
+                self.x = torch.where(cond, 1.5 * torch.sign(self.x), self.x)
+                self.e = torch.where(self.e < 0.01, 0.01, self.e)

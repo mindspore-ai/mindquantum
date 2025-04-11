@@ -20,6 +20,13 @@ from scipy.sparse import csr_matrix
 from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less
 from .QAIA import QAIA, OverflowException
 
+try:
+    import torch
+
+    _INSTALL_TORCH = True
+except ImportError:
+    _INSTALL_TORCH = False
+
 
 class SFC(QAIA):
     r"""
@@ -43,6 +50,8 @@ class SFC(QAIA):
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.1``.
         k (float): parameter of deviation between mean-field and error variables. Default: ``0.2``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -57,16 +66,7 @@ class SFC(QAIA):
     """
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
-    def __init__(
-        self,
-        J,
-        h=None,
-        x=None,
-        n_iter=1000,
-        batch_size=1,
-        dt=0.1,
-        k=0.2,
-    ):
+    def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1, k=0.2, backend='cpu-float32'):
         """Construct SFC algorithm."""
         _check_number_type("dt", dt)
         _check_value_should_not_less("dt", 0, dt)
@@ -74,8 +74,12 @@ class SFC(QAIA):
         _check_number_type("k", k)
         _check_value_should_not_less("k", 0, k)
 
-        super().__init__(J, h, x, n_iter, batch_size)
-        self.J = csr_matrix(self.J)
+        super().__init__(J, h, x, n_iter, batch_size, backend)
+        if self.backend == "cpu-float32":
+            self.J = csr_matrix(self.J)
+        elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
+            raise ImportError("Please install pytorch before use qaia gpu version.")
+
         self.N = self.J.shape[0]
         self.dt = dt
         self.n_iter = n_iter
@@ -92,9 +96,15 @@ class SFC(QAIA):
 
     def initialize(self):
         """Initialize spin values and error variables."""
-        if self.x is None:
-            self.x = np.random.normal(0, 0.1, (self.N, self.batch_size))
-        self.e = np.zeros_like(self.x)
+        if self.backend == "cpu-float32":
+            if self.x is None:
+                self.x = np.random.normal(0, 0.1, (self.N, self.batch_size))
+            self.e = np.zeros_like(self.x)
+
+        elif self.backend == "gpu-float32":
+            if self.x is None:
+                self.x = torch.normal(0, 0.1, (self.N, self.batch_size))
+            self.e = torch.zeros_like(self.x)
 
         if self.x.shape[0] != self.N:
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
@@ -102,14 +112,28 @@ class SFC(QAIA):
     # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution."""
-        for i in range(self.n_iter):
-            if self.h is None:
-                z = -self.xi * (self.J @ self.x)
-            else:
-                z = -self.xi * (self.J @ self.x + self.h)
-            f = np.tanh(self.c[i] * z)
-            self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
-            self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+        if self.backend == "cpu-float32":
+            for i in range(self.n_iter):
+                if self.h is None:
+                    z = -self.xi * (self.J @ self.x)
+                else:
+                    z = -self.xi * (self.J @ self.x + self.h)
+                f = np.tanh(self.c[i] * z)
+                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
-            if np.isnan(self.x).any():
-                raise OverflowException("Value is too large to handle due to large dt or xi.")
+                if np.isnan(self.x).any():
+                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+
+        elif self.backend == "gpu-float32":
+            for i in range(self.n_iter):
+                if self.h is None:
+                    z = -self.xi * (torch.sparse.mm(self.J, self.x))
+                else:
+                    z = -self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                f = torch.tanh(self.c[i] * z)
+                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+
+                if torch.isnan(self.x).any():
+                    raise OverflowException("Value is too large to handle due to large dt or xi.")
