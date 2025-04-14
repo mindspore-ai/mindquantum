@@ -28,6 +28,7 @@ mindquantum/mindquantum/algorithm/compiler/rules/basic_decompose.py:decom_basic_
 mindquantum/mindquantum/algorithm/nisq/chem/reference_state.py:get_reference_circuit
 mindquantum/mindquantum/io/display/circuit_text_drawer.py:rich_circuit
 mindquantum/mindquantum/utils/f.py:random_insert_gates
+mindquantum/mindquantum/algorithm/qaia/QAIA.py:__init__
 
 mindquantum/ccsrc/lib/simulator/stabilizer/stabilizer.cpp:mindquantum::stabilizer::StabilizerTableau::Decompose
 mindquantum/ccsrc/include/simulator/vector/vector_state.tpp:mindquantum::sim::vector::detail::VectorState<qs_policy_t_>::GetExpectationWithGradParameterShiftOneMulti
