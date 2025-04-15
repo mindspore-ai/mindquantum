@@ -23,9 +23,19 @@ from .QAIA import QAIA
 try:
     import torch
 
+    assert torch.cuda.is_available()
     _INSTALL_TORCH = True
-except ImportError:
+except (ImportError, AssertionError):
     _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
 
 
 class CAC(QAIA):
@@ -50,7 +60,7 @@ class CAC(QAIA):
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.075``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -73,7 +83,11 @@ class CAC(QAIA):
         if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
         elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before use qaia gpu version.")
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
 
         self.N = self.J.shape[0]
         self.dt = dt
@@ -86,7 +100,15 @@ class CAC(QAIA):
         # target amplitude
         self.alpha = np.hstack([np.linspace(1, 3, self.Tr), 3.0 * np.ones(self.Tp)])
         # coupling strength
-        self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+        self.xi = None
+        if self.backend == "cpu-float32":
+            self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+        if self.backend == "gpu-float32":
+            self.xi = torch.sqrt(2 * self.N / torch.sum(self.J.to_dense() ** 2))
+        if self.backend == "npu-float32":
+            self.xi = torch.sqrt(
+                2 * self.N / torch.tensor(csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum())
+            ).npu()
         # rate of change of error variables
         self.beta = 0.3
         self.initialize()
@@ -104,44 +126,61 @@ class CAC(QAIA):
 
         elif self.backend == "gpu-float32":
             if self.x is None:
-                self.x = torch.normal(0, 10 ** (-4), size=(self.N, self.batch_size))
+                self.x = torch.normal(0, 10 ** (-4), size=(self.N, self.batch_size)).to("cuda")
 
             if self.x.shape[0] != self.N:
                 raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
 
-            self.e = torch.ones(self.N, self.batch_size)
+            self.e = torch.ones(self.N, self.batch_size, device="cuda")
+
+        elif self.backend == "npu-float32":
+            if self.x is None:
+                self.x = torch.normal(0, 10 ** (-4), size=(self.N, self.batch_size)).to("npu")
+
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+
+            self.e = torch.ones(self.N, self.batch_size).npu()
 
     # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution."""
         if self.backend == "cpu-float32":
-            for i in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for i in range(self.n_iter):
                     self.x = (
                         self.x
                         + (-self.x**3 + (self.p[i] - 1) * self.x + self.xi * self.e * (self.J @ self.x)) * self.dt
                     )
-                else:
+                    self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
+                    cond = np.abs(self.x) > (1.5 * np.sqrt(self.alpha[i]))
+                    self.x = np.where(cond, 1.5 * np.sign(self.x) * np.sqrt(self.alpha[i]), self.x)
+            else:
+                for i in range(self.n_iter):
                     self.x = (
                         self.x
                         + (-self.x**3 + (self.p[i] - 1) * self.x + self.xi * self.e * (self.J @ self.x + self.h))
                         * self.dt
                     )
-
-                self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
-
-                cond = np.abs(self.x) > (1.5 * np.sqrt(self.alpha[i]))
-                self.x = np.where(cond, 1.5 * np.sign(self.x) * np.sqrt(self.alpha[i]), self.x)
+                    self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
+                    cond = np.abs(self.x) > (1.5 * np.sqrt(self.alpha[i]))
+                    self.x = np.where(cond, 1.5 * np.sign(self.x) * np.sqrt(self.alpha[i]), self.x)
 
         elif self.backend == "gpu-float32":
-            for i in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for i in range(self.n_iter):
                     self.x = (
                         self.x
                         + (-self.x**3 + (self.p[i] - 1) * self.x + self.xi * self.e * torch.sparse.mm(self.J, self.x))
                         * self.dt
                     )
-                else:
+                    self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
+                    cond = torch.abs(self.x) > (1.5 * torch.sqrt(torch.tensor(self.alpha[i])))
+                    self.x = torch.where(
+                        cond, 1.5 * torch.sign(self.x) * torch.sqrt(torch.tensor(self.alpha[i])), self.x
+                    )
+            else:
+                for i in range(self.n_iter):
                     self.x = (
                         self.x
                         + (
@@ -151,8 +190,39 @@ class CAC(QAIA):
                         )
                         * self.dt
                     )
+                    self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
+                    cond = torch.abs(self.x) > (1.5 * torch.sqrt(torch.tensor(self.alpha[i])))
+                    self.x = torch.where(
+                        cond, 1.5 * torch.sign(self.x) * torch.sqrt(torch.tensor(self.alpha[i])), self.x
+                    )
 
-                self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
+        elif self.backend == "npu-float32":
+            if self.h is None:
+                for i in range(self.n_iter):
+                    self.x = (
+                        self.x
+                        + (-self.x**3 + (self.p[i] - 1) * self.x + self.xi * self.e * torch.sparse.mm(self.J, self.x))
+                        * self.dt
+                    )
+                    self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
 
-                cond = torch.abs(self.x) > (1.5 * torch.sqrt(self.alpha[i]))
-                self.x = torch.where(cond, 1.5 * torch.sign(self.x) * torch.sqrt(self.alpha[i]), self.x)
+                    cond = torch.abs(self.x) > (1.5 * torch.sqrt(torch.tensor(self.alpha[i])).npu())
+                    self.x = torch.where(
+                        cond, 1.5 * torch.sign(self.x) * torch.sqrt(torch.tensor(self.alpha[i])).npu(), self.x
+                    )
+            else:
+                for i in range(self.n_iter):
+                    self.x = (
+                        self.x
+                        + (
+                            -self.x**3
+                            + (self.p[i] - 1) * self.x
+                            + self.xi * self.e * (torch.sparse.mm(self.J, self.x) + self.h)
+                        )
+                        * self.dt
+                    )
+                    self.e = self.e + (-self.beta * self.e * (self.x**2 - self.alpha[i])) * self.dt
+                    cond = torch.abs(self.x) > (1.5 * torch.sqrt(torch.tensor(self.alpha[i])).npu())
+                    self.x = torch.where(
+                        cond, 1.5 * torch.sign(self.x) * torch.sqrt(torch.tensor(self.alpha[i])).npu(), self.x
+                    )

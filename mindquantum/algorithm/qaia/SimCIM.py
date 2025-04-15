@@ -27,9 +27,19 @@ from .QAIA import QAIA
 try:
     import torch
 
+    assert torch.cuda.is_available()
     _INSTALL_TORCH = True
-except ImportError:
+except (ImportError, AssertionError):
     _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
 
 
 class SimCIM(QAIA):
@@ -57,7 +67,7 @@ class SimCIM(QAIA):
         sigma (float): The standard deviation of noise. Default: ``0.03``.
         pt (float): Pump parameter. Default: ``6.5``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -99,10 +109,14 @@ class SimCIM(QAIA):
         _check_value_should_not_less("pt", 0, pt)
 
         super().__init__(J, h, x, n_iter, batch_size, backend)
-        if backend == "cpu-float32":
+        if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
         elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before use qaia gpu version.")
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
 
         self.dt = dt
         self.momentum = momentum
@@ -118,53 +132,88 @@ class SimCIM(QAIA):
                 self.x = np.zeros((self.N, self.batch_size))
             # gradient
             self.dx = np.zeros_like(self.x)
-            if self.x.shape[0] != self.N:
-                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
-            # pump-loss factor
-            self.p_list = (np.tanh(np.linspace(-3, 3, self.n_iter)) - 1) * self.pt
 
         elif self.backend == "gpu-float32":
             if self.x is None:
-                self.x = torch.zeros(self.N, self.batch_size)
+                self.x = torch.zeros(self.N, self.batch_size).to("cuda")
             # gradient
-            self.dx = torch.zeros_like(self.x)
-            if self.x.shape[0] != self.N:
-                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
-            # pump-loss factor
-            self.p_list = (np.tanh(np.linspace(-3, 3, self.n_iter)) - 1) * self.pt
+            self.dx = torch.zeros_like(self.x, device="cuda")
+
+        elif self.backend == "npu-float32":
+            if self.x is None:
+                self.x = torch.zeros(self.N, self.batch_size).to("npu")
+            # gradient
+            self.dx = torch.zeros_like(self.x).to("npu")
+
+        if self.x.shape[0] != self.N:
+            raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+        # pump-loss factor
+        self.p_list = (np.tanh(np.linspace(-3, 3, self.n_iter)) - 1) * self.pt
 
     # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution."""
         if self.backend == "cpu-float32":
-            for _, p in zip(range(self.n_iter), self.p_list):
-                if self.h is None:
+            if self.h is None:
+                for _, p in zip(range(self.n_iter), self.p_list):
                     newdc = self.x * p + (
                         self.J.dot(self.x) * self.dt + np.random.normal(size=(self.N, self.batch_size)) * self.sigma
                     )
-                else:
+                    # gradient + momentum
+                    self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
+                    ind = (np.abs(self.x + self.dx) < 1.0).astype(np.int64)
+                    self.x += self.dx * ind
+            else:
+                for _, p in zip(range(self.n_iter), self.p_list):
                     newdc = self.x * p + (
                         (self.J.dot(self.x) + self.h) * self.dt
                         + np.random.normal(size=(self.N, self.batch_size)) * self.sigma
                     )
-                # gradient + momentum
-                self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
-                ind = (np.abs(self.x + self.dx) < 1.0).astype(np.int64)
-                self.x += self.dx * ind
+                    # gradient + momentum
+                    self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
+                    ind = (np.abs(self.x + self.dx) < 1.0).astype(np.int64)
+                    self.x += self.dx * ind
 
         elif self.backend == "gpu-float32":
-            for _, p in zip(range(self.n_iter), self.p_list):
-                if self.h is None:
+            if self.h is None:
+                for _, p in zip(range(self.n_iter), self.p_list):
                     newdc = self.x * p + (
                         torch.sparse.mm(self.J, self.x) * self.dt
-                        + torch.normal(size=(self.N, self.batch_size)) * self.sigma
+                        + torch.normal(0, 1, size=(self.N, self.batch_size)).to("cuda") * self.sigma
                     )
-                else:
+                    # gradient + momentum
+                    self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
+                    ind = (torch.abs(self.x + self.dx) < 1.0).to(torch.int64)
+                    self.x += self.dx * ind
+            else:
+                for _, p in zip(range(self.n_iter), self.p_list):
                     newdc = self.x * p + (
                         (torch.sparse.mm(self.J, self.x) + self.h) * self.dt
-                        + torch.normal(size=(self.N, self.batch_size)) * self.sigma
+                        + torch.normal(0, 1, size=(self.N, self.batch_size)).to("cuda") * self.sigma
                     )
-                # gradient + momentum
-                self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
-                ind = (torch.abs(self.x + self.dx) < 1.0).to(torch.int64)
-                self.x += self.dx * ind
+                    # gradient + momentum
+                    self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
+                    ind = (torch.abs(self.x + self.dx) < 1.0).to(torch.int64)
+                    self.x += self.dx * ind
+
+        elif self.backend == "npu-float32":
+            if self.h is None:
+                for _, p in zip(range(self.n_iter), self.p_list):
+                    newdc = self.x * p + (
+                        torch.sparse.mm(self.J, self.x) * self.dt
+                        + torch.normal(0, 1, size=(self.N, self.batch_size)).to("npu") * self.sigma
+                    )
+                    # gradient + momentum
+                    self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
+                    ind = (torch.abs(self.x + self.dx) < 1.0).to(torch.int64)
+                    self.x += self.dx * ind
+            else:
+                for _, p in zip(range(self.n_iter), self.p_list):
+                    newdc = self.x * p + (
+                        (torch.sparse.mm(self.J, self.x) + self.h) * self.dt
+                        + torch.normal(0, 1, size=(self.N, self.batch_size)).to("npu") * self.sigma
+                    )
+                    # gradient + momentum
+                    self.dx = self.dx * self.momentum + newdc * (1 - self.momentum)
+                    ind = (torch.abs(self.x + self.dx) < 1.0).to(torch.int64)
+                    self.x += self.dx * ind

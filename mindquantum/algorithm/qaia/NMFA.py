@@ -27,9 +27,19 @@ from .QAIA import QAIA
 try:
     import torch
 
+    assert torch.cuda.is_available()
     _INSTALL_TORCH = True
-except ImportError:
+except (ImportError, AssertionError):
     _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
 
 
 class NMFA(QAIA):
@@ -55,7 +65,7 @@ class NMFA(QAIA):
         alpha (float): Momentum factor. Default: ``0.15``.
         sigma (float): The standard deviation of noise. Default: ``0.15``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -79,7 +89,8 @@ class NMFA(QAIA):
         _check_value_should_not_less("sigma", 0, sigma)
 
         super().__init__(J, h, x, n_iter, batch_size, backend)
-        self.J = csr_matrix(self.J)
+        if self.backend == "cpu-float32":
+            self.J = csr_matrix(self.J)
         if self.backend == "cpu-float32":
             if self.h is None:
                 self.J_norm = np.sqrt(np.asarray(csr_matrix.power(self.J, 2).sum(axis=1)))
@@ -88,12 +99,23 @@ class NMFA(QAIA):
 
         elif self.backend == "gpu-float32" and _INSTALL_TORCH:
             if self.h is None:
-                self.J_norm = torch.sqrt((self.J**2).sum(dim=1, keepdim=True))
+                self.J_norm = torch.sqrt((self.J.to_dense() ** 2).sum(dim=1, keepdim=True))
             else:
-                self.J_norm = torch.sqrt((self.J**2).sum(dim=1, keepdim=True) + ((self.h) ** 2).sum(1, keepdim=True).T)
+                self.J_norm = torch.sqrt((self.J.to_dense() ** 2).sum(dim=1, keepdim=True) + torch.sum(self.h**2))
 
         elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before use qaia gpu version.")
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+
+        elif self.backend == "npu-float32" and _INSTALL_TORCH_NPU:
+            if self.h is None:
+                self.J_norm = torch.sqrt((self.J.to_dense() ** 2).sum(dim=1, keepdim=True)).npu()
+            else:
+                self.J_norm = torch.sqrt((self.J.to_dense() ** 2).sum(dim=1, keepdim=True) + torch.sum(self.h**2)).npu()
+
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
 
         self.alpha = alpha
         self.sigma = sigma
@@ -108,7 +130,11 @@ class NMFA(QAIA):
 
         elif self.backend == "gpu-float32":
             if self.x is None:
-                self.x = torch.zeros(self.N, self.batch_size)
+                self.x = torch.zeros(self.N, self.batch_size, device="cuda")
+
+        elif self.backend == "npu-float32":
+            if self.x is None:
+                self.x = torch.zeros(self.N, self.batch_size).npu()
 
         if self.x.shape[0] != self.N:
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
@@ -118,31 +144,71 @@ class NMFA(QAIA):
     def update(self):
         """Dynamical evolution."""
         if self.backend == "cpu-float32":
-            for _ in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for _ in range(self.n_iter):
                     phi = self.J.dot(self.x) / self.J_norm + np.random.normal(0, self.sigma, size=self.x.shape)
-                else:
+
+                    x_hat = np.tanh(phi * self.beta)
+
+                    self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
+
+                    self.beta += 1 / self.n_iter
+            else:
+                for _ in range(self.n_iter):
                     phi = (self.J.dot(self.x) + self.h) / self.J_norm + np.random.normal(
                         0, self.sigma, size=self.x.shape
                     )
 
-                x_hat = np.tanh(phi * self.beta)
+                    x_hat = np.tanh(phi * self.beta)
 
-                self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
+                    self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
 
-                self.beta += 1 / self.n_iter
+                    self.beta += 1 / self.n_iter
 
         elif self.backend == "gpu-float32":
-            for _ in range(self.n_iter):
-                if self.h is None:
-                    phi = torch.sparse.mm(self.J, self.x) / self.J_norm + torch.normal(0, self.sigma, size=self.x.shape)
-                else:
+            if self.h is None:
+                for _ in range(self.n_iter):
+                    phi = torch.sparse.mm(self.J, self.x) / self.J_norm + torch.normal(
+                        0, self.sigma, size=self.x.shape
+                    ).to("cuda")
+
+                    x_hat = torch.tanh(phi * self.beta)
+
+                    self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
+
+                    self.beta += 1 / self.n_iter
+            else:
+                for _ in range(self.n_iter):
                     phi = (torch.sparse.mm(self.J, self.x) + self.h) / self.J_norm + torch.normal(
                         0, self.sigma, size=self.x.shape
-                    )
+                    ).to("cuda")
 
-                x_hat = torch.tanh(phi * self.beta)
+                    x_hat = torch.tanh(phi * self.beta)
 
-                self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
+                    self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
 
-                self.beta += 1 / self.n_iter
+                    self.beta += 1 / self.n_iter
+
+        elif self.backend == "npu-float32":
+            if self.h is None:
+                for _ in range(self.n_iter):
+                    phi = torch.sparse.mm(self.J, self.x) / self.J_norm + torch.normal(
+                        0, self.sigma, size=self.x.shape
+                    ).to("npu")
+
+                    x_hat = torch.tanh(phi * self.beta)
+
+                    self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
+
+                    self.beta += 1 / self.n_iter
+            else:
+                for _ in range(self.n_iter):
+                    phi = (torch.sparse.mm(self.J, self.x) + self.h) / self.J_norm + torch.normal(
+                        0, self.sigma, size=self.x.shape
+                    ).to("npu")
+
+                    x_hat = torch.tanh(phi * self.beta)
+
+                    self.x = self.alpha * x_hat + (1 - self.alpha) * self.x
+
+                    self.beta += 1 / self.n_iter

@@ -26,6 +26,15 @@ try:
 except (ImportError, AssertionError):
     _INSTALL_TORCH = False
 
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
+
 
 class QAIA:
     r"""
@@ -45,13 +54,25 @@ class QAIA:
             Will be modified during optimization. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
-        backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+        backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
+            'gpu-float16', 'gpu-int8','npu-float32'. Default: ``'cpu-float32'``.
     """
 
     # pylint: disable=too-many-arguments
     def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, backend='cpu-float32'):
         """Construct a QAIA algorithm."""
+        valid_backends = {'cpu-float32', 'gpu-float32', 'gpu-float16', 'gpu-int8', 'npu-float32'}
+        if not isinstance(backend, str):
+            raise TypeError(f"backend requires a string, but get {type(backend)}")
+        if backend not in valid_backends:
+            raise ValueError(f"backend must be one of {valid_backends}")
+        if backend == "gpu-float32" and not _INSTALL_TORCH:
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        if backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
+
         if not isinstance(J, (np.ndarray, sp.spmatrix)):
             raise TypeError(f"J requires numpy.array or scipy sparse matrix, but get {type(J)}")
         if len(J.shape) != 2 or J.shape[0] != J.shape[1]:
@@ -73,27 +94,23 @@ class QAIA:
             if x.shape[0] != J.shape[0] or x.shape[1] != batch_size:
                 raise ValueError(f"x must have shape ({J.shape[0]}, {batch_size}), but got {x.shape}")
 
-        valid_backends = {'cpu-float32', 'gpu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
-
         _check_int_type("n_iter", n_iter)
         _check_value_should_not_less("n_iter", 1, n_iter)
         _check_int_type("batch_size", batch_size)
         _check_value_should_not_less("batch_size", 1, batch_size)
 
         if backend == "gpu-float32" and _INSTALL_TORCH:
+            J = torch.tensor(J.toarray()).float()
             if J.layout != torch.sparse_csr:
                 J = J.to("cuda")
                 J = J.to_sparse_csr()
-            h = h.to("cuda")
+            if h is not None:
+                h = torch.from_numpy(h).float().to("cuda")
 
-        elif backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError(
-                "Please install pytorch before using qaia gpu version, ensure that the environment has any GPU."
-            )
+        if backend == "npu-float32" and _INSTALL_TORCH_NPU:
+            J = torch.tensor(J.toarray()).float().to("npu")
+            if h is not None:
+                h = torch.from_numpy(h).float().to("npu")
 
         self.J = J
         self.h = h
@@ -111,6 +128,13 @@ class QAIA:
                 self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
             elif self.backend == "gpu-float32":
                 self.x = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
+            elif self.backend == "npu-float32":
+                self.x = 0.02 * (torch.rand(self.N, self.batch_size).npu() - 0.5)
+        else:
+            if self.backend == "gpu-float32":
+                self.x = torch.from_numpy(self.x).float().to("cuda")
+            elif self.backend == "npu-float32":
+                self.x = torch.from_numpy(self.x).float().to("npu")
 
     def calc_cut(self, x=None):
         r"""
@@ -120,7 +144,7 @@ class QAIA:
             x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
-        if self.backend == "cpu-float32":
+        if self.backend in ["cpu-float32", 'gpu-float16', 'gpu-int8']:
             if x is None:
                 sign = np.sign(self.x)
             else:
@@ -134,6 +158,13 @@ class QAIA:
                 sign = torch.sign(x)
             return 0.25 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0) - 0.25 * self.J.sum()
 
+        if self.backend == "npu-float32":
+            if x is None:
+                sign = torch.sign(self.x).npu()
+            else:
+                sign = torch.sign(x).npu()
+            return 0.25 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0) - 0.25 * self.J.sum()
+
         raise ValueError("invalid backend")
 
     def calc_energy(self, x=None):
@@ -144,7 +175,7 @@ class QAIA:
             x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
-        if self.backend == "cpu-float32":
+        if self.backend in ["cpu-float32", 'gpu-float16', 'gpu-int8']:
             if x is None:
                 sign = np.sign(self.x)
             else:
@@ -152,7 +183,7 @@ class QAIA:
 
             if self.h is None:
                 return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0)
-            return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.T.dot(sign)
+            return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.T @ sign
 
         if self.backend == "gpu-float32":
             if x is None:
@@ -162,7 +193,17 @@ class QAIA:
 
             if self.h is None:
                 return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0)
-            return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0, keepdim=True) - self.h.T.dot(sign)
+            return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0, keepdim=True) - self.h.T @ sign
+
+        if self.backend == "npu-float32":
+            if x is None:
+                sign = torch.sign(self.x).npu()
+            else:
+                sign = torch.sign(x).npu()
+
+            if self.h is None:
+                return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0)
+            return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0, keepdim=True) - self.h.T @ sign
 
         raise ValueError("invalid backend")
 

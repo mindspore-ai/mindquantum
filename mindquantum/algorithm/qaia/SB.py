@@ -21,6 +21,23 @@ from mindquantum.utils.type_value_check import _check_number_type, _check_value_
 from .QAIA import QAIA, OverflowException
 
 try:
+    import torch
+
+    assert torch.cuda.is_available()
+    _INSTALL_TORCH = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
+
+try:
     from mindquantum import _qaia_sb
 
     GPU_AVAILABLE = True
@@ -60,6 +77,8 @@ class SB(QAIA):
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
     """
 
     # pylint: disable=too-many-arguments
@@ -72,6 +91,7 @@ class SB(QAIA):
         batch_size=1,
         dt=1,
         xi=None,
+        backend='cpu-float32',
     ):
         """Construct SB algorithm."""
         _check_number_type("dt", dt)
@@ -81,29 +101,74 @@ class SB(QAIA):
             _check_number_type("xi", xi)
             _check_value_should_not_less("xi", 0, xi)
 
-        super().__init__(J, h, x, n_iter, batch_size)
-        self.J = csr_matrix(self.J)
+        super().__init__(J, h, x, n_iter, batch_size, backend)
+        if self.backend == "cpu-float32":
+            self.J = csr_matrix(self.J)
+        elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
+
         # positive detuning frequency
         self.delta = 1
         self.dt = dt
         # pumping amplitude
         self.p = np.linspace(0, 1, self.n_iter)
         self.xi = xi
+
         if self.xi is None:
-            self.xi = 0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(self.J, 2).sum())
+            if self.backend == "cpu-float32":
+                self.xi = 0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(self.J, 2).sum())
+            elif self.backend == "gpu-float32":
+                if h is not None:
+                    self.xi = (
+                        0.5
+                        * np.sqrt(self.N - 1)
+                        / torch.sqrt((self.J.to_dense() ** 2).sum() + 2 * ((self.h / 2) ** 2).sum())
+                    )
+                else:
+                    self.xi = 0.5 * np.sqrt(self.N - 1) / torch.sqrt((self.J.to_dense() ** 2).sum())
+            elif self.backend == "npu-float32":
+                if h is not None:
+                    self.xi = (
+                        0.5
+                        * np.sqrt(self.N - 1)
+                        / np.sqrt(
+                            csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum() + 2 * ((self.h / 2) ** 2).sum()
+                        )
+                    )
+                else:
+                    self.xi = (
+                        0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum())
+                    )
         self.x = x
 
         self.initialize()
 
     def initialize(self):
         """Initialize spin values and momentum."""
-        if self.x is None:
-            self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
+        if self.backend == "cpu-float32":
+            if self.x is None:
+                self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+            self.y = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
 
-        if self.x.shape[0] != self.N:
-            raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+        elif self.backend == "gpu-float32":
+            if self.x is None:
+                self.x = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+            self.y = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
 
-        self.y = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
+        elif self.backend == "npu-float32":
+            if self.x is None:
+                self.x = 0.02 * (torch.rand(self.N, self.batch_size).npu() - 0.5)
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+            self.y = 0.02 * (torch.rand(self.N, self.batch_size).npu() - 0.5)
 
 
 class ASB(SB):  # noqa: N801
@@ -129,6 +194,8 @@ class ASB(SB):  # noqa: N801
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
         M (int): The number of update without mean-field terms. Default: ``2``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -153,11 +220,12 @@ class ASB(SB):  # noqa: N801
         dt=1,
         xi=None,
         M=2,
+        backend='cpu-float32',
     ):
         """Construct ASB algorithm."""
         _check_int_type("M", M)
         _check_value_should_not_less("M", 1, M)
-        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
         # positive Kerr coefficient
         self.K = 1
         self.M = M
@@ -167,17 +235,44 @@ class ASB(SB):  # noqa: N801
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
         # iterate on the number of MVMs
-        for i in range(self.n_iter):
-            for _ in range(self.M):
-                self.x += self.dm * self.y * self.delta
-                self.y -= (self.K * self.x**3 + (self.delta - self.p[i]) * self.x) * self.dm
-            if self.h is None:
-                self.y += self.xi * self.dt * self.J.dot(self.x)
-            else:
-                self.y += self.xi * self.dt * (self.J.dot(self.x) + self.h)
+        if self.backend == "cpu-float32":
+            for i in range(self.n_iter):
+                for _ in range(self.M):
+                    self.x += self.dm * self.y * self.delta
+                    self.y -= (self.K * self.x**3 + (self.delta - self.p[i]) * self.x) * self.dm
+                if self.h is None:
+                    self.y += self.xi * self.dt * self.J.dot(self.x)
+                else:
+                    self.y += self.xi * self.dt * (self.J.dot(self.x) + self.h)
 
-            if np.isnan(self.x).any():
-                raise OverflowException("Value is too large to handle due to large dt or xi.")
+                if np.isnan(self.x).any():
+                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+
+        elif self.backend == "gpu-float32":
+            for i in range(self.n_iter):
+                for _ in range(self.M):
+                    self.x += self.dm * self.y * self.delta
+                    self.y -= (self.K * self.x**3 + (self.delta - self.p[i]) * self.x) * self.dm
+                if self.h is None:
+                    self.y += self.xi * self.dt * torch.sparse.mm(self.J, self.x)
+                else:
+                    self.y += self.xi * self.dt * (torch.sparse.mm(self.J, self.x) + self.h)
+
+                if torch.isnan(self.x).any():
+                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+
+        elif self.backend == "npu-float32":
+            for i in range(self.n_iter):
+                for _ in range(self.M):
+                    self.x += self.dm * self.y * self.delta
+                    self.y -= (self.K * self.x**3 + (self.delta - self.p[i]) * self.x) * self.dm
+                if self.h is None:
+                    self.y += self.xi * self.dt * torch.sparse.mm(self.J, self.x)
+                else:
+                    self.y += self.xi * self.dt * (torch.sparse.mm(self.J, self.x) + self.h)
+
+                if torch.isnan(self.x).any():
+                    raise OverflowException("Value is too large to handle due to large dt or xi.")
 
 
 class BSB(SB):  # noqa: N801
@@ -206,8 +301,8 @@ class BSB(SB):  # noqa: N801
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float16', or 'gpu-int8'. Default: ``'cpu-float32'``.
+        backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
+            'gpu-float16', 'gpu-int8','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -234,39 +329,23 @@ class BSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct BSB algorithm."""
-        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
-
-        valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
+        valid_backends = {'cpu-float32', 'gpu-float32', 'gpu-float16', 'gpu-int8', 'npu-float32'}
         if not isinstance(backend, str):
             raise TypeError(f"backend requires a string, but get {type(backend)}")
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
-        if backend.startswith('gpu'):
+
+        if backend in ['cpu-float32', 'gpu-float32', 'npu-float32']:
+            super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
+        elif backend in ['gpu-float16', 'gpu-int8']:
+            super().__init__(J, h, x, n_iter, batch_size, dt, xi)
             if not GPU_AVAILABLE:
                 raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
             _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
-        self.backend = backend
+            self.backend = backend
 
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
-        if self.h is not None:
-            if not isinstance(self.h, np.ndarray):
-                raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
-            if self.h.shape != (self.J.shape[0],) and self.h.shape != (self.J.shape[0], 1):
-                raise ValueError(
-                    f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}"
-                )
-            if len(self.h.shape) == 1:
-                self.h = self.h[:, np.newaxis]
-
-        if self.x is not None:
-            if not isinstance(self.x, np.ndarray):
-                raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
-            if len(self.x.shape) != 2:
-                raise ValueError(f"x must be a 2D array, but got shape {self.x.shape}")
-            if self.x.shape[0] != self.J.shape[0] or self.x.shape[1] != self.batch_size:
-                raise ValueError(f"x must have shape ({self.J.shape[0]}, {self.batch_size}), but got {self.x.shape}")
-
         if self.backend == 'gpu-float16':
             if self.h is not None:
                 h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
@@ -287,7 +366,7 @@ class BSB(SB):  # noqa: N801
                 _qaia_sb.bsb_update_int8(
                     self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
-        else:  # cpu-float32
+        elif self.backend == 'cpu-float32':
             for i in range(self.n_iter):
                 if self.h is None:
                     self.y += (-(self.delta - self.p[i]) * self.x + self.xi * self.J.dot(self.x)) * self.dt
@@ -298,6 +377,32 @@ class BSB(SB):  # noqa: N801
                 cond = np.abs(self.x) > 1
                 self.x = np.where(cond, np.sign(self.x), self.x)
                 self.y = np.where(cond, np.zeros_like(self.x), self.y)
+        elif self.backend == 'gpu-float32':
+            for i in range(self.n_iter):
+                if self.h is None:
+                    self.y += (-(self.delta - self.p[i]) * self.x + self.xi * torch.sparse.mm(self.J, self.x)) * self.dt
+                else:
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                    ) * self.dt
+                self.x += self.dt * self.y * self.delta
+
+                cond = torch.abs(self.x) > 1
+                self.x = torch.where(cond, torch.sign(self.x), self.x)
+                self.y = torch.where(cond, torch.zeros_like(self.x), self.y)
+        elif self.backend == 'npu-float32':
+            for i in range(self.n_iter):
+                if self.h is None:
+                    self.y += (-(self.delta - self.p[i]) * self.x + self.xi * torch.sparse.mm(self.J, self.x)) * self.dt
+                else:
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                    ) * self.dt
+                self.x += self.dt * self.y * self.delta
+
+                cond = torch.abs(self.x) > 1
+                self.x = torch.where(cond, torch.sign(self.x), self.x)
+                self.y = torch.where(cond, torch.zeros_like(self.x), self.y)
 
 
 class DSB(SB):  # noqa: N801
@@ -326,8 +431,8 @@ class DSB(SB):  # noqa: N801
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float16', or 'gpu-int8'. Default: ``'cpu-float32'``.
+        backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
+            'gpu-float16', 'gpu-int8','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -354,38 +459,23 @@ class DSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct DSB algorithm."""
-        super().__init__(J, h, x, n_iter, batch_size, dt, xi)
-        valid_backends = {'cpu-float32', 'gpu-float16', 'gpu-int8'}
+        valid_backends = {'cpu-float32', 'gpu-float32', 'gpu-float16', 'gpu-int8', 'npu-float32'}
         if not isinstance(backend, str):
             raise TypeError(f"backend requires a string, but get {type(backend)}")
         if backend not in valid_backends:
             raise ValueError(f"backend must be one of {valid_backends}")
-        if backend.startswith('gpu'):
+
+        if backend in ['cpu-float32', 'gpu-float32', 'npu-float32']:
+            super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
+        elif backend in ['gpu-float16', 'gpu-int8']:
+            super().__init__(J, h, x, n_iter, batch_size, dt, xi)
             if not GPU_AVAILABLE:
                 raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
             _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
-        self.backend = backend
+            self.backend = backend
 
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
-        if self.h is not None:
-            if not isinstance(self.h, np.ndarray):
-                raise TypeError(f"h requires numpy.array, but get {type(self.h)}")
-            if self.h.shape != (self.J.shape[0],) and self.h.shape != (self.J.shape[0], 1):
-                raise ValueError(
-                    f"h must have shape ({self.J.shape[0]},) or ({self.J.shape[0]}, 1), but got {self.h.shape}"
-                )
-            if len(self.h.shape) == 1:
-                self.h = self.h[:, np.newaxis]
-
-        if self.x is not None:
-            if not isinstance(self.x, np.ndarray):
-                raise TypeError(f"x requires numpy.array, but get {type(self.x)}")
-            if len(self.x.shape) != 2:
-                raise ValueError(f"x must be a 2D array, but got shape {self.x.shape}")
-            if self.x.shape[0] != self.J.shape[0] or self.x.shape[1] != self.batch_size:
-                raise ValueError(f"x must have shape ({self.J.shape[0]}, {self.batch_size}), but got {self.x.shape}")
-
         if self.backend == 'gpu-float16':
             if self.h is not None:
                 h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
@@ -406,16 +496,70 @@ class DSB(SB):  # noqa: N801
                 _qaia_sb.dsb_update_int8(
                     self.J, self.x, self.h, self.batch_size, self.xi, self.delta, self.dt, self.n_iter
                 )
-        else:  # cpu-float32
-            for i in range(self.n_iter):
-                if self.h is None:
+        elif self.backend == 'cpu-float32':
+            if self.h is None:
+                for i in range(self.n_iter):
                     self.y += (-(self.delta - self.p[i]) * self.x + self.xi * self.J.dot(np.sign(self.x))) * self.dt
-                else:
+                    self.x += self.dt * self.y * self.delta
+
+                    cond = np.abs(self.x) > 1
+                    self.x = np.where(cond, np.sign(self.x), self.x)
+                    self.y = np.where(cond, np.zeros_like(self.x), self.y)
+            else:
+                for i in range(self.n_iter):
                     self.y += (
                         -(self.delta - self.p[i]) * self.x + self.xi * (self.J.dot(np.sign(self.x)) + self.h)
                     ) * self.dt
-                self.x += self.dt * self.y * self.delta
+                    self.x += self.dt * self.y * self.delta
 
-                cond = np.abs(self.x) > 1
-                self.x = np.where(cond, np.sign(self.x), self.x)
-                self.y = np.where(cond, np.zeros_like(self.x), self.y)
+                    cond = np.abs(self.x) > 1
+                    self.x = np.where(cond, np.sign(self.x), self.x)
+                    self.y = np.where(cond, np.zeros_like(self.x), self.y)
+        elif self.backend == 'gpu-float32':
+            if self.h is None:
+                for i in range(self.n_iter):
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x + self.xi * torch.sparse.mm(self.J, torch.sign(self.x))
+                    ) * self.dt
+
+                    self.x += self.dt * self.y * self.delta
+
+                    cond = torch.abs(self.x) > 1
+                    self.x = torch.where(cond, torch.sign(self.x), self.x)
+                    self.y = torch.where(cond, torch.zeros_like(self.y), self.y)
+            else:
+                for i in range(self.n_iter):
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x
+                        + self.xi * (torch.sparse.mm(self.J, torch.sign(self.x)) + self.h)
+                    ) * self.dt
+
+                    self.x += self.dt * self.y * self.delta
+
+                    cond = torch.abs(self.x) > 1
+                    self.x = torch.where(cond, torch.sign(self.x), self.x)
+                    self.y = torch.where(cond, torch.zeros_like(self.y), self.y)
+        elif self.backend == 'npu-float32':
+            if self.h is None:
+                for i in range(self.n_iter):
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x + self.xi * torch.sparse.mm(self.J, torch.sign(self.x))
+                    ) * self.dt
+
+                    self.x += self.dt * self.y * self.delta
+
+                    cond = torch.abs(self.x) > 1
+                    self.x = torch.where(cond, torch.sign(self.x), self.x)
+                    self.y = torch.where(cond, torch.zeros_like(self.y), self.y)
+            else:
+                for i in range(self.n_iter):
+                    self.y += (
+                        -(self.delta - self.p[i]) * self.x
+                        + self.xi * (torch.sparse.mm(self.J, torch.sign(self.x)) + self.h)
+                    ) * self.dt
+
+                    self.x += self.dt * self.y * self.delta
+
+                    cond = torch.abs(self.x) > 1
+                    self.x = torch.where(cond, torch.sign(self.x), self.x)
+                    self.y = torch.where(cond, torch.zeros_like(self.y), self.y)
