@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.CFC
 ==============================
 
-.. py:class:: mindquantum.algorithm.qaia.CFC(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1)
+.. py:class:: mindquantum.algorithm.qaia.CFC(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1, backend='cpu-float32' )
 
     混沌振幅反馈算法。
 
@@ -18,7 +18,8 @@ mindquantum.algorithm.qaia.CFC
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.1``。
-
+        - **backend** (str) - 后端的类型。默认值： ``'cpu-float32'``。
+        
     .. py:method:: initialize()
 
         初始化自旋和错误变量。
