@@ -21,7 +21,8 @@
 # cmake-lint: disable=C0103
 
 set(CMAKE_OPTION -DBUILD_TESTING=OFF -DJSON_MultipleHeaders=ON -DJSON_BuildTests=OFF
-                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+                 -DCMAKE_POLICY_VERSION_MINIMUM=3.5)
 
 if(MSVC)
   set(nlohmann_json_CXXFLAGS
