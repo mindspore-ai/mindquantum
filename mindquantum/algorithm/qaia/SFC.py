@@ -23,9 +23,19 @@ from .QAIA import QAIA, OverflowException
 try:
     import torch
 
+    assert torch.cuda.is_available()
     _INSTALL_TORCH = True
-except ImportError:
+except (ImportError, AssertionError):
     _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
 
 
 class SFC(QAIA):
@@ -51,7 +61,7 @@ class SFC(QAIA):
         dt (float): The step size. Default: ``0.1``.
         k (float): parameter of deviation between mean-field and error variables. Default: ``0.2``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -78,7 +88,11 @@ class SFC(QAIA):
         if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
         elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before use qaia gpu version.")
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
 
         self.N = self.J.shape[0]
         self.dt = dt
@@ -87,7 +101,12 @@ class SFC(QAIA):
         # pumping parameters
         self.p = np.linspace(-1, 1, self.n_iter)
         # coupling strength
-        self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+        if self.backend == "cpu-float32":
+            self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+        if self.backend == "gpu-float32":
+            self.xi = torch.sqrt(2 * self.N / torch.sum(self.J.to_dense() ** 2))
+        if self.backend == "npu-float32":
+            self.xi = np.sqrt(2 * self.N / csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum())
         # rate of change of error variables
         self.beta = np.linspace(0.3, 0, self.n_iter)
         # coefficient of mean-field term
@@ -103,8 +122,13 @@ class SFC(QAIA):
 
         elif self.backend == "gpu-float32":
             if self.x is None:
-                self.x = torch.normal(0, 0.1, (self.N, self.batch_size))
-            self.e = torch.zeros_like(self.x)
+                self.x = torch.normal(0, 0.1, (self.N, self.batch_size)).to("cuda")
+            self.e = torch.zeros_like(self.x, device="cuda")
+
+        elif self.backend == "npu-float32":
+            if self.x is None:
+                self.x = torch.normal(0, 0.1, (self.N, self.batch_size)).to("npu")
+            self.e = torch.zeros_like(self.x).npu()
 
         if self.x.shape[0] != self.N:
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
@@ -113,27 +137,61 @@ class SFC(QAIA):
     def update(self):
         """Dynamical evolution."""
         if self.backend == "cpu-float32":
-            for i in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for i in range(self.n_iter):
                     z = -self.xi * (self.J @ self.x)
-                else:
-                    z = -self.xi * (self.J @ self.x + self.h)
-                f = np.tanh(self.c[i] * z)
-                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
-                self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+                    f = np.tanh(self.c[i] * z)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                    self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
-                if np.isnan(self.x).any():
-                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+                    if np.isnan(self.x).any():
+                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+            else:
+                for i in range(self.n_iter):
+                    z = -self.xi * (self.J @ self.x + self.h)
+                    f = np.tanh(self.c[i] * z)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                    self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+
+                    if np.isnan(self.x).any():
+                        raise OverflowException("Value is too large to handle due to large dt or xi.")
 
         elif self.backend == "gpu-float32":
-            for i in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for i in range(self.n_iter):
                     z = -self.xi * (torch.sparse.mm(self.J, self.x))
-                else:
-                    z = -self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
-                f = torch.tanh(self.c[i] * z)
-                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
-                self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+                    f = torch.tanh(self.c[i] * z)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                    self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
-                if torch.isnan(self.x).any():
-                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+                    if torch.isnan(self.x).any():
+                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+            else:
+                for i in range(self.n_iter):
+                    z = -self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                    f = torch.tanh(self.c[i] * z)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                    self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+
+                    if torch.isnan(self.x).any():
+                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+
+        elif self.backend == "npu-float32":
+            if self.h is None:
+                for i in range(self.n_iter):
+                    z = -self.xi * (torch.sparse.mm(self.J, self.x))
+                    f = torch.tanh(self.c[i] * z).npu()
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                    self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+
+                    if torch.isnan(self.x).any():
+                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+            else:
+                for i in range(self.n_iter):
+                    z = -self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                    f = torch.tanh(self.c[i] * z).npu()
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x - f - self.k * (z - self.e)) * self.dt
+                    self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
+
+                    if torch.isnan(self.x).any():
+                        raise OverflowException("Value is too large to handle due to large dt or xi.")

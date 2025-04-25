@@ -23,9 +23,19 @@ from .QAIA import QAIA
 try:
     import torch
 
+    assert torch.cuda.is_available()
     _INSTALL_TORCH = True
-except ImportError:
+except (ImportError, AssertionError):
     _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
 
 
 class CFC(QAIA):
@@ -50,7 +60,7 @@ class CFC(QAIA):
         batch_size (int): The number of sampling. Default: ``1``.
         dt (float): The step size. Default: ``0.1``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -73,7 +83,11 @@ class CFC(QAIA):
         if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
         elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before use qaia gpu version.")
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
 
         self.dt = dt
         # The number of first iterations
@@ -86,7 +100,14 @@ class CFC(QAIA):
         # target amplitude
         self.alpha = 1.0
         # coupling strength
-        self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+        if self.backend == "cpu-float32":
+            self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+        if self.backend == "gpu-float32":
+            self.xi = torch.sqrt(2 * self.N / torch.sum(self.J.to_dense() ** 2))
+        if self.backend == "npu-float32":
+            self.xi = torch.sqrt(
+                2 * self.N / torch.tensor(csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum())
+            ).npu()
         # rate of change of error variables
         self.beta = 0.15
         self.initialize()
@@ -104,38 +125,81 @@ class CFC(QAIA):
 
         elif self.backend == "gpu-float32":
             if self.x is None:
-                self.x = torch.normal(0, 0.1, size=(self.N, self.batch_size))
+                self.x = torch.normal(0, 0.1, size=(self.N, self.batch_size)).to("cuda")
 
             if self.x.shape[0] != self.N:
                 raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
 
-            self.e = torch.ones_like(self.x)
+            self.e = torch.ones_like(self.x, device="cuda")
+
+        elif self.backend == "npu-float32":
+            if self.x is None:
+                self.x = torch.normal(0, 0.1, size=(self.N, self.batch_size)).to("npu")
+
+            if self.x.shape[0] != self.N:
+                raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
+
+            self.e = torch.ones_like(self.x).npu()
 
     # pylint: disable=attribute-defined-outside-init
     def update(self):
         """Dynamical evolution."""
         if self.backend == "cpu-float32":
-            for i in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for i in range(self.n_iter):
                     z = self.xi * self.e * (self.J @ self.x)
-                else:
-                    z = self.xi * self.e * (self.J @ self.x + self.h)
-                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
-                self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                    self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
 
-                cond = np.abs(self.x) > 1.5
-                self.x = np.where(cond, 1.5 * np.sign(self.x), self.x)
-                self.e = np.where(self.e < 0.01, 0.01, self.e)
+                    cond = np.abs(self.x) > 1.5
+                    self.x = np.where(cond, 1.5 * np.sign(self.x), self.x)
+                    self.e = np.where(self.e < 0.01, 0.01, self.e)
+            else:
+                for i in range(self.n_iter):
+                    z = self.xi * self.e * (self.J @ self.x + self.h)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                    self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+
+                    cond = np.abs(self.x) > 1.5
+                    self.x = np.where(cond, 1.5 * np.sign(self.x), self.x)
+                    self.e = np.where(self.e < 0.01, 0.01, self.e)
 
         elif self.backend == "gpu-float32":
-            for i in range(self.n_iter):
-                if self.h is None:
+            if self.h is None:
+                for i in range(self.n_iter):
                     z = self.xi * self.e * (torch.sparse.mm(self.J, self.x))
-                else:
-                    z = self.xi * self.e * (torch.sparse.mm(self.J, self.x) + self.h)
-                self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
-                self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                    self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
 
-                cond = torch.abs(self.x) > 1.5
-                self.x = torch.where(cond, 1.5 * torch.sign(self.x), self.x)
-                self.e = torch.where(self.e < 0.01, 0.01, self.e)
+                    cond = torch.abs(self.x) > 1.5
+                    self.x = torch.where(cond, 1.5 * torch.sign(self.x), self.x)
+                    self.e = torch.where(self.e < 0.01, 0.01, self.e)
+            else:
+                for i in range(self.n_iter):
+                    z = self.xi * self.e * (torch.sparse.mm(self.J, self.x) + self.h)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                    self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+
+                    cond = torch.abs(self.x) > 1.5
+                    self.x = torch.where(cond, 1.5 * torch.sign(self.x), self.x)
+                    self.e = torch.where(self.e < 0.01, 0.01, self.e)
+
+        elif self.backend == "npu-float32":
+            if self.h is None:
+                for i in range(self.n_iter):
+                    z = self.xi * self.e * (torch.sparse.mm(self.J, self.x))
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                    self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+
+                    cond = torch.abs(self.x) > 1.5
+                    self.x = torch.where(cond, 1.5 * torch.sign(self.x), self.x).npu()
+                    self.e = torch.where(self.e < 0.01, torch.tensor(0.01).npu(), self.e).npu()
+            else:
+                for i in range(self.n_iter):
+                    z = self.xi * self.e * (torch.sparse.mm(self.J, self.x) + self.h)
+                    self.x = self.x + (-self.x**3 + (self.p[i] - 1) * self.x + z) * self.dt
+                    self.e = self.e + (-self.beta * self.e * (z**2 - self.alpha)) * self.dt
+
+                    cond = torch.abs(self.x) > 1.5
+                    self.x = torch.where(cond, 1.5 * torch.sign(self.x), self.x).npu()
+                    self.e = torch.where(self.e < 0.01, torch.tensor(0.01).npu(), self.e).npu()

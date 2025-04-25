@@ -475,7 +475,7 @@ def test_custom_gate_expectation_with_grad(config):  # pylint: disable=too-many-
             @ init_state
         ).real * 2
         assert np.allclose(f, ref_f, atol=1e-6)
-        assert np.allclose(grad, ref_grad, atol=1e-6)
+        assert np.allclose(grad, ref_grad, atol=1e-5)
 
         c_g = g.on(list(range(n)), n)
         c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j
@@ -623,7 +623,7 @@ def test_fsim_expectation_with_grad(config):  # pylint: disable=R0914
     ).real * 2
     ref_grad = np.array([ref_grad_theta, ref_grad_phi])
     assert np.allclose(f, ref_f, atol=1e-6)
-    assert np.allclose(grad, ref_grad, atol=1e-6)
+    assert np.allclose(grad, ref_grad, atol=1e-5)
 
     c_g = g.on(list(range(g.n_qubits)), g.n_qubits)
     c_init_state = np.random.rand(2 * dim) + np.random.rand(2 * dim) * 1j

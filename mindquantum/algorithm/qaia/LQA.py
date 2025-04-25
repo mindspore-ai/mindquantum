@@ -27,9 +27,19 @@ from .QAIA import QAIA
 try:
     import torch
 
+    assert torch.cuda.is_available()
     _INSTALL_TORCH = True
-except ImportError:
+except (ImportError, AssertionError):
     _INSTALL_TORCH = False
+
+try:
+    import torch
+    import torch_npu
+
+    assert torch_npu.npu.is_available()
+    _INSTALL_TORCH_NPU = True
+except (ImportError, AssertionError):
+    _INSTALL_TORCH_NPU = False
 
 
 class LQA(QAIA):
@@ -56,7 +66,7 @@ class LQA(QAIA):
         gamma (float): The coupling strength. Default: ``0.1``.
         momentum (float): Momentum factor. Default: ``0.99``.
         backend (str): Computation backend and precision to use: 'cpu-float32',
-            'gpu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float32','npu-float32'. Default: ``'cpu-float32'``.
 
     Examples:
         >>> import numpy as np
@@ -88,7 +98,11 @@ class LQA(QAIA):
         if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
         elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before use qaia gpu version.")
+            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
+        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
+            raise ImportError(
+                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
+            )
 
         self.gamma = gamma
         self.dt = dt
@@ -104,6 +118,8 @@ class LQA(QAIA):
                 self.x = 0.2 * (np.random.rand(self.N, self.batch_size) - 0.5)
             elif self.backend == "gpu-float32":
                 self.x = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
+            elif self.backend == "npu-float32":
+                self.x = 0.02 * (torch.rand(self.N, self.batch_size).npu() - 0.5)
 
         if self.x.shape[0] != self.N:
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
@@ -121,60 +137,134 @@ class LQA(QAIA):
         v_dx = 0
 
         if self.backend == "cpu-float32":
-            for i in range(1, self.n_iter):
-                t = i / self.n_iter
-                tanh_x = np.tanh(self.x)
-                tmp = np.pi / 2 * tanh_x
-                z = np.sin(tmp)
-                y = np.cos(tmp)
-                if self.h is None:
-                    dx = np.pi / 2 * (-t * self.gamma * self.J.dot(z) * y + (1 - t) * z) * (1 - tanh_x ** 2)
-                else:
-                    dx = (
-                        np.pi
-                        / 2
-                        * (-t * self.gamma * (self.J.dot(z) + self.h) * y + (1 - t) * z)
-                        * (1 - tanh_x ** 2)
-                    )
+            if self.h is None:
+                for i in range(1, self.n_iter):
+                    t = i / self.n_iter
+                    tanh_x = np.tanh(self.x)
+                    tmp = np.pi / 2 * tanh_x
+                    z = np.sin(tmp)
+                    y = np.cos(tmp)
+                    dx = np.pi / 2 * (-t * self.gamma * self.J.dot(z) * y + (1 - t) * z) * (1 - tanh_x**2)
 
-                # momentum beta1
-                m_dx = beta1 * m_dx + (1 - beta1) * dx
-                # rms beta2
-                v_dx = beta2 * v_dx + (1 - beta2) * dx**2
-                # bias correction
-                m_dx_corr = m_dx / (1 - beta1**i)
-                v_dx_corr = v_dx / (1 - beta2**i)
+                    # momentum beta1
+                    m_dx = beta1 * m_dx + (1 - beta1) * dx
+                    # rms beta2
+                    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                    # bias correction
+                    m_dx_corr = m_dx / (1 - beta1**i)
+                    v_dx_corr = v_dx / (1 - beta2**i)
 
-                self.x = self.x - self.dt * m_dx_corr / (np.sqrt(v_dx_corr) + epsilon)
+                    self.x = self.x - self.dt * m_dx_corr / (np.sqrt(v_dx_corr) + epsilon)
+            else:
+                for i in range(1, self.n_iter):
+                    t = i / self.n_iter
+                    tanh_x = np.tanh(self.x)
+                    tmp = np.pi / 2 * tanh_x
+                    z = np.sin(tmp)
+                    y = np.cos(tmp)
+                    dx = np.pi / 2 * (-t * self.gamma * (self.J.dot(z) + self.h) * y + (1 - t) * z) * (1 - tanh_x**2)
+
+                    # momentum beta1
+                    m_dx = beta1 * m_dx + (1 - beta1) * dx
+                    # rms beta2
+                    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                    # bias correction
+                    m_dx_corr = m_dx / (1 - beta1**i)
+                    v_dx_corr = v_dx / (1 - beta2**i)
+
+                    self.x = self.x - self.dt * m_dx_corr / (np.sqrt(v_dx_corr) + epsilon)
 
         elif self.backend == "gpu-float32":
-            for i in range(1, self.n_iter):
-                t = i / self.n_iter
-                tanh_x = torch.tanh(self.x)
-                tmp = torch.pi / 2 * tanh_x
-                z = torch.sin(tmp)
-                y = torch.cos(tmp)
-                if self.h is None:
+            if self.h is None:
+                for i in range(1, self.n_iter):
+                    t = i / self.n_iter
+                    tanh_x = torch.tanh(self.x)
+                    tmp = torch.pi / 2 * tanh_x
+                    z = torch.sin(tmp)
+                    y = torch.cos(tmp)
+
                     dx = (
                         torch.pi
                         / 2
                         * (-t * self.gamma * torch.sparse.mm(self.J, z) * y + (1 - t) * z)
-                        * (1 - tanh_x ** 2)
+                        * (1 - tanh_x**2)
                     )
-                else:
+
+                    # momentum beta1
+                    m_dx = beta1 * m_dx + (1 - beta1) * dx
+                    # rms beta2
+                    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                    # bias correction
+                    m_dx_corr = m_dx / (1 - beta1**i)
+                    v_dx_corr = v_dx / (1 - beta2**i)
+
+                    self.x = self.x - self.dt * m_dx_corr / (torch.sqrt(v_dx_corr) + epsilon)
+            else:
+                for i in range(1, self.n_iter):
+                    t = i / self.n_iter
+                    tanh_x = torch.tanh(self.x)
+                    tmp = torch.pi / 2 * tanh_x
+                    z = torch.sin(tmp)
+                    y = torch.cos(tmp)
+
                     dx = (
                         np.pi
                         / 2
                         * (-t * self.gamma * (torch.sparse.mm(self.J, z) + self.h) * y + (1 - t) * z)
-                        * (1 - tanh_x ** 2)
+                        * (1 - tanh_x**2)
                     )
 
-                # momentum beta1
-                m_dx = beta1 * m_dx + (1 - beta1) * dx
-                # rms beta2
-                v_dx = beta2 * v_dx + (1 - beta2) * dx**2
-                # bias correction
-                m_dx_corr = m_dx / (1 - beta1**i)
-                v_dx_corr = v_dx / (1 - beta2**i)
+                    # momentum beta1
+                    m_dx = beta1 * m_dx + (1 - beta1) * dx
+                    # rms beta2
+                    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                    # bias correction
+                    m_dx_corr = m_dx / (1 - beta1**i)
+                    v_dx_corr = v_dx / (1 - beta2**i)
 
-                self.x = self.x - self.dt * m_dx_corr / (torch.sqrt(v_dx_corr) + epsilon)
+                    self.x = self.x - self.dt * m_dx_corr / (torch.sqrt(v_dx_corr) + epsilon)
+
+        elif self.backend == "npu-float32":
+            if self.h is None:
+                for i in range(1, self.n_iter):
+                    t = i / self.n_iter
+                    tanh_x = torch.tanh(self.x).npu()
+                    tmp = torch.pi / 2 * tanh_x
+                    z = torch.sin(tmp).npu()
+                    y = torch.cos(tmp).npu()
+
+                    dx = np.pi / 2 * (-t * self.gamma * torch.sparse.mm(self.J, z) * y + (1 - t) * z) * (1 - tanh_x**2)
+
+                    # momentum beta1
+                    m_dx = beta1 * m_dx + (1 - beta1) * dx
+                    # rms beta2
+                    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                    # bias correction
+                    m_dx_corr = m_dx / (1 - beta1**i)
+                    v_dx_corr = v_dx / (1 - beta2**i)
+
+                    self.x = self.x - self.dt * m_dx_corr / (torch.sqrt(v_dx_corr) + epsilon)
+            else:
+                for i in range(1, self.n_iter):
+                    t = i / self.n_iter
+                    tanh_x = torch.tanh(self.x).npu()
+                    tmp = torch.pi / 2 * tanh_x
+                    z = torch.sin(tmp).npu()
+                    y = torch.cos(tmp).npu()
+
+                    dx = (
+                        np.pi
+                        / 2
+                        * (-t * self.gamma * (torch.sparse.mm(self.J, z) + self.h) * y + (1 - t) * z)
+                        * (1 - tanh_x**2)
+                    )
+
+                    # momentum beta1
+                    m_dx = beta1 * m_dx + (1 - beta1) * dx
+                    # rms beta2
+                    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
+                    # bias correction
+                    m_dx_corr = m_dx / (1 - beta1**i)
+                    v_dx_corr = v_dx / (1 - beta2**i)
+
+                    self.x = self.x - self.dt * m_dx_corr / (torch.sqrt(v_dx_corr) + epsilon)
