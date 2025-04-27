@@ -1,0 +1,9 @@
+mindquantum==0.9.11
+mindspore
+scikit-learn==1.5.2
+tensorcircuit==0.12.0
+tensorflow==2.17.0
+tensorflow-io-gcs-filesystem==0.37.1
+tensornetwork-ng==0.5.0
+torch==2.4.1
+torchvision==0.19.1
