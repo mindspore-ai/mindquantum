@@ -1,4 +1,4 @@
-# Copyright 2023 Huawei Technologies Co., Ltd
+# Copyright 2025 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,16 +18,21 @@ from pathlib import Path
 
 import numpy as np
 from scipy.sparse import coo_matrix
-from scipy.sparse import csr_matrix
 
 from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM
 from mindquantum.utils.fdopen import fdopen
 
 import pytest
 
+OPTIMAL_CUT_G43 = 6660.0
+TOLERANCE = 0.05  # 5% relative tolerance for cut value
+BENCHMARK_ENERGY_H = -3347.0  # Benchmark energy for scaled h, based on DSB
+ENERGY_TOLERANCE = 0.05  # Uniform 5% relative tolerance for energy with h
+N_ITER = 300  # Global default iteration count
+BATCH_SIZE = 5  # Global default batch size
+SEED = 666
 
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
+
 def read_gset(filename, negate=True):
     """
     Reading Gset and transform it into sparse matrix
@@ -50,6 +55,7 @@ def read_gset(filename, negate=True):
     graph = np.array([[int(i) for i in j.strip().split(" ")] for j in data[1:]])
     if n_e != graph.shape[0]:
         raise ValueError(f"The number of edges is not matched, {n_e} != {graph.shape[0]}")
+    # Convert to CSR format which is preferred by QAIA CPU backend
     out = coo_matrix(
         (
             np.concatenate([graph[:, -1], graph[:, -1]]),
@@ -59,7 +65,7 @@ def read_gset(filename, negate=True):
             ),
         ),
         shape=(n_v, n_v),
-    )
+    ).tocsr()
 
     if negate:
         return -out
@@ -68,209 +74,247 @@ def read_gset(filename, negate=True):
 
 
 G = read_gset(str(Path(__file__).parent.parent.parent / 'G43.txt'))
+N = G.shape[0]
+np.random.seed(SEED)  # Ensure h_test is reproducible
+h_test = np.random.rand(N, 1)  # Scaled h
+x_init_test = 0.01 * (np.random.rand(N, BATCH_SIZE) - 0.5)
+
+
+# Helper function to run and check algorithm
+def run_and_check(
+    solver_class,
+    G_mat,
+    h_vec,
+    x_init,
+    n_iter,
+    batch_size,
+    optimal_cut,
+    cut_tolerance,
+    benchmark_energy,
+    energy_tolerance,
+    seed,
+    **kwargs,
+):
+    """Runs QAIA solver and checks cut value and energy with h."""
+    # Test without h (check cut value)
+    np.random.seed(seed)
+    solver = solver_class(G_mat, x=x_init.copy(), n_iter=n_iter, batch_size=batch_size, **kwargs)
+    solver.update()
+    avg_cut = np.mean(solver.calc_cut())
+    print(f"{solver_class.__name__} Avg Cut: {avg_cut:.2f}, Optimal Cut: {optimal_cut}")
+    assert np.abs(avg_cut - optimal_cut) / np.abs(optimal_cut) < cut_tolerance
+
+    # Test with external field h (check energy value)
+    if h_vec is not None:
+        np.random.seed(seed)
+        solver_h = solver_class(G_mat, h=h_vec, x=x_init.copy(), n_iter=n_iter, batch_size=batch_size, **kwargs)
+        solver_h.update()
+        energy_h = solver_h.calc_energy()
+        assert energy_h is not None
+        if energy_h.ndim > 1:
+            energy_h = energy_h.flatten()
+        avg_energy_h = np.mean(energy_h)
+        print(f"{solver_class.__name__} with h Avg Energy: {avg_energy_h:.2f}, Benchmark Energy: {benchmark_energy}")
+        assert np.abs(avg_energy_h - benchmark_energy) / np.abs(benchmark_energy) < energy_tolerance
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_aSB():
     """
-    Description: Test ASB
+    Description: Test ASB CPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    y = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = ASB(G, n_iter=1)
-    solver.x = x.copy()
-    solver.y = y.copy()
-    solver.update()
-    for _ in range(2):
-        x += solver.dm * y
-        y -= (x**3 + (1 - solver.p[0]) * x) * solver.dm
-    np.allclose(x, solver.x)
+    run_and_check(
+        ASB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_bSB():
     """
-    Description: Test BSB
+    Description: Test BSB CPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    y = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = BSB(G, n_iter=1)
-    solver.x = x.copy()
-    solver.y = y.copy()
-    solver.update()
-    y += (-(1 - solver.p[0]) * x + solver.xi * G @ x) * solver.dt
-    x += y * solver.dt
-    x = np.where(np.abs(x) > 1, np.sign(x), x)
-    np.allclose(x, solver.x)
+    run_and_check(
+        BSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_dSB():
     """
-    Description: Test DSB
+    Description: Test DSB CPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    y = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = DSB(G, n_iter=1)
-    solver.x = x.copy()
-    solver.y = y.copy()
-    solver.update()
-    y += (-(1 - solver.p[0]) * x + solver.xi * G @ np.sign(x)) * solver.dt
-    x += y * solver.dt
-    x = np.where(np.abs(x) > 1, np.sign(x), x)
-    np.allclose(x, solver.x)
+    run_and_check(
+        DSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_LQA():
     """
-    Description: Test LQA
+    Description: Test LQA CPU
     Expectation: success
     """
-    N = G.shape[0]
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = LQA(G, n_iter=1)
-    solver.x = x.copy()
-    solver.update()
-    beta1 = 0.9
-    beta2 = 0.999
-    epsilon = 10e-8
-    m_dx = 0
-    v_dx = 0
-    t = 1
-    tmp = np.pi / 2 * np.tanh(x)
-    z = np.sin(tmp)
-    y = np.cos(tmp)
-    dx = np.pi / 2 * (-t * solver.gamma * G.dot(z) * y + (1 - t) * z) * (1 - np.tanh(x) ** 2)
-    # momentum beta1
-    m_dx = beta1 * m_dx + (1 - beta1) * dx
-    # rms beta2
-    v_dx = beta2 * v_dx + (1 - beta2) * dx**2
-    # bias correction
-    m_dx_corr = m_dx / (1 - beta1)
-    v_dx_corr = v_dx / (1 - beta2)
-
-    x = x - solver.dt * m_dx_corr / (np.sqrt(v_dx_corr) + epsilon)
-    np.allclose(x, solver.x)
+    run_and_check(
+        LQA,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_CAC():
     """
-    Description: Test CAC
+    Description: Test CAC CPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = CAC(G, n_iter=1)
-    solver.x = x.copy()
-    solver.update()
-    y = np.ones_like(x)
-    x = x + (-(x**3) + (solver.p[0] - 1) * x + solver.xi * y * (G @ x)) * solver.dt
-    cond = np.abs(x) > (1.5 * np.sqrt(solver.alpha[0]))
-    x = np.where(cond, 1.5 * np.sign(x) * np.sqrt(solver.alpha[0]), solver.x)
-    np.allclose(x, solver.x)
+    run_and_check(
+        CAC,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_CFC():
     """
-    Description: Test CFC
+    Description: Test CFC CPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = CFC(G, n_iter=1)
-    solver.x = x.copy()
-    solver.update()
-    y = np.ones_like(x)
-
-    x = x + (-(x**3) + (solver.p[0] - 1) * x + solver.xi * y * (G @ x)) * solver.dt
-    cond = np.abs(x) > 1.5
-    x = np.where(cond, 1.5 * np.sign(x), solver.x)
-    np.allclose(x, solver.x)
+    run_and_check(
+        CFC,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_SFC():
     """
-    Description: Test SFC
+    Description: Test SFC CPU (specific N_ITER)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = SFC(G, n_iter=1)
-    solver.x = x.copy()
-    solver.update()
-    y = np.zeros_like(x)
-    z = -solver.xi * (G @ x)
-    x = x + (-(x**3) + (solver.p[0] - 1) * x - np.tanh(solver.c[0] * z) - solver.k * (z - y)) * solver.dt
-    np.allclose(x, solver.x)
+    sfc_n_iter = 1000
+    run_and_check(
+        SFC,
+        G,
+        h_test,
+        x_init_test,
+        sfc_n_iter,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_NMFA():
     """
-    Description: Test NMFA
+    Description: Test NMFA CPU (specific N_ITER)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = NMFA(G, n_iter=1)
-    solver.x = x.copy()
-    solver.update()
-    alpha = 0.15
-    beta = 1 / 1
-    sigma = 0.15
-    J_norm = np.sqrt(np.asarray(csr_matrix.power(G, 2).sum(axis=1)))
-    phi = G.dot(x) / J_norm + np.random.normal(0, sigma, size=x.shape)
-    x_hat = np.tanh(phi * beta)
-    x = alpha * x_hat + (1 - alpha) * x
-    np.allclose(x, solver.x)
+    nmfa_n_iter = 1000
+    run_and_check(
+        NMFA,
+        G,
+        h_test,
+        x_init_test,
+        nmfa_n_iter,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
 
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
 def test_SimCIM():
     """
-    Description: Test SimCIM
+    Description: Test SimCIM CPU (specific N_ITER)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    x = 0.01 * (np.random.rand(N, 1) - 0.5)
-    solver = SimCIM(G, n_iter=1)
-    solver.x = x.copy()
-    solver.update()
-    dt = 0.01
-    momentum = 0.9
-    sigma = 0.03
-    pt = 6.5
-    dx = np.zeros_like(x)
-    p_list = (np.tanh(np.linspace(-3, 3, 1)) - 1) * pt
-    newdc = x * p_list[0] + (G.dot(x) * dt + np.random.normal(size=(N, 1)) * sigma)
-    dx = dx * momentum + newdc * (1 - momentum)
-    ind = (np.abs(x + dx) < 1.0).astype(np.int64)
-    x += dx * ind
-    np.allclose(x, solver.x)
+    simcim_n_iter = 5000
+    simcim_energy_tolerance = 0.1
+    run_and_check(
+        SimCIM,
+        G,
+        h_test,
+        x_init_test,
+        simcim_n_iter,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        simcim_energy_tolerance,
+        SEED,
+    )
