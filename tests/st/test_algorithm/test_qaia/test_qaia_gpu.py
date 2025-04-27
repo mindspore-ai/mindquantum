@@ -1,4 +1,4 @@
-# Copyright 2023 Huawei Technologies Co., Ltd
+# Copyright 2025 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Test QAIA algorithm."""
+"""Test QAIA algorithm GPU backend."""
 # pylint: disable=invalid-name
 from pathlib import Path
 import subprocess
@@ -25,6 +25,15 @@ from mindquantum.utils.fdopen import fdopen
 
 import pytest
 
+OPTIMAL_CUT_G43 = 6660.0
+TOLERANCE = 0.05  # 5% relative tolerance for cut value
+BENCHMARK_ENERGY_H = -3347.0  # Benchmark energy for scaled h
+ENERGY_TOLERANCE = 0.05  # Uniform 5% relative tolerance for energy with h
+N_ITER = 300  # Global default iteration count
+BATCH_SIZE = 5  # Global default batch size
+SEED = 666
+
+
 try:
     subprocess.check_output('nvidia-smi')
     _HAS_GPU = True
@@ -33,12 +42,7 @@ except FileNotFoundError:
 
 torch = pytest.importorskip("torch", reason="This test case require torch")
 
-# Temporarily disable QAIA GPU module in version 0.10
-# _HAS_GPU = False
 
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
 def read_gset(filename, negate=True):
     """
     Reading Gset and transform it into sparse matrix
@@ -49,10 +53,6 @@ def read_gset(filename, negate=True):
 
     Returns:
         coo_matrix, matrix representation of graph.
-
-    Examples:
-        >>> from qaia.utils import read
-        >>> G = read.read_gset('data/Gset/G1.txt')
     """
     with fdopen(filename, "r") as f:
         data = f.readlines()
@@ -61,6 +61,7 @@ def read_gset(filename, negate=True):
     graph = np.array([[int(i) for i in j.strip().split(" ")] for j in data[1:]])
     if n_e != graph.shape[0]:
         raise ValueError(f"The number of edges is not matched, {n_e} != {graph.shape[0]}")
+    # Keep COO format for PyTorch sparse tensor conversion
     out = coo_matrix(
         (
             np.concatenate([graph[:, -1], graph[:, -1]]),
@@ -79,6 +80,71 @@ def read_gset(filename, negate=True):
 
 
 G = read_gset(str(Path(__file__).parent.parent.parent / 'G43.txt'))
+N = G.shape[0]
+np.random.seed(SEED)
+h_test = np.random.rand(N, 1)  # Scaled h
+x_init_test = 0.01 * (np.random.rand(N, BATCH_SIZE) - 0.5)
+
+
+# Helper function to run and check GPU algorithm
+def run_and_check_gpu(
+    solver_class,
+    G_mat,
+    h_vec,
+    x_init,
+    n_iter,
+    batch_size,
+    optimal_cut,
+    cut_tolerance,
+    benchmark_energy,
+    energy_tolerance,
+    seed,
+    backend,
+    **kwargs,
+):
+    """Runs QAIA GPU solver and checks cut value and energy with h."""
+    # Test without h (check cut value)
+    np.random.seed(seed)
+    solver = solver_class(G_mat, x=x_init.copy(), n_iter=n_iter, batch_size=batch_size, backend=backend, **kwargs)
+    solver.update()
+    cuts = solver.calc_cut()
+    if hasattr(cuts, 'tolist'):
+        cuts_np = np.array(cuts.tolist())
+    elif hasattr(cuts, 'cpu'):
+        cuts_np = cuts.cpu().numpy()
+    else:
+        cuts_np = np.array(cuts)
+
+    avg_cut = np.mean(cuts_np)
+    print(f"{solver_class.__name__} ({backend}) Avg Cut: {avg_cut:.2f}, Optimal Cut: {optimal_cut}")
+    assert np.abs(avg_cut - optimal_cut) / np.abs(optimal_cut) < cut_tolerance
+
+    # Test with external field h (check energy value)
+    if h_vec is not None:
+        np.random.seed(seed)
+        solver_h = solver_class(
+            G_mat, h=h_vec, x=x_init.copy(), n_iter=n_iter, batch_size=batch_size, backend=backend, **kwargs
+        )
+        solver_h.update()
+        energy_h = solver_h.calc_energy()
+        assert energy_h is not None
+
+        if hasattr(energy_h, 'tolist'):
+            energy_h_np = np.array(energy_h.tolist())
+        elif hasattr(energy_h, 'cpu'):
+            energy_h_np = energy_h.cpu().numpy()
+        else:
+            energy_h_np = np.array(energy_h)
+
+        if energy_h_np.ndim > 1:
+            energy_h_np = energy_h_np.flatten()
+
+        avg_energy_h = np.mean(energy_h_np)
+        print(
+            f"{solver_class.__name__} ({backend}) with h Avg Energy: {avg_energy_h:.2f}, "
+            f"Benchmark Energy: {benchmark_energy}"
+        )
+        assert np.abs(avg_energy_h - benchmark_energy) / np.abs(benchmark_energy) < energy_tolerance
 
 
 @pytest.mark.level0
@@ -87,42 +153,23 @@ G = read_gset(str(Path(__file__).parent.parent.parent / 'G43.txt'))
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_aSB_gpu():
     """
-    Description: Test ASB GPU implementation end-to-end performance
+    Description: Test ASB GPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-    dt = 0.9
-    xi = 0.1
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = ASB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = ASB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = ASB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
-    solver_gpu_h = ASB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    run_and_check_gpu(
+        ASB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
 
 
 @pytest.mark.level0
@@ -131,67 +178,54 @@ def test_aSB_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_bSB_gpu():
     """
-    Description: Test BSB GPU implementation end-to-end performance
+    Description: Test BSB GPU (all backends)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-    dt = 0.9
-    xi = 0.1
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = BSB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float16 test
-    solver_gpu_fp16 = BSB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
-    solver_gpu_fp16.update()
-    energy_gpu_fp16 = np.mean(solver_gpu_fp16.calc_energy())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp16 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = BSB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
-    solver_gpu_h = BSB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
-
-    # GPU int8 test
-    solver_int8 = BSB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
-    solver_int8.update()
-    energy_int8 = np.mean(solver_int8.calc_energy())
-    assert np.abs(energy_int8 - energy_cpu) / np.abs(energy_cpu) < 0.1
-
-    # GPU int8 + external field test
-    solver_int8_h = BSB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
-    solver_int8_h.update()
-    energy_int8_h = np.mean(solver_int8_h.calc_energy())
-    assert np.abs(energy_int8_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
-
-    # GPU float32 test
-    solver_gpu_fp32 = BSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1
-
-    # GPU float32 + external field test
-    solver_fp32_h = BSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float32')
-    solver_fp32_h.update()
-    energy_fp32_h = np.mean(solver_fp32_h.calc_energy().tolist())
-    assert np.abs(energy_fp32_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    # gpu-float32
+    run_and_check_gpu(
+        BSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
+    # gpu-float16
+    run_and_check_gpu(
+        BSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float16',
+    )
+    # gpu-int8
+    run_and_check_gpu(
+        BSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-int8',
+    )
 
 
 @pytest.mark.level0
@@ -200,68 +234,56 @@ def test_bSB_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason="Machine does not has GPU.")
 def test_dSB_gpu():
     """
-    Description: Test DSB GPU implementation end-to-end performance
+    Description: Test DSB GPU (all backends)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-    dt = 0.9
-    xi = 0.1
+    dsb_int8_tolerance = 0.1
 
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = DSB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float16 test
-    solver_gpu_fp16 = DSB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
-    solver_gpu_fp16.update()
-    energy_gpu_fp16 = np.mean(solver_gpu_fp16.calc_energy())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp16 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = DSB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='cpu-float32')
-    solver_gpu_h = DSB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float16')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
-
-    # GPU int8 test
-    solver_int8 = DSB(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
-    solver_int8.update()
-    energy_int8 = np.mean(solver_int8.calc_energy())
-    assert np.abs(energy_int8 - energy_cpu) / np.abs(energy_cpu) < 0.1
-
-    # GPU int8 + external field test
-    solver_int8_h = DSB(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-int8')
-    solver_int8_h.update()
-    energy_int8_h = np.mean(solver_int8_h.calc_energy())
-    assert np.abs(energy_int8_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
-
-    # GPU float32 test
-    solver_gpu_fp32 = DSB(G, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1
-
-    # GPU float32 + external field test
-    solver_fp32_h = DSB(G, h=h, n_iter=n_iter, batch_size=batch_size, dt=dt, xi=xi, backend='gpu-float32')
-    solver_fp32_h.update()
-    energy_fp32_h = np.mean(solver_fp32_h.calc_energy().tolist())
-    assert np.abs(energy_fp32_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    # gpu-float32
+    run_and_check_gpu(
+        DSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
+    # gpu-float16
+    run_and_check_gpu(
+        DSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float16',
+    )
+    # gpu-int8
+    run_and_check_gpu(
+        DSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        dsb_int8_tolerance,
+        SEED,
+        'gpu-int8',
+    )
 
 
 @pytest.mark.level0
@@ -270,40 +292,23 @@ def test_dSB_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_LQA_gpu():
     """
-    Description: Test LQA GPU implementation end-to-end performance
+    Description: Test LQA GPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = LQA(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = LQA(G, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = LQA(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_gpu_h = LQA(G, h=h, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    run_and_check_gpu(
+        LQA,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
 
 
 @pytest.mark.level0
@@ -312,40 +317,23 @@ def test_LQA_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_CAC_gpu():
     """
-    Description: Test CAC GPU implementation end-to-end performance
+    Description: Test CAC GPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = CAC(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = CAC(G, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = CAC(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_gpu_h = CAC(G, h=h, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    run_and_check_gpu(
+        CAC,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
 
 
 @pytest.mark.level0
@@ -354,40 +342,23 @@ def test_CAC_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_CFC_gpu():
     """
-    Description: Test CFC GPU implementation end-to-end performance
+    Description: Test CFC GPU
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = CFC(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = CFC(G, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = CFC(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_gpu_h = CFC(G, h=h, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    run_and_check_gpu(
+        CFC,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
 
 
 @pytest.mark.level0
@@ -396,40 +367,24 @@ def test_CFC_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_SFC_gpu():
     """
-    Description: Test SFC GPU implementation end-to-end performance
+    Description: Test SFC GPU (specific N_ITER)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = SFC(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = SFC(G, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = SFC(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_gpu_h = SFC(G, h=h, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    sfc_n_iter = 1000
+    run_and_check_gpu(
+        SFC,
+        G,
+        h_test,
+        x_init_test,
+        sfc_n_iter,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
 
 
 @pytest.mark.level0
@@ -438,40 +393,24 @@ def test_SFC_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_NMFA_gpu():
     """
-    Description: Test NMFA GPU implementation end-to-end performance
+    Description: Test NMFA GPU (specific N_ITER)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 1000
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = NMFA(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = NMFA(G, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = NMFA(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_gpu_h = NMFA(G, h=h, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    nmfa_n_iter = 1000
+    run_and_check_gpu(
+        NMFA,
+        G,
+        h_test,
+        x_init_test,
+        nmfa_n_iter,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
 
 
 @pytest.mark.level0
@@ -480,37 +419,22 @@ def test_NMFA_gpu():
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_SimCIM_gpu():
     """
-    Description: Test SimCIM GPU implementation end-to-end performance
+    Description: Test SimCIM GPU (specific N_ITER)
     Expectation: success
     """
-    N = G.shape[0]
-    np.random.seed(666)
-    n_iter = 1000  # Increase the number of iterations for end-to-end testing
-    batch_size = 100
-
-    # Initialize the same random state
-    x = 0.01 * (np.random.rand(N, batch_size) - 0.5)
-
-    # CPU float32 baseline test
-    solver_cpu = SimCIM(G, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_cpu.update()
-    energy_cpu = np.mean(solver_cpu.calc_energy())
-
-    # GPU float32 test
-    solver_gpu_fp32 = SimCIM(G, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-    solver_gpu_fp32.update()
-    energy_gpu_fp32 = np.mean(solver_gpu_fp32.calc_energy().tolist())
-
-    # Compare energy values, allowing some error
-    assert np.abs(energy_gpu_fp32 - energy_cpu) / np.abs(energy_cpu) < 0.1  # Allow 10% relative error
-
-    # Use external field for testing
-    h = np.random.rand(N, 1)
-    solver_cpu_h = SimCIM(G, h=h, x=x.copy(), n_iter=n_iter, batch_size=batch_size, backend='cpu-float32')
-    solver_gpu_h = SimCIM(G, h=h, n_iter=n_iter, batch_size=batch_size, backend='gpu-float32')
-
-    solver_cpu_h.update()
-    solver_gpu_h.update()
-    energy_cpu_h = np.mean(solver_cpu_h.calc_energy())
-    energy_gpu_h = np.mean(solver_gpu_h.calc_energy().tolist())
-    assert np.abs(energy_gpu_h - energy_cpu_h) / np.abs(energy_cpu_h) < 0.1
+    simcim_n_iter = 5000
+    simcim_energy_tolerance = 0.1
+    run_and_check_gpu(
+        SimCIM,
+        G,
+        h_test,
+        x_init_test,
+        simcim_n_iter,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        simcim_energy_tolerance,
+        SEED,
+        'gpu-float32',
+    )

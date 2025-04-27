@@ -82,12 +82,6 @@ class CFC(QAIA):
         super().__init__(J, h, x, n_iter, batch_size, backend)
         if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
-        elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
-        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
-            raise ImportError(
-                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
-            )
 
         self.dt = dt
         # The number of first iterations
@@ -126,6 +120,9 @@ class CFC(QAIA):
         elif self.backend == "gpu-float32":
             if self.x is None:
                 self.x = torch.normal(0, 0.1, size=(self.N, self.batch_size)).to("cuda")
+            else:
+                if isinstance(self.x, np.ndarray):
+                    self.x = torch.from_numpy(self.x).float().to("cuda")
 
             if self.x.shape[0] != self.N:
                 raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
@@ -135,6 +132,9 @@ class CFC(QAIA):
         elif self.backend == "npu-float32":
             if self.x is None:
                 self.x = torch.normal(0, 0.1, size=(self.N, self.batch_size)).to("npu")
+            else:
+                if isinstance(self.x, np.ndarray):
+                    self.x = torch.from_numpy(self.x).float().to("npu")
 
             if self.x.shape[0] != self.N:
                 raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")

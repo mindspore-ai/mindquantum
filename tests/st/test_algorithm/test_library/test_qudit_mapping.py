@@ -84,7 +84,7 @@ def test_mat_to_op():
     state = random_qudits(2, 2)
     mat = state @ np.transpose(np.conj(state))
     qubit_test = qudit_mapping.mat_to_op(mat, little_endian=True)
-    assert np.allclose(qubit_test.matrix().A, mat)
+    assert np.allclose(qubit_test.matrix().toarray(), mat)
 
 
 @pytest.mark.level0

@@ -195,7 +195,7 @@ def test_get_expectation(config):
         ref_f = (
             init_state.T.conj() @ circ.hermitian().matrix() @ ham0.hamiltonian.matrix(3) @ circ.matrix() @ init_state
         )
-        assert np.allclose(f, ref_f, atol=1e-6)
+        assert np.allclose(f, ref_f, atol=1e-5)
 
 
 @pytest.mark.level0

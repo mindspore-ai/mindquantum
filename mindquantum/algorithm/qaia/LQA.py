@@ -97,12 +97,6 @@ class LQA(QAIA):
         super().__init__(J, h, x, n_iter, batch_size, backend)
         if self.backend == "cpu-float32":
             self.J = csr_matrix(self.J)
-        elif self.backend == "gpu-float32" and not _INSTALL_TORCH:
-            raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
-        elif self.backend == "npu-float32" and not _INSTALL_TORCH_NPU:
-            raise ImportError(
-                "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
-            )
 
         self.gamma = gamma
         self.dt = dt
@@ -120,6 +114,13 @@ class LQA(QAIA):
                 self.x = 0.02 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
             elif self.backend == "npu-float32":
                 self.x = 0.02 * (torch.rand(self.N, self.batch_size).npu() - 0.5)
+        else:
+            if self.backend == "gpu-float32":
+                if isinstance(self.x, np.ndarray):
+                    self.x = torch.from_numpy(self.x).float().to("cuda")
+            elif self.backend == "npu-float32":
+                if isinstance(self.x, np.ndarray):
+                    self.x = torch.from_numpy(self.x).float().to("npu")
 
         if self.x.shape[0] != self.N:
             raise ValueError(f"The size of x {self.x.shape[0]} is not equal to the number of spins {self.N}")
