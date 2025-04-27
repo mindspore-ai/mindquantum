@@ -136,12 +136,18 @@ class SimCIM(QAIA):
         elif self.backend == "gpu-float32":
             if self.x is None:
                 self.x = torch.zeros(self.N, self.batch_size).to("cuda")
+            else:
+                if isinstance(self.x, np.ndarray): # Add conversion for user-provided x
+                    self.x = torch.from_numpy(self.x).float().to("cuda")
             # gradient
             self.dx = torch.zeros_like(self.x, device="cuda")
 
         elif self.backend == "npu-float32":
             if self.x is None:
                 self.x = torch.zeros(self.N, self.batch_size).to("npu")
+            else:
+                if isinstance(self.x, np.ndarray): # Add conversion for user-provided x
+                    self.x = torch.from_numpy(self.x).float().to("npu")
             # gradient
             self.dx = torch.zeros_like(self.x).to("npu")
 
