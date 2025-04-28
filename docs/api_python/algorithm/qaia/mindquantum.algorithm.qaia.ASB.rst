@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.ASB
 ===============================
 
-.. py:class:: mindquantum.algorithm.qaia.ASB(J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, M=2)
+.. py:class:: mindquantum.algorithm.qaia.ASB(J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, M=2, backend='cpu-float32')
 
     绝热模拟分叉算法。
 
@@ -20,6 +20,7 @@ mindquantum.algorithm.qaia.ASB
         - **dt** (float) - 迭代步长。默认值： ``0.1``。
         - **xi** (float) - 频率维数，正的常数。默认值： ``None``。
         - **M** (int) - 不含平均场项的迭代次数。默认值： ``2``。
+        - **backend** (str) - 后端的类型。默认值： ``'cpu-float32'``。
 
     .. py:method:: update()
 
