@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.NMFA
 ===============================
 
-.. py:class:: mindquantum.algorithm.qaia.NMFA(J, h=None, x=None, n_iter=1000, batch_size=1, alpha=0.15, sigma=0.15)
+.. py:class:: mindquantum.algorithm.qaia.NMFA(J, h=None, x=None, n_iter=1000, batch_size=1, alpha=0.15, sigma=0.15, backend='cpu-float32')
 
     含噪平均场退火算法。
 
@@ -19,6 +19,7 @@ mindquantum.algorithm.qaia.NMFA
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **alpha** (float) - 动量系数。默认值： ``0.15``。
         - **sigma** (float) - 噪声标准差。默认值： ``0.15``。
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32' 或 'npu-float32'。默认值： ``'cpu-float32'``。
 
     .. py:method:: initialize()
 

@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.SimCIM
 =================================
 
-.. py:class:: mindquantum.algorithm.qaia.SimCIM(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.01, momentum=0.9, sigma=0.03, pt=6.5)
+.. py:class:: mindquantum.algorithm.qaia.SimCIM(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.01, momentum=0.9, sigma=0.03, pt=6.5, backend='cpu-float32')
 
     模拟相干伊辛机算法。
 
@@ -17,10 +17,11 @@ mindquantum.algorithm.qaia.SimCIM
         - **x** (numpy.array) - 自旋初始化配置，维度为 :math:`(N \times batch\_size)`。会在优化过程中被修改。如果不提供（``None``），将被初始化为全零数组。默认值： ``None``。
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
-        - **dt** (float) - 迭代步长。默认值： ``1``。
+        - **dt** (float) - 迭代步长。默认值： ``0.01``。
         - **momentum** (float) - 动量系数。默认值： ``0.9``。
         - **sigma** (float) - 噪声标准差。默认值： ``0.03``。
         - **pt** (float) - 泵浦系数。默认值： ``6.5``。
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32' 或 'npu-float32'。默认值： ``'cpu-float32'``。
 
     .. py:method:: initialize()
 

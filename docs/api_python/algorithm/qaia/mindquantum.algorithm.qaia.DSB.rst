@@ -22,7 +22,7 @@ mindquantum.algorithm.qaia.DSB
         - **batch_size** (int) - 样本个数。默认值： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``1``。
         - **xi** (float) - 频率维数，正的常数。默认值： ``None``。
-        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float16'或'gpu-int8'。默认值： ``'cpu-float32'``。
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32'、'gpu-float16'、'gpu-int8' 或 'npu-float32'。默认值： ``'cpu-float32'``。
 
     .. py:method:: update()
 

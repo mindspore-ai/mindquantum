@@ -18,7 +18,7 @@ mindquantum.algorithm.qaia.CAC
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.075``。
-        - **backend** (str) - 后端的类型。默认值： ``'cpu-float32'``。
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32' 或 'npu-float32'。默认值： ``'cpu-float32'``。
 
     .. py:method:: initialize()
 

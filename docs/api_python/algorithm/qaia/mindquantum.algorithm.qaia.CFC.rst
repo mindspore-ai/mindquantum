@@ -3,7 +3,7 @@ mindquantum.algorithm.qaia.CFC
 
 .. py:class:: mindquantum.algorithm.qaia.CFC(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1, backend='cpu-float32' )
 
-    混沌振幅反馈算法。
+    混沌反馈控制算法。
 
     参考文献：`Coherent Ising machines with optical error correction circuits <https://onlinelibrary.wiley.com/doi/full/10.1002/qute.202100077>`_。
 
@@ -18,7 +18,7 @@ mindquantum.algorithm.qaia.CFC
         - **n_iter** (int) - 迭代步数。默认值： ``1000``。
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.1``。
-        - **backend** (str) - 后端的类型。默认值： ``'cpu-float32'``。
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32' 或 'npu-float32'。默认值： ``'cpu-float32'``。
         
     .. py:method:: initialize()
 
