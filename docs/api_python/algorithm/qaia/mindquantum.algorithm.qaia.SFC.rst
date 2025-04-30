@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.SFC
 ==============================
 
-.. py:class:: mindquantum.algorithm.qaia.SFC(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1, k=0.2)
+.. py:class:: mindquantum.algorithm.qaia.SFC(J, h=None, x=None, n_iter=1000, batch_size=1, dt=0.1, k=0.2, backend='cpu-float32')
 
     离散振幅反馈算法。
 
@@ -19,6 +19,7 @@ mindquantum.algorithm.qaia.SFC
         - **batch_size** (int) - 样本个数。默认值为： ``1``。
         - **dt** (float) - 迭代步长。默认值： ``0.1``。
         - **k** (float) - 平均场和误差变量之间的偏差参数。默认值： ``0.2``。
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32' 或 'npu-float32'。默认值： ``'cpu-float32'``。
 
     .. py:method:: initialize()
 

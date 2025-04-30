@@ -1,7 +1,7 @@
 mindquantum.algorithm.qaia.LQA
 ==============================
 
-.. py:class:: mindquantum.algorithm.qaia.LQA(J, h=None, x=None, n_iter=1000, batch_size=1, gamma=0.1, dt=1.0, momentum=0.99)
+.. py:class:: mindquantum.algorithm.qaia.LQA(J, h=None, x=None, n_iter=1000, batch_size=1, gamma=0.1, dt=1.0, momentum=0.99, backend='cpu-float32')
 
     局域量子退火算法。
 
@@ -20,6 +20,7 @@ mindquantum.algorithm.qaia.LQA
         - **dt** (float) - 迭代步长。默认值： ``1``。
         - **gamma** (float) - 耦合强度。默认值： ``0.1``。
         - **momentum** (float) - 动量系数。默认值： ``0.99``.
+        - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32' 或 'npu-float32'。默认值： ``'cpu-float32'``。
 
     .. py:method:: initialize()
 
