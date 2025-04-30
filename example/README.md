@@ -5,6 +5,9 @@
 ## 案例列表
 
 - [Q-JEPG算法](./quantum-jpeg/quantum-jpeg.ipynb)
+- [基于 MindSpore Quantum 实现 Adapt Clifford 算法求解 Maxcut 问题](./Adapt-Clifford/Adapt-Clifford-for-MaxCut.ipynb)
+- [深度展开鲁棒量子启发式算法](./quantum-dusb/DU_SB_test.ipynb)
+- [基于 DQAS 算法的 MNIST 手写数字二分类问题](./DQAS_for_image_classfication/DQAS_for_image_classfication.ipynb)
 
 ## 贡献指南
 
@@ -66,7 +69,7 @@ black --check <your_code_directory>
 ## 环境要求
 
 - Python >= 3.7
-- MindQuantum >= 0.9.0
+- MindQuantum >= 0.9.11
 
 ## 参考资源
 
