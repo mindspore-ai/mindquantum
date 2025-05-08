@@ -8,9 +8,9 @@ from typing import Callable, List, Tuple, Union
 
 import numpy as np
 
-from src import helper
-from src import state
-from src import tensor
+from utils import helper
+from utils import state
+from utils import tensor
 
 
 class Operator(tensor.Tensor):
