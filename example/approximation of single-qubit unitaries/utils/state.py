@@ -7,8 +7,8 @@ import sys
 from typing import List, Tuple
 
 import numpy as np
-from src import helper
-from src import tensor
+from utils import helper
+from utils import tensor
 
 
 class State(tensor.Tensor):
