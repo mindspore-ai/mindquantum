@@ -18,7 +18,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less
-from .QAIA import QAIA, OverflowException
+from .QAIA import QAIA
 
 try:
     import torch
@@ -145,7 +145,11 @@ class SFC(QAIA):
                     self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
                     if np.isnan(self.x).any():
-                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+                        raise ValueError(
+                            f"NaNs detected in tensor 'x'. "
+                            f"This often indicates numerical instability. "
+                            f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                        )
             else:
                 for i in range(self.n_iter):
                     z = -self.xi * (self.J @ self.x + self.h)
@@ -154,7 +158,11 @@ class SFC(QAIA):
                     self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
                     if np.isnan(self.x).any():
-                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+                        raise ValueError(
+                            f"NaNs detected in tensor 'x'. "
+                            f"This often indicates numerical instability. "
+                            f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                        )
 
         elif self.backend == "gpu-float32":
             if self.h is None:
@@ -165,7 +173,11 @@ class SFC(QAIA):
                     self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
                     if torch.isnan(self.x).any():
-                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+                        raise ValueError(
+                            f"NaNs detected in tensor 'x'. "
+                            f"This often indicates numerical instability. "
+                            f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                        )
             else:
                 for i in range(self.n_iter):
                     z = -self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
@@ -174,7 +186,11 @@ class SFC(QAIA):
                     self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
                     if torch.isnan(self.x).any():
-                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+                        raise ValueError(
+                            f"NaNs detected in tensor 'x'. "
+                            f"This often indicates numerical instability. "
+                            f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                        )
 
         elif self.backend == "npu-float32":
             if self.h is None:
@@ -185,7 +201,11 @@ class SFC(QAIA):
                     self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
                     if torch.isnan(self.x).any():
-                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+                        raise ValueError(
+                            f"NaNs detected in tensor 'x'. "
+                            f"This often indicates numerical instability. "
+                            f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                        )
             else:
                 for i in range(self.n_iter):
                     z = -self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
@@ -194,4 +214,8 @@ class SFC(QAIA):
                     self.e = self.e + (-self.beta[i] * (self.e - z)) * self.dt
 
                     if torch.isnan(self.x).any():
-                        raise OverflowException("Value is too large to handle due to large dt or xi.")
+                        raise ValueError(
+                            f"NaNs detected in tensor 'x'. "
+                            f"This often indicates numerical instability. "
+                            f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                        )
