@@ -86,7 +86,8 @@ class TimeEvolution:  # pylint: disable=too-few-public-methods
 
         circ = Circuit()
         for k, v in self.ops.terms.items():
-            pr_tmp = self.time * v
-            tmp_circ = decompose_single_term_time_evolution(k, pr_tmp)
-            circ += tmp_circ
+            if k:
+                pr_tmp = self.time * v
+                tmp_circ = decompose_single_term_time_evolution(k, pr_tmp)
+                circ += tmp_circ
         return circ
