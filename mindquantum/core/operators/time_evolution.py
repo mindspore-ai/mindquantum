@@ -83,11 +83,14 @@ class TimeEvolution:  # pylint: disable=too-few-public-methods
     def circuit(self):
         """Get the first order trotter decomposition circuit of this time evolution operator."""
         from ..circuit import Circuit  # pylint: disable=import-outside-toplevel
+        from ..gates import GlobalPhase  # pylint: disable=import-outside-toplevel
 
         circ = Circuit()
         for k, v in self.ops.terms.items():
+            pr_tmp = self.time * v
             if k:
-                pr_tmp = self.time * v
                 tmp_circ = decompose_single_term_time_evolution(k, pr_tmp)
-                circ += tmp_circ
+            else:
+                tmp_circ = GlobalPhase(pr_tmp).on(0)
+            circ += tmp_circ
         return circ
