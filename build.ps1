@@ -198,6 +198,49 @@ $ErrorActionPreference = 'Stop'
 
 Write-Output "Called with: $($MyInvocation.Line)"
 
+if ($global:_IS_MINDSPORE_CI) {
+    # ==============================================================================
+    # CI WORKAROUND for linker path-with-space issue
+    #
+    # The linker on some Windows CI nodes (ld.lld.exe) fails to process
+    # library paths that contain spaces (e.g., Python installed in "Program Files").
+    # To work around this, we copy the required Python .lib file to a local,
+    # space-free directory and then force CMake to use this local copy.
+    # This logic is only active when $global:_IS_MINDSPORE_CI is true.
+    # ==============================================================================
+    $global:NEW_PYTHON_LIB_DIR = (Join-Path $ROOTDIR 'local_python_libs')
+    Write-Output "Creating local directory for Python library at $($global:NEW_PYTHON_LIB_DIR)"
+    if (-not (Test-Path $global:NEW_PYTHON_LIB_DIR)) {
+        New-Item -ItemType Directory -Path $global:NEW_PYTHON_LIB_DIR | Out-Null
+    }
+
+    Write-Output "Locating original Python library..."
+    $pythonPrefix = (& "$PYTHON" -c "import sys; print(sys.prefix)").Trim()
+    $pythonLibFilename = (& "$PYTHON" -c "import sys; print('python{0}{1}.lib'.format(sys.version_info.major, sys.version_info.minor))").Trim()
+    if (-not $pythonPrefix) {
+        Write-Error "ERROR: Could not determine Python prefix."; exit 1
+    }
+    if (-not $pythonLibFilename) {
+        Write-Error "ERROR: Could not determine Python library filename."; exit 1
+    }
+    $pythonLibDir = (Join-Path $pythonPrefix 'libs')
+    Write-Output "Original Python library directory is: $pythonLibDir"
+    Write-Output "Python library filename is: $pythonLibFilename"
+
+    $sourceLibFile = (Join-Path $pythonLibDir $pythonLibFilename)
+    $destLibFile = (Join-Path $global:NEW_PYTHON_LIB_DIR $pythonLibFilename)
+    Write-Output "Checking for Python library file at: $sourceLibFile"
+    if (-not (Test-Path $sourceLibFile)) {
+        Write-Error "ERROR: $pythonLibFilename not found at the expected location."; exit 1
+    }
+
+    Write-Output "Copying Python library to local directory..."
+    Copy-Item -Path $sourceLibFile -Destination $destLibFile -Force
+    Write-Output "Successfully copied $pythonLibFilename."
+
+    $global:OVERRIDDEN_PYTHON_LIB_PATH_CMAKE = ($destLibFile).Replace('\', '/')
+}
+
 cd "$ROOTDIR"
 
 # ------------------------------------------------------------------------------
@@ -358,6 +401,13 @@ if([bool]$Env:CXX) {
 }
 if([bool]$Env:CUDACXX) {
     $build_args += '--var', 'CMAKE_CUDA_COMPILER', "$Env:CUDACXX"
+}
+
+# Add CMake override for the local Python library, part of the CI WORKAROUND.
+if ($global:_IS_MINDSPORE_CI) {
+    Write-Output "Overriding Python library to use: $($global:OVERRIDDEN_PYTHON_LIB_PATH_CMAKE)"
+    $build_args += '--var', 'Python_LIBRARIES', "$($global:OVERRIDDEN_PYTHON_LIB_PATH_CMAKE)"
+    $build_args += '--var', 'Python_LIBRARY', "$($global:OVERRIDDEN_PYTHON_LIB_PATH_CMAKE)"
 }
 
 Write-Debug 'Will be passing these arguments to setup.py:'

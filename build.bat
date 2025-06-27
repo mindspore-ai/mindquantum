@@ -325,6 +325,51 @@ rem Locate python or python3
 call %SCRIPTDIR%\locate_python3.bat
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
 
+if !_IS_MINDSPORE_CI! == 1 (
+  rem ============================================================================
+  rem CI WORKAROUND for linker path-with-space issue
+  rem
+  rem The linker on some Windows CI nodes (ld.lld.exe) fails to process
+  rem library paths that contain spaces (e.g., Python installed in "Program Files").
+  rem To work around this, we copy the required Python .lib file to a local,
+  rem space-free directory and then force CMake to use this local copy.
+  rem This logic is only active when _IS_MINDSPORE_CI is true.
+  rem ============================================================================
+  set NEW_PYTHON_LIB_DIR=%ROOTDIR%\local_python_libs
+  echo Creating local directory for Python library at !NEW_PYTHON_LIB_DIR!
+  if not exist "!NEW_PYTHON_LIB_DIR!" md "!NEW_PYTHON_LIB_DIR!"
+
+  echo Locating original Python library...
+  for /f "delims=" %%i in ('!PYTHON! -c "import sys; print(sys.prefix)"') do set PYTHON_PREFIX=%%i
+  for /f "delims=" %%j in ('!PYTHON! -c "import sys; print('python{0}{1}.lib'.format(sys.version_info.major, sys.version_info.minor))"') do set PYTHON_LIB_FILENAME=%%j
+  if not defined PYTHON_PREFIX (
+      echo ERROR: Could not determine Python prefix.
+      exit /B 1
+  )
+  if not defined PYTHON_LIB_FILENAME (
+      echo ERROR: Could not determine Python library filename.
+      exit /B 1
+  )
+  set PYTHON_LIB_DIR=!PYTHON_PREFIX!\libs
+  echo Original Python library directory is: !PYTHON_LIB_DIR!
+  echo Python library filename is: !PYTHON_LIB_FILENAME!
+
+  set PYTHON_LIB_FILE=!PYTHON_LIB_DIR!\!PYTHON_LIB_FILENAME!
+  echo Checking for Python library file at: !PYTHON_LIB_FILE!
+  if not exist "!PYTHON_LIB_FILE!" (
+      echo ERROR: !PYTHON_LIB_FILENAME! not found at the expected location.
+      exit /B 1
+  )
+
+  echo Copying Python library to local directory...
+  copy /Y "!PYTHON_LIB_FILE!" "!NEW_PYTHON_LIB_DIR!\!PYTHON_LIB_FILENAME!"
+  if %ERRORLEVEL% NEQ 0 (
+      echo ERROR: Failed to copy !PYTHON_LIB_FILENAME!.
+      exit /B 1
+  )
+  echo Successfully copied !PYTHON_LIB_FILENAME!.
+)
+
 
 rem ============================================================================
 
@@ -410,6 +455,15 @@ if !has_build_dir! == 1 set args=!args! -C--global-option=build_ext -C--global-o
 if NOT "!CC!" == "" set args=!args! -C--global-option=--var -C--global-option=CMAKE_C_COMPILER -C--global-option=!CC!
 if NOT "!CXX!" == "" set args=!args! -C--global-option=--var -C--global-option=CMAKE_CXX_COMPILER -C--global-option=!CXX!
 if NOT "!CUDACXX!" == "" set args=!args! -C--global-option=--var -C--global-option=CMAKE_CUDA_COMPILER -C--global-option=!CUDACXX!
+
+rem Add CMake override for the local Python library, part of the CI WORKAROUND.
+if !_IS_MINDSPORE_CI! == 1 (
+  set OVERRIDDEN_PYTHON_LIB_PATH=!NEW_PYTHON_LIB_DIR!\!PYTHON_LIB_FILENAME!
+  set OVERRIDDEN_PYTHON_LIB_PATH_CMAKE=!OVERRIDDEN_PYTHON_LIB_PATH:\=/!
+  echo Overriding Python library to use: !OVERRIDDEN_PYTHON_LIB_PATH_CMAKE!
+  set args=!args! -C--global-option=--var -C--global-option=Python_LIBRARIES -C--global-option="!OVERRIDDEN_PYTHON_LIB_PATH_CMAKE!"
+  set args=!args! -C--global-option=--var -C--global-option=Python_LIBRARY -C--global-option="!OVERRIDDEN_PYTHON_LIB_PATH_CMAKE!"
+)
 
 rem ============================================================================
 
