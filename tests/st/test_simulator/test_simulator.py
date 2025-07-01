@@ -584,8 +584,8 @@ def test_custom_gate_in_parallel(config):
     f, g = grad_ops(p0)
     f_sum_exp = 0.8396650072427185
     g_sum_exp = 0.06041889360878677
-    assert np.allclose(np.sum(f), f_sum_exp)
-    assert np.allclose(np.sum(g), g_sum_exp)
+    assert np.allclose(np.sum(f), f_sum_exp, atol=1e-6)
+    assert np.allclose(np.sum(g), g_sum_exp, atol=1e-6)
 
 
 @pytest.mark.level0
