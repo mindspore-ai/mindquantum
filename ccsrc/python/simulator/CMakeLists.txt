@@ -57,6 +57,13 @@ target_include_directories(_mq_stabilizer PRIVATE $<BUILD_INTERFACE:${CMAKE_CURR
 force_at_least_cxx17_workaround(_mq_stabilizer)
 target_link_libraries(_mq_stabilizer PUBLIC mq_python_core mqsim_stabilizer)
 
+pybind11_add_module(_mq_chem MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_chem.cpp
+                    OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
+
+target_include_directories(_mq_chem PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
+force_at_least_cxx17_workaround(_mq_chem)
+target_link_libraries(_mq_chem PUBLIC mq_python_core mqchem_cpu)
+
 # ------------------------------------------------------------------------------
 
 add_subdirectory(include)

@@ -14,7 +14,6 @@
 #   limitations under the License.
 """This module provide some useful function related to operators."""
 
-from ...simulator.available_simulator import SUPPORTED_SIMULATOR
 from ..operators.fermion_operator import FermionOperator
 from ..operators.polynomial_tensor import PolynomialTensor
 from ..operators.qubit_excitation_operator import QubitExcitationOperator
@@ -309,6 +308,8 @@ def ground_state_of_sum_zz(ops: QubitOperator, sim='mqvector') -> float:
         (-2.5+0j)
     """
     # pylint: disable=import-outside-toplevel
+    from ...simulator.available_simulator import SUPPORTED_SIMULATOR
+
     if sim.startswith('mqmatrix'):
         raise ValueError("mqmatrix simulator not support this method yet.")
     c_module = SUPPORTED_SIMULATOR.c_module(sim)
