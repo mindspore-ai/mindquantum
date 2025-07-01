@@ -18,6 +18,7 @@ from .available_simulator import SUPPORTED_SIMULATOR
 from .noise import NoiseBackend
 from .simulator import Simulator, fidelity, get_supported_simulator, inner_product
 from .stabilizer import decompose_stabilizer, get_stabilizer_string, get_tableau_string
+from . import mqchem
 from .utils import GradOpsWrapper
 
 __all__ = [
@@ -31,5 +32,6 @@ __all__ = [
     'get_stabilizer_string',
     'get_tableau_string',
     'decompose_stabilizer',
+    'mqchem',
 ]
 __all__.sort()
