@@ -18,7 +18,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less, _check_int_type
-from .QAIA import QAIA, OverflowException
+from .QAIA import QAIA
 
 try:
     import torch
@@ -246,7 +246,11 @@ class ASB(SB):  # noqa: N801
                     self.y += self.xi * self.dt * (self.J.dot(self.x) + self.h)
 
                 if np.isnan(self.x).any():
-                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+                    raise ValueError(
+                        f"NaNs detected in tensor 'x'. "
+                        f"This often indicates numerical instability. "
+                        f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                    )
 
         elif self.backend == "gpu-float32":
             for i in range(self.n_iter):
@@ -259,7 +263,11 @@ class ASB(SB):  # noqa: N801
                     self.y += self.xi * self.dt * (torch.sparse.mm(self.J, self.x) + self.h)
 
                 if torch.isnan(self.x).any():
-                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+                    raise ValueError(
+                        f"NaNs detected in tensor 'x'. "
+                        f"This often indicates numerical instability. "
+                        f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                    )
 
         elif self.backend == "npu-float32":
             for i in range(self.n_iter):
@@ -272,7 +280,11 @@ class ASB(SB):  # noqa: N801
                     self.y += self.xi * self.dt * (torch.sparse.mm(self.J, self.x) + self.h)
 
                 if torch.isnan(self.x).any():
-                    raise OverflowException("Value is too large to handle due to large dt or xi.")
+                    raise ValueError(
+                        f"NaNs detected in tensor 'x'. "
+                        f"This often indicates numerical instability. "
+                        f"Consider adjusting parameters like dt={self.dt} or xi={self.xi}."
+                    )
 
 
 class BSB(SB):  # noqa: N801

@@ -78,6 +78,16 @@ class QAIA:
             raise TypeError(f"J requires numpy.array or scipy sparse matrix, but get {type(J)}")
         if len(J.shape) != 2 or J.shape[0] != J.shape[1]:
             raise ValueError(f"J must be a square matrix, but got shape {J.shape}")
+        if isinstance(J, np.ndarray):
+            if not np.allclose(J, J.T):
+                raise ValueError("J must be a symmetric matrix.")
+            if not np.all(np.diag(J) == 0):
+                raise ValueError("The diagonal elements of J are not all 0, recommend transferring them to h.")
+        if isinstance(J, sp.spmatrix):
+            if (J != J.T).nnz != 0:
+                raise ValueError("J must be a symmetric matrix.")
+            if not np.all(J.diagonal() == 0):
+                raise ValueError("The diagonal elements of J are not all 0, recommend transferring them to h.")
 
         if h is not None:
             if not isinstance(h, np.ndarray):
