@@ -116,7 +116,7 @@ class MQSABRE:
 
         if not check_connected(topology):
             raise ValueError(
-                'The current mapping algorithm SABRE only supports connected graphs, '
+                'The current mapping algorithm MQSABRE only supports connected graphs, '
                 'please manually assign some lines to connected subgraphs.'
             )
 

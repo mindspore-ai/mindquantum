@@ -21,6 +21,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -168,6 +169,10 @@ class MQ_SABRE {
     VT<VT<double>> T;                  // The length of a CNOT between the physical qubits Qi and Qj
     VT<VT<double>> DM;                 // distance matrix
 
+    // Internal ID-compression: map original physical qubit IDs to [0..num_physical-1]
+    std::unordered_map<qbit_t, int> old_to_new_;
+    VT<qbit_t> new_to_old_;
+
  public:
     VT<VT<double>> CNOT_error_rate;   // The error rate of the cnot gates
     VT<VT<double>> CNOT_gate_length;  // The length of the cnot gates
@@ -295,6 +300,10 @@ class SABRE {
      */
     double H(const std::list<int>& F, const std::list<int>& E, const VT<int>& pi, const std::pair<int, int>& SWAP,
              const VT<double>& decay) const;
+
+    // Internal ID-compression: map original physical qubit IDs to [0..num_physical-1]
+    std::unordered_map<qbit_t, int> old_to_new_;
+    VT<qbit_t> new_to_old_;
 
  public:
     /**
