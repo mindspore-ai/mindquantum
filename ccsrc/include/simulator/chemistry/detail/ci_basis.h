@@ -27,9 +27,10 @@
 #include <mutex>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include "core/utils.h"
 
 namespace mindquantum::sim::chem::detail {
 
@@ -88,26 +89,26 @@ class Indexing {
     }
 
     size_t rank(uint64_t mask) const {
-        return mask_to_index_.at(mask);
+        return mask_to_index_[mask];
     }
 
  private:
     void initialize() {
         size_t dim = Combinatorics::get(n_qubits_, n_electrons_);
         index_to_mask_.resize(dim);
-        mask_to_index_.reserve(dim);
-
-        for (size_t i = 0; i < dim; ++i) {
-            uint64_t mask = unrank_lexicographical(i, n_qubits_, n_electrons_);
-            index_to_mask_[i] = mask;
-            mask_to_index_.emplace(mask, i);
-        }
+        mask_to_index_.resize(1ULL << n_qubits_);
+        THRESHOLD_OMP_FOR(
+            dim, 1UL << 13, for (omp::idx_t i = 0; i < dim; ++i) {
+                uint64_t mask = unrank_lexicographical(i, n_qubits_, n_electrons_);
+                index_to_mask_[i] = mask;
+                mask_to_index_[mask] = i;
+            });
     }
 
     int n_qubits_;
     int n_electrons_;
     std::vector<uint64_t> index_to_mask_;
-    std::unordered_map<uint64_t, size_t> mask_to_index_;
+    std::vector<size_t> mask_to_index_;
 };
 
 class IndexingManager {
