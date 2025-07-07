@@ -106,8 +106,7 @@ struct CIVectorGradPolicy {
                                          const parameter::ParameterResolver& pr) {
         // This function calculates <psi_l| G \exp{\theta G} |psi_r> where G is the generator of the UCC gate.
         // The calculation is optimized to a single loop over coupled basis states without intermediate allocations.
-        g->EnsureGroupInfoPopulated();
-        if (g->group_info_.empty()) {
+        if (!g->is_valid_) {
             // This case should ideally not be hit if all gates are standard UCC excitations.
             // Returning zero for safety.
             return tensor::Matrix(std::vector<std::vector<py_qs_data_t>>{{py_qs_data_t(0)}});
@@ -119,8 +118,8 @@ struct CIVectorGradPolicy {
 
         const auto& data_l = psi_l_sim->qs_->data();
         const auto& data_r = psi_r_sim->qs_->data();
-        const auto& group_info = g->group_info_;
-        const size_t n_groups = group_info.size();
+        auto indexer = ci_basis::IndexingManager::GetIndexer(g->n_qubits_, g->n_electrons_);
+        const size_t dim = psi_l_sim->qs_->dimension();
 
         calc_type real_part = 0;
         calc_type imag_part = 0;
@@ -132,22 +131,35 @@ struct CIVectorGradPolicy {
         // and  c'_2 = phase*sin_th*c1 + cos_th*c2
         // This can be parallelized with reduction.
         THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:real_part, imag_part) schedule(static)), n_groups, 1UL << 13,
-                for (omp::idx_t i = 0; i < n_groups; i++) {
-                    const auto& info = group_info[i];
-                    const auto c1 = data_r[info.idx1];
-                    const auto c2 = data_r[info.idx2];
-                    const auto d1 = data_l[info.idx1];
-                    const auto d2 = data_l[info.idx2];
-                    const auto phase = static_cast<calc_type>(info.phase);
+            MQ_DO_PRAGMA(omp parallel for reduction(+:real_part, imag_part) schedule(static)), dim, 1UL << 13,
+                for (omp::idx_t i = 0; i < dim; i++) {
+                    uint64_t mask_i = indexer->unrank(i);
+                    if ((mask_i & g->excit_mask_) == g->ket_bra_mask_) {
+                        uint64_t mask_j = mask_i ^ g->flip_mask_;
+                        size_t j = indexer->rank(mask_j);
 
-                    const auto c_prime_1 = cos_th * c1 - phase * sin_th * c2;
-                    const auto c_prime_2 = phase * sin_th * c1 + cos_th * c2;
-                    const auto term = phase * (std::conj(d2) * c_prime_1 - std::conj(d1) * c_prime_2);
+                        const auto c1 = data_r[i], c2 = data_r[j];
+                        const auto d1 = data_l[i], d2 = data_l[j];
+                        double phase_d = 1.0;
+                        uint64_t current_mask = mask_i;
+                        for (size_t k = 0; k < g->op_sequence_.size(); ++k) {
+                            const auto& [orb_idx, is_creation] = g->op_sequence_[k];
+                            const auto& parity_mask = g->op_parity_masks_[k];
+                            if (ci_basis::SlaterDeterminant::count_set_bits(current_mask & parity_mask) & 1) {
+                                phase_d = -phase_d;
+                            }
+                            current_mask ^= (1ULL << orb_idx);
+                        }
+                        const auto phase = static_cast<calc_type>(phase_d);
 
-                    real_part += term.real();
-                    imag_part += term.imag();
+                        const auto c_prime_1 = cos_th * c1 - phase * sin_th * c2;
+                        const auto c_prime_2 = phase * sin_th * c1 + cos_th * c2;
+                        const auto term = phase * (std::conj(d2) * c_prime_1 - std::conj(d1) * c_prime_2);
+                        real_part += term.real();
+                        imag_part += term.imag();
+                    }
                 });
+
         py_qs_data_t total_val(real_part, imag_part);
         std::vector<std::vector<py_qs_data_t>> mdata{{total_val}};
         return tensor::Matrix(mdata);

@@ -79,24 +79,37 @@ struct cpu_ci_vector_policy_base {
 
     template <typename ExcOp>
     static void ApplyUCCGate(qs_data_p_t qs, const ExcOp& op, double theta, qbit_t n_qubits, int n_electrons) {
-        op.EnsureGroupInfoPopulated();
-        if (op.group_info_.empty()) {
-            return;  // Not a gate we can optimize, or no groups to apply to.
+        if (!op.is_valid_) {
+            return;  // Not a gate we can optimize.
         }
 
         auto& data = qs->data();
-        double cos_th = std::cos(theta);
-        double sin_th = std::sin(theta);
-        const auto& group_info = op.group_info_;
-        size_t n_groups = group_info.size();
+        const auto cos_th = static_cast<calc_type>(std::cos(theta));
+        const auto sin_th = static_cast<calc_type>(std::sin(theta));
+        auto indexer = ci_basis::IndexingManager::GetIndexer(n_qubits, n_electrons);
+        const size_t dim = qs->dimension();
 
         THRESHOLD_OMP_FOR(
-            n_groups, 1UL << 13, for (omp::idx_t i = 0; i < n_groups; i++) {
-                const auto& info = group_info[i];
-                auto c1 = data[info.idx1];
-                auto c2 = data[info.idx2];
-                data[info.idx1] = static_cast<calc_type>(cos_th * c1 - info.phase * sin_th * c2);
-                data[info.idx2] = static_cast<calc_type>(info.phase * sin_th * c1 + cos_th * c2);
+            dim, 1UL << 13, for (omp::idx_t i = 0; i < dim; i++) {
+                uint64_t mask_i = indexer->unrank(i);
+                if ((mask_i & op.excit_mask_) == op.ket_bra_mask_) {
+                    uint64_t mask_j = mask_i ^ op.flip_mask_;
+                    size_t j = indexer->rank(mask_j);
+                    double phase = 1.0;
+                    uint64_t current_mask = mask_i;
+                    for (size_t k = 0; k < op.op_sequence_.size(); ++k) {
+                        const auto& [orb_idx, is_creation] = op.op_sequence_[k];
+                        const auto& parity_mask = op.op_parity_masks_[k];
+                        if (ci_basis::SlaterDeterminant::count_set_bits(current_mask & parity_mask) & 1) {
+                            phase = -phase;
+                        }
+                        current_mask ^= (1ULL << orb_idx);
+                    }
+                    auto c1 = data[i];
+                    auto c2 = data[j];
+                    data[i] = cos_th * c1 - static_cast<calc_type>(phase) * sin_th * c2;
+                    data[j] = static_cast<calc_type>(phase) * sin_th * c1 + cos_th * c2;
+                }
             });
     }
 };

@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <mutex>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -50,57 +50,86 @@ class CppExcitationOperator {
     /// Binding data: list of (term ops, raw generator coefficient) pairs.
     using FermionOpData = std::vector<std::pair<FermionTermData, calc_type>>;
 
-    /// Struct to hold pre-calculated information for a coupled group.
-    struct GateGroupInfo {
-        size_t idx1;
-        size_t idx2;
-        double phase;
-    };
-
     /// Construct from fermionic operator data, number of spin-orbitals, electrons, and parameter resolver.
     explicit CppExcitationOperator(const FermionOpData& term_data, qbit_t n_qubits, int n_electrons,
                                    const parameter::ParameterResolver& pr = {});
 
-    /// Copy constructor to handle std::mutex member
-    CppExcitationOperator(const CppExcitationOperator& other)
-        : coeff(other.coeff)
-        , terms_(other.terms_)
-        , n_qubits_(other.n_qubits_)
-        , n_electrons_(other.n_electrons_)
-        , group_info_(other.group_info_)
-        , group_info_populated_(other.group_info_populated_) {
+    /// Copy constructor
+    CppExcitationOperator(const CppExcitationOperator& other);
+
+    /// Move constructor
+    CppExcitationOperator(CppExcitationOperator&& other) = default;
+
+    /*!
+     * @brief Get the excitation indices from the operator terms.
+     * @return A tuple containing p_indices (creation), q_indices (annihilation), and a boolean indicating validity.
+     */
+    std::tuple<std::vector<int>, std::vector<int>, bool> get_excitation_indices() const {
+        std::vector<int> p_indices, q_indices;
+        if (terms_.size() != 2) {
+            return {p_indices, q_indices, false};
+        }
+        for (const auto& [idx, is_creation] : terms_[0].ops) {
+            (is_creation ? p_indices : q_indices).push_back(idx);
+        }
+        std::sort(p_indices.begin(), p_indices.end(), std::greater<int>());
+        std::sort(q_indices.begin(), q_indices.end(), std::greater<int>());
+        if (!((p_indices.size() == 1 && q_indices.size() == 1) || (p_indices.size() == 2 && q_indices.size() == 2))) {
+            return {{}, {}, false};
+        }
+        return {p_indices, q_indices, true};
     }
 
-    /// Ensure the group info cache is populated. This is a one-time operation.
-    void EnsureGroupInfoPopulated() const;
-
-    /// Parameter resolver for generator coefficient (e.g., rotation angle expression).
     parameter::ParameterResolver coeff;
     std::vector<FermionTerm<calc_type>> terms_;
     qbit_t n_qubits_;
     int n_electrons_;
 
-    // Cache for pre-calculated group information
-    mutable std::vector<GateGroupInfo> group_info_;
-    mutable bool group_info_populated_ = false;
-    mutable std::mutex mutex_;  // To make cache population thread-safe
+    // Pre-calculated masks for fast gate application
+    bool is_valid_ = false;
+    uint64_t excit_mask_ = 0;    // Mask of all active orbitals
+    uint64_t ket_bra_mask_ = 0;  // Mask to identify the 'ket' part of the pair
+    uint64_t flip_mask_ = 0;     // Mask to flip between ket and bra states
+    std::vector<std::pair<int, bool>> op_sequence_;
+    std::vector<uint64_t> op_parity_masks_;
 
  private:
-    /// Populate group_info_ for single excitations.
-    void PopulateSingleExcitationGroupInfo(const std::vector<int>& p_indices, const std::vector<int>& q_indices) const;
-
-    /// Populate group_info_ for double excitations.
-    void PopulateDoubleExcitationGroupInfo(const std::vector<int>& p_indices, const std::vector<int>& q_indices) const;
+    void precompute_mask();
 };
 
 // Implementation
+template <typename calc_t>
+void CppExcitationOperator<calc_t>::precompute_mask() {
+    auto [p_indices, q_indices, is_valid] = get_excitation_indices();
+    is_valid_ = is_valid;
+    if (!is_valid_)
+        return;
+
+    uint64_t p_mask = 0, q_mask = 0;
+    for (auto p : p_indices)
+        p_mask |= (1ULL << p);
+    for (auto q : q_indices)
+        q_mask |= (1ULL << q);
+
+    excit_mask_ = p_mask | q_mask;
+    ket_bra_mask_ = q_mask;
+    flip_mask_ = excit_mask_;
+
+    const auto& term_ops = terms_[0].ops;
+    op_sequence_.reserve(term_ops.size());
+    op_parity_masks_.reserve(term_ops.size());
+    for (const auto& op : term_ops) {
+        op_sequence_.push_back(op);
+        op_parity_masks_.push_back((1ULL << op.first) - 1);
+    }
+}
+
 template <typename calc_t>
 CppExcitationOperator<calc_t>::CppExcitationOperator(const FermionOpData& term_data, qbit_t n_qubits, int n_electrons,
                                                      const parameter::ParameterResolver& pr)
     : coeff(pr), n_qubits_(n_qubits), n_electrons_(n_electrons) {
     for (auto const& term : term_data) {
         FermionTerm<calc_t> ft;
-        // Raw generator coefficient and ops are provided per term
         const auto& ops = term.first;
         const auto& val = term.second;
         ft.coefficient = val;
@@ -109,111 +138,13 @@ CppExcitationOperator<calc_t>::CppExcitationOperator(const FermionOpData& term_d
         }
         terms_.push_back(std::move(ft));
     }
+    precompute_mask();
 }
 
 template <typename calc_t>
-void CppExcitationOperator<calc_t>::PopulateSingleExcitationGroupInfo(const std::vector<int>& p_indices,
-                                                                      const std::vector<int>& q_indices) const {
-    auto indexer = ci_basis::IndexingManager::GetIndexer(n_qubits_, n_electrons_);
-    // Single excitation
-    int p = p_indices[0], q = q_indices[0];
-    int n_spec_q = n_qubits_ - 2, n_spec_e = n_electrons_ - 1;
-    if (n_spec_e < 0 || n_spec_e > n_spec_q) {
-        return;
-    }
-    size_t n_spec_comb = ci_basis::Combinatorics::get(n_spec_q, n_spec_e);
-    group_info_.reserve(n_spec_comb);
-    uint64_t p_mask = 1ULL << p, q_mask = 1ULL << q;
-
-    for (size_t i = 0; i < n_spec_comb; i++) {
-        uint64_t spec_mask_small = ci_basis::unrank_lexicographical(i, n_spec_q, n_spec_e);
-        uint64_t base_mask = 0;
-        int orb_idx = 0;
-        for (int j = 0; j < n_spec_q; j++) {
-            while (orb_idx == q || orb_idx == p)
-                orb_idx++;
-            if ((spec_mask_small >> j) & 1)
-                base_mask |= (1ULL << orb_idx);
-            orb_idx++;
-        }
-        uint64_t mask1 = base_mask | q_mask, mask2 = base_mask | p_mask;
-        size_t idx1 = indexer->rank(mask1), idx2 = indexer->rank(mask2);
-        int phase_q_ = ci_basis::SlaterDeterminant::count_set_bits(mask1 & ((1ULL << q) - 1));
-        uint64_t mask_tmp1 = mask1 ^ q_mask;
-        int phase_p_ = ci_basis::SlaterDeterminant::count_set_bits(mask_tmp1 & ((1ULL << p) - 1));
-        double phase = ((phase_q_ + phase_p_) & 1) ? -1.0 : 1.0;
-        group_info_.push_back({idx1, idx2, phase});
-    }
-}
-
-template <typename calc_t>
-void CppExcitationOperator<calc_t>::PopulateDoubleExcitationGroupInfo(const std::vector<int>& p_indices,
-                                                                      const std::vector<int>& q_indices) const {
-    auto indexer = ci_basis::IndexingManager::GetIndexer(n_qubits_, n_electrons_);
-    // Double excitation
-    int p = p_indices[0], q = p_indices[1];
-    int r = q_indices[0], s = q_indices[1];
-    int n_spec_q = n_qubits_ - 4, n_spec_e = n_electrons_ - 2;
-    if (n_spec_e < 0 || n_spec_e > n_spec_q) {
-        return;
-    }
-    size_t n_spec_comb = ci_basis::Combinatorics::get(n_spec_q, n_spec_e);
-    group_info_.reserve(n_spec_comb);
-    uint64_t p_mask = 1ULL << p, q_mask = 1ULL << q;
-    uint64_t r_mask = 1ULL << r, s_mask = 1ULL << s;
-
-    for (size_t i = 0; i < n_spec_comb; i++) {
-        uint64_t spec_mask_small = ci_basis::unrank_lexicographical(i, n_spec_q, n_spec_e);
-        uint64_t base_mask = 0;
-        int orb_idx = 0;
-        for (int j = 0; j < n_spec_q; j++) {
-            while (orb_idx == p || orb_idx == q || orb_idx == r || orb_idx == s)
-                orb_idx++;
-            if ((spec_mask_small >> j) & 1)
-                base_mask |= (1ULL << orb_idx);
-            orb_idx++;
-        }
-        uint64_t mask1 = base_mask | r_mask | s_mask;
-        uint64_t mask2 = base_mask | p_mask | q_mask;
-        size_t idx1 = indexer->rank(mask1), idx2 = indexer->rank(mask2);
-        int phase_s_ = ci_basis::SlaterDeterminant::count_set_bits(mask1 & ((1ULL << s) - 1));
-        uint64_t mask_tmp1 = mask1 ^ s_mask;
-        int phase_r_ = ci_basis::SlaterDeterminant::count_set_bits(mask_tmp1 & ((1ULL << r) - 1));
-        uint64_t mask_tmp2 = mask_tmp1 ^ r_mask;
-        int phase_q_ = ci_basis::SlaterDeterminant::count_set_bits(mask_tmp2 & ((1ULL << q) - 1));
-        uint64_t mask_tmp3 = mask_tmp2 | q_mask;
-        int phase_p_ = ci_basis::SlaterDeterminant::count_set_bits(mask_tmp3 & ((1ULL << p) - 1));
-        double phase = ((phase_s_ + phase_r_ + phase_q_ + phase_p_) & 1) ? -1.0 : 1.0;
-        group_info_.push_back({idx1, idx2, phase});
-    }
-}
-
-template <typename calc_t>
-void CppExcitationOperator<calc_t>::EnsureGroupInfoPopulated() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (group_info_populated_) {
-        return;
-    }
-
-    if (terms_.size() != 2) {
-        // Not a standard UCC gate with G = T - T_dagger, cannot pre-compute.
-        group_info_populated_ = true;  // Mark as populated to avoid re-checking
-        return;
-    }
-
-    std::vector<int> p_indices, q_indices;
-    for (const auto& [idx, is_creation] : terms_[0].ops) {
-        (is_creation ? p_indices : q_indices).push_back(idx);
-    }
-    std::sort(p_indices.begin(), p_indices.end(), std::greater<int>());
-    std::sort(q_indices.begin(), q_indices.end(), std::greater<int>());
-
-    if (p_indices.size() == 1 && q_indices.size() == 1) {
-        PopulateSingleExcitationGroupInfo(p_indices, q_indices);
-    } else if (p_indices.size() == 2 && q_indices.size() == 2) {
-        PopulateDoubleExcitationGroupInfo(p_indices, q_indices);
-    }
-    group_info_populated_ = true;
+CppExcitationOperator<calc_t>::CppExcitationOperator(const CppExcitationOperator<calc_t>& other)
+    : coeff(other.coeff), terms_(other.terms_), n_qubits_(other.n_qubits_), n_electrons_(other.n_electrons_) {
+    precompute_mask();
 }
 
 }  // namespace mindquantum::sim::chem::detail
