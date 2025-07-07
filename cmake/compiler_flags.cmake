@@ -102,6 +102,15 @@ if(MSVC)
     FLAGS "/MDd"
     GENEX "$<AND:$<OR:$<CONFIG:DEBUG>,$<CONFIG:RELWITHDEBINFO>>,$<BOOL:${ENABLE_MD}>>"
     NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+
+  # MSVC security hardening flags: enable DEP, ASLR, SafeSEH, GS, SDL, CFG
+  # /guard:cf is both a compiler and linker flag
+  test_compile_option(
+    msvc_security_flags
+    LANGS C CXX
+    FLAGS "/GS" "/sdl" "/guard:cf"
+    CMAKE_OPTION ENABLE_MSVC_SECURITY
+    NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -396,5 +405,11 @@ target_include_directories(cmake_config INTERFACE $<BUILD_INTERFACE:${PROJECT_BI
 
 append_to_property(mq_install_targets GLOBAL cmake_config)
 install(FILES ${PROJECT_BINARY_DIR}/config/cmake_config.h DESTINATION ${MQ_INSTALL_INCLUDEDIR}/config)
+
+# ==============================================================================
+
+if(ENABLE_PIE)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # ==============================================================================
