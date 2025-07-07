@@ -305,15 +305,14 @@ if("${OS_NAME}" STREQUAL "MSYS-CLANG64")
   endforeach()
 endif()
 
-# --------------------------------------------------------------
-
-test_linker_option(
-  link_pie
-  LANGS C CXX DPCXX
-  FLAGS "-pie"
-  CMAKE_OPTION ENABLE_PIE)
-
-# --------------------------------------------------------------
+# For executables, add the -pie flag to enable ASLR. This does not affect shared libraries.
+if(ENABLE_PIE AND NOT MSVC AND NOT APPLE)
+  include(CheckLinkerFlag)
+  check_linker_flag(CXX "-pie" LINKER_SUPPORTS_PIE)
+  if(LINKER_SUPPORTS_PIE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie" CACHE STRING "Linker flags for executables" FORCE)
+  endif()
+endif()
 
 if(MSVC)
   # Determine if we are building 32-bit (SAFESEH only valid for 32-bit targets)
