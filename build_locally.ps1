@@ -237,6 +237,8 @@ $cmake_args = @('-DIN_PLACE_BUILD:BOOL=ON'
                 '-DIS_PYTHON_BUILD:BOOL=OFF'
                 '-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON'
                 "-DCMAKE_BUILD_TYPE:STRING={0}" -f $build_type
+                '-DENABLE_RUNPATH:BOOL=ON'
+                '-DLINKER_RPATH:BOOL=ON'
                 "-DENABLE_ANALYZER:BOOL={0}" -f $CMAKE_BOOL[$enable_analyzer]
                 "-DENABLE_CMAKE_DEBUG:BOOL={0}" -f $CMAKE_BOOL[$cmake_debug_mode]
                 "-DENABLE_CUDA:BOOL={0}" -f $CMAKE_BOOL[$enable_gpu]

@@ -304,3 +304,30 @@ if("${OS_NAME}" STREQUAL "MSYS-CLANG64")
     endif()
   endforeach()
 endif()
+
+# --------------------------------------------------------------
+
+test_linker_option(
+  link_pie
+  LANGS C CXX DPCXX
+  FLAGS "-pie"
+  CMAKE_OPTION ENABLE_PIE)
+
+# --------------------------------------------------------------
+
+if(MSVC)
+  # Determine if we are building 32-bit (SAFESEH only valid for 32-bit targets)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(_mq_seh_flag "/SAFESEH")
+  else()
+    set(_mq_seh_flag "")
+  endif()
+
+  # MSVC security hardening flags for the linker
+  test_linker_option(
+    msvc_security_linker_flags
+    LANGS C CXX
+    FLAGS "/DYNAMICBASE" "/NXCOMPAT" "/guard:cf" "${_mq_seh_flag}"
+    CMAKE_OPTION ENABLE_MSVC_SECURITY
+    NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET)
+endif()
