@@ -121,10 +121,10 @@ class SABRE:
                 add 3*delta2 to decay values. Default: 0.2.
 
         Returns:
-            - mapped_circuit (:class:`~.core.circuit.Circuit`): Quantum circuit compatible with hardware
+            - mapped_circuit (:class:`~.core.circuit.Circuit`), Quantum circuit compatible with hardware
               topology after adding SWAP gates
-            - initial_mapping (List[int]): Mapping from logical to physical qubits at the start of execution
-            - final_mapping (List[int]): Mapping from logical to physical qubits at the end of execution
+            - initial_mapping (List[int]), Mapping from logical to physical qubits at the start of execution
+            - final_mapping (List[int]), Mapping from logical to physical qubits at the end of execution
 
         Examples:
             >>> # Use default parameters
