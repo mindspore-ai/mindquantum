@@ -1,6 +1,6 @@
 # ==============================================================================
 #
-# Copyright 2020 <Huawei Technologies Co., Ltd>
+# Copyright 2025 <Huawei Technologies Co., Ltd>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,16 +16,8 @@
 #
 # ==============================================================================
 
-find_package(Catch2 CONFIG REQUIRED)
-list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
+# lint_cmake: -whitespace/indent
 
-include(CTest)
-include(Catch)
-
-add_subdirectory(utils)
-
-# ==============================================================================
-
-add_subdirectory(config)
-
-# ------------------------------------------------------------------------------
+target_sources(
+  mqchem_cpu
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/cpu_ci_vector_policy.cpp)

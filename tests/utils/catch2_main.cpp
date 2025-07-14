@@ -16,7 +16,7 @@
 
 #include "config/logging.h"
 
-#include <catch2/catch_session.h>
+#include <catch2/catch_session.hpp>
 
 int main(int argc, char* argv[]) {
     Catch::Session session;

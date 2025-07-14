@@ -73,3 +73,11 @@ target_link_libraries(mqsim_stabilizer PUBLIC mqsim_common mq_math intrin_flag_C
 force_at_least_cxx17_workaround(mqsim_stabilizer)
 append_to_property(mq_install_targets GLOBAL mqsim_stabilizer)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/stabilizer)
+
+# ==============================================================================
+
+add_library(mqchem_cpu STATIC)
+target_link_libraries(mqchem_cpu PUBLIC mqsim_common mq_math intrin_flag_CXX)
+force_at_least_cxx17_workaround(mqchem_cpu)
+append_to_property(mq_install_targets GLOBAL mqchem_cpu)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/chemistry/detail)

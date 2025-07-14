@@ -98,11 +98,13 @@ def uccsd_singlet_get_packed_amplitudes(single_amplitudes, double_amplitudes, n_
         # Just get up amplitudes, since down and cross terms should be the same
         virtual_1_up = up_index(virtual_spatial_1)
         occupied_1_up = up_index(occupied_spatial_1)
-        virtual_2_up = up_index(virtual_spatial_2)
-        occupied_2_up = up_index(occupied_spatial_2)
+        virtual_2_down = down_index(virtual_spatial_2)
+        occupied_2_down = down_index(occupied_spatial_2)
 
         # Get amplitude
-        doubles_2[f'd2_{len(doubles_2)}'] = double_amplitudes[virtual_1_up, occupied_1_up, virtual_2_up, occupied_2_up]
+        doubles_2[f'd2_{len(doubles_2)}'] = double_amplitudes[
+            virtual_1_up, occupied_1_up, virtual_2_down, occupied_2_down
+        ]
 
     return singles + doubles_1 + doubles_2
 
@@ -206,7 +208,7 @@ def uccsd_singlet_generator(n_qubits, n_electrons, anti_hermitian=True):
 
         # Generate double excitations
         coeff = ParameterResolver({f'd2_{i}': 1})
-        for (spin_a, spin_b) in itertools.product(range(2), repeat=2):
+        for spin_a, spin_b in itertools.product(range(2), repeat=2):
             # Get the functions which map a spatial orbital index to a
             # spin orbital index
             index_a = spin_index_functions[spin_a]

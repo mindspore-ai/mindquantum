@@ -23,8 +23,8 @@ UT_PATH="$PROJECT_DIR/tests/ut"
 run_test() {
     echo "Start to run test."
     cd "$PROJECT_DIR" || exit
-    echo python -m pytest -v "$UT_PATH"
-    python -m pytest -v "$UT_PATH"
+    echo python -m pytest -vv -s "$UT_PATH"
+    python -m pytest -vv -s "$UT_PATH"
     echo "Test all use cases success."
 }
 

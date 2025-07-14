@@ -16,7 +16,7 @@
 
 #include "config/constexpr_type_name.h"
 
-#include <catch2/catch_test_macros.h>
+#include <catch2/catch_test_macros.hpp>
 
 // =============================================================================
 

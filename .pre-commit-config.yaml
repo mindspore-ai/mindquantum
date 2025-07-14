@@ -97,7 +97,7 @@ repos:
         additional_dependencies: [pyyaml]
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 6.0.1
     hooks:
       - id: isort
         name: isort (python)
@@ -163,11 +163,11 @@ repos:
   - repo: https://github.com/Takishima/cmake-pre-commit-hooks/
     rev: 'v1.5.3'
     hooks:
-      - id: clang-format
-        require_serial: false
-        args: [-i]
-        files: .*\.(h|hpp|tpp|cpp|cc)$
-        additional_dependencies: ['clang-format==14.*']
+      # - id: clang-format
+      #   require_serial: false
+      #   args: [-i]
+      #   files: .*\.(h|hpp|tpp|cpp|cc)$
+      #   additional_dependencies: ['clang-format==14.*']
       - id: cpplint
         require_serial: false
         args: [--quiet]
@@ -202,3 +202,6 @@ repos:
                --std=c++20,
                --language=c++,
                --suppressions-list=.cppcheck.suppressions]
+      - id: clang-format
+        args: ["-i"]
+        files: .*\.(h|hpp|tpp|cpp|cc)$
