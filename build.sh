@@ -425,9 +425,16 @@ call_cmd mv -v "$ROOTDIR/dist/"*whl* "${output_path}"
 
 if [[ "$_IS_MINDSPORE_CI" -eq 1 && "$(uname)" == 'Linux' ]]; then
     suffix="-manylinux_2_27_$(uname -m)"
+    dot_suffix=".manylinux_2_27_$(uname -m)"
     for ext in ".whl" ".whl.sha256"; do
-        for wheel in "${output_path}"/*"${suffix}${ext}"; do
-            call_cmd cp -v "$wheel" "${wheel%"${suffix}${ext}"}-linux_$(uname -m)${ext}"
+        for wheel in "${output_path}"/*"${suffix}${ext}" "${output_path}"/*"${dot_suffix}${ext}"; do
+            [ -e "$wheel" ] || continue
+            if [[ "$wheel" == *"${suffix}${ext}" ]]; then
+                base="${wheel%"${suffix}${ext}"}"
+            else
+                base="${wheel%"${dot_suffix}${ext}"}"
+            fi
+            call_cmd cp -v "$wheel" "${base}-linux_$(uname -m)${ext}"
         done
     done
 fi
