@@ -21,6 +21,8 @@
 
 #include "config/openmp.h"
 #include "simulator/utils.h"
+#include "simulator/vector/detail/cuquantum_vector_double_policy.cuh"
+#include "simulator/vector/detail/cuquantum_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
@@ -439,6 +441,8 @@ auto GPUVectorPolicyBase<derived_, calc_type_>::GetReducedDensityMatrix(const qs
     }
 }
 
+template struct GPUVectorPolicyBase<CuQuantumVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<CuQuantumVectorPolicyDouble, double>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 

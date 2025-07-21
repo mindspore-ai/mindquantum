@@ -17,6 +17,8 @@
 
 #include "config/openmp.h"
 #include "simulator/utils.h"
+#include "simulator/vector/detail/cuquantum_vector_double_policy.cuh"
+#include "simulator/vector/detail/cuquantum_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
@@ -35,7 +37,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyH(qs_data_p_t* qs_p, const 
 
 template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ApplySX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
-                                                       index_t dim) {
+                                                        index_t dim) {
     py_qs_data_t a = py_qs_data_t(0.5, 0.5);
     py_qs_data_t b = std::conj(a);
     std::vector<std::vector<py_qs_data_t>> m{{a, b}, {b, a}};
@@ -43,7 +45,7 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplySX(qs_data_p_t* qs_p, const
 }
 template <typename derived_, typename calc_type_>
 void GPUVectorPolicyBase<derived_, calc_type_>::ApplySXdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls,
-                                                       index_t dim) {
+                                                           index_t dim) {
     py_qs_data_t a = py_qs_data_t(0.5, -0.5);
     py_qs_data_t b = std::conj(a);
     std::vector<std::vector<py_qs_data_t>> m{{a, b}, {b, a}};
@@ -57,6 +59,8 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyGP(qs_data_p_t* qs_p, qbit_
     derived::ApplySingleQubitMatrix(*qs_p, qs_p, obj_qubit, ctrls, m, dim);
 }
 
+template struct GPUVectorPolicyBase<CuQuantumVectorPolicyFloat, float>;
+template struct GPUVectorPolicyBase<CuQuantumVectorPolicyDouble, double>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 
