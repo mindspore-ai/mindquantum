@@ -4,7 +4,7 @@
 #    file_path:function_name1, function_name2
 #
 _build/backend.py:build_wheel
-mindquantum/mindquantum/_build/backend.py:build_wheel
+mindquantum/_build/backend.py:build_wheel
 mindquantum/mindquantum/algorithm/nisq/chem/qubit_ucc_ansatz.py:_implement
 mindquantum/mindquantum/algorithm/nisq/chem/quccsd.py:quccsd_generator
 mindquantum/mindquantum/algorithm/nisq/chem/transform.py:bravyi_kitaev_superfast
