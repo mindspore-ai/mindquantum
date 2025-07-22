@@ -17,6 +17,7 @@
 #include "device/mapping.h"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <queue>
@@ -447,15 +448,29 @@ MQ_SABRE::MQ_SABRE(const VT<std::shared_ptr<BasicGate>>& circ, const std::shared
     auto tmp = GateToAbstractGate(circ);
     this->num_logical = tmp.first;
     this->gates = tmp.second;
-    this->num_physical = coupling_graph->size();
-    this->CNOT_error_rate = VT<VT<double>>(this->num_physical, VT<double>(num_physical));
-    this->CNOT_gate_length = VT<VT<double>>(this->num_physical, VT<double>(num_physical));
+    // Compress physical-qubit IDs to contiguous [0..num_physical-1]
+    auto ids_set = coupling_graph->AllQubitID();
+    VT<qbit_t> sorted_ids(ids_set.begin(), ids_set.end());
+    std::sort(sorted_ids.begin(), sorted_ids.end());
+    for (int i = 0; i < static_cast<int>(sorted_ids.size()); ++i) {
+        old_to_new_[sorted_ids[i]] = i;
+        new_to_old_.push_back(sorted_ids[i]);
+    }
+    this->num_physical = static_cast<int>(sorted_ids.size());
+    if (this->num_logical > this->num_physical) {
+        throw std::runtime_error("The number of logical qubits (" + std::to_string(this->num_logical)
+                                 + ") cannot be greater than the number of physical qubits ("
+                                 + std::to_string(this->num_physical) + ").");
+    }
+
+    this->CNOT_error_rate = VT<VT<double>>(this->num_physical, VT<double>(this->num_physical, 0.0));
+    this->CNOT_gate_length = VT<VT<double>>(this->num_physical, VT<double>(this->num_physical, 0.0));
     // get cnot error rate matrix and cnot length matrix
-    for (int i = 0; i < CnotErrrorRateAndGateLength.size(); i++) {
-        CNOT_error_rate[CnotErrrorRateAndGateLength[i].first.first][CnotErrrorRateAndGateLength[i].first.second]
-            = CnotErrrorRateAndGateLength[i].second[0];
-        CNOT_gate_length[CnotErrrorRateAndGateLength[i].first.first][CnotErrrorRateAndGateLength[i].first.second]
-            = CnotErrrorRateAndGateLength[i].second[1];
+    for (const auto& cnot_data : CnotErrrorRateAndGateLength) {
+        int n_q1 = old_to_new_.at(cnot_data.first.first);
+        int n_q2 = old_to_new_.at(cnot_data.first.second);
+        CNOT_error_rate[n_q1][n_q2] = cnot_data.second[0];
+        CNOT_gate_length[n_q1][n_q2] = cnot_data.second[1];
     }
     this->SWAP_success_rate = VT<VT<double>>(this->num_physical, VT<double>(this->num_physical));
     this->SWAP_gate_length = VT<VT<double>>(this->num_physical, VT<double>(this->num_physical));
@@ -473,9 +488,11 @@ MQ_SABRE::MQ_SABRE(const VT<std::shared_ptr<BasicGate>>& circ, const std::shared
         }
     }
     this->G = VT<VT<int>>(this->num_physical, VT<int>(0));
-    for (auto id : coupling_graph->AllQubitID()) {
-        auto nearby = (*coupling_graph)[id]->neighbour;
-        this->G[id].insert(this->G[id].begin(), nearby.begin(), nearby.end());
+    for (auto old_id : sorted_ids) {
+        int nid = old_to_new_[old_id];
+        for (auto old_nb : (*coupling_graph)[old_id]->neighbour) {
+            this->G[nid].push_back(old_to_new_[old_nb]);
+        }
     }
     // get DAG of logical circuit
     this->DAG = GetCircuitDAG(num_logical, gates);
@@ -572,16 +589,35 @@ std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>> MQ_SABRE::Solve(double W, do
     auto initial_mapping = this->layout;                    // first mapping
     auto gates = HeuristicSearch(this->layout, this->DAG);  // final mapping
 
-    // return std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>>();
     VT<VT<int>> gate_info;
     for (auto& g : gates) {
+        // translate back to original physical-qubit IDs
+        qbit_t old_q1 = new_to_old_.at(g.q1);
+        qbit_t old_q2 = new_to_old_.at(g.q2);
         if (g.type == "SWAP") {
-            gate_info.push_back({-1, g.q1, g.q2});
+            gate_info.push_back({-1, static_cast<int>(old_q1), static_cast<int>(old_q2)});
         } else {
-            gate_info.push_back({std::stoi(g.tag), g.q1, g.q2});
+            gate_info.push_back({std::stoi(g.tag), static_cast<int>(old_q1), static_cast<int>(old_q2)});
         }
     }
-    return {gate_info, {initial_mapping, this->layout}};
+    // remap initial and final logical->physical mappings back to original IDs
+    VT<int> init_map_remap(initial_mapping.size());
+    for (size_t i = 0; i < initial_mapping.size(); i++) {
+        if (initial_mapping[i] != -1) {
+            init_map_remap[i] = static_cast<int>(new_to_old_.at(initial_mapping[i]));
+        } else {
+            init_map_remap[i] = -1;
+        }
+    }
+    VT<int> final_map_remap(this->layout.size());
+    for (size_t i = 0; i < this->layout.size(); i++) {
+        if (this->layout[i] != -1) {
+            final_map_remap[i] = static_cast<int>(new_to_old_.at(this->layout[i]));
+        } else {
+            final_map_remap[i] = -1;
+        }
+    }
+    return {gate_info, {init_map_remap, final_map_remap}};
 }
 
 inline void MQ_SABRE::SetParameters(double W, double alpha1, double alpha2, double alpha3) {
@@ -675,11 +711,26 @@ SABRE::SABRE(const VT<std::shared_ptr<BasicGate>>& circ, const std::shared_ptr<Q
     auto tmp = GateToAbstractGate(circ);
     this->num_logical = tmp.first;
     this->gates = tmp.second;
-    this->num_physical = coupling_graph->size();
-    this->G = VT<VT<int>>(this->num_physical, VT<int>(0));
-    for (auto id : coupling_graph->AllQubitID()) {
-        auto nearby = (*coupling_graph)[id]->neighbour;
-        this->G[id].insert(this->G[id].begin(), nearby.begin(), nearby.end());
+    // Compress physical-qubit IDs to contiguous [0..num_physical-1]
+    auto ids_set = coupling_graph->AllQubitID();
+    VT<qbit_t> sorted_ids(ids_set.begin(), ids_set.end());
+    std::sort(sorted_ids.begin(), sorted_ids.end());
+    for (int i = 0; i < static_cast<int>(sorted_ids.size()); ++i) {
+        old_to_new_[sorted_ids[i]] = i;
+        new_to_old_.push_back(sorted_ids[i]);
+    }
+    this->num_physical = static_cast<int>(sorted_ids.size());
+    if (this->num_logical > this->num_physical) {
+        throw std::runtime_error("The number of logical qubits (" + std::to_string(this->num_logical)
+                                 + ") cannot be greater than the number of physical qubits ("
+                                 + std::to_string(this->num_physical) + ").");
+    }
+    this->G = VT<VT<int>>(num_physical, VT<int>(0));
+    for (auto old_id : sorted_ids) {
+        int nid = old_to_new_[old_id];
+        for (auto old_nb : (*coupling_graph)[old_id]->neighbour) {
+            this->G[nid].push_back(old_to_new_[old_nb]);
+        }
     }
     // -----------------------------------------------------------------------------
 
@@ -817,13 +868,25 @@ std::pair<VT<VT<int>>, std::pair<VT<int>, VT<int>>> SABRE::Solve(int iter_num, d
     auto gs = HeuristicSearch(pi, this->DAG);
     VT<VT<int>> gate_info;
     for (auto& g : gs) {
+        // translate back to original physical-qubit IDs
+        qbit_t old_q1 = new_to_old_[g.q1];
+        qbit_t old_q2 = new_to_old_[g.q2];
         if (g.type == "SWAP") {
-            gate_info.push_back({-1, g.q1, g.q2});
+            gate_info.push_back({-1, static_cast<int>(old_q1), static_cast<int>(old_q2)});
         } else {
-            gate_info.push_back({std::stoi(g.tag), g.q1, g.q2});
+            gate_info.push_back({std::stoi(g.tag), static_cast<int>(old_q1), static_cast<int>(old_q2)});
         }
     }
-    return {gate_info, {initial_mapping, pi}};
+    // remap initial and final logical->physical mappings back to original IDs
+    VT<int> init_map_remap;
+    VT<int> final_map_remap;
+    init_map_remap.reserve(initial_mapping.size());
+    std::transform(initial_mapping.cbegin(), initial_mapping.cend(), std::back_inserter(init_map_remap),
+                   [this](int v) { return static_cast<int>(new_to_old_[v]); });
+    final_map_remap.reserve(pi.size());
+    std::transform(pi.cbegin(), pi.cend(), std::back_inserter(final_map_remap),
+                   [this](int v) { return static_cast<int>(new_to_old_[v]); });
+    return {gate_info, {init_map_remap, final_map_remap}};
 }
 
 inline void SABRE::SetParameters(double W, double delta1, double delta2) {
