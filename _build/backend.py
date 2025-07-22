@@ -273,6 +273,16 @@ def build_sdist(sdist_directory, config_settings=None):
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):  # pylint: disable=R0912,R0914,R0915
     """Build a wheel from this project."""
+    cuda_libs_to_exclude = [
+        'libcublas.so.11',
+        'libcublasLt.so.11',
+        'libcusolver.so',
+        'libcusparse.so',
+    ]
+    exclude_args = []
+    for lib in cuda_libs_to_exclude:
+        exclude_args.extend(['--exclude', lib])
+
     if platform.system() == 'Linux':
         logging.info('Running on Linux %s', platform.uname().release)
     elif platform.system() == 'Darwin':
@@ -318,7 +328,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
             call_auditwheel('show', name_full)
             if plat:
-                call_auditwheel('repair', '--plat', plat, '-w', delocated_wheel_directory, name_full)
+                call_auditwheel('repair', '--plat', plat, '-w', delocated_wheel_directory, *exclude_args, name_full)
             else:
                 logging.info('No platform specified, trying a few from older specifications to more recent')
                 for plat in (
@@ -343,7 +353,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                     logging.info('----------------------------------------')
                     logging.info('Trying to delocate to platform: %s', plat)
                     if call_auditwheel(
-                        'repair', '--plat', plat, '-w', delocated_wheel_directory, name_full, allow_failure=True
+                        'repair', '--plat', plat, '-w', delocated_wheel_directory, *exclude_args, name_full, allow_failure=True
                     ):
                         break
         elif platform.system() == 'Darwin':

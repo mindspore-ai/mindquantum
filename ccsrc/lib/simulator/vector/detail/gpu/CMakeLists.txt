@@ -29,4 +29,7 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_policy.cu
           ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_rot_pauli.cu
           ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_swap_like.cu
-          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_z_like.cu)
+          ${CMAKE_CURRENT_LIST_DIR}/gpu_vector_core_z_like.cu
+          ${CMAKE_CURRENT_LIST_DIR}/cuquantum_vector_core_float.cu
+          ${CMAKE_CURRENT_LIST_DIR}/cuquantum_vector_core_double.cu
+          ${CMAKE_CURRENT_LIST_DIR}/cuquantum_loader.cu)

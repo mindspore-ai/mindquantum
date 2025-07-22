@@ -45,6 +45,8 @@
 namespace mindquantum::sim::vector::detail {
 struct GPUVectorPolicyFloat;
 struct GPUVectorPolicyDouble;
+struct CuQuantumVectorPolicyFloat;
+struct CuQuantumVectorPolicyDouble;
 
 template <typename derived_, typename calc_type_>
 struct GPUVectorPolicyBase {

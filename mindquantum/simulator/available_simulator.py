@@ -22,6 +22,9 @@ from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.error import SimNotAvailableError
 
 GPU_DISABLED_REASON = None
+CUQUANTUM_DISABLED_REASON = None
+MQVECTOR_GPU_SUPPORTED = False
+MQVECTOR_CUQUANTUM_SUPPORTED = False
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -29,12 +32,21 @@ try:
     # pylint: disable=no-member
     _mq_vector_gpu.double.mqvector_gpu(1).apply_gate(mqbackend.gate.HGate([0]))
     MQVECTOR_GPU_SUPPORTED = True
-except ImportError as err:
-    GPU_DISABLED_REASON = f"Unable to import mqvector_gpu backend. This backend requires CUDA 11 or higher."
-    MQVECTOR_GPU_SUPPORTED = False
-except RuntimeError as err:
-    GPU_DISABLED_REASON = f"Disable mqvector gpu backend due to: {err}"
-    MQVECTOR_GPU_SUPPORTED = False
+except ImportError:
+    GPU_DISABLED_REASON = "GPU backend is not available. This backend requires CUDA 11 or higher."
+except Exception as e:  # pylint: disable=broad-except
+    GPU_DISABLED_REASON = f"GPU backend is not available due to: {e}"
+
+if MQVECTOR_GPU_SUPPORTED:
+    if hasattr(_mq_vector_gpu, 'cuquantum_float'):
+        MQVECTOR_CUQUANTUM_SUPPORTED = True
+    else:
+        CUQUANTUM_DISABLED_REASON = (
+            "The 'mqvector_cq' backend is not available. "
+            "Please ensure that NVIDIA's cuQuantum SDK is installed correctly."
+        )
+else:
+    CUQUANTUM_DISABLED_REASON = GPU_DISABLED_REASON
 
 
 class _AvailableSimulator:
@@ -64,6 +76,12 @@ class _AvailableSimulator:
                 complex64: _mq_vector_gpu.float,
                 complex128: _mq_vector_gpu.double,
             }
+        if MQVECTOR_CUQUANTUM_SUPPORTED:
+            self.base_module['mqvector_cq'] = _mq_vector_gpu
+            self.sims['mqvector_cq'] = {
+                complex64: _mq_vector_gpu.cuquantum_float,
+                complex128: _mq_vector_gpu.cuquantum_double,
+            }
 
     def is_available(self, sim: typing.Union[str, BackendBase], dtype) -> bool:
         """Check a simulator with given data type is available or not."""
@@ -71,7 +89,7 @@ class _AvailableSimulator:
             return True
         if sim == 'stabilizer':
             return True
-        if sim in self.sims and dtype in self.sims[sim]:
+        if sim in self.sims and dtype in self.sims.get(sim, {}):
             return True
         return False
 
@@ -79,6 +97,9 @@ class _AvailableSimulator:
         """Get available simulator c module."""
         if sim == 'mqvector_gpu' and not MQVECTOR_GPU_SUPPORTED:
             warnings.warn(f"{GPU_DISABLED_REASON}", stacklevel=3)
+        if sim == 'mqvector_cq' and not MQVECTOR_CUQUANTUM_SUPPORTED:
+            warnings.warn(f"{CUQUANTUM_DISABLED_REASON}", stacklevel=3)
+
         if dtype is None:
             if sim not in self.base_module:
                 raise SimNotAvailableError(sim)
@@ -89,8 +110,13 @@ class _AvailableSimulator:
 
     def py_class(self, sim: str):
         """Get python base class of simulator."""
+        if sim == 'mqvector_gpu' and not MQVECTOR_GPU_SUPPORTED:
+            raise ValueError(f"{GPU_DISABLED_REASON}")
+        if sim == 'mqvector_cq' and not MQVECTOR_CUQUANTUM_SUPPORTED:
+            raise ValueError(f"{CUQUANTUM_DISABLED_REASON}")
+
         if sim in self.sims:
-            if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix']:
+            if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix', 'mqvector_cq']:
                 # pylint: disable=import-outside-toplevel
                 from mindquantum.simulator.mqsim import MQSim
 
@@ -100,7 +126,6 @@ class _AvailableSimulator:
                 from mindquantum.simulator.stabilizer import Stabilizer
 
                 return Stabilizer
-            raise SimNotAvailableError(sim)
         raise SimNotAvailableError(sim)
 
     def __iter__(self):

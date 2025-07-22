@@ -54,6 +54,10 @@ if(ENABLE_CUDA)
   set_target_properties(mqsim_vector_gpu PROPERTIES CUDA_RUNTIME_LIBRARY $<IF:$<BOOL:${CUDA_STATIC}>,Static,Shared>)
   force_at_least_cxx17_workaround(mqsim_vector_gpu)
   append_to_property(mq_install_targets GLOBAL mqsim_vector_gpu)
+
+  find_package(cuquantum CONFIG REQUIRED)
+  target_link_libraries(mqsim_vector_gpu PUBLIC cuquantum::cuquantum)
+  target_link_libraries(mqsim_vector_gpu PRIVATE dl)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail)
