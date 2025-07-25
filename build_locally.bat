@@ -347,8 +347,6 @@ call %SCRIPTDIR%\dos\build_locally_cmake_option.bat ENABLE_LOGGING_TRACE_LEVEL !
 
 set cmake_args=!cmake_args! %RETVAL%
 set cmake_args=!cmake_args! -DENABLE_BUILD_TYPE:STRING=!build_type!
-set cmake_args=!cmake_args! -DENABLE_RUNPATH:BOOL=ON
-set cmake_args=!cmake_args! -DLINKER_RPATH:BOOL=ON
 
 if !cmake_make_silent! == 1 (
   set cmake_args=!cmake_args! -DUSE_VERBOSE_MAKEFILE:BOOL=OFF
