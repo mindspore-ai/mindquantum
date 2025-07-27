@@ -928,7 +928,7 @@ class SVGCNOTGate(SVGBasicGate):
         super().__init__(g, svg_config)
         if isinstance(g, CNOTGate):
             self.obj_qubits = [g.obj_qubits[0]]
-            self.ctrl_qubits = [g.obj_qubits[1]]
+            self.ctrl_qubits = sorted([g.obj_qubits[1]] + list(g.ctrl_qubits))
         self.rect1 = self.create_n_qubits_rect(1)
         self.rect1.fill(self.svg_config['cnot_fill'])
         self.rect1.fill_opacity(self.svg_config['cnot_fill_opacity'])
