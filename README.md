@@ -1,7 +1,7 @@
 # MindQuantum
 
-[![PyPI - Python Version](https://img.shields.io/badge/python-37|38|39-blue.svg)](https://pypi.org/project/mindquantum/)
-[![PyPI](https://img.shields.io/badge/pypi_package-0.9.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
+[![PyPI - Python Version](https://img.shields.io/badge/python-39|310|311-blue.svg)](https://pypi.org/project/mindquantum/)
+[![PyPI](https://img.shields.io/badge/pypi_package-0.11.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
 [![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
 [![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
 [![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-limegreend.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/beginner/parameterized_quantum_circuit.html)
@@ -117,28 +117,41 @@ The trained parameters are,
 
 ## Tutorials
 
-1. Basic usage
+1. Beginner Tutorial
 
-    - [Variational Quantum Circuit](https://mindspore.cn/mindquantum/docs/en/master/beginner/parameterized_quantum_circuit.html)
-    - [Quantum simulator](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/quantum_simulator.html)
-    - [Initial experience of quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/advanced/initial_experience_of_quantum_neural_network.html)
-    - [Advanced gradient calculation of variational quantum circuits](https://www.mindspore.cn/mindquantum/docs/en/master/advanced/get_gradient_of_PQC_with_mindquantum.html)
-    - [Advanced operations of quantum circuit](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/advanced_operations_of_quantum_circuit.html)
+    - [Variational Quantum Circuit](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/parameterized_quantum_circuit.html)
+    - [Quantum Simulator](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/quantum_simulator.html)
     - [Quantum Measurement](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/quantum_measurement.html)
-    - [Noisy Quantum Circuit](https://www.mindspore.cn/mindquantum/docs/en/master/middle_level/noise.html)
-    - [Noise simulator](https://www.mindspore.cn/mindquantum/docs/en/master/middle_level/noise_simulator.html)
-    - [Qubit Mapping](https://www.mindspore.cn/mindquantum/docs/en/master/middle_level/qubit_mapping.html)
+    - [Advanced Operations of Quantum Circuit](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/advanced_operations_of_quantum_circuit.html)
     - [Bloch Sphere](https://www.mindspore.cn/mindquantum/docs/en/master/beginner/bloch_sphere.html)
-2. Variational quantum algorithm
-    - [Classification of iris by quantum neural network](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/classification_of_iris_by_qnn.html)
-    - [Quantum Approximate Optimization Algorithm](https://mindspore.cn/mindquantum/docs/en/master/case_library/quantum_approximate_optimization_algorithm.html)
-    - [The Application of Quantum Neural Network in NLP](https://mindspore.cn/mindquantum/docs/en/master/case_library/qnn_for_nlp.html)
-    - [VQE Application in Quantum Chemistry Computing](https://mindspore.cn/mindquantum/docs/en/master/case_library/vqe_for_quantum_chemistry.html)
+
+2. Middle Level Tutorial
+
+    - [Noisy Quantum Circuit](https://www.mindspore.cn/mindquantum/docs/en/master/middle_level/noise.html)
+    - [Noise Simulator](https://www.mindspore.cn/mindquantum/docs/en/master/middle_level/noise_simulator.html)
+    - [Qubit Mapping](https://www.mindspore.cn/mindquantum/docs/en/master/middle_level/qubit_mapping.html)
+
+3. Advanced Tutorial
+
+    - [Initial Experience of Quantum Neural Network](https://www.mindspore.cn/mindquantum/docs/en/master/advanced/initial_experience_of_quantum_neural_network.html)
+    - [Advanced Gradient Calculation of Variational Quantum Circuits](https://www.mindspore.cn/mindquantum/docs/en/master/advanced/get_gradient_of_PQC_with_mindquantum.html)
     - [Equivalence Checking of Parameterized Quantum Circuits](https://www.mindspore.cn/mindquantum/docs/en/master/advanced/equivalence_checking_of_PQC.html)
-3. GENERAL QUANTUM ALGORITHM
-    - [Quantum Phase Estimation algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/quantum_phase_estimation.html)
-    - [Grover search and long algorithms based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/grover_search_algorithm.html)
-    - [Shor’s algorithm based on MindQuantum](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/shor_algorithm.html)
+
+### Case Library
+
+1. General Quantum Algorithms
+
+    - [Grover Search and Long Algorithms Based on MindSpore Quantum](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/grover_search_algorithm.html)
+    - [Shor’s Algorithm Based on MindSpore Quantum](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/shor_algorithm.html)
+    - [HHL Algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/hhl_algorithm.html)
+    - [Quantum Phase Estimation Algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/quantum_phase_estimation.html)
+
+2. NISQ Algorithms
+
+    - [Quantum Approximate Optimization Algorithm](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/quantum_approximate_optimization_algorithm.html)
+    - [Classification of IRIS by Quantum Neural Network](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/classification_of_iris_by_qnn.html)
+    - [VQE Application in Quantum Chemistry Computing](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/vqe_for_quantum_chemistry.html)
+    - [The Application of Quantum Neural Network in NLP](https://www.mindspore.cn/mindquantum/docs/en/master/case_library/qnn_for_nlp.html)
 
 ## API
 
