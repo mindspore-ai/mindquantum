@@ -2,6 +2,43 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindQuantum 0.11.0 Release Notes
+
+### Major Features and Enhancements
+
+#### Simulator
+
+- [STABLE] [`mqchem`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.mqchem.MQChemSimulator.html): Introduced the `mqchem` simulator backend. Based on the Configuration Interaction (CI) method, this simulator operates within a subspace of a fixed electron count, offering a more memory and computationally efficient solution for quantum chemistry problems. Its core components include ([`!2717`](https://gitee.com/mindspore/mindquantum/pulls/2717)):
+    - [`MQChemSimulator`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.mqchem.MQChemSimulator.html): A simulator for the CI space, initialized to the Hartree-Fock state by default.
+    - [`UCCExcitationGate`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.mqchem.UCCExcitationGate.html): A dedicated excitation gate for constructing UCC ansatz.
+    - [`CIHamiltonian`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.mqchem.CIHamiltonian.html): A Hamiltonian wrapper for efficient expectation value calculations in the CI space.
+    - [`prepare_uccsd_vqe`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.mqchem.prepare_uccsd_vqe.html): A high-level function to automate the preparation process for UCCSD-VQE experiments.
+- [STABLE] [`mqvector_cq`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html): Added the `mqvector_cq` simulator backend, which leverages the NVIDIA cuQuantum SDK to further accelerate quantum circuit simulations on NVIDIA GPUs ([`!2724`](https://gitee.com/mindspore/mindquantum/pulls/2724)). This backend depends on cuQuantum, which must be properly installed in your environment. For details, please refer to the official cuQuantum installation guide.
+
+#### Algorithm
+
+- [STABLE] **QAIA Algorithm Backend Extension**: Added PyTorch-based GPU and NPU backend support for the Quantum Annealing Inspired Algorithm (QAIA) family (including [`ASB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.ASB.html), [`BSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html), [`DSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html), [`LQA`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.LQA.html), [`CAC`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.CAC.html), [`CFC`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.CFC.html), [`SFC`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.SFC.html), [`NMFA`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.NMFA.html), and [`SimCIM`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.SimCIM.html)). This significantly boosts computational performance on the respective hardware. Users can now select `'gpu-float32'` or `'npu-float32'` via the `backend` parameter ([`!2669`](https://gitee.com/mindspore/mindquantum/pulls/2669), [`!2678`](https://gitee.com/mindspore/mindquantum/pulls/2678)).
+
+### Bug Fixes
+
+- [`PR2727`](https://gitee.com/mindspore/mindquantum/pulls/2727): Fixed an issue where the SVG export for circuit diagrams only displayed a single control qubit for multi-controlled CNOT gates.
+- [`PR2717`](https://gitee.com/mindspore/mindquantum/pulls/2717): Fixed an indexing error for double-excitation amplitudes in `uccsd_singlet_get_packed_amplitudes`, ensuring the correctness of amplitudes extracted from CCSD calculations.
+- [`PR2716`](https://gitee.com/mindspore/mindquantum/pulls/2716): Fixed a crash in the SABRE and MQSABRE mapping algorithms when processing non-consecutive physical qubit IDs (e.g., `[12, 13, 15]`).
+- [`PR2713`](https://gitee.com/mindspore/mindquantum/pulls/2713): Fixed an issue with `TimeEvolution` when handling Hamiltonians containing a constant term (identity operator), which is now correctly converted to a global phase gate.
+- [`PR2679`](https://gitee.com/mindspore/mindquantum/pulls/2679): Fixed an incorrect `J_norm` calculation in the NMFA algorithm when an external field `h` is included.
+- [`PR2714`](https://gitee.com/mindspore/mindquantum/pulls/2714): Fixed a potential linker error in the Windows CI environment when Python is installed in a path containing spaces.
+- [`PR2650`](https://gitee.com/mindspore/mindquantum/pulls/2650): Fixed a potential division-by-zero error in the `Rn` gate under certain conditions.
+- [`PR2648`](https://gitee.com/mindspore/mindquantum/pulls/2648): Fixed the improper handling of `barrier` gates in the `sabre` mapping algorithm.
+
+### Other Updates
+
+- **QAIA Algorithm**:
+    - Enhanced input parameter validation to ensure the coupling matrix `J` is symmetric with a zero diagonal, providing clearer guidance to users ([`!2710`](https://gitee.com/mindspore/mindquantum/pulls/2710)).
+    - Optimized the [`LQA`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.LQA.html) algorithm by caching intermediate results to reduce redundant computations ([`!2656`](https://gitee.com/mindspore/mindquantum/pulls/2656)).
+    - Improved error messages for numerical instability in certain algorithms to be more instructive ([`!2710`](https://gitee.com/mindspore/mindquantum/pulls/2710)).
+- **Dependencies**: Updated dependencies: `scipy>=1.13.1` is now required.
+- Added warnings for the presence of complex numbers in `ParameterResolver` and for the use of `int8` precision with the `SB` simulator ([`!2651`](https://gitee.com/mindspore/mindquantum/pulls/2651)).
+
 ## MindQuantum 0.10.0 Release Notes
 
 ### Major Features and Improvements
