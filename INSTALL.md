@@ -101,16 +101,14 @@ Here is an exhaustive list of all CMake options available for customization
 | ENABLE_MD                       | Use /MD, /MDd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_MT                       | Use /MT, /MTd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_PROFILING                | Enable compilation with profiling flags                               | OFF                 |
-| ENABLE_RUNPATH                  | Prefer RUNPATH over RPATH when linking                                | OFF                 |
+| ENABLE_RUNPATH                  | Prefer RUNPATH over RPATH when linking                                | ON                  |
 | ENABLE_STACK_PROTECTION         | Enable stack protection during compilation                            | ON                  |
-| ENABLE_PIE                      | Enable Position Independent Executables (PIE) for ASLR Level 2        | ON                  |
-| ENABLE_MSVC_SECURITY            | Enable MSVC security flags: /GS, /DYNAMICBASE, /NXCOMPAT, /SAFESEH    | ON                  |
 | IN_PLACE_BUILD                  | Build the C++ MindQuantum libraries in-place                          | OFF                 |
 | IS_PYTHON_BUILD                 | Whether CMake is called from setup.py                                 | OFF                 |
 | LINKER_DTAGS                    | Enable --enable-new-dtags (else use --disable-new-dtags) when linking | ON                  |
 | LINKER_NOEXECSTACK              | Use `-z,noexecstack` during linking (if supported)                    | ON                  |
 | LINKER_RELRO                    | Use `-z,relro` during linking (if supported)                          | ON                  |
-| LINKER_RPATH                    | Use RUNPATH/RPATH related flags when compiling                        | OFF                 |
+| LINKER_RPATH                    | Use RUNPATH/RPATH related flags when compiling                        | ON                  |
 | LINKER_STRIP_ALL                | Use `--strip-all` during linking (if supported)                       | ON                  |
 | USE_OPENMP                      | Use the OpenMP library for parallelisation                            | ON                  |
 | USE_PARALLEL_STL                | Use the parallel STL for parallelisation (using TBB or else)          | OFF                 |

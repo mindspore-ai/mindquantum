@@ -98,10 +98,6 @@ endif()
 option(ENABLE_PROFILING "Enable compilation with profiling flags." OFF)
 option(ENABLE_STACK_PROTECTION "Enable the use of -fstack-protector during compilation" ON)
 
-option(ENABLE_PIE "Enable Position Independent Executables (PIE) for ASLR Level 2" ON)
-
-option(ENABLE_MSVC_SECURITY "Enable MSVC security flags: /GS, /sdl, /guard:cf, /DYNAMICBASE, /NXCOMPAT, /SAFESEH" ON)
-
 option(ENABLE_GCC_DEBUG_MODE "Enable the debug mode for GCC and libstdc++" OFF)
 
 option(ENABLE_ANALYZER "Enable compiler static analysis tools (e.g. -fanalyzer for GCC)" OFF)
@@ -115,13 +111,13 @@ cmake_dependent_option(SANITIZER_USE_Og "Use -O1 when the build type is for a sa
 # ==============================================================================
 # Linking options
 
-option(ENABLE_RUNPATH "Prefer RUNPATH over RPATH when linking" OFF)
+option(ENABLE_RUNPATH "Prefer RUNPATH over RPATH when linking" ON)
 
 option(LINKER_DTAGS "Use --enable-new-dtags or --disable-new-dtags during linking" ON)
 option(LINKER_NOEXECSTACK "Use -z,noexecstack during linking" ON)
 option(LINKER_NOW "Use -z,now during linking for certain targets" ON)
 option(LINKER_RELRO "Use -z,relro during linking for certain targets" ON)
-option(LINKER_RPATH "Enable the use of RPATH/RUNPATH related flags during linking" OFF)
+option(LINKER_RPATH "Enable the use of RPATH/RUNPATH related flags during linking" ON)
 option(LINKER_STRIP_ALL "Use --strip-all during linking" ON)
 
 # ==============================================================================

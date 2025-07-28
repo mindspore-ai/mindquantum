@@ -25,5 +25,5 @@ append_to_property(mq_install_targets GLOBAL _math_python_interface)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/python DESTINATION ${MQ_INSTALL_INCLUDEDIR})
 
 pybind11_add_module(_math MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/bind_math.cpp OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
-force_at_least_cxx17_workaround(_mq_vector)
+force_at_least_cxx17_workaround(_math)
 target_link_libraries(_math PUBLIC mq_math _math_python_interface)
