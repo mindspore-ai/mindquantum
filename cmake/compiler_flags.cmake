@@ -245,7 +245,7 @@ test_compile_option(
 
 test_compile_option(
   stack_protection
-  LANGS C CXX DPCXX
+  LANGS C CXX DPCXX CUDA NVCXX
   FLAGS "-fstack-protector-all"
   CMAKE_OPTION ENABLE_STACK_PROTECTION)
 
