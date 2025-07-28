@@ -2,6 +2,43 @@
 
 [View English](./RELEASE.md)
 
+## MindQuantum 0.11.0 Release Notes
+
+### 主要特性和增强
+
+#### Simulator
+
+- [STABLE] [`mqchem`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.mqchem.MQChemSimulator.html): 新增 `mqchem` 模拟器后端。该模拟器基于配置相互作用（CI）方法，通过在固定电子数的子空间中进行计算，为量子化学问题提供了内存和计算效率更高的解决方案。其核心组件包括 ([`!2717`](https://gitee.com/mindspore/mindquantum/pulls/2717))：
+    - [`MQChemSimulator`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.mqchem.MQChemSimulator.html): CI空间模拟器，默认初始化为Hartree-Fock态。
+    - [`UCCExcitationGate`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.mqchem.UCCExcitationGate.html): 用于构建UCC拟设线路的专用激发门。
+    - [`CIHamiltonian`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.mqchem.CIHamiltonian.html): 用于在CI空间中高效计算期望值的哈密顿量包装器。
+    - [`prepare_uccsd_vqe`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.mqchem.prepare_uccsd_vqe.html): 自动化UCCSD-VQE实验准备流程的高级函数。
+- [STABLE] [`mqvector_cq`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html): 新增 `mqvector_cq` 模拟器后端，利用 NVIDIA cuQuantum SDK 进一步加速在 NVIDIA GPU 上的量子线路模拟 ([`!2724`](https://gitee.com/mindspore/mindquantum/pulls/2724))。该后端依赖于cuquantum，因此需要在环境中正确安装cuqauntum后方可使用，详情请参考cuquantum官网上的安装指南。
+
+#### Algorithm
+
+- [STABLE] **QAIA 算法后端扩展**: 为量子退火启发式算法（QAIA）家族（包括 [`ASB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.ASB.html), [`BSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html), [`DSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html), [`LQA`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.LQA.html), [`CAC`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.CAC.html), [`CFC`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.CFC.html), [`SFC`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.SFC.html), [`NMFA`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.NMFA.html), [`SimCIM`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.SimCIM.html)）新增了基于 PyTorch 的 GPU 和 NPU 后端支持，显著提升了在相应硬件上的计算性能。用户现在可以通过 `backend` 参数选择 `'gpu-float32'` 或 `'npu-float32'` ([`!2669`](https://gitee.com/mindspore/mindquantum/pulls/2669), [`!2678`](https://gitee.com/mindspore/mindquantum/pulls/2678))。
+
+### 问题修复
+
+- [`PR2727`](https://gitee.com/mindspore/mindquantum/pulls/2727): 修复了线路图的 SVG 导出功能在处理多控 CNOT 门时只显示一个控制比特的问题。
+- [`PR2717`](https://gitee.com/mindspore/mindquantum/pulls/2717): 修复了 `uccsd_singlet_get_packed_amplitudes` 中双激发振幅索引错误的问题，确保了从CCSD计算中提取的振幅的正确性。
+- [`PR2716`](https://gitee.com/mindspore/mindquantum/pulls/2716): 修复了 SABRE 和 MQSABRE 映射算法在处理非连续物理比特ID（例如，`[12, 13, 15]`）时会崩溃的问题。
+- [`PR2713`](https://gitee.com/mindspore/mindquantum/pulls/2713): 修复了 `TimeEvolution` 在处理含常数项（单位算符）的哈密顿量时的问题，现在会正确地将其转换为全局相位门。
+- [`PR2679`](https://gitee.com/mindspore/mindquantum/pulls/2679): 修复了 NMFA 算法在包含外场 `h` 时 `J_norm` 计算不正确的问题。
+- [`PR2714`](https://gitee.com/mindspore/mindquantum/pulls/2714): 修复了在 Windows CI 环境下，当 Python 安装在带空格的路径中时可能出现的链接器错误。
+- [`PR2650`](https://gitee.com/mindspore/mindquantum/pulls/2650): 修复了 `Rn` 门在某些情况下可能出现的除零错误。
+- [`PR2648`](https://gitee.com/mindspore/mindquantum/pulls/2648): 修复了 `sabre` 映射算法中 `barrier` 门处理不当的问题。
+
+### 其他更新
+
+- **QAIA 算法**:
+    - 增强了对输入参数的检查，确保耦合矩阵 `J` 是对称且对角线为零，为用户提供更明确的指引 ([`!2710`](https://gitee.com/mindspore/mindquantum/pulls/2710))。
+    - 优化了 [`LQA`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.LQA.html) 算法，通过缓存中间计算结果减少了冗余计算 ([`!2656`](https://gitee.com/mindspore/mindquantum/pulls/2656))。
+    - 改进了部分算法中数值不稳定时的错误提示信息，使其更具指导性 ([`!2710`](https://gitee.com/mindspore/mindquantum/pulls/2710))。
+- **依赖项**: 更新了依赖项，现在要求 `scipy>=1.13.1`。
+- 为 `ParameterResolver` 中出现复数以及 `SB` 模拟器使用 `int8` 精度时增加了警告提示 ([`!2651`](https://gitee.com/mindspore/mindquantum/pulls/2651))。
+
 ## MindQuantum 0.10.0 Release Notes
 
 ### 主要特性和增强

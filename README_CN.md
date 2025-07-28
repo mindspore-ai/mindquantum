@@ -1,7 +1,7 @@
 # MindQuantum
 
-[![PyPI - Python Version](https://img.shields.io/badge/python-37|38|39-blue.svg)](https://pypi.org/project/mindquantum/)
-[![PyPI](https://img.shields.io/badge/pypi_package-0.9.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
+[![PyPI - Python Version](https://img.shields.io/badge/python-39|310|311-blue.svg)](https://pypi.org/project/mindquantum/)
+[![PyPI](https://img.shields.io/badge/pypi_package-0.11.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
 [![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
 [![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
 [![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-limegreend.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/beginner/parameterized_quantum_circuit.html)
@@ -118,33 +118,44 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 ## 案例教程
 
-1. 基础使用指南
+1. 初级使用教程
 
     - [变分量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/parameterized_quantum_circuit.html)
     - [量子模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/quantum_simulator.html)
-    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/initial_experience_of_quantum_neural_network.html)
-    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/get_gradient_of_PQC_with_mindquantum.html)
-    - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/advanced_operations_of_quantum_circuit.html)
     - [量子测量](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/quantum_measurement.html)
+    - [量子线路高阶操作](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/advanced_operations_of_quantum_circuit.html)
+    - [布洛赫球](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/bloch_sphere.html)
+
+2. 中级使用教程
+
     - [含噪声量子线路](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/middle_level/noise.html)
     - [噪声模拟器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/middle_level/noise_simulator.html)
     - [比特映射](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/middle_level/qubit_mapping.html)
-    - [布洛赫球](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/beginner/bloch_sphere.html)
 
-2. 变分量子算法
+3. 高级使用教程
 
-    - [通过量子神经网络对鸢尾花进行分类](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/classification_of_iris_by_qnn.html)
-    - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/quantum_approximate_optimization_algorithm.html)
-    - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/qnn_for_nlp.html)
-    - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/vqe_for_quantum_chemistry.html)
+    - [量子神经网络初体验](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/initial_experience_of_quantum_neural_network.html)
+    - [变分量子线路梯度计算进阶](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/get_gradient_of_PQC_with_mindquantum.html)
     - [含参量子线路的等价性检查](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/advanced/equivalence_checking_of_PQC.html)
 
-3. 通用量子算法
+### 案例库
 
+1. 通用量子算法
+
+    - [基于MindSpore Quantum的Grover搜索算法和龙算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/grover_search_algorithm.html)
+    - [基于MindSpore Quantum的Shor算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/shor_algorithm.html)
+    - [HHL 算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/hhl_algorithm.html)
     - [量子相位估计算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/quantum_phase_estimation.html)
-    - [基于MindQuantum的Grover搜索算法和龙算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/grover_search_algorithm.html)
-    - [基于MindQuantum的Shor算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/shor_algorithm.html)
-    - [HHL算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/hhl_algorithm.html)
+
+2. 近期量子算法
+
+    - [量子近似优化算法](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/quantum_approximate_optimization_algorithm.html)
+    - [通过量子神经网络对鸢尾花进行分类](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/classification_of_iris_by_qnn.html)
+    - [在量子化学计算中应用量子变分求解器](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/vqe_for_quantum_chemistry.html)
+    - [量子神经网络在自然语言处理中的应用](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/qnn_for_nlp.html)
+    - [使用量子退火启发式算法求解最大割问题](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/quantum_annealing_inspired_algorithm.html)
+    - [量子启发式算法结合自动调参工具](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/qaia_automatic_parameter_adjustment.html)
+    - [量子启发式算法GPU后端使用教程](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/case_library/qaia_gpu_tutorial.html)
 
 ## API
 
