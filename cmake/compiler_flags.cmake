@@ -31,6 +31,8 @@ set(CMAKE_CUDA_EXTENSIONS OFF)
 # ------------------------------------------------------------------------------
 
 # Always generate position independent code
+include(CheckPIESupported)
+check_pie_supported(LANGUAGES C CXX)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
