@@ -39,6 +39,14 @@
 - **Dependencies**: Updated dependencies: `scipy>=1.13.1` is now required.
 - Added warnings for the presence of complex numbers in `ParameterResolver` and for the use of `int8` precision with the `SB` simulator ([`!2651`](https://gitee.com/mindspore/mindquantum/pulls/2651)).
 
+### Contributor
+
+Thanks to the following developers for their contributions:
+
+beastsenior, dsdsdshe, GhostArtyom, liushiwei2024, lyq, MangroveCoder, YangleiSHAO, zengqg, ZhuangJP, 葛宇非, 满成, 肖阳, 左博伟.
+
+Welcome contributions to the project in any form!
+
 ## MindQuantum 0.10.0 Release Notes
 
 ### Major Features and Improvements

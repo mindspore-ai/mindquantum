@@ -39,6 +39,14 @@
 - **依赖项**: 更新了依赖项，现在要求 `scipy>=1.13.1`。
 - 为 `ParameterResolver` 中出现复数以及 `SB` 模拟器使用 `int8` 精度时增加了警告提示 ([`!2651`](https://gitee.com/mindspore/mindquantum/pulls/2651))。
 
+### 贡献者
+
+感谢以下开发者做出的贡献：
+
+beastsenior, dsdsdshe, GhostArtyom, liushiwei2024, lyq, MangroveCoder, YangleiSHAO, zengqg, ZhuangJP, 葛宇非, 满成, 肖阳, 左博伟.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindQuantum 0.10.0 Release Notes
 
 ### 主要特性和增强
