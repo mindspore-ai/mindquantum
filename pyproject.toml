@@ -82,6 +82,7 @@ mindquantum-config = 'mindquantum_config:main'
 [tool.setuptools]
 
 zip-safe = false
+license-files = []
 
 [tool.setuptools.dynamic]
 
