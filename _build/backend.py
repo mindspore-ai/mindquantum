@@ -335,6 +335,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                     'manylinux2010_x86_64',  # NB: equivalent to manylinux_2_5_x86_64
                     'manylinux2014_x86_64',  # NB: equivalent to manylinux_2_17_x86_64
                     'manylinux_2_24_x86_64',
+                    'manylinux_2_26_x86_64',
                     'manylinux_2_27_x86_64',
                     'manylinux_2_28_x86_64',
                     'manylinux_2_31_x86_64',
