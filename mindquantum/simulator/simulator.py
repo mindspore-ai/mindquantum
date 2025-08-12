@@ -407,7 +407,7 @@ class Simulator:
                 Default: ``False``.
 
         Returns:
-            Union[numpy.ndarray, str]: The current quantum state.
+            Union[numpy.ndarray, str], The current quantum state.
             If ket is True, returns string representation in ket notation.
             For state vector simulator, returns 1D array or ket string of state vector.
             For density matrix simulator, returns 2D array or ket string of density matrix.
@@ -550,7 +550,7 @@ class Simulator:
                 can be a single integer or a list of integers.
 
         Returns:
-            numpy.ndarray: The reduced density matrix of the specified qubits.
+            numpy.ndarray, The reduced density matrix of the specified qubits.
 
         Examples:
             >>> from mindquantum.simulator import Simulator
@@ -661,7 +661,7 @@ class Simulator:
                 Default: False.
 
         Returns:
-            Union[np.ndarray, str]: If ket is True, return string representation of
+            Union[np.ndarray, str], If ket is True, return string representation of
                 quantum state. If ket is False and the state is pure, return state
                 vector as numpy array. If the state is mixed, return density matrix.
 

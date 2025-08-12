@@ -127,7 +127,7 @@ class QuantumNeuron:
         The quantum circuit of the quantum neuron.
 
         Returns:
-            Circuit: The quantum circuit of the quantum neuron
+            Circuit, The quantum circuit of the quantum neuron
         """
         if self._circuit is None:
             self._circuit = Circuit()
