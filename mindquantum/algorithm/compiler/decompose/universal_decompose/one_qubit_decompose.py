@@ -76,7 +76,7 @@ def u3_decompose(gate: U3, method: str = 'standard'):
         method (str): The decomposition method to use, either 'standard' or 'alternative'. Default: 'standard'
 
     Returns:
-        Circuit: A quantum circuit implementing the U3 gate using ZXZXZ sequence.
+        Circuit, A quantum circuit implementing the U3 gate using ZXZXZ sequence.
 
     Raises:
         ValueError: If the method is not 'standard' or 'alternative'.

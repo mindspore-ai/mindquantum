@@ -223,8 +223,9 @@ class XGate(PauliGate):
             X^\theta = RX(\theta\pi)
 
     Examples:
-        >>> from mindquantum.core.gates import X
+        >>> from mindquantum.core.gates import X, XGate
         >>> x1 = X.on(0)
+        >>> x2 = XGate().on(0)
         >>> cnot = X.on(0, 1)
         >>> print(x1)
         X(0)

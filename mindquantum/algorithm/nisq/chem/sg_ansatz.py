@@ -200,7 +200,7 @@ class SGAnsatz2D(Ansatz):
             suffix (str): The suffix of parameters. Default: ''
 
         Returns:
-            SGAnsatz2D: A new instance configured for the specified 2D grid
+            SGAnsatz2D, A new instance configured for the specified 2D grid
 
         Examples:
             >>> from mindquantum.algorithm import SGAnsatz2D
@@ -259,7 +259,7 @@ class SGAnsatz2D(Ansatz):
             ncol (int): Number of columns in the 2D grid
 
         Returns:
-            list: A list containing two traversal paths, where each path is a list of qubit indices.
+            list, A list containing two traversal paths, where each path is a list of qubit indices.
                   The first path is column-wise, the second is row-wise.
 
         Examples:

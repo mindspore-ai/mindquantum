@@ -173,6 +173,7 @@ class MeasureResult:
     Examples:
         >>> from mindquantum.algorithm.library import qft
         >>> from mindquantum.simulator import Simulator
+        >>> from mindquantum.core.gates import MeasureResult
         >>> sim = Simulator('mqvector', 2)
         >>> res = sim.sampling(qft(range(2)).measure_all(), shots=1000, seed=42)
         >>> res

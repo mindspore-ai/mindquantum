@@ -200,7 +200,7 @@ class U3Fusion(BasicCompilerRule):
             dag_circuit (DAGCircuit): Input circuit in DAG form
 
         Returns:
-            bool: True if any fusion was performed, False otherwise
+            bool, True if any fusion was performed, False otherwise
         """
         _check_input_type('dag_circuit', DAGCircuit, dag_circuit)
 
