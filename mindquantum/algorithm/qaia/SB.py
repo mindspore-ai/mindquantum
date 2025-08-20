@@ -42,14 +42,10 @@ try:
 
     GPU_AVAILABLE = True
 except ImportError as err:
-    GPU_DISABLE_REASON = "Unable to import SB GPU backend. This backend requires CUDA 11 or higher."
-    GPU_AVAILABLE = False
-
-    # Temporarily disable GPU backend due to PyPI package size limitations
     GPU_DISABLE_REASON = (
-        "GPU backend is temporarily disabled in 0.10.0 version due to PyPI package size limitations. "
-        "To use GPU backend, please install mindquantum 0.10.0 from https://www.mindspore.cn/versions"
+        "Unable to import SB GPU backend. This backend requires CUDA 11 or higher.\n" f"--> Specific error: {err}"
     )
+    GPU_AVAILABLE = False
 except RuntimeError as err:
     GPU_DISABLE_REASON = f"Disable SB GPU backend due to: {err}."
     GPU_AVAILABLE = False
