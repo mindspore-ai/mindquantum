@@ -27,8 +27,9 @@ def prepare_uccsd_vqe(molecular, threshold: float = 1e-6):
     Prepare all components for a UCCSD-VQE simulation with the MQChemSimulator.
 
     This factory function streamlines the setup for a VQE simulation by:
+
     1. Generating all singlet UCCSD excitation operators using
-       :func:`~.algorithm.nisq.chem.uccsd_singlet_generator`.
+       :function:`~.algorithm.nisq.chem.uccsd_singlet_generator`.
     2. Extracting the corresponding amplitudes from a pre-computed CCSD
        calculation included in the `molecular` data.
     3. Filtering excitations based on their CCSD amplitudes via the `threshold`.

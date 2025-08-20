@@ -1,7 +1,7 @@
 mindquantum.simulator.mqchem.CIHamiltonian
 ==========================================
 
-.. py:class:: mindquantum.simulator.mqchem.CIHamiltonian(fermion_hamiltonian)
+.. py:class:: mindquantum.simulator.mqchem.CIHamiltonian(fermion_hamiltonian: FermionOperator)
 
     一个费米子哈密顿量的包装器，用于与 :class:`~.simulator.mqchem.MQChemSimulator` 一同使用。
 
@@ -12,3 +12,18 @@ mindquantum.simulator.mqchem.CIHamiltonian
 
     参数：
         - **fermion_hamiltonian** (FermionOperator) - 一个正规序的费米子哈密顿量。
+
+    .. py:method:: get_cpp_obj(backend, n_qubits, n_electrons)
+
+        返回用于模拟的C++对象。
+
+        .. note::
+            此方法供 :class:`~.simulator.mqchem.MQChemSimulator` 内部使用。
+
+        参数：
+            - **backend** (``_mq_chem.float`` 或 ``_mq_chem.double``) - C++后端模块。
+            - **n_qubits** (int) - 系统中的总量子比特数（自旋轨道数）。
+            - **n_electrons** (int) - 系统中的总电子数。
+
+        返回：
+            C++对象，底层绑定类型为 ``CppCIHamiltonian``，用于模拟。

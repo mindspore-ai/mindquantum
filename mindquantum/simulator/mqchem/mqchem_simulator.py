@@ -131,7 +131,7 @@ class MQChemSimulator:
                 If ``False``, returns the state as a NumPy array. Default: ``False``.
 
         Returns:
-            Union[numpy.ndarray, str]: The quantum state vector as a NumPy array or a string
+            Union[numpy.ndarray, str], The quantum state vector as a NumPy array or a string
             in ket notation.
 
         Raises:
@@ -289,7 +289,7 @@ class MQChemSimulator:
             ham (CIHamiltonian): The Hamiltonian for which to compute the expectation.
 
         Returns:
-            float: The real-valued expectation value.
+            float, The real-valued expectation value.
 
         Raises:
             TypeError: If `ham` is not a :class:`~.simulator.mqchem.CIHamiltonian`.
@@ -328,7 +328,7 @@ class MQChemSimulator:
                 :math:`U(\theta)`. The circuit must have parameters for gradient calculation.
 
         Returns:
-            Callable: A function that accepts a NumPy array of parameter values `x` and
+            Callable, A function that accepts a NumPy array of parameter values `x` and
             returns a tuple `(expectation, gradient)`. `expectation` is the float
             expectation value, and `gradient` is a NumPy array containing the derivatives
             with respect to each parameter in `x`. The order of parameters is determined

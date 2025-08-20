@@ -1,7 +1,7 @@
 mindquantum.simulator.mqchem.UCCExcitationGate
 ===============================================
 
-.. py:class:: mindquantum.simulator.mqchem.UCCExcitationGate(fermion_operator)
+.. py:class:: mindquantum.simulator.mqchem.UCCExcitationGate(fermion_operator: FermionOperator)
 
     酉耦合簇（UCC）激发门，用于与 :class:`~.simulator.mqchem.MQChemSimulator` 一同使用。
 
@@ -23,3 +23,18 @@ mindquantum.simulator.mqchem.UCCExcitationGate
     参数：
         - **fermion_operator** (FermionOperator) - 费米子激发算符 :math:`T`。
           它必须只包含一项。该项的系数用作旋转角 :math:`\theta`。如果系数是变量，则该门是参数化的。
+
+    .. py:method:: get_cpp_obj(n_qubits: int, n_electrons: int, backend)
+
+        返回用于模拟的C++对象。
+
+        .. note::
+            此方法供 :class:`~.simulator.mqchem.MQChemSimulator` 内部使用。
+
+        参数：
+            - **n_qubits** (int) - 系统中的总量子比特数（自旋轨道数）。
+            - **n_electrons** (int) - 系统中的总电子数。
+            - **backend** (``_mq_chem.float`` 或 ``_mq_chem.double``) - C++后端模块。
+
+        返回：
+            C++对象，底层绑定类型为 ``CppExcitationOperator``，用于模拟。
