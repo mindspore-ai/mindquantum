@@ -15,7 +15,7 @@ env:
 
 jobs:
   standard:
-    if: ${{ true }}
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -139,8 +139,8 @@ jobs:
 
   macos:
     if: ${{ true }}
-    runs-on: macos-11
-    name: "MacOS 11 • ${{ matrix.xcode }} • x64"
+    runs-on: macos-12
+    name: "MacOS 12 • ${{ matrix.xcode }} • x64"
     env:
       DEVELOPER_DIR: "/Applications/${{ matrix.xcode }}.app/Contents/Developer"
       CC: /usr/bin/clang
@@ -149,13 +149,13 @@ jobs:
       fail-fast: false
       matrix:
         xcode:
-          - "Xcode_11.7"    # Not available on macos-12
-          - "Xcode_12.4"    # Not available on macos-12
-          - "Xcode_12.5.1"  # Not available on macos-12
-          # - "Xcode_13.0"    # Not available on macos-12
-          - "Xcode_13.1"
-          - "Xcode_13.2.1"
-          # - "Xcode_13.3.1"  # macos-12 only
+          # - "Xcode_11.7"    # Not available on macos-12
+          # - "Xcode_12.4"    # Not available on macos-12
+          # - "Xcode_12.5.1"  # Not available on macos-12
+          # # - "Xcode_13.0"    # Not available on macos-12
+          # - "Xcode_13.1"
+          # - "Xcode_13.2.1"
+          - "Xcode_13.3.1"  # macos-12 only
           # - "Xcode_13.4.1"  # macos-12 only
     steps:
       - uses: actions/checkout@v3
@@ -226,7 +226,7 @@ jobs:
   # ============================================================================
 
   gcc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -375,7 +375,7 @@ jobs:
   # ============================================================================
 
   clang:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -546,7 +546,7 @@ jobs:
   # ============================================================================
 
   msvc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
@@ -633,7 +633,7 @@ jobs:
   # ============================================================================
 
   clang-cl:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     name: "Clang-Cl • x64"
     steps:
@@ -721,7 +721,7 @@ jobs:
   # ============================================================================
 
   mingw64:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-2022
     strategy:
       fail-fast: false
@@ -805,7 +805,7 @@ jobs:
   # ============================================================================
 
   msys2:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -954,7 +954,7 @@ jobs:
   # ============================================================================
 
   cuda:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -1044,7 +1044,7 @@ jobs:
   # ============================================================================
 
   nvhpc:
-    if: ${{ true }}
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
