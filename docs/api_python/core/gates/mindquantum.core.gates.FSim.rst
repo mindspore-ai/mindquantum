@@ -1,7 +1,7 @@
 mindquantum.core.gates.FSim
 ============================
 
-.. py:class:: mindquantum.core.gates.FSim(theta: ParameterResolver, phi: ParameterResolver)
+.. py:class:: mindquantum.core.gates.FSim(theta, phi)
 
     FSim 门表示费米子模拟门。FSim 门的矩阵形式为：
 
@@ -22,7 +22,7 @@ mindquantum.core.gates.FSim
 
         获取 FSim 门的厄米共轭形式。
 
-    .. py:method:: matrix(pr: ParameterResolver = None, full=False)
+    .. py:method:: matrix(pr=None, full=False)
 
         获取 FSim 门的矩阵形式。
 

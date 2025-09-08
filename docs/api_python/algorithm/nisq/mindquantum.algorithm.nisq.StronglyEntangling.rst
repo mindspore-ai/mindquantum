@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.StronglyEntangling
 ==============================================
 
-.. py:class:: mindquantum.algorithm.nisq.StronglyEntangling(n_qubits: int, depth: int, entangle_gate: BasicGate, prefix: str = '', suffix: str = '')
+.. py:class:: mindquantum.algorithm.nisq.StronglyEntangling(n_qubits, depth, entangle_gate, prefix='', suffix='')
 
     强纠缠ansatz。请参考 `Circuit-centric quantum classifiers <https://arxiv.org/pdf/1804.00633.pdf>`_。
 

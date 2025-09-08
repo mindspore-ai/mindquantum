@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.DAGCircuit
 =========================================
 
-.. py:class:: mindquantum.algorithm.compiler.DAGCircuit(circuit: Circuit)
+.. py:class:: mindquantum.algorithm.compiler.DAGCircuit(circuit)
 
     量子线路的有向无环图表示（Directed acyclic graph， DAG）。
 
@@ -9,7 +9,7 @@ mindquantum.algorithm.compiler.DAGCircuit
         - **circuit** (:class:`~.core.circuit.Circuit`) - 输入的量子线路。
 
 
-    .. py:method:: append_node(node: DAGNode)
+    .. py:method:: append_node(node)
 
         添加一个量子门 DAG 节点。
 
@@ -34,7 +34,7 @@ mindquantum.algorithm.compiler.DAGCircuit
         返回：
             List[:class:`~.core.circuit.Circuit`]，分层后的量子线路列表。
 
-    .. py:method:: replace_node_with_dag_circuit(node: DAGNode, coming: "DAGCircuit")
+    .. py:method:: replace_node_with_dag_circuit(node, coming)
         :abstractmethod:
 
         用一个 DAG 图来替换给定的节点。

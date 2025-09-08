@@ -63,7 +63,7 @@ mindquantum.core.circuit.Circuit
 
         返回该量子线路的浅拷贝。
 
-    .. py:method:: depth(with_single: bool = True, with_barrier: bool = False)
+    .. py:method:: depth(with_single=True, with_barrier=False)
 
         获取整个量子线路的深度。
 
@@ -71,7 +71,7 @@ mindquantum.core.circuit.Circuit
             - **with_single** (bool) - 是否考虑单量子比特门。默认值：``False``。
             - **with_barrier** (bool) - 是否将量子门对齐到栅栏门。默认值：``False``。
 
-    .. py:method:: display_detail(state: bool)
+    .. py:method:: display_detail(state)
         :staticmethod:
 
         是否展示线路细节。
@@ -94,7 +94,7 @@ mindquantum.core.circuit.Circuit
         参数：
             - **gates** (Union[Circuit, list[BasicGate]]) - `Circuit` 或 `BasicGate` 的list。
 
-    .. py:method:: from_hiqasm(hiqasm_str: str)
+    .. py:method:: from_hiqasm(hiqasm_str)
         :staticmethod:
 
         将 HiQASM 字符串的量子线路或者 HiQASM 文件转化为 MindQuantum 中的量子线路。
@@ -105,7 +105,7 @@ mindquantum.core.circuit.Circuit
         返回：
             :class:`~.core.circuit.Circuit`，从HiQASM转换而来的MindQuantum量子线路。
 
-    .. py:method:: from_openqasm(openqasm_str: str)
+    .. py:method:: from_openqasm(openqasm_str)
         :staticmethod:
 
         将 OpenQASM 字符串的量子线路或者 OpenQASM 文件转化为 MindQuantum 中的量子线路。
@@ -116,7 +116,7 @@ mindquantum.core.circuit.Circuit
         返回：
             :class:`~.core.circuit.Circuit`，从OpenQASM转换而来的MindQuantum量子线路。
 
-    .. py:method:: from_qcis(qcis_str: str)
+    .. py:method:: from_qcis(qcis_str)
         :staticmethod:
 
         将 QCIS 字符串的量子线路或者 QCIS 文件转化为 MindQuantum 中的量子线路。
@@ -253,7 +253,7 @@ mindquantum.core.circuit.Circuit
             - **obj_qubit** (int) - 要测量的量子比特。默认值： ``None``。
             - **reset_to** (Union[int, None]) - 将量子比特重置为0态或者1态。如果是 ``None``，则不重置量子比特。默认值： ``None``。
 
-    .. py:method:: measure_all(suffix=None, up_to: int = -1)
+    .. py:method:: measure_all(suffix=None, up_to=-1)
 
         测量所有量子比特。
 
@@ -476,7 +476,7 @@ mindquantum.core.circuit.Circuit
             - **ctrl_qubits** (Union[int, list[int]]) - `T` 门的控制量子比特。默认值： ``None``。
             - **hermitian** (bool) - 是否添加 `T` 门的轭米形式。默认值： ``False``。
 
-    .. py:method:: to_hiqasm(file_name: Optional[str] = None, version: str = '0.1')
+    .. py:method:: to_hiqasm(file_name=None, version='0.1')
 
         将 MindQuantum 中的量子线路转化为 HiQASM 字符串或者文件。
 
@@ -487,7 +487,7 @@ mindquantum.core.circuit.Circuit
         返回：
             str，HiQASM格式的量子线路字符串。
 
-    .. py:method:: to_openqasm(file_name: Optional[str] = None, version: str = '2.0')
+    .. py:method:: to_openqasm(file_name=None, version='2.0')
 
         将 MindQuantum 中的量子线路转化为 OpenQASM 字符串或者文件。
 
@@ -498,7 +498,7 @@ mindquantum.core.circuit.Circuit
         返回：
             str，OpenQASM格式的量子线路字符串。
 
-    .. py:method:: to_qcis(file_name: Optional[str] = None,  parametric: bool = True)
+    .. py:method:: to_qcis(file_name=None,  parametric=True)
 
         将 MindQuantum 中的量子线路转化为 QCIS 字符串或者文件。
 

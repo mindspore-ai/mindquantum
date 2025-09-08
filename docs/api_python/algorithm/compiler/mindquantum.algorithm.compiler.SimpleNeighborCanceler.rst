@@ -5,7 +5,7 @@ mindquantum.algorithm.compiler.SimpleNeighborCanceler
 
     如果可能，该编译规则会融合临近的量子门。
 
-    .. py:method:: do(dag_circuit: DAGCircuit)
+    .. py:method:: do(dag_circuit)
 
         原位的将该编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 

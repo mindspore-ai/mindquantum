@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.Ansatz8
 ==================================
 
-.. py:class:: mindquantum.algorithm.nisq.Ansatz8(n_qubits: int, depth: int, prefix: str = '', suffix: str = '')
+.. py:class:: mindquantum.algorithm.nisq.Ansatz8(n_qubits, depth, prefix='', suffix='')
 
     Arxiv 论文中所提及的量子线路8。
 

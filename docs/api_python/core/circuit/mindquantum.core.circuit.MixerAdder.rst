@@ -1,7 +1,7 @@
 mindquantum.core.circuit.MixerAdder
 ===================================
 
-.. py:class:: mindquantum.core.circuit.MixerAdder(adders: typing.List[ChannelAdderBase], add_after=True)
+.. py:class:: mindquantum.core.circuit.MixerAdder(adders, add_after=True)
 
     在子添加器的接受集被满足、拒绝集被拒绝时依次执行所有的添加器。
 

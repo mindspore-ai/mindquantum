@@ -1,7 +1,7 @@
 mindquantum.core.gates.Rn
 ===============================
 
-.. py:class:: mindquantum.core.gates.Rn(alpha: ParameterResolver, beta: ParameterResolver, gamma: ParameterResolver)
+.. py:class:: mindquantum.core.gates.Rn(alpha, beta, gamma)
 
     Rn 门表示绕布洛赫球中给定轴旋转的量子门。Rn 门的矩阵形式为：
 
@@ -51,7 +51,7 @@ mindquantum.core.gates.Rn
 
         获取 Rn 门的厄米共轭形式。
 
-    .. py:method:: matrix(pr: ParameterResolver = None, full=False)
+    .. py:method:: matrix(pr=None, full=False)
 
         获取 Rn 门的矩阵形式。
 

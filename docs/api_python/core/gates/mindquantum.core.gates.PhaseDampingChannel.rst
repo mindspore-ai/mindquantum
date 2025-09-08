@@ -1,7 +1,7 @@
 mindquantum.core.gates.PhaseDampingChannel
 ===========================================
 
-.. py:class:: mindquantum.core.gates.PhaseDampingChannel(gamma: float, **kwargs)
+.. py:class:: mindquantum.core.gates.PhaseDampingChannel(gamma, **kwargs)
 
     相位阻尼信道。表示的是量子比特在不跟外界产生能量交换时量子信息的损失。
 
