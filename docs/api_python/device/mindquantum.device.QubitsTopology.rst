@@ -1,7 +1,7 @@
 mindquantum.device.QubitsTopology
 =================================
 
-.. py:class:: mindquantum.device.QubitsTopology(qubits: typing.List[QubitNode])
+.. py:class:: mindquantum.device.QubitsTopology(qubits)
 
     量子比特在硬件设备上的拓扑结构图。
 
@@ -10,7 +10,7 @@ mindquantum.device.QubitsTopology
     参数：
         - **qubits** (List[:class:`~.device.QubitNode`]) - 拓扑结构中的所有量子比特。
 
-    .. py:method:: add_qubit_node(qubit: QubitNode)
+    .. py:method:: add_qubit_node(qubit)
 
         在拓扑结构中添加一个量子比特。
 
@@ -24,7 +24,7 @@ mindquantum.device.QubitsTopology
         返回：
             Set[int]，所有比特的 id。
 
-    .. py:method:: choose(ids: typing.List[int])
+    .. py:method:: choose(ids)
 
         根据给定的 id 选择量子比特。
 
@@ -55,7 +55,7 @@ mindquantum.device.QubitsTopology
         返回：
             Set[Tuple[Tuple[float, float], Tuple[float, float]]]，量子拓扑结构中相连接的量子比特所在的边，用坐标表示。
 
-    .. py:method:: get_edge_color(qubit_id1: int, qubit_id2: int)
+    .. py:method:: get_edge_color(qubit_id1, qubit_id2)
 
         获取边的颜色。
 
@@ -65,7 +65,7 @@ mindquantum.device.QubitsTopology
             - **qubit_id1** (int) - 边的第一个比特序号。
             - **qubit_id2** (int) - 边的第二个比特序号。
 
-    .. py:method:: has_qubit_node(qubit_id: int)
+    .. py:method:: has_qubit_node(qubit_id)
 
         检查某个量子比特是否在该拓扑结构中。
 
@@ -75,7 +75,7 @@ mindquantum.device.QubitsTopology
         返回：
             bool，当前拓扑结构是否拥有给定 id 的比特。
 
-    .. py:method:: is_coupled_with(id1: int, id2: int)
+    .. py:method:: is_coupled_with(id1, id2)
 
         检查两个比特是否联通，也即是否有耦合。
 
@@ -86,7 +86,7 @@ mindquantum.device.QubitsTopology
         返回：
             bool，给定的两个比特是否联通。
 
-    .. py:method:: isolate_with_near(qubit_id: int)
+    .. py:method:: isolate_with_near(qubit_id)
 
         将给定比特与相连接的比特解耦。
 
@@ -104,14 +104,14 @@ mindquantum.device.QubitsTopology
 
         移除那些不与其他比特有耦合的比特。
 
-    .. py:method:: remove_qubit_node(qubit_id: int)
+    .. py:method:: remove_qubit_node(qubit_id)
 
         移除一个给定的比特。
 
         参数：
             - **qubit_id** (int) - 想要移除的那个比特。
 
-    .. py:method:: select(ids: typing.List[int])
+    .. py:method:: select(ids)
 
         选择一些比特节点并生成新的拓扑图。
 
@@ -121,7 +121,7 @@ mindquantum.device.QubitsTopology
         返回：
             :class:`~.device.QubitsTopology`，保持连接信息的新的拓扑图。
 
-    .. py:method:: set_color(qubit_id: int, color: str)
+    .. py:method:: set_color(qubit_id, color)
 
         设置给定比特的颜色。
 
@@ -129,7 +129,7 @@ mindquantum.device.QubitsTopology
             - **qubit_id** (int) - 想要改变颜色的量子别的 id。
             - **color** (str) - RGB颜色。
 
-    .. py:method:: set_edge_color(qubit_id1: int, qubit_id2: int, color: str)
+    .. py:method:: set_edge_color(qubit_id1, qubit_id2, color)
 
         设置给定边的颜色。
 
@@ -140,7 +140,7 @@ mindquantum.device.QubitsTopology
             - **qubit_id2** (int) - 边的第二个比特序号。
             - **color** (str) - 边的颜色。
 
-    .. py:method:: set_position(qubit_id: int, poi_x: float, poi_y: float)
+    .. py:method:: set_position(qubit_id, poi_x, poi_y)
 
         设置给定比特的位置。
 
@@ -149,7 +149,7 @@ mindquantum.device.QubitsTopology
             - **poi_x** (float) - 新的 x 轴坐标。
             - **poi_y** (float) - 新的 y 轴坐标。
 
-    .. py:method:: show(method: Optional[AVA_SHOW_METHOD] = None)
+    .. py:method:: show(method=None)
 
         展示拓扑结构。
 

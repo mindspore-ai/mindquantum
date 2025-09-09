@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.u3_decompose
 =============================================
 
-.. py:function:: mindquantum.algorithm.compiler.u3_decompose(gate: U3, method: str = 'standard')
+.. py:function:: mindquantum.algorithm.compiler.u3_decompose(gate, method='standard')
 
     将U3门分解为Z-X-Z-X-Z旋转序列。
 

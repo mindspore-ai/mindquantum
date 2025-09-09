@@ -1,7 +1,7 @@
 mindquantum.io.draw_topology_plt
 ================================
 
-.. py:function:: mindquantum.io.draw_topology_plt(topo: QubitsTopology, circuit: Circuit = None, style: Dict = None)
+.. py:function:: mindquantum.io.draw_topology_plt(topo, circuit=None, style=None)
 
     用 matplotlib 打印量子拓扑结构。
 

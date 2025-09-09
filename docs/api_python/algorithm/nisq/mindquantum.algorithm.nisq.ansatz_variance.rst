@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.ansatz_variance
 ==========================================
 
-.. py:function:: mindquantum.algorithm.nisq.ansatz_variance(ansatz: Circuit, ham: Hamiltonian, focus: str, var_range: typing.Tuple[float, float] = (0, np.pi * 2), other_var: np.array = None, atol: float = 0.1, init_batch: int = 20, sim: typing.Union[Simulator, str] = 'mqvector')
+.. py:function:: mindquantum.algorithm.nisq.ansatz_variance(ansatz, ham, focus, var_range=(0, np.pi * 2), other_var=None, atol=0.1, init_batch=20, sim='mqvector')
 
     计算变分量子线路中的某个参数的梯度的方差。
 

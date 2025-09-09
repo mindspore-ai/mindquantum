@@ -1,7 +1,7 @@
 mindquantum.algorithm.error_mitigation.virtual_distillation
 ============================================================
 
-.. py:function:: mindquantum.algorithm.error_mitigation.virtual_distillation(circ: Circuit, executor: Callable[[Circuit], Dict[str, int]], little_endian: bool = True, **kwargs)
+.. py:function:: mindquantum.algorithm.error_mitigation.virtual_distillation(circ, executor, little_endian=True, **kwargs)
 
     基于虚拟蒸馏的误差缓解算法（arXiv:2011.07064）。
 

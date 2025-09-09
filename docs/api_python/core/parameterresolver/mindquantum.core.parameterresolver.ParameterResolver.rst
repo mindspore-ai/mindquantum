@@ -51,7 +51,7 @@ mindquantum.core.parameterresolver.ParameterResolver
         参数：
             - **dtype** (mindquantum.dtype) - 参数解析器的新的数据类型。
 
-    .. py:method:: combination(other: typing.Union[typing.Dict[str, numbers.Number], "ParameterResolver"])
+    .. py:method:: combination(other)
 
         将该参数解析器与输入的参数解析器进行线性组合。
 
@@ -161,7 +161,7 @@ mindquantum.core.parameterresolver.ParameterResolver
 
         生成所有参数名称的迭代器。
 
-    .. py:method:: loads(strs: str)
+    .. py:method:: loads(strs)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到FermionOperator中。
@@ -213,7 +213,7 @@ mindquantum.core.parameterresolver.ParameterResolver
         返回：
             list，参数值的列表。
 
-    .. py:method:: pop(v: str)
+    .. py:method:: pop(v)
 
         弹出参数。
 
@@ -256,7 +256,7 @@ mindquantum.core.parameterresolver.ParameterResolver
         返回：
             ParameterResolver，参数解析器本身。
 
-    .. py:method:: subs(other: typing.Union["ParameterResolver", typing.Dict[str, numbers.Number]])
+    .. py:method:: subs(other)
 
         将变量的参数值带入参数解析器。
 
@@ -267,7 +267,7 @@ mindquantum.core.parameterresolver.ParameterResolver
 
         转化为实数类型。
 
-    .. py:method:: update(other: "ParameterResolver")
+    .. py:method:: update(other)
 
         使用其它参数解析器更新此参数解析器。
 

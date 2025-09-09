@@ -1,7 +1,7 @@
 mindquantum.core.operators.ground_state_of_sum_zz
 =================================================
 
-.. py:function:: mindquantum.core.operators.ground_state_of_sum_zz(ops: QubitOperator, sim='mqvector')
+.. py:function:: mindquantum.core.operators.ground_state_of_sum_zz(ops, sim='mqvector')
 
     计算只有泡利 :math:`Z` 项的哈密顿量的基态能量。
 

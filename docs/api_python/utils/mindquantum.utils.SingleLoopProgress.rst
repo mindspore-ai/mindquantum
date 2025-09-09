@@ -1,7 +1,7 @@
 mindquantum.utils.SingleLoopProgress
 ====================================
 
-.. py:class:: mindquantum.utils.SingleLoopProgress(n_loop: int, loop_name: str = 'Task')
+.. py:class:: mindquantum.utils.SingleLoopProgress(n_loop, loop_name='Task')
 
     一个用于展示拥有一层循环任务的进度的进度条。
 
@@ -9,7 +9,7 @@ mindquantum.utils.SingleLoopProgress
         - **n_loop** (int) - 循环的个数。
         - **loop_name** (str) - 循环的进度条的标题。默认值： ``"Task"``。
 
-    .. py:method:: update_loop(loop_idx: int)
+    .. py:method:: update_loop(loop_idx)
 
         更新循环进度条。
 

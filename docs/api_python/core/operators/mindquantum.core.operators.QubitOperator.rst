@@ -1,7 +1,7 @@
 mindquantum.core.operators.QubitOperator
 =========================================
 
-.. py:class:: mindquantum.core.operators.QubitOperator(terms: typing.Union[str, "QubitOperator"] = None, coefficient: PRConvertible = 1.0, internal: bool = False)
+.. py:class:: mindquantum.core.operators.QubitOperator(terms=None, coefficient=1.0, internal=False)
 
     作用于量子比特的项的总和，例如 0.5 * 'X1 X5' + 0.3 * 'Z1 Z2'。
     项是一个作用于n个量子比特的运算符，可以表示为：coefficient * local_operator[0] x ... x local_operator[n-1]，其中x是张量乘积。
@@ -63,7 +63,7 @@ mindquantum.core.operators.QubitOperator
 
         玻色子算符系数的数据类型。
 
-    .. py:method:: dumps(indent: int = 4)
+    .. py:method:: dumps(indent=4)
 
         将QubitOperator转储到JSON（JavaScript对象表示法）。
 
@@ -119,7 +119,7 @@ mindquantum.core.operators.QubitOperator
         返回：
             bool，当前玻色子是否只有一项。
 
-    .. py:method:: loads(strs: str)
+    .. py:method:: loads(strs)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到QubitOperator中。
@@ -130,7 +130,7 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，从字符串加载的QubitOperator。
 
-    .. py:method:: matrix(n_qubits: int = None, pr=None)
+    .. py:method:: matrix(n_qubits=None, pr=None)
 
         将此玻色子算符转换为csr_matrix。
 
@@ -156,7 +156,7 @@ mindquantum.core.operators.QubitOperator
         返回：
             QubitOperator，这个玻色子算符的实部。
 
-    .. py:method:: relabel(logic_qubits: typing.List[int])
+    .. py:method:: relabel(logic_qubits)
 
         根据逻辑比特顺序重新编码量子比特。
 
@@ -195,7 +195,7 @@ mindquantum.core.operators.QubitOperator
         返回：
             List[List[ParameterResolver, QubitOperator]]，分裂后的结果。
 
-    .. py:method:: subs(params_value: PRConvertible)
+    .. py:method:: subs(params_value)
 
         将玻色子中的变量换成具体的参数值。
 

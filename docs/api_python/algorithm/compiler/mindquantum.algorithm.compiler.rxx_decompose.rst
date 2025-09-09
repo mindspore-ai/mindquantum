@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.rxx_decompose
 ============================================
 
-.. py:function:: mindquantum.algorithm.compiler.rxx_decompose(gate: gates.Rxx)
+.. py:function:: mindquantum.algorithm.compiler.rxx_decompose(gate)
 
     分解一个的 :class:`~.core.gates.Rxx` 门。
 

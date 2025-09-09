@@ -1,7 +1,7 @@
 mindquantum.algorithm.error_mitigation.query_single_qubit_clifford_elem
 =======================================================================
 
-.. py:function:: mindquantum.algorithm.error_mitigation.query_single_qubit_clifford_elem(idx: int)
+.. py:function:: mindquantum.algorithm.error_mitigation.query_single_qubit_clifford_elem(idx)
 
     输出单比特clifford群中的群元。
 

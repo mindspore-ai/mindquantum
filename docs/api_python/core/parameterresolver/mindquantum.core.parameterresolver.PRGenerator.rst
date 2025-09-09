@@ -1,7 +1,7 @@
 mindquantum.core.parameterresolver.PRGenerator
 ==============================================
 
-.. py:class:: mindquantum.core.parameterresolver.PRGenerator(name='p', prefix: str = '', suffix: str = '', dtype=None)
+.. py:class:: mindquantum.core.parameterresolver.PRGenerator(name='p', prefix='', suffix='', dtype=None)
 
     一个一个的生成参数。
 
@@ -11,7 +11,7 @@ mindquantum.core.parameterresolver.PRGenerator
         - **suffix** (str) - 参数的后缀。默认值： ``''``。
         - **dtype** (mindquantum.dtype) - 改参数解析器的数据类型。如果为 ``None``，则类型为 ``mindquantum.float64``。默认： ``None``。
 
-    .. py:method:: new(prefix: str = '', suffix: str = '')
+    .. py:method:: new(prefix='', suffix='')
 
         生成下一个新的参数。
 

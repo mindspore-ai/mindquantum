@@ -1,7 +1,7 @@
 mindquantum.simulator.inner_product
 ====================================
 
-.. py:function:: mindquantum.simulator.inner_product(bra_simulator: Simulator, ket_simulator: Simulator)
+.. py:function:: mindquantum.simulator.inner_product(bra_simulator, ket_simulator)
 
     计算给定模拟器中两种状态的内积。
 

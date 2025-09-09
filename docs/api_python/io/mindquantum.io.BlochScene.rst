@@ -53,7 +53,7 @@ mindquantum.io.BlochScene
         返回：
             dict，由折线、端点和投影线构成的字典。
 
-    .. py:method:: animation(fig, ax, objs, new_amps: np.ndarray, interval=15, with_trace=True, history_len=None, **kwargs)
+    .. py:method:: animation(fig, ax, objs, new_amps, interval=15, with_trace=True, history_len=None, **kwargs)
 
         在布洛赫球上动画展示给定量子态。
 
@@ -128,7 +128,7 @@ mindquantum.io.BlochScene
             - **elev** (numbers.Number) - 以度为单位时，当前方位绕z轴转动的角度。
             - **azim** (numbers.Number) - 以度为单位时，当前方位相对与 (x, y) 平面的仰角。默认值： ``0``。
 
-    .. py:method:: state_to_cor(amp: np.ndarray)
+    .. py:method:: state_to_cor(amp)
         :staticmethod:
 
         将单比特量子态转化为布洛赫球上的三维坐标。
@@ -139,7 +139,7 @@ mindquantum.io.BlochScene
         返回：
             numpy.ndarray，量子态在布洛赫球中的三维坐标。
 
-    .. py:method:: update(objs: dict, new_amp: np.ndarray)
+    .. py:method:: update(objs, new_amp)
 
         利用给定的量子态来更新通过 `BlochScene.add_state` 接口输出的对象。
 

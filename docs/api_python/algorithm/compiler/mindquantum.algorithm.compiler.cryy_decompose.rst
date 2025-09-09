@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.cryy_decompose
 =============================================
 
-.. py:function:: mindquantum.algorithm.compiler.cryy_decompose(gate: gates.Ryy)
+.. py:function:: mindquantum.algorithm.compiler.cryy_decompose(gate)
 
     分解一个受控的 :class:`~.core.gates.Ryy` 门。
 

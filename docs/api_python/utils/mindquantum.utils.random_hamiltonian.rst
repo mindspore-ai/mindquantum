@@ -1,7 +1,7 @@
 mindquantum.utils.random_hamiltonian
 =====================================
 
-.. py:function:: mindquantum.utils.random_hamiltonian(n_qubits: int, n_terms: int, seed: int = None, dtype=None)
+.. py:function:: mindquantum.utils.random_hamiltonian(n_qubits, n_terms, seed=None, dtype=None)
 
     生成随机的泡利哈密顿量。
 

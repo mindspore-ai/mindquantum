@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.swap_decompose
 =============================================
 
-.. py:function:: mindquantum.algorithm.compiler.swap_decompose(gate: gates.SWAPGate)
+.. py:function:: mindquantum.algorithm.compiler.swap_decompose(gate)
 
     分解一个 :class:`~.core.gates.SWAPGate` 门。
 

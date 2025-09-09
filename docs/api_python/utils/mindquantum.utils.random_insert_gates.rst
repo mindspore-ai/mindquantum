@@ -1,7 +1,7 @@
 mindquantum.utils.random_insert_gates
 ======================================
 
-.. py:function:: mindquantum.utils.random_insert_gates(circuit: Circuit, gates: BasicGate | list[BasicGate], nums: int | list[int], focus_on: int | list[int] | None = None, with_ctrl: bool = True, after_measure: bool = False, shots: int = 1, seed: int | None = None)
+.. py:function:: mindquantum.utils.random_insert_gates(circuit, gates, nums, focus_on=None, with_ctrl=True, after_measure=False, shots=1, seed=None)
 
     将指定数量的单量子比特门插入到量子线路中的随机位置。
 

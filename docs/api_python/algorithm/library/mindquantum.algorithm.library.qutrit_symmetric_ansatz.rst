@@ -1,7 +1,7 @@
 mindquantum.algorithm.library.qutrit_symmetric_ansatz
 =======================================================
 
-.. py:function:: mindquantum.algorithm.library.qutrit_symmetric_ansatz(gate: UnivMathGate, basis: str = "zyz", with_phase: bool = False)
+.. py:function:: mindquantum.algorithm.library.qutrit_symmetric_ansatz(gate, basis="zyz", with_phase=False)
 
     构造一个保持任意qutrit门编码对称性的qubit ansatz。
 

@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.abc_decompose
 ============================================
 
-.. py:function:: mindquantum.algorithm.compiler.abc_decompose(gate: QuantumGate, return_u3: bool = True)
+.. py:function:: mindquantum.algorithm.compiler.abc_decompose(gate, return_u3=True)
 
     通过abc分解来分解量子门。
 

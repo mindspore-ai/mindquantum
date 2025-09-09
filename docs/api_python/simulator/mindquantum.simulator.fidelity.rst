@@ -1,7 +1,7 @@
 mindquantum.simulator.fidelity
 ====================================
 
-.. py:function:: mindquantum.simulator.fidelity(rho: np.ndarray, sigma: np.ndarray)
+.. py:function:: mindquantum.simulator.fidelity(rho, sigma)
 
     计算两个量子态的保真度。
 

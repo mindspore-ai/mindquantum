@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.compile_circuit
 ==============================================
 
-.. py:function:: mindquantum.algorithm.compiler.compile_circuit(compiler: BasicCompilerRule, circ: Circuit)
+.. py:function:: mindquantum.algorithm.compiler.compile_circuit(compiler, circ)
 
     直接根据给定的编译规则，编译一个量子线路。
 

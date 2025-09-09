@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.ch_decompose
 ===========================================
 
-.. py:function:: mindquantum.algorithm.compiler.ch_decompose(gate: gates.HGate)
+.. py:function:: mindquantum.algorithm.compiler.ch_decompose(gate)
 
     分解一个受控的 :class:`~.core.gates.HGate` 门。
 

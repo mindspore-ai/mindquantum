@@ -1,7 +1,7 @@
 mindquantum.simulator.get_stabilizer_string
 ===========================================
 
-.. py:function:: mindquantum.simulator.get_stabilizer_string(sim: Simulator | Stabilizer)
+.. py:function:: mindquantum.simulator.get_stabilizer_string(sim)
 
     获取stabilizer模拟器中stabilizer的字符串形式。
 
