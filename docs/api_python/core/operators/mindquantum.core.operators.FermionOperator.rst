@@ -1,7 +1,7 @@
 mindquantum.core.operators.FermionOperator
 ===========================================
 
-.. py:class:: mindquantum.core.operators.FermionOperator(terms: typing.Union[str, "FermionOperator"] = None, coefficient: PRConvertible = 1.0, internal: bool = False)
+.. py:class:: mindquantum.core.operators.FermionOperator(terms=None, coefficient=1.0, internal=False)
 
     费米子算子，如FermionOperator('9 4^ 3 3^')表示 :math:`a_9 a_4^\dagger a_3 a_3^\dagger`。
     这些是描述费米子系统的基本运算符，如分子系统。
@@ -59,7 +59,7 @@ mindquantum.core.operators.FermionOperator
 
         费米子算符系数的数据类型。
 
-    .. py:method:: dumps(indent: int = 4)
+    .. py:method:: dumps(indent=4)
 
         将FermionOperator转储到JSON（JavaScript对象表示法）。
 
@@ -115,7 +115,7 @@ mindquantum.core.operators.FermionOperator
         返回：
             bool，当前费米子是否只有一项。
 
-    .. py:method:: loads(strs: str)
+    .. py:method:: loads(strs)
         :staticmethod:
 
         将JSON（JavaScript对象表示法）加载到FermionOperator中。
@@ -126,7 +126,7 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，从字符串加载的FermionOperator。
 
-    .. py:method:: matrix(n_qubits: int = None, pr=None)
+    .. py:method:: matrix(n_qubits=None, pr=None)
 
         将此费米子运算符转换为jordan_wigner映射下的csr_matrix。
 
@@ -159,7 +159,7 @@ mindquantum.core.operators.FermionOperator
         返回：
             FermionOperator，这个FermionOperator的实部。
 
-    .. py:method:: relabel(logic_qubits: typing.List[int])
+    .. py:method:: relabel(logic_qubits)
 
         根据逻辑比特顺序重新编码量子比特。
 
@@ -198,7 +198,7 @@ mindquantum.core.operators.FermionOperator
         返回：
             List[List[ParameterResolver, FermionOperator]]，分裂后的结果。
 
-    .. py:method:: subs(params_value: PRConvertible)
+    .. py:method:: subs(params_value)
 
         将费米子中的变量换成具体的参数值。
 

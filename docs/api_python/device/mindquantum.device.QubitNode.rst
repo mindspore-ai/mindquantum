@@ -1,7 +1,7 @@
 mindquantum.device.QubitNode
 ============================
 
-.. py:class:: mindquantum.device.QubitNode(qubit_id: int, color: str = '#000000', poi_x: float = 0.0, poi_y: float = 0.0)
+.. py:class:: mindquantum.device.QubitNode(qubit_id, color='#000000', poi_x=0.0, poi_y=0.0)
 
     量子比特节点。
 
@@ -45,14 +45,14 @@ mindquantum.device.QubitNode
         返回：
             int，量子比特的 id。
 
-    .. py:method:: set_color(color:str)
+    .. py:method:: set_color(color)
 
         设置量子比特的颜色。
 
         参数：
             - **color** (str) - 新的颜色。
 
-    .. py:method:: set_poi(poi_x: float, poi_y: float)
+    .. py:method:: set_poi(poi_x, poi_y)
 
         设置量子比特的位置坐标。
 

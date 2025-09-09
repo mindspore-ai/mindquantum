@@ -1,7 +1,7 @@
 mindquantum.simulator.decompose_stabilizer
 ===========================================
 
-.. py:function:: mindquantum.simulator.decompose_stabilizer(sim: Simulator | Stabilizer)
+.. py:function:: mindquantum.simulator.decompose_stabilizer(sim)
 
     将一个stabilizer分解为clifford量子线路。
 

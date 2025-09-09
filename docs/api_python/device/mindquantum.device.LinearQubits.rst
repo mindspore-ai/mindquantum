@@ -1,7 +1,7 @@
 mindquantum.device.LinearQubits
 ===============================
 
-.. py:class:: mindquantum.device.LinearQubits(n_qubits: int)
+.. py:class:: mindquantum.device.LinearQubits(n_qubits)
 
     线性的量子比特拓扑结构。
 

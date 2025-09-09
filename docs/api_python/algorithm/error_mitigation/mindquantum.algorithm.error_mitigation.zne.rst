@@ -1,7 +1,7 @@
 mindquantum.algorithm.error_mitigation.zne
 =====================================================
 
-.. py:function:: mindquantum.algorithm.error_mitigation.zne(circuit: Circuit, executor: typing.Callable[[Circuit], float], scaling: typing.List[float] = None, order=None, method="R", a=0, args=None)
+.. py:function:: mindquantum.algorithm.error_mitigation.zne(circuit, executor, scaling=None, order=None, method="R", a=0, args=None)
 
     零噪声外推算法。
 

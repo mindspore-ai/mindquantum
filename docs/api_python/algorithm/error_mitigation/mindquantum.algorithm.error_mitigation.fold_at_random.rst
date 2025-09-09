@@ -1,7 +1,7 @@
 mindquantum.algorithm.error_mitigation.fold_at_random
 =====================================================
 
-.. py:function:: mindquantum.algorithm.error_mitigation.fold_at_random(circ: Circuit, factor: float, method='locally')
+.. py:function:: mindquantum.algorithm.error_mitigation.fold_at_random(circ, factor, method='locally')
 
     随机的折叠一个量子线路。
 

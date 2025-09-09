@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.kak_decompose
 ============================================
 
-.. py:function:: mindquantum.algorithm.compiler.kak_decompose(gate: QuantumGate, return_u3: bool = True)
+.. py:function:: mindquantum.algorithm.compiler.kak_decompose(gate, return_u3=True)
 
     通过kak分解来分解任意的两量子比特门。
 

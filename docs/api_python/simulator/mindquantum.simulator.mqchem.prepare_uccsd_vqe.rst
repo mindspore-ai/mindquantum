@@ -1,7 +1,7 @@
 mindquantum.simulator.mqchem.prepare_uccsd_vqe
 =================================================
 
-.. py:function:: mindquantum.simulator.mqchem.prepare_uccsd_vqe(molecular, threshold: float = 1e-6))
+.. py:function:: mindquantum.simulator.mqchem.prepare_uccsd_vqe(molecular, threshold=1e-6)
 
     为使用 MQChemSimulator 进行 UCCSD-VQE 模拟准备所有组件。
 

@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.get_reference_circuit
 ================================================
 
-.. py:function:: mindquantum.algorithm.nisq.get_reference_circuit(n_qubits: int, n_ele_alpha: Optional[int] = None, n_ele_beta: Optional[int] = None, ref: Union[AVA_REF, Iterable] = 'AllH',)
+.. py:function:: mindquantum.algorithm.nisq.get_reference_circuit(n_qubits, n_ele_alpha=None, n_ele_beta=None, ref='AllH')
 
     根据不同的方法获取制备初态的线路。
 

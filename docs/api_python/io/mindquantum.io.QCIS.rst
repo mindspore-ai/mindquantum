@@ -5,7 +5,7 @@ mindquantum.io.QCIS
 
     将电路转换为qcis格式的模块。
 
-    .. py:method:: from_file(file_name: str)
+    .. py:method:: from_file(file_name)
 
         读取qcis文件。
 
@@ -15,7 +15,7 @@ mindquantum.io.QCIS
         返回：
             Circuit，从qcis文件翻译过来的量子线路。
 
-    .. py:method:: from_string(string: str)
+    .. py:method:: from_string(string)
 
         读取 QCIS 字符串。
 
@@ -25,7 +25,7 @@ mindquantum.io.QCIS
         返回：
             :class:`~.core.circuit.Circuit`，QCIS 字符串表示的量子线路。
 
-    .. py:method:: to_file(file_name: str, circuit, parametric: bool = True)
+    .. py:method:: to_file(file_name, circuit, parametric=True)
 
         将量子线路转换为qcis格式并保存在文件中。
 
@@ -39,7 +39,7 @@ mindquantum.io.QCIS
             - **TypeError** - 如果 `circuit` 不是 `Circuit` 。
             - **NotImplementedError** - 如果 `circuit` 中包含QCIS不支持的量子门。
 
-    .. py:method:: to_string(circuit, parametric: bool = True)
+    .. py:method:: to_string(circuit, parametric=True)
 
         将电路转换为qcis。
 

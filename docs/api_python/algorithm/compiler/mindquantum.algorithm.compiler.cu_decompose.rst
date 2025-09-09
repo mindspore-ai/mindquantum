@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.cu_decompose
 ===========================================
 
-.. py:function:: mindquantum.algorithm.compiler.cu_decompose(gate: QuantumGate, with_barrier: bool = False)
+.. py:function:: mindquantum.algorithm.compiler.cu_decompose(gate, with_barrier=False)
 
     对任意维度的受控幺正门进行分解。
 

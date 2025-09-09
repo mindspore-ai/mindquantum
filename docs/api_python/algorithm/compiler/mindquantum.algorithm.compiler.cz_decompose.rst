@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.cz_decompose
 ===========================================
 
-.. py:function:: mindquantum.algorithm.compiler.cz_decompose(gate: gates.ZGate)
+.. py:function:: mindquantum.algorithm.compiler.cz_decompose(gate)
 
     分解一个受控的 :class:`~.core.gates.ZGate` 门。
 

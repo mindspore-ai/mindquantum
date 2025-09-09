@@ -1,7 +1,7 @@
 mindquantum.algorithm.compiler.cnry_decompose
 =============================================
 
-.. py:function:: mindquantum.algorithm.compiler.cnry_decompose(gate: gates.RY)
+.. py:function:: mindquantum.algorithm.compiler.cnry_decompose(gate)
 
     分解一个受控的 :class:`~.core.gates.RY` 门。
 
