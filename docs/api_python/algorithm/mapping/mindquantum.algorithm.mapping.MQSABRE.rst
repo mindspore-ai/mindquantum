@@ -1,7 +1,7 @@
 mindquantum.algorithm.mapping.MQSABRE
 =====================================
 
-.. py:class:: mindquantum.algorithm.mapping.MQSABRE(circuit: Circuit, topology: QubitsTopology, cnoterrorandlength: List[Tuple[Tuple[int, int], List[float]]])
+.. py:class:: mindquantum.algorithm.mapping.MQSABRE(circuit, topology, cnoterrorandlength)
 
     MQSABRE 算法用于硬件感知的量子比特映射优化。
 
@@ -30,7 +30,7 @@ mindquantum.algorithm.mapping.MQSABRE
     异常：
         - **ValueError** - 如果拓扑不是连通图。
 
-    .. py:method:: solve(w: float = 0.5, alpha1: float = 0.3, alpha2: float = 0.2, alpha3: float = 0.1)
+    .. py:method:: solve(w=0.5, alpha1=0.3, alpha2=0.2, alpha3=0.1)
 
         使用 MQSABRE 算法求解量子比特映射问题。
 

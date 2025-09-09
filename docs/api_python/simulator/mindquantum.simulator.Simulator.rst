@@ -48,7 +48,7 @@ mindquantum.simulator.Simulator
             - **ValueError** - 如果 `gate` 是含参的，但没有提供参数。
             - **TypeError** - 如果 `gate` 是含参的，但 `pr` 不是ParameterResolver。
 
-    .. py:method:: apply_hamiltonian(hamiltonian: Hamiltonian)
+    .. py:method:: apply_hamiltonian(hamiltonian)
 
         将hamiltonian应用到模拟器上，这个hamiltonian可以是hermitian或non hermitian。
 

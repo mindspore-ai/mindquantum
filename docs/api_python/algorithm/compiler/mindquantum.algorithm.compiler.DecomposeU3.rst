@@ -13,7 +13,7 @@ mindquantum.algorithm.compiler.DecomposeU3
     参数：
         - **method** (str) - 使用的分解方法,可选'standard'或'alternative'。默认值:'standard'。
 
-    .. py:method:: do(dag_circuit: DAGCircuit)
+    .. py:method:: do(dag_circuit)
 
         执行U3门分解规则。
 

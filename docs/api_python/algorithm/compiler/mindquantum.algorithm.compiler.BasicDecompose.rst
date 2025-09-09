@@ -10,7 +10,7 @@ mindquantum.algorithm.compiler.BasicDecompose
     参数：
         - **prefer_u3** (bool) - 是否优先选择 :class:`~.core.gates.U3` 来进行分解。默认值： ``False``。
 
-    .. py:method:: do(dag_circuit: DAGCircuit)
+    .. py:method:: do(dag_circuit)
 
         原位的将该多控制和自定义量子门编译规则运用到 :class:`~.algorithm.compiler.DAGCircuit` 上。
 

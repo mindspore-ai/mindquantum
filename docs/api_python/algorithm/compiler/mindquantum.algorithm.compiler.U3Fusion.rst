@@ -13,7 +13,7 @@ mindquantum.algorithm.compiler.U3Fusion
         - **log_level** (int) - 显示日志级别。默认值：0。
         - **with_global_phase** (bool) - 是否包含全局相位门。默认值：False。
 
-    .. py:method:: do(dag_circuit: DAGCircuit)
+    .. py:method:: do(dag_circuit)
 
         将单量子比特门融合规则应用到量子线路上。
 

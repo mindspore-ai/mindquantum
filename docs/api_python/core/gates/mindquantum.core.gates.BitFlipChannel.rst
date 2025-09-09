@@ -1,7 +1,7 @@
 mindquantum.core.gates.BitFlipChannel
 ======================================
 
-.. py:class:: mindquantum.core.gates.BitFlipChannel(p: float, **kwargs)
+.. py:class:: mindquantum.core.gates.BitFlipChannel(p, **kwargs)
 
     比特翻转信道。描述的噪声体现为：以 :math:`P` 的概率翻转量子比特（作用 :math:`X` 门），或以 :math:`1-P` 的概率保持不变（作用 :math:`I` 门）。
 

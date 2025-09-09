@@ -1,7 +1,7 @@
 mindquantum.core.circuit.DepolarizingChannelAdder
 =================================================
 
-.. py:class:: mindquantum.core.circuit.DepolarizingChannelAdder(p: float, n_qubits: int, add_after: bool = True)
+.. py:class:: mindquantum.core.circuit.DepolarizingChannelAdder(p, n_qubits, add_after=True)
 
     去极化信道添加器。
 

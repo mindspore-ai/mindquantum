@@ -1,7 +1,7 @@
 mindquantum.simulator.NoiseBackend
 ==================================
 
-.. py:class:: mindquantum.simulator.NoiseBackend(base_sim: str, n_qubits: int, adder: ChannelAdderBase, seed: int = None, dtype=None)
+.. py:class:: mindquantum.simulator.NoiseBackend(base_sim, n_qubits, adder, seed=None, dtype=None)
 
     基于噪声信道的含噪模拟器。
 

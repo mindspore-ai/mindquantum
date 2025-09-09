@@ -1,7 +1,7 @@
 mindquantum.core.gates.U3
 ===============================
 
-.. py:class:: mindquantum.core.gates.U3(theta: ParameterResolver, phi: ParameterResolver, lamda: ParameterResolver)
+.. py:class:: mindquantum.core.gates.U3(theta, phi, lamda)
 
     U3 门表示单比特的任意幺正门。U3 门的矩阵形式为：
 
@@ -37,7 +37,7 @@ mindquantum.core.gates.U3
         返回：
             ParameterResolver，参数 lamda。
 
-    .. py:method:: matrix(pr: ParameterResolver = None, full=False)
+    .. py:method:: matrix(pr=None, full=False)
 
         获取 U3 门的矩阵形式。
 

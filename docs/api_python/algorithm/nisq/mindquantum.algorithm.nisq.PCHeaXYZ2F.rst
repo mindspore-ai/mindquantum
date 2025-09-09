@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.PCHeaXYZ2F
 =====================================
 
-.. py:class:: mindquantum.algorithm.nisq.PCHeaXYZ2F(n_qubits: int, depth: int, prefix: str = '', suffix: str = '')
+.. py:class:: mindquantum.algorithm.nisq.PCHeaXYZ2F(n_qubits, depth, prefix='', suffix='')
 
     PCHeaXYZ2F 硬件友好型线路。
 

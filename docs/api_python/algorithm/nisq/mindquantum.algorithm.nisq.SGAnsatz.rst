@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.SGAnsatz
 ========================================
 
-.. py:class:: mindquantum.algorithm.nisq.SGAnsatz(nqubits, k, nlayers=1, prefix: str = '', suffix: str = '')
+.. py:class:: mindquantum.algorithm.nisq.SGAnsatz(nqubits, k, nlayers=1, prefix='', suffix='')
 
     序列生成（SG）ansatz，用于一维量子系统。
 

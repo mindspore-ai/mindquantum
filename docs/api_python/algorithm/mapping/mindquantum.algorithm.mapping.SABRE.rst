@@ -1,7 +1,7 @@
 mindquantum.algorithm.mapping.SABRE
 ===================================
 
-.. py:class:: mindquantum.algorithm.mapping.SABRE(circuit: Circuit, topology: QubitsTopology)
+.. py:class:: mindquantum.algorithm.mapping.SABRE(circuit, topology)
 
     SABRE（基于SWAP的双向启发式搜索）算法用于量子比特映射优化。
 
@@ -17,7 +17,7 @@ mindquantum.algorithm.mapping.SABRE
         - **circuit** (:class:`~.core.circuit.Circuit`) - 需要映射的量子线路。当前仅支持由单量子比特门和双量子比特门（包括受控门）组成的线路。
         - **topology** (:class:`~.device.QubitsTopology`) - 硬件量子比特拓扑结构。当前仅支持连通图。
 
-    .. py:method:: solve(iter_num: int = 5, w: float = 0.5, delta1: float = 0.3, delta2: float = 0.2)
+    .. py:method:: solve(iter_num=5, w=0.5, delta1=0.3, delta2=0.2)
 
         使用 SABRE 算法求解量子比特映射问题。
 

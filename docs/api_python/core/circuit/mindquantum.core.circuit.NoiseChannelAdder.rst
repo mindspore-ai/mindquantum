@@ -1,7 +1,7 @@
 mindquantum.core.circuit.NoiseChannelAdder
 ==========================================
 
-.. py:class:: mindquantum.core.circuit.NoiseChannelAdder(channel: NoiseGate, with_ctrl=True, focus_on: int = None, add_after: bool = True)
+.. py:class:: mindquantum.core.circuit.NoiseChannelAdder(channel, with_ctrl=True, focus_on=None, add_after=True)
 
     添加一个单比特量子信道。
 

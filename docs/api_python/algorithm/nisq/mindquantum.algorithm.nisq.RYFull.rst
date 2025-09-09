@@ -1,7 +1,7 @@
 mindquantum.algorithm.nisq.RYFull
 =================================
 
-.. py:class:: mindquantum.algorithm.nisq.RYFull(n_qubits: int, depth: int, prefix: str = '', suffix: str = '')
+.. py:class:: mindquantum.algorithm.nisq.RYFull(n_qubits, depth, prefix='', suffix='')
 
     以 :class:`~.core.gates.RY` 门作为单比特门，以两两比特都有作用的 CNOT 门作为纠缠门的硬件友好型线路。
 

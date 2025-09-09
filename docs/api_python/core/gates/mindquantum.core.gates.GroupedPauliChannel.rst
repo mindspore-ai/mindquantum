@@ -1,7 +1,7 @@
 mindquantum.core.gates.GroupedPauliChannel
 ==========================================
 
-.. py:class:: mindquantum.core.gates.GroupedPauliChannel(probs: npt.NDArray[np.float64], **kwargs)
+.. py:class:: mindquantum.core.gates.GroupedPauliChannel(probs, **kwargs)
 
     组合泡利信道。
 

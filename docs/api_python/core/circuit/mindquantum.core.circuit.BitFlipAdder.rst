@@ -1,7 +1,7 @@
 mindquantum.core.circuit.BitFlipAdder
 =====================================
 
-.. py:class:: mindquantum.core.circuit.BitFlipAdder(flip_rate: float, with_ctrl=True, focus_on: int = None, add_after: bool = True)
+.. py:class:: mindquantum.core.circuit.BitFlipAdder(flip_rate, with_ctrl=True, focus_on=None, add_after=True)
 
     在量子门前面或者后面添加一个比特翻转信道。
 
