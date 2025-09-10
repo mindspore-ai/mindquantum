@@ -1,7 +1,7 @@
 mindquantum.simulator.mqchem.CIHamiltonian
 ==========================================
 
-.. py:class:: mindquantum.simulator.mqchem.CIHamiltonian(fermion_hamiltonian: FermionOperator)
+.. py:class:: mindquantum.simulator.mqchem.CIHamiltonian(fermion_hamiltonian)
 
     一个费米子哈密顿量的包装器，用于与 :class:`~.simulator.mqchem.MQChemSimulator` 一同使用。
 
