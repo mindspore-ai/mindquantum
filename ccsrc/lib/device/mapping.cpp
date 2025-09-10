@@ -109,10 +109,12 @@ int MQ_SABRE::CalGraphCenter(const VT<VT<int>>& graph) {
 VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling_graph) {
     VT<int> layout(this->num_physical, -1);
     VT<int> Rlayout(this->num_physical, -1);
+    // Track temporary reservations separately from actual assignments in Rlayout
+    VT<int> reserved(this->num_physical, 0);
     int Qc = CalGraphCenter(this->D);
     int qc = CalGraphCenter(this->Gw);
     layout[qc] = Qc;
-    Rlayout[Qc] = 1;
+    Rlayout[Qc] = qc;
     std::queue<int> qcQueue;  // the queue of logic qubits
     std::queue<int> QcQueue;  // the queue of physical qubits
     qcQueue.push(qc);
@@ -146,18 +148,17 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
                 }
             }
             sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(),
-                 [](const VT<int> a, const VT<int> b) {
-                     if (a[0] <= b[0])
-                         return true;
-                     return false;
-                 });
+                 [](const VT<int>& a, const VT<int>& b) { return a[0] < b[0]; });
 
             qcQueue.pop();
             QcQueue.pop();
             // find nearest physical qubits and its number equal with qcQueue.size
-            for (int i = 0; i < qcQueue.size(); i++) {
-                QcQueue.push(tempCandidatePysicalQubits[i + 1][1]);
-                Rlayout[tempCandidatePysicalQubits[i + 1][1]] = 1;
+            for (int i = 0; i < static_cast<int>(qcQueue.size()); i++) {
+                int phys = tempCandidatePysicalQubits[i + 1][1];
+                if (!reserved[phys]) {
+                    QcQueue.push(phys);
+                    reserved[phys] = 1;  // reserve but do not mark used yet
+                }
             }
         } else {
             VT<int> SubTree;
@@ -179,18 +180,15 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
                     }
                 }
                 sort(tempCandidatePysicalQubits.begin(), tempCandidatePysicalQubits.end(),
-                     [](const VT<int> a, const VT<int> b) {
-                         if (a[0] <= b[0])
-                             return true;
-                         return false;
-                     });
+                     [](const VT<int>& a, const VT<int>& b) { return a[0] < b[0]; });
                 // find nearest physical qubits and its number equal with SubTree.size
                 for (int i = 0; i < SubTree.size(); i++) {
                     for (int j = 1; j < tempCandidatePysicalQubits.size(); j++) {
-                        if (Rlayout[tempCandidatePysicalQubits[j][1]] == -1) {
+                        int phys = tempCandidatePysicalQubits[j][1];
+                        if (Rlayout[phys] == -1 && !reserved[phys]) {
                             qcQueue.push(SubTree[i]);
-                            QcQueue.push(tempCandidatePysicalQubits[j][1]);
-                            Rlayout[tempCandidatePysicalQubits[j][1]] = 1;
+                            QcQueue.push(phys);
+                            reserved[phys] = 1;  // reserve but do not mark used yet
                             break;
                         }
                     }
@@ -208,6 +206,10 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
         if (layout[start_num_logical] == -1) {
             while (start_num_physical < this->num_physical && Rlayout[start_num_physical] != -1) {
                 start_num_physical++;
+            }
+            if (start_num_physical >= this->num_physical) {
+                throw std::runtime_error(
+                    "InitialMapping: no free physical qubits available for backfill; this is a bug");
             }
             layout[start_num_logical] = start_num_physical;
             Rlayout[start_num_physical] = start_num_logical;
