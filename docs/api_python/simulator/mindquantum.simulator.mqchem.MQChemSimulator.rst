@@ -20,7 +20,7 @@ mindquantum.simulator.mqchem.MQChemSimulator
         - **seed** (int) - 此模拟器的随机种子。如果为 ``None``，将生成一个随机种子。默认值：``None``。
         - **dtype** (str) - 模拟的数据类型，可以是 ``"float"`` 或 ``"double"``。默认值：``"double"``。
 
-    .. py:method:: apply_circuit(circuit: Union[Circuit, Iterable[UCCExcitationGate]], pr: ParameterResolver = None)
+    .. py:method:: apply_circuit(circuit: Union[Circuit, Iterable[UCCExcitationGate]], pr=None)
 
         将量子线路应用于当前模拟器状态。
 
@@ -31,7 +31,7 @@ mindquantum.simulator.mqchem.MQChemSimulator
             - **circuit** (Union[Circuit, Iterable[UCCExcitationGate]]) - 要应用的量子线路或UCC门的可迭代对象。
             - **pr** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - 用于替换参数值的参数解析器。如果为 ``None``，则直接使用门中定义的参数。默认值：``None``。
 
-    .. py:method:: apply_gate(gate: UCCExcitationGate, pr: ParameterResolver = None)
+    .. py:method:: apply_gate(gate: UCCExcitationGate, pr=None)
 
         将单个UCC激发门应用于当前模拟器状态。
 
@@ -57,7 +57,7 @@ mindquantum.simulator.mqchem.MQChemSimulator
         异常：
             - **TypeError** - 如果 `ham` 不是 :class:`~.simulator.mqchem.CIHamiltonian`。
 
-    .. py:method:: get_expectation_with_grad(ham: CIHamiltonian, circuit: Union[Circuit, Iterable[UCCExcitationGate]])
+    .. py:method:: get_expectation_with_grad(ham, circuit)
 
         生成一个计算期望值及其梯度的函数。
 
@@ -74,7 +74,7 @@ mindquantum.simulator.mqchem.MQChemSimulator
         异常：
             - **TypeError** - 如果 `ham` 不是 :class:`~.simulator.mqchem.CIHamiltonian`。
 
-    .. py:method:: get_qs(ket: bool = False)
+    .. py:method:: get_qs(ket=False)
 
         获取模拟器当前的量子态。
 
