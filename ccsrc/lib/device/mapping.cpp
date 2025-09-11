@@ -126,7 +126,9 @@ VT<int> MQ_SABRE::InitialMapping(const std::shared_ptr<QubitsTopology>& coupling
         int Qi = QcQueue.front();
         // judge whether the current logical bit matches the physical bit
         if (layout[qi] == -1) {
-            layout[qi] = Qi;  //  if not ,then map them
+            layout[qi] = Qi;   // map logical -> physical
+            Rlayout[Qi] = qi;  // mark physical as used by this logical
+            reserved[Qi] = 1;  // also consider it reserved to avoid duplicate enqueue
         }
         // if it is the first mapping
         if (flag == 1) {
