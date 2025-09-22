@@ -20,7 +20,7 @@ mindquantum.simulator.mqchem.MQChemSimulator
         - **seed** (int) - 此模拟器的随机种子。如果为 ``None``，将生成一个随机种子。默认值：``None``。
         - **dtype** (str) - 模拟的数据类型，可以是 ``"float"`` 或 ``"double"``。默认值：``"double"``。
 
-    .. py:method:: apply_circuit(circuit: Union[Circuit, Iterable[UCCExcitationGate]], pr=None)
+    .. py:method:: apply_circuit(circuit, pr=None)
 
         将量子线路应用于当前模拟器状态。
 
@@ -31,7 +31,7 @@ mindquantum.simulator.mqchem.MQChemSimulator
             - **circuit** (Union[Circuit, Iterable[UCCExcitationGate]]) - 要应用的量子线路或UCC门的可迭代对象。
             - **pr** (Union[ParameterResolver, dict, numpy.ndarray, list, numbers.Number]) - 用于替换参数值的参数解析器。如果为 ``None``，则直接使用门中定义的参数。默认值：``None``。
 
-    .. py:method:: apply_gate(gate: UCCExcitationGate, pr=None)
+    .. py:method:: apply_gate(gate, pr=None)
 
         将单个UCC激发门应用于当前模拟器状态。
 
