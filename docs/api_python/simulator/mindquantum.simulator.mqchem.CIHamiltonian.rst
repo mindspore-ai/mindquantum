@@ -21,7 +21,7 @@ mindquantum.simulator.mqchem.CIHamiltonian
             此方法供 :class:`~.simulator.mqchem.MQChemSimulator` 内部使用。
 
         参数：
-            - **backend** (``_mq_chem.float`` 或 ``_mq_chem.double``) - C++后端模块。
+            - **backend** (Union[_mq_chem.float, _mq_chem.double]) - C++后端模块。
             - **n_qubits** (int) - 系统中的总量子比特数（自旋轨道数）。
             - **n_electrons** (int) - 系统中的总电子数。
 

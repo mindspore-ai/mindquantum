@@ -70,7 +70,7 @@ class CIHamiltonian:
             This method is for internal use by the :class:`~.simulator.mqchem.MQChemSimulator`.
 
         Args:
-            backend: The C++ backend module (_mq_chem.float or _mq_chem.double).
+            backend (Union[_mq_chem.float, _mq_chem.double]): The C++ backend module.
             n_qubits (int): The total number of qubits (spin-orbitals) in the system.
             n_electrons (int): The total number of electrons in the system.
 
