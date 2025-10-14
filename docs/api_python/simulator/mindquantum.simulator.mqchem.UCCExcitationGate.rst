@@ -34,7 +34,7 @@ mindquantum.simulator.mqchem.UCCExcitationGate
         参数：
             - **n_qubits** (int) - 系统中的总量子比特数（自旋轨道数）。
             - **n_electrons** (int) - 系统中的总电子数。
-            - **backend** (``_mq_chem.float`` 或 ``_mq_chem.double``) - C++后端模块。
+            - **backend** (Union[_mq_chem.float, _mq_chem.double]) - C++后端模块。
 
         返回：
             C++对象，底层绑定类型为 ``CppExcitationOperator``，用于模拟。

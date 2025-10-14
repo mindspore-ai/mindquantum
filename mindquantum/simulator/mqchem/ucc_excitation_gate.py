@@ -114,7 +114,7 @@ class UCCExcitationGate(ParameterGate):
         Args:
             n_qubits (int): The total number of qubits (spin-orbitals) in the system.
             n_electrons (int): The total number of electrons in the system.
-            backend: The C++ backend module (_mq_chem.float or _mq_chem.double).
+            backend (Union[_mq_chem.float, _mq_chem.double]): The C++ backend module.
 
         Returns:
             The C++ object used for simulation.
