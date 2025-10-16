@@ -110,7 +110,14 @@ class SB(QAIA):
 
         if self.xi is None:
             if self.backend == "cpu-float32":
-                self.xi = 0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(self.J, 2).sum())
+                if h is not None:
+                    self.xi = (
+                        0.5
+                        * np.sqrt(self.N - 1)
+                        / np.sqrt(csr_matrix.power(self.J, 2).sum() + 2 * ((self.h / 2) ** 2).sum())
+                    )
+                else:
+                    self.xi = 0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(self.J, 2).sum())
             elif self.backend == "gpu-float32":
                 if h is not None:
                     self.xi = (
