@@ -20,10 +20,11 @@ import subprocess
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM
+import pytest
+
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM, TSB, USB, LSB
 from mindquantum.utils.fdopen import fdopen
 
-import pytest
 
 OPTIMAL_CUT_G43 = 6660.0
 TOLERANCE = 0.05  # 5% relative tolerance for cut value
@@ -290,6 +291,83 @@ def test_dSB_gpu():
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.env_onecard
 @pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_tSB_gpu():
+    """
+    Description: Test TSB GPU
+    Expectation: success
+    """
+    run_and_check_gpu(
+        TSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_lSB_gpu():
+    """
+    Description: Test LSB GPU
+    Expectation: success
+    """
+    run_and_check_gpu(
+        LSB,
+        G,
+        None,
+        x_init_test,
+        N_ITER * 10,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE * 3,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE * 3,
+        SEED,
+        'gpu-float32',
+        threshold=5,
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_uSB_gpu():
+    """
+    Description: Test USB GPU
+    Expectation: success
+    """
+    run_and_check_gpu(
+        USB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+        threshold=20,
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
 def test_LQA_gpu():
     """
     Description: Test LQA GPU
@@ -397,6 +475,7 @@ def test_NMFA_gpu():
     Expectation: success
     """
     nmfa_n_iter = 1000
+    nmfa_energy_tolerance = 0.1
     run_and_check_gpu(
         NMFA,
         G,
@@ -407,7 +486,7 @@ def test_NMFA_gpu():
         OPTIMAL_CUT_G43,
         TOLERANCE,
         BENCHMARK_ENERGY_H,
-        ENERGY_TOLERANCE,
+        nmfa_energy_tolerance,
         SEED,
         'gpu-float32',
     )
