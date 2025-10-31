@@ -20,7 +20,6 @@ from .simulator import Simulator, fidelity, get_supported_simulator, inner_produ
 from .stabilizer import decompose_stabilizer, get_stabilizer_string, get_tableau_string
 from . import mqchem
 from .utils import GradOpsWrapper
-from .TN_Circuit import TN_Circuit
 
 __all__ = [
     'Simulator',
@@ -34,6 +33,5 @@ __all__ = [
     'get_tableau_string',
     'decompose_stabilizer',
     'mqchem',
-    'TN_Circuit',
 ]
 __all__.sort()
