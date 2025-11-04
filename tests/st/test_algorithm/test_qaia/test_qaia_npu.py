@@ -20,10 +20,11 @@ import subprocess
 import numpy as np
 from scipy.sparse import coo_matrix
 
+import pytest
+
 from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM
 from mindquantum.utils.fdopen import fdopen
 
-import pytest
 
 OPTIMAL_CUT_G43 = 6660.0
 TOLERANCE = 0.05  # 5% relative tolerance for cut value

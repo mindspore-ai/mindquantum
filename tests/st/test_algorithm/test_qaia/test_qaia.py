@@ -19,10 +19,11 @@ from pathlib import Path
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM
+import pytest
+
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM, TSB, USB, LSB
 from mindquantum.utils.fdopen import fdopen
 
-import pytest
 
 OPTIMAL_CUT_G43 = 6660.0
 TOLERANCE = 0.05  # 5% relative tolerance for cut value
@@ -181,6 +182,74 @@ def test_dSB():
         BENCHMARK_ENERGY_H,
         ENERGY_TOLERANCE,
         SEED,
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_tSB():
+    """
+    Description: Test TSB CPU
+    Expectation: success
+    """
+    run_and_check(
+        TSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_uSB():
+    """
+    Description: Test USB CPU
+    Expectation: success
+    """
+    run_and_check(
+        USB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        threshold=20,
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_lSB():
+    """
+    Description: Test LSB CPU
+    Expectation: success
+    """
+    run_and_check(
+        LSB,
+        G,
+        None,
+        x_init_test,
+        N_ITER * 10,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE * 3,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE * 3,
+        SEED,
+        threshold=5,
     )
 
 
