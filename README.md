@@ -187,7 +187,7 @@ pip install mindquantum-*.whl
 
 #### Install MindSpore
 
-Please refer to [MindSpore installation guide](https://www.mindspore.cn/install) to install MindSpore that at least 1.4.0 version.
+Please refer to the [MindSpore installation guide](https://www.mindspore.cn/install) to install an appropriate version of MindSpore.
 
 #### Install MindQuantum
 
