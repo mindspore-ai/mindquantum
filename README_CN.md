@@ -173,7 +173,7 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 #### 安装MindSpore
 
-请根据MindSpore官网[安装指南](https://www.mindspore.cn/install)，安装1.4.0及以上版本的MindSpore。
+请根据MindSpore官网[安装指南](https://www.mindspore.cn/install)，安装合适版本的MindSpore。
 
 #### 安装MindQuantum
 
