@@ -248,19 +248,16 @@ def extra_params(cmd, dtype=float):
     for i in matches:
         for j in i.split(','):
             pr = j.strip()
+            if not pr:
+                continue
             if dtype == str:
                 out.append(pr)
-            else:
-                if '*' in pr:
-                    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
-                    pr = [float(i.strip()) for i in pr.split('*')]
-                    out.append(pr[0] * pr[1])
-                elif '/' in pr:
-                    pr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
-                    pr = [float(i.strip()) for i in pr.split('/')]
-                    out.append(pr[0] / pr[1])
-                else:
-                    out.append(float(pr))
+                continue
+            expr = pr.replace('pi', str(np.pi)).replace('π', str(np.pi))
+            try:
+                out.append(float(eval_expr(expr)))
+            except Exception as err:  # pylint: disable=broad-except
+                raise ValueError(f"Cannot parse parameter expression: {pr}") from err
     return out
 
 
