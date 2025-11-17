@@ -17,6 +17,7 @@
 import numpy as np
 
 from mindquantum.core import U3, UN, Circuit, H, X
+from mindquantum.core.gates import Measure
 from mindquantum.io import OpenQASM
 from mindquantum.simulator import Simulator
 from mindquantum.utils import random_circuit
@@ -179,3 +180,26 @@ measure q -> c;
     s_1 = sim.sampling(init + circ, shots=50, seed=42)
     s_2 = sim.sampling(init + exp_circ, shots=50, seed=42)
     assert np.all(s_1._samples == s_2._samples)
+
+
+def test_openqasm_distinguishes_repeated_measurements():
+    """
+    Description: Ensure multiple measurements on the same qubit map to unique classical bits.
+    Expectation: success
+    """
+
+    circ = Circuit().h(0)
+    circ += Measure('m0').on(0)
+    circ += H.on(0)
+    circ += Measure('m1').on(0)
+
+    qasm = OpenQASM().to_string(circ)
+    lines = qasm.splitlines()
+    assert 'creg c[2];' in lines
+
+    measure_lines = [line for line in lines if line.startswith('measure')]
+    assert len(measure_lines) == 2
+    assert measure_lines[0].startswith('measure q[0] -> c[0];')
+    assert 'key:m0' in measure_lines[0]
+    assert measure_lines[1].startswith('measure q[0] -> c[1];')
+    assert 'key:m1' in measure_lines[1]

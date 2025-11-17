@@ -17,6 +17,8 @@
 import ast
 import operator as op
 import re
+from dataclasses import dataclass
+from typing import List
 
 import numpy as np
 
@@ -396,6 +398,29 @@ def generate_custom_gate(gate_def, custom_gate, gate_map_openqasm_mq):
     custom_gate[gate_name] = gate
 
 
+@dataclass(frozen=True)
+class MeasurementSlot:
+    """Book-keeping entry describing how a measurement maps to a classical bit."""
+
+    gate_id: int
+    qubit: int
+    key: str
+    bit: int
+
+
+def collect_measurement_layout(circ) -> List[MeasurementSlot]:
+    """Return an ordered mapping from measurement gates to classical bits."""
+    from mindquantum.core import gates as G  # noqa: N812
+
+    slots: List[MeasurementSlot] = []
+    for gate in circ:
+        if isinstance(gate, G.Measure):
+            qubit = gate.obj_qubits[0]
+            key = gate.key or f"q{qubit}"
+            slots.append(MeasurementSlot(id(gate), qubit, key, len(slots)))
+    return slots
+
+
 def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
     """Convert mindquantum circuit to openqasm."""
     from mindquantum.algorithm.compiler import BasicDecompose, compile_circuit
@@ -407,10 +432,10 @@ def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
     if circ.is_noise_circuit:
         raise ValueError("Cannot convert noise circuit to qasm.")
     cmds = ['OPENQASM 2.0;', 'include "qelib1.inc";', f'qreg q[{circ.n_qubits}];']
-    mea_qubits = sorted({m.obj_qubits[0] for m in circ.all_measures.keys()})
-    reg_map = {j: i for i, j in enumerate(mea_qubits)}
-    if mea_qubits:
-        cmds.append(f"creg c[{len(mea_qubits)}];")
+    measurement_slots = collect_measurement_layout(circ)
+    if measurement_slots:
+        cmds.append(f"creg c[{len(measurement_slots)}];")
+    gate_to_slot = {slot.gate_id: slot for slot in measurement_slots}
     for gate in circ:
         gate: G.BasicGate
         if isinstance(gate, G.BarrierGate):
@@ -420,7 +445,11 @@ def mq_to_qasm_v2(circ, gate_map_mq_openqasm, version: str = '2.0'):
             cmds.append(f"barrier {join_qubit(G.BARRIER.on(obj))};")
             continue
         if isinstance(gate, G.Measure):
-            cmds.append(f"measure q[{gate.obj_qubits[0]}] -> c[{reg_map[gate.obj_qubits[0]]}];")
+            slot = gate_to_slot.get(id(gate))
+            if slot is None:
+                raise ValueError("Measurement gate missing from layout map during OpenQASM export.")
+            key_comment = f" // key:{slot.key}" if slot.key else ''
+            cmds.append(f"measure q[{slot.qubit}] -> c[{slot.bit}];{key_comment}")
             continue
         if gate.__class__ in gate_map_mq_openqasm:
             cmds.append(gate_map_mq_openqasm[gate.__class__](gate))
