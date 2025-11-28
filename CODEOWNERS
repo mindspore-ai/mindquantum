@@ -1,0 +1,12 @@
+# The CODEOWNERS file is used to define the maintainer of a specific file or directory in the code repository.
+# Its main purpose is to automatically request designated maintainer to conduct code review in Pull Request (PR),
+# in order to clarify code ownership, improve code quality, and accelerate the review process.
+
+# The lines starting with # are comments.
+# Each line corresponds to a specified file or directory and maintainer by @ splitting.
+# The rules are applied from top to bottom, and the last matching rule will take effect.
+
+/ @dsdsdshe
+/mindquantum/algorithm/qaia/ @mangrovecoder
+/tests/ @mangrovecoder
+/mindquantum/algorithm/nisq/ @herunhong
