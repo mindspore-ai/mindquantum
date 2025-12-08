@@ -1,0 +1,9 @@
+jop=-2 +
+iop=-22 immdp=-1 igeom=1 iform=1 nsav15=3 +
+icuts=-1 icutg=-1 kitscf=9999 iscf=9 iplscf=9 +
+iprint=-1 kprint=-5 lprint=-2 mprint=0 jprint=-1 +
+kharge=1 imult=0 nprint=-1 +
+kci=5 movo=-1 ici1=2 ici2=1 jci1=1 jci2=1 nciref=0 +
+iroot=3 iuvcd=2 +
+ncisym=-1 ioutci=3 ipubo=1 +
+ncigrd=3 icross=1 

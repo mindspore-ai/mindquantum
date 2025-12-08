@@ -1,0 +1,483 @@
+{
+    "id": "e633a474-7d1c-4059-957a-a2e61325b868",
+    "charge": 1,
+    "multiplicity": 1,
+    "_pbc": null,
+    "_cell": null,
+    "atoms": [
+        {
+            "element_symbol": "H",
+            "atomic_number": 1,
+            "nuclear_charge": 1,
+            "relative_isotopic_mass": 1.00782503223,
+            "isotope_abundance": 99.9885,
+            "nuclear_spin": 0.5,
+            "H0": 0.08302982211229532,
+            "multiplicity": 2,
+            "nuclear_mass": 1.00782503223,
+            "xyz_coordinates": [
+                0.492826,
+                -9e-06,
+                0.0
+            ],
+            "energy_gradients": [
+                -5.755387541191443e-07,
+                3.053353021395372e-07,
+                0.0
+            ],
+            "normal_modes": [
+                [
+                    0.49348395140788825,
+                    -0.2995696373893238,
+                    7.735782371756897e-17
+                ],
+                [
+                    0.2995653072884522,
+                    0.4935517362139497,
+                    -1.3818367471129642e-16
+                ],
+                [
+                    -0.500067203638898,
+                    0.288672887538314,
+                    2.3695828175550273e-17
+                ]
+            ]
+        },
+        {
+            "element_symbol": "H",
+            "atomic_number": 1,
+            "nuclear_charge": 1,
+            "relative_isotopic_mass": 1.00782503223,
+            "isotope_abundance": 99.9885,
+            "nuclear_spin": 0.5,
+            "H0": 0.08302982211229532,
+            "multiplicity": 2,
+            "nuclear_mass": 1.00782503223,
+            "xyz_coordinates": [
+                -0.492831,
+                -8e-06,
+                0.0
+            ],
+            "energy_gradients": [
+                4.4663287921697277e-07,
+                8.206143203949304e-08,
+                0.0
+            ],
+            "normal_modes": [
+                [
+                    0.0127416026428108,
+                    0.5772388970601956,
+                    1.160322327600037e-16
+                ],
+                [
+                    -0.5771780341860706,
+                    0.012711456156697082,
+                    -1.2750029698159128e-16
+                ],
+                [
+                    0.5000367445999314,
+                    0.28861735917485276,
+                    2.119113823772669e-17
+                ]
+            ]
+        },
+        {
+            "element_symbol": "H",
+            "atomic_number": 1,
+            "nuclear_charge": 1,
+            "relative_isotopic_mass": 1.00782503223,
+            "isotope_abundance": 99.9885,
+            "nuclear_spin": 0.5,
+            "H0": 0.08302982211229532,
+            "multiplicity": 2,
+            "nuclear_mass": 1.00782503223,
+            "xyz_coordinates": [
+                -1e-06,
+                0.853596,
+                0.0
+            ],
+            "energy_gradients": [
+                1.2890587448256809e-07,
+                -3.873967339692285e-07,
+                0.0
+            ],
+            "normal_modes": [
+                [
+                    -0.5062255540506992,
+                    -0.2776692596708716,
+                    -2.3367082847112544e-17
+                ],
+                [
+                    0.2776127268976181,
+                    -0.5062631923706471,
+                    2.2357909944069437e-17
+                ],
+                [
+                    3.0459038966833718e-05,
+                    -0.5772902467131668,
+                    -2.286680128731822e-17
+                ]
+            ]
+        }
+    ],
+    "electronic_states": [
+        {
+            "id": "ed60ba5a-7420-4a32-8caf-336ce76b2b02",
+            "charge": 1,
+            "multiplicity": 1,
+            "_pbc": null,
+            "_cell": null,
+            "atoms": [
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        0.492826,
+                        -9e-06,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        -5.755387541191443e-07,
+                        3.053353021395372e-07,
+                        0.0
+                    ]
+                },
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        -0.492831,
+                        -8e-06,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        4.4663287921697277e-07,
+                        8.206143203949304e-08,
+                        0.0
+                    ]
+                },
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        -1e-06,
+                        0.853596,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        1.2890587448256809e-07,
+                        -3.873967339692285e-07,
+                        0.0
+                    ]
+                }
+            ],
+            "electronic_states": [],
+            "energy": -1.2744376575587566,
+            "properties_and_their_derivatives": {
+                "energy": "energy_gradients"
+            }
+        },
+        {
+            "id": "cd8b1c51-0655-431a-a136-7b5677400613",
+            "charge": 1,
+            "multiplicity": 1,
+            "_pbc": null,
+            "_cell": null,
+            "atoms": [
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        0.492826,
+                        -9e-06,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        -0.13765413078720137,
+                        0.1394920561760731,
+                        0.0
+                    ]
+                },
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        -0.492831,
+                        -8e-06,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        0.4246931590237316,
+                        0.6366555943708161,
+                        0.0
+                    ]
+                },
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        -1e-06,
+                        0.853596,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        -0.28703902823653005,
+                        -0.7761476505468888,
+                        0.0
+                    ]
+                }
+            ],
+            "electronic_states": [],
+            "energy": -0.5224725386370253,
+            "properties_and_their_derivatives": {
+                "energy": "energy_gradients"
+            }
+        },
+        {
+            "id": "ef139faa-1c9e-49c5-b36d-6c6b9f4b58a9",
+            "charge": 1,
+            "multiplicity": 1,
+            "_pbc": null,
+            "_cell": null,
+            "atoms": [
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        0.492826,
+                        -9e-06,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        -0.8156833857817766,
+                        0.41091928363067987,
+                        0.0
+                    ]
+                },
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        -0.492831,
+                        -8e-06,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        0.5286454352422458,
+                        -0.08624767287274367,
+                        0.0
+                    ]
+                },
+                {
+                    "element_symbol": "H",
+                    "atomic_number": 1,
+                    "nuclear_charge": 1,
+                    "relative_isotopic_mass": 1.00782503223,
+                    "isotope_abundance": 99.9885,
+                    "nuclear_spin": 0.5,
+                    "H0": 0.08302982211229532,
+                    "multiplicity": 2,
+                    "nuclear_mass": 1.00782503223,
+                    "xyz_coordinates": [
+                        -1e-06,
+                        0.853596,
+                        0.0
+                    ],
+                    "energy_gradients": [
+                        0.2870379505395307,
+                        -0.3246716107579369,
+                        0.0
+                    ]
+                }
+            ],
+            "electronic_states": [],
+            "energy": -0.5224719495884731,
+            "properties_and_their_derivatives": {
+                "energy": "energy_gradients"
+            }
+        }
+    ],
+    "energy": -1.2744376575587566,
+    "properties_and_their_derivatives": {
+        "energy": "energy_gradients"
+    },
+    "hessian": [
+        [
+            0.6078020745971053,
+            -0.23352653118205804,
+            0.0,
+            -0.5061829125268704,
+            -0.05733730007207767,
+            0.0,
+            -0.1016276798594081,
+            0.29087539836898646,
+            1.0490087268638992e-14
+        ],
+        [
+            -0.2334077433141263,
+            0.3381747830903626,
+            1.3112609085798739e-14,
+            0.05734235185803536,
+            0.03308479061322518,
+            0.0,
+            0.17606535859831055,
+            -0.3712577532420497,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            5.017161983349e-05,
+            0.0,
+            0.0,
+            -2.5062135513186283e-05,
+            0.0,
+            0.0,
+            -2.5109476018383087e-05
+        ],
+        [
+            -0.5061829125031155,
+            0.057338506783027966,
+            2.6225218171597478e-14,
+            0.6078032992673578,
+            0.23352537658203767,
+            0.0,
+            -0.10162890448231353,
+            -0.2908754504716187,
+            1.5735130902958488e-14
+        ],
+        [
+            -0.057341144005309874,
+            0.03308479065943926,
+            -7.867565451479244e-15,
+            0.23340658902174347,
+            0.338172285071898,
+            0.0,
+            -0.17606541209646795,
+            -0.3712552551311727,
+            1.0490087268638992e-14
+        ],
+        [
+            0.0,
+            0.0,
+            -2.506213932002256e-05,
+            0.0,
+            0.0,
+            5.043305271841012e-05,
+            0.0,
+            0.0,
+            -2.537091651570548e-05
+        ],
+        [
+            -0.10161916209398292,
+            0.17618802439906908,
+            -1.2293071017936318e-15,
+            -0.10162038674053497,
+            -0.1761880765099277,
+            0.0,
+            0.20325658434173874,
+            5.21026479079367e-08,
+            -1.393214715366116e-15
+        ],
+        [
+            0.29074888731943616,
+            -0.37125957374977303,
+            -2.0980174537277984e-14,
+            -0.29074894087974473,
+            -0.37125707568514155,
+            0.0,
+            5.349814954428118e-08,
+            0.7425130083732486,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            -2.510948051408209e-05,
+            0.0,
+            0.0,
+            -2.5370917205223833e-05,
+            0.0,
+            0.0,
+            5.048039253404759e-05
+        ]
+    ],
+    "frequencies": [
+        2116.1373891555113,
+        2116.3528534068714,
+        3446.021699040581
+    ],
+    "force_constants": [
+        2.6594907648456028,
+        2.660032368960893,
+        7.05255985842344
+    ],
+    "reduced_masses": [
+        1.0080000000000002,
+        1.008,
+        1.0079999999999998
+    ],
+    "ZPE": 0.01749293734445124,
+    "U0": -1.2569447202143054,
+    "H0": -1.2569447202143054,
+    "U": -1.2541114575444308,
+    "H": -1.2531672729883045,
+    "G": -1.2702186662675736,
+    "S": 5.719065329286906e-05
+}
