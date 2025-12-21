@@ -1,0 +1,105 @@
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef PYTHON_LIB_QUANTUMSTATE_BIND_MPS_STATE_HPP
+#define PYTHON_LIB_QUANTUMSTATE_BIND_MPS_STATE_HPP
+
+#include <cstdint>
+
+#include <memory>
+#include <stdexcept>
+#include <string_view>
+#include <vector>
+
+#include <pybind11/complex.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include "math/pr/parameter_resolver.h"
+#include "ops/hamiltonian.h"
+#include "simulator/mps/mps_state.h"
+
+template <typename sim_t>
+auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
+    using namespace pybind11::literals;                                 // NOLINT
+    using qbit_t = mindquantum::qbit_t;
+    using calc_type = typename sim_t::calc_type;
+    using circuit_t = typename sim_t::circuit_t;
+    using py_qs_data_t = typename sim_t::py_qs_data_t;
+
+    return pybind11::class_<sim_t>(module, name.data())
+        .def(pybind11::init<qbit_t, unsigned, uint32_t>(), "n_qubits"_a, "seed"_a = 42, "max_bond_dimension"_a = 0)
+        .def("dtype", &sim_t::DType)
+        .def("display", &sim_t::Display, "qubits_limit"_a = 10)
+        .def("apply_gate", &sim_t::ApplyGate, "gate"_a, "pr"_a = parameter::ParameterResolver(), "diff"_a = false)
+        .def("apply_circuit", &sim_t::ApplyCircuit, "gate"_a, "pr"_a = parameter::ParameterResolver())
+        .def("reset", &sim_t::Reset)
+        .def("get_qs", &sim_t::GetQS)
+        .def("set_qs", &sim_t::SetQS)
+        .def("get_reduced_density_matrix", &sim_t::GetReducedDensityMatrix)
+        .def("purity", &sim_t::Purity)
+        .def("pure_state_vector", &sim_t::PureStateVector)
+        .def("apply_hamiltonian", &sim_t::ApplyHamiltonian)
+        .def("copy", [](const sim_t& sim) { return sim; })
+        .def("sampling", &sim_t::Sampling)
+        .def("sampling_measure_ending_without_noise", &sim_t::SamplingMeasurementEndingWithoutNoise)
+        .def("get_circuit_matrix", &sim_t::GetCircuitMatrix)
+        .def("get_expectation",
+             pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&, const circuit_t&,
+                                     const typename sim_t::derived_t&, const parameter::ParameterResolver&>(
+                 &sim_t::GetExpectation, pybind11::const_))
+        .def("get_expectation",
+             pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&, const circuit_t&,
+                                     const parameter::ParameterResolver&>(&sim_t::GetExpectation, pybind11::const_))
+        .def("get_expectation",
+             pybind11::overload_cast<const mindquantum::Hamiltonian<calc_type>&, const circuit_t&,
+                                     const parameter::ParameterResolver&>(&sim_t::GetExpectation, pybind11::const_))
+        // Gradients are not supported yet for mqmps (roadmap item in design doc).
+        .def(
+            "qram_expectation_with_grad",
+            [](const sim_t&, const std::vector<std::shared_ptr<mindquantum::Hamiltonian<calc_type>>>&, const circuit_t&,
+               const circuit_t&, const mindquantum::VVT<py_qs_data_t>&, const mindquantum::VT<calc_type>&,
+               const mindquantum::VS&, size_t, size_t) -> mindquantum::VT<mindquantum::VVT<py_qs_data_t>> {
+                throw std::runtime_error("mqmps: qram_expectation_with_grad is not supported.");
+            })
+        .def(
+            "get_expectation_with_grad_multi_multi",
+            [](const sim_t&, const std::vector<std::shared_ptr<mindquantum::Hamiltonian<calc_type>>>&, const circuit_t&,
+               const circuit_t&, const mindquantum::VVT<calc_type>&, const mindquantum::VT<calc_type>&,
+               const mindquantum::VS&, const mindquantum::VS&, size_t, size_t)
+                -> mindquantum::VT<mindquantum::VVT<py_qs_data_t>> {
+                throw std::runtime_error("mqmps: get_expectation_with_grad is not supported.");
+            })
+        .def(
+            "get_expectation_with_grad_non_hermitian_multi_multi",
+            [](const sim_t&, const std::vector<std::shared_ptr<mindquantum::Hamiltonian<calc_type>>>&,
+               const std::vector<std::shared_ptr<mindquantum::Hamiltonian<calc_type>>>&, const circuit_t&,
+               const circuit_t&, const circuit_t&, const circuit_t&, const mindquantum::VVT<calc_type>&,
+               const mindquantum::VT<calc_type>&, const mindquantum::VS&, const mindquantum::VS&, const sim_t&, size_t,
+               size_t) -> mindquantum::VT<mindquantum::VVT<py_qs_data_t>> {
+                throw std::runtime_error("mqmps: get_expectation_with_grad (non-hermitian) is not supported.");
+            })
+        .def(
+            "get_expectation_with_grad_parameter_shift_multi_multi",
+            [](const sim_t&, const std::vector<std::shared_ptr<mindquantum::Hamiltonian<calc_type>>>&, const circuit_t&,
+               const mindquantum::VVT<calc_type>&, const mindquantum::VT<calc_type>&, const mindquantum::VS&,
+               const mindquantum::VS&, size_t, size_t) -> mindquantum::VT<mindquantum::VVT<py_qs_data_t>> {
+                throw std::runtime_error("mqmps: parameter-shift gradients are not supported.");
+            });
+}
+
+#endif  // PYTHON_LIB_QUANTUMSTATE_BIND_MPS_STATE_HPP
+

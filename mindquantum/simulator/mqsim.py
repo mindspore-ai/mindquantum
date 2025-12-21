@@ -51,7 +51,7 @@ from .utils import GradOpsWrapper, _thread_balance
 class MQSim(BackendBase):
     """Mindquantum Backend."""
 
-    def __init__(self, name: str, n_qubits: int, seed=None, dtype=complex128, internal=False):
+    def __init__(self, name: str, n_qubits: int, seed=None, dtype=complex128, internal=False, **kwargs):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed, dtype)
         self.internal = internal
@@ -62,7 +62,7 @@ class MQSim(BackendBase):
                 dtype = complex128
                 self.arithmetic_type = dtype
             _check_mq_type(dtype)
-            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed)
+            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed, **kwargs)
 
     def __str__(self):
         """Return a string representation of the object."""
