@@ -20,8 +20,10 @@
 #include <cstdint>
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <random>
 #include <string>
 #include <utility>
@@ -122,11 +124,20 @@ class MPSState {
     std::map<std::string, int> ApplyCircuitCompiled_(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                      bool diff);
 
+    void ReserveStorage_();
+    size_t BondDimReserve_(qbit_t bond) const;
+
     // Expectation value helpers
     py_qs_data_t ExpectationPauliTerms_(const VT<PauliTerm<calc_type>>& terms) const;
     py_qs_data_t ExpectationSparse_(const Hamiltonian<calc_type>& ham) const;
 
  private:
+    struct PauliSumCache {
+        size_t terms_hash = 0;
+        size_t mapping_hash = 0;
+        VT<PauliTerm<calc_type>> phys_terms;  // merged/sorted, positions are physical sites
+    };
+
     qbit_t n_qubits_ = 0;
     unsigned seed_ = 0;
     uint32_t max_bond_dimension_ = 0;
@@ -141,10 +152,12 @@ class MPSState {
     // Dynamic mapping between logical qubits (bit positions) and MPS physical sites.
     qbits_t pos_of_logical_;   // size n_qubits_
     qbits_t logical_at_pos_;   // size n_qubits_
+
+    // Cached compilation for large Pauli-sums (depends on current logical<->physical mapping).
+    mutable std::optional<PauliSumCache> pauli_sum_cache_;
 };
 }  // namespace mindquantum::sim::mps::detail
 
 #include "simulator/mps/mps_state.tpp"
 
 #endif  // INCLUDE_SIMULATOR_MPS_MPS_STATE_HPP
-

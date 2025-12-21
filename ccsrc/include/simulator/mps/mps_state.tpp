@@ -21,16 +21,22 @@
 #include <Eigen/SVD>
 
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 #include "core/sparse/algo.h"
 #include "core/utils.h"
 #include "simulator/mps/compiler/mps_compiler.h"
+#include "simulator/mps/linalg/gemm.h"
+#include "simulator/mps/linalg/svd.h"
 
 namespace mindquantum::sim::mps::detail {
 namespace detail {
@@ -48,6 +54,65 @@ inline calc_t SafeInv(calc_t x, calc_t floor) {
     }
     return static_cast<calc_t>(1) / x;
 }
+
+inline size_t HashCombine(size_t seed, size_t value) {
+    // boost-like hash combine
+    seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
+    return seed;
+}
+
+template <typename T>
+inline size_t HashScalarBits(T v) {
+    static_assert(std::is_floating_point_v<T>, "HashScalarBits expects a floating-point type.");
+    if constexpr (std::is_same_v<T, float>) {
+        uint32_t bits = 0;
+        std::memcpy(&bits, &v, sizeof(bits));
+        return static_cast<size_t>(bits);
+    } else if constexpr (std::is_same_v<T, double>) {
+        uint64_t bits = 0;
+        std::memcpy(&bits, &v, sizeof(bits));
+        return static_cast<size_t>(bits ^ (bits >> 32U));
+    } else {
+        // Fallback: hash as bytes.
+        size_t out = 0;
+        const auto* ptr = reinterpret_cast<const unsigned char*>(&v);
+        for (size_t i = 0; i < sizeof(T); ++i) {
+            out = HashCombine(out, static_cast<size_t>(ptr[i]));
+        }
+        return out;
+    }
+}
+
+template <typename T>
+struct TwoSiteWorkspace {
+    using MatT = Mat<T>;
+    MatT L;
+    MatT R;
+    MatT Theta;
+    mindquantum::sim::mps::linalg::ThinSvd<T> svd;
+
+    void EnsureCapacity(size_t bond_dim_cap, unsigned int opts) {
+        // Allocate for worst-case local sizes:
+        //   L: (2*D_L) x D_M, R: D_M x (2*D_R), Theta: (2*D_L) x (2*D_R)
+        // with D_L,D_M,D_R <= bond_dim_cap.
+        const auto cap = static_cast<Eigen::Index>(bond_dim_cap);
+        if (cap <= 0) {
+            return;
+        }
+        const Eigen::Index two_cap = 2 * cap;
+
+        if (L.size() < two_cap * cap) {
+            L.resize(two_cap, cap);
+        }
+        if (R.size() < cap * two_cap) {
+            R.resize(cap, two_cap);
+        }
+        if (Theta.size() < two_cap * two_cap) {
+            Theta.resize(two_cap, two_cap);
+        }
+        svd.EnsureCapacity(two_cap, two_cap, opts);
+    }
+};
 }  // namespace detail
 
 template <typename qs_policy_t_>
@@ -137,15 +202,76 @@ void MPSState<qs_policy_t_>::SetSeed(unsigned new_seed) {
 }
 
 template <typename qs_policy_t_>
+size_t MPSState<qs_policy_t_>::BondDimReserve_(qbit_t bond) const {
+    if (bond < 0) {
+        return 1;
+    }
+    const auto n = static_cast<size_t>(n_qubits_);
+    const auto i = static_cast<size_t>(bond);
+    if (i > n) {
+        return 1;
+    }
+    const size_t exp = std::min(i, n - i);
+    size_t max_no_cap = 0;
+    if (exp >= (sizeof(size_t) * 8U - 1U)) {
+        max_no_cap = std::numeric_limits<size_t>::max();
+    } else {
+        max_no_cap = static_cast<size_t>(1ULL) << exp;
+    }
+
+    if (max_bond_dimension_ != 0) {
+        return std::min<size_t>(static_cast<size_t>(max_bond_dimension_), max_no_cap);
+    }
+    // Uncapped growth: reserve a small base to reduce churn without exploding memory use.
+    constexpr size_t kDefaultReserveBondDim = 64;
+    return std::min<size_t>(kDefaultReserveBondDim, max_no_cap);
+}
+
+template <typename qs_policy_t_>
+void MPSState<qs_policy_t_>::ReserveStorage_() {
+    const auto n = static_cast<size_t>(n_qubits_);
+    if (lambdas_.size() != n + 1) {
+        lambdas_.resize(n + 1);
+    }
+    if (gammas_.size() != n) {
+        gammas_.resize(n);
+    }
+
+    for (qbit_t i = 0; i <= n_qubits_; ++i) {
+        lambdas_.at(static_cast<size_t>(i)).reserve(BondDimReserve_(i));
+    }
+    for (qbit_t i = 0; i < n_qubits_; ++i) {
+        const size_t dl_cap = BondDimReserve_(i);
+        const size_t dr_cap = BondDimReserve_(i + 1);
+        size_t site_cap = 0;
+        if (dl_cap != 0 && dr_cap > std::numeric_limits<size_t>::max() / dl_cap) {
+            site_cap = std::numeric_limits<size_t>::max();
+        } else {
+            site_cap = dl_cap * dr_cap;
+        }
+        gammas_.at(static_cast<size_t>(i)).g0.reserve(site_cap);
+        gammas_.at(static_cast<size_t>(i)).g1.reserve(site_cap);
+    }
+}
+
+template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::InitZeroState_() {
-    lambdas_.assign(static_cast<size_t>(n_qubits_) + 1, VT<calc_type>{static_cast<calc_type>(1)});
-    gammas_.assign(static_cast<size_t>(n_qubits_), GammaSite{});
+    ReserveStorage_();
+    // Initialize all Λ bonds to [1] while preserving capacity.
+    for (qbit_t i = 0; i <= n_qubits_; ++i) {
+        auto& lam = lambdas_.at(static_cast<size_t>(i));
+        lam.resize(1);
+        lam[0] = static_cast<calc_type>(1);
+    }
+    // Initialize all Γ sites to |0> while preserving capacity.
     for (qbit_t i = 0; i < n_qubits_; ++i) {
         auto& g = gammas_.at(static_cast<size_t>(i));
         g.dl = 1;
         g.dr = 1;
-        g.g0.assign(1, complex_t{1, 0});
-        g.g1.assign(1, complex_t{0, 0});
+        g.g0.resize(1);
+        g.g1.resize(1);
+        g.g0[0] = complex_t{1, 0};
+        g.g1[0] = complex_t{0, 0};
     }
     pos_of_logical_.resize(static_cast<size_t>(n_qubits_));
     logical_at_pos_.resize(static_cast<size_t>(n_qubits_));
@@ -359,6 +485,9 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
         pos_of_logical_.at(static_cast<size_t>(q)) = q;
         logical_at_pos_.at(static_cast<size_t>(q)) = q;
     }
+
+    // Ensure hot-path reserves are in place after rebuilding from a full vector.
+    ReserveStorage_();
 }
 
 template <typename qs_policy_t_>
@@ -419,10 +548,20 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
         throw std::runtime_error("mqmps: inconsistent bond dimensions for 2-site update.");
     }
 
-    thread_local Mat L;
-    thread_local Mat R;
-    thread_local Mat Theta;
+    constexpr unsigned int svd_opts = Eigen::ComputeThinU | Eigen::ComputeThinV;
+    thread_local detail::TwoSiteWorkspace<complex_t> ws;
+    const size_t bond_dim_cap = [&]() {
+        if (max_bond_dimension_ != 0) {
+            return static_cast<size_t>(max_bond_dimension_);
+        }
+        constexpr size_t kDefaultWorkspaceBondDim = 64;
+        return std::max({D_L, D_M, D_R, kDefaultWorkspaceBondDim});
+    }();
+    ws.EnsureCapacity(bond_dim_cap, svd_opts);
 
+    auto& L = ws.L;
+    auto& R = ws.R;
+    auto& Theta = ws.Theta;
     L.resize(static_cast<Eigen::Index>(2 * D_L), static_cast<Eigen::Index>(D_M));
     R.resize(static_cast<Eigen::Index>(D_M), static_cast<Eigen::Index>(2 * D_R));
 
@@ -447,7 +586,7 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     }
 
     Theta.resize(static_cast<Eigen::Index>(2 * D_L), static_cast<Eigen::Index>(2 * D_R));
-    Theta.noalias() = L * R;
+    mindquantum::sim::mps::linalg::Gemm(L, R, &Theta);
 
     // Apply 4x4 gate to physical indices (unrolled).
     for (size_t a = 0; a < D_L; ++a) {
@@ -469,8 +608,8 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
         }
     }
 
-    Eigen::BDCSVD<Mat> svd(Theta, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    const auto s_all = svd.singularValues();
+    ws.svd.Compute(Theta, svd_opts);
+    const auto& s_all = ws.svd.singularValues();
     const size_t r_full = static_cast<size_t>(s_all.size());
     size_t r_keep = r_full;
     if (max_bond_dimension_ != 0) {
@@ -504,8 +643,8 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     lambdas_.at(static_cast<size_t>(i + 1)) = std::move(s_kept);
 
     const size_t D_new = lambdas_.at(static_cast<size_t>(i + 1)).size();
-    const auto U = svd.matrixU().leftCols(static_cast<Eigen::Index>(D_new));
-    const auto V = svd.matrixV().leftCols(static_cast<Eigen::Index>(D_new));  // (2*D_R x D_new)
+    const auto U = ws.svd.matrixU().leftCols(static_cast<Eigen::Index>(D_new));
+    const auto V = ws.svd.matrixV().leftCols(static_cast<Eigen::Index>(D_new));  // (2*D_R x D_new)
 
     // Update left site gamma (D_L x D_new)
     site_i.dr = D_new;
@@ -879,59 +1018,202 @@ template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type>>& terms) const -> py_qs_data_t {
     using Mat = detail::Mat<complex_t>;
     constexpr complex_t I{0, 1};
-    py_qs_data_t out{0, 0};
 
+    // Cache key: (logical Pauli term list) + (current logical->physical mapping).
+    size_t mapping_hash = 0;
+    mapping_hash = detail::HashCombine(mapping_hash, pos_of_logical_.size());
+    for (auto p : pos_of_logical_) {
+        mapping_hash = detail::HashCombine(mapping_hash, static_cast<size_t>(p));
+    }
+    size_t terms_hash = 0;
+    terms_hash = detail::HashCombine(terms_hash, terms.size());
     for (const auto& [pwords, coeff] : terms) {
-        // Local operators per physical site (default identity).
-        VT<std::array<complex_t, 4>> ops(static_cast<size_t>(n_qubits_), {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}});
+        terms_hash = detail::HashCombine(terms_hash, pwords.size());
         for (const auto& [q, p] : pwords) {
-            const auto pos = pos_of_logical_.at(static_cast<size_t>(q));
-            switch (p) {
-                case 'X':
-                    ops.at(static_cast<size_t>(pos)) = {complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
-                    break;
-                case 'Y':
-                    ops.at(static_cast<size_t>(pos)) = {complex_t{0, 0}, -I, I, complex_t{0, 0}};
-                    break;
-                case 'Z':
-                    ops.at(static_cast<size_t>(pos)) = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
-                    break;
-                default:
+            terms_hash = detail::HashCombine(terms_hash, static_cast<size_t>(q));
+            terms_hash = detail::HashCombine(terms_hash, static_cast<size_t>(static_cast<unsigned char>(p)));
+        }
+        terms_hash = detail::HashCombine(terms_hash, detail::HashScalarBits(static_cast<calc_type>(coeff)));
+    }
+
+    if (!pauli_sum_cache_ || pauli_sum_cache_->terms_hash != terms_hash || pauli_sum_cache_->mapping_hash != mapping_hash) {
+        PauliSumCache cache;
+        cache.terms_hash = terms_hash;
+        cache.mapping_hash = mapping_hash;
+        cache.phys_terms.reserve(terms.size());
+
+        for (const auto& [pwords, coeff_in] : terms) {
+            const auto coeff = static_cast<calc_type>(coeff_in);
+            if (coeff == static_cast<calc_type>(0)) {
+                continue;
+            }
+            VT<PauliWord> phys_words;
+            phys_words.reserve(pwords.size());
+            for (const auto& [q_idx, p] : pwords) {
+                const auto q = static_cast<size_t>(q_idx);
+                if (q >= pos_of_logical_.size()) {
+                    throw std::runtime_error("mqmps: invalid qubit index in Pauli term.");
+                }
+                const auto pos = pos_of_logical_.at(q);
+                if (pos < 0 || pos >= n_qubits_) {
+                    throw std::runtime_error("mqmps: invalid physical position in Pauli term.");
+                }
+                if (p != 'X' && p != 'Y' && p != 'Z') {
                     throw std::runtime_error("mqmps: unknown Pauli word.");
+                }
+                phys_words.push_back(PauliWord{static_cast<Index>(pos), p});
             }
+            std::sort(phys_words.begin(), phys_words.end(),
+                      [](const PauliWord& a, const PauliWord& b) { return (a.first != b.first) ? (a.first < b.first) : (a.second < b.second); });
+            for (size_t k = 1; k < phys_words.size(); ++k) {
+                if (phys_words[k].first == phys_words[k - 1].first) {
+                    throw std::runtime_error("mqmps: Pauli term has repeated qubit index.");
+                }
+            }
+            cache.phys_terms.push_back(PauliTerm<calc_type>{std::move(phys_words), coeff});
         }
 
-        Mat E(1, 1);
-        E(0, 0) = complex_t{1, 0};
-        for (qbit_t i = 0; i < n_qubits_; ++i) {
-            const auto D_i = lambdas_.at(static_cast<size_t>(i)).size();
-            const auto D_next = lambdas_.at(static_cast<size_t>(i + 1)).size();
-            const auto& lam_next = lambdas_.at(static_cast<size_t>(i + 1));
-            const auto& site = gammas_.at(static_cast<size_t>(i));
-            Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-            Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-
-            const auto o = ops.at(static_cast<size_t>(i));
-            const complex_t o00 = o[0];
-            const complex_t o01 = o[1];
-            const complex_t o10 = o[2];
-            const complex_t o11 = o[3];
-
-            Mat t00 = g0.adjoint() * E * g0;
-            Mat t01 = g0.adjoint() * E * g1;
-            Mat t10 = g1.adjoint() * E * g0;
-            Mat t11 = g1.adjoint() * E * g1;
-            Mat X = t00 * o00 + t01 * o01 + t10 * o10 + t11 * o11;
-
-            // E_next = diag(lambda_next) * X * diag(lambda_next)
-            Mat E_next = X;
-            for (size_t k = 0; k < D_next; ++k) {
-                E_next.row(static_cast<Eigen::Index>(k)) *= lam_next[k];
-                E_next.col(static_cast<Eigen::Index>(k)) *= lam_next[k];
+        std::sort(cache.phys_terms.begin(), cache.phys_terms.end(),
+                  [](const PauliTerm<calc_type>& a, const PauliTerm<calc_type>& b) {
+                      return std::lexicographical_compare(a.first.begin(), a.first.end(), b.first.begin(), b.first.end());
+                  });
+        // Merge identical Pauli strings (reduces work for some Hamiltonians).
+        VT<PauliTerm<calc_type>> merged;
+        merged.reserve(cache.phys_terms.size());
+        for (auto& t : cache.phys_terms) {
+            if (merged.empty() || merged.back().first != t.first) {
+                merged.push_back(std::move(t));
+            } else {
+                merged.back().second += t.second;
             }
-            E = std::move(E_next);
         }
-        out += static_cast<calc_type>(coeff) * E(0, 0);
+        cache.phys_terms = std::move(merged);
+        pauli_sum_cache_ = std::move(cache);
+    }
+
+    struct ExpectWs {
+        Mat a0;
+        Mat a1;
+        Mat tmp;
+    };
+    thread_local ExpectWs ws;
+
+    const std::array<complex_t, 4> eye = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}};
+    const std::array<complex_t, 4> xop = {complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
+    const std::array<complex_t, 4> yop = {complex_t{0, 0}, -I, I, complex_t{0, 0}};
+    const std::array<complex_t, 4> zop = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
+
+    auto apply_local = [&](qbit_t site, const std::array<complex_t, 4>& op, const Mat& e, Mat* out) {
+        const size_t D_i = lambdas_.at(static_cast<size_t>(site)).size();
+        const size_t D_next = lambdas_.at(static_cast<size_t>(site + 1)).size();
+        const auto& lam_next = lambdas_.at(static_cast<size_t>(site + 1));
+        const auto& g = gammas_.at(static_cast<size_t>(site));
+        if (g.dl != D_i || g.dr != D_next) {
+            throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions during expectation.");
+        }
+
+        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+
+        ws.a0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        ws.a1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        ws.a0.noalias() = e * g0;
+        ws.a1.noalias() = e * g1;
+
+        out->resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+        ws.tmp.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+
+        // out = o00*(g0^H a0) + o01*(g0^H a1) + o10*(g1^H a0) + o11*(g1^H a1)
+        ws.tmp.noalias() = g0.adjoint() * ws.a0;
+        *out = op[0] * ws.tmp;
+        if (op[1] != complex_t{0, 0}) {
+            ws.tmp.noalias() = g0.adjoint() * ws.a1;
+            *out += op[1] * ws.tmp;
+        }
+        if (op[2] != complex_t{0, 0}) {
+            ws.tmp.noalias() = g1.adjoint() * ws.a0;
+            *out += op[2] * ws.tmp;
+        }
+        ws.tmp.noalias() = g1.adjoint() * ws.a1;
+        *out += op[3] * ws.tmp;
+
+        // out = diag(lam_next) * out * diag(lam_next)
+        for (size_t k = 0; k < D_next; ++k) {
+            out->row(static_cast<Eigen::Index>(k)) *= lam_next[k];
+            out->col(static_cast<Eigen::Index>(k)) *= lam_next[k];
+        }
+    };
+
+    py_qs_data_t out{0, 0};
+    VT<PauliWord> prev_ops;
+    VT<Mat> prefix_env;
+    VT<qbit_t> prefix_next_site;
+
+    Mat e(1, 1);
+    Mat e_tmp(1, 1);
+
+    const auto& merged = pauli_sum_cache_->phys_terms;
+    for (const auto& [ops, coeff] : merged) {
+        if (coeff == static_cast<calc_type>(0)) {
+            continue;
+        }
+        if (ops.empty()) {
+            out += coeff * complex_t{1, 0};
+            prev_ops.clear();
+            prefix_env.clear();
+            prefix_next_site.clear();
+            continue;
+        }
+
+        size_t lcp = 0;
+        while (lcp < prev_ops.size() && lcp < ops.size() && prev_ops[lcp] == ops[lcp]) {
+            ++lcp;
+        }
+        prefix_env.resize(lcp);
+        prefix_next_site.resize(lcp);
+
+        qbit_t next_site = 0;
+        e.resize(1, 1);
+        e(0, 0) = complex_t{1, 0};
+        if (lcp > 0) {
+            e = prefix_env.at(lcp - 1);
+            next_site = prefix_next_site.at(lcp - 1);
+        }
+
+        // Process remaining sparse Pauli ops, interleaving identity sites.
+        for (size_t op_idx = lcp; op_idx < ops.size(); ++op_idx) {
+            const auto& op = ops.at(op_idx);
+            const auto op_pos = static_cast<qbit_t>(op.first);
+            if (op_pos < next_site) {
+                throw std::runtime_error("mqmps: invalid Pauli op ordering.");
+            }
+            for (qbit_t s = next_site; s < op_pos; ++s) {
+                apply_local(s, eye, e, &e_tmp);
+                e.swap(e_tmp);
+            }
+            const std::array<complex_t, 4>* local = &eye;
+            if (op.second == 'X') {
+                local = &xop;
+            } else if (op.second == 'Y') {
+                local = &yop;
+            } else if (op.second == 'Z') {
+                local = &zop;
+            }
+            apply_local(op_pos, *local, e, &e_tmp);
+            e.swap(e_tmp);
+            next_site = op_pos + 1;
+
+            prefix_env.push_back(e);
+            prefix_next_site.push_back(next_site);
+        }
+
+        // Tail identities to the end.
+        for (qbit_t s = next_site; s < n_qubits_; ++s) {
+            apply_local(s, eye, e, &e_tmp);
+            e.swap(e_tmp);
+        }
+        out += coeff * e(0, 0);
+        prev_ops = ops;
     }
     return out;
 }
