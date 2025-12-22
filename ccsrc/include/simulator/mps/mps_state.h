@@ -102,6 +102,11 @@ class MPSState {
     MPSState<policy_des> astype(unsigned new_seed) const;
 
  private:
+    template <typename>
+    friend class MPSState;
+
+    static constexpr qbit_t kMaxStateVectorQubits = 30;
+
     struct GammaSite {
         VT<complex_t> g0;
         VT<complex_t> g1;
@@ -114,7 +119,7 @@ class MPSState {
     void Apply1QOnPhysical_(qbit_t pos, const std::array<complex_t, 4>& u);
     void Apply2QOnBond_(qbit_t bond, const std::array<complex_t, 16>& u);
 
-    // Full-state helpers (slow paths, used for SetQS/measurement).
+    // Full-state helpers (explicit statevector conversion; guarded by kMaxStateVectorQubits).
     VT<complex_t> ContractToStateVectorPhysicalOrder_() const;
     VT<complex_t> PermutePhysicalToLogical_(const VT<complex_t>& phys) const;
 
@@ -127,9 +132,11 @@ class MPSState {
     void ReserveStorage_();
     size_t BondDimReserve_(qbit_t bond) const;
 
+    void ReorderToTargetMapping_(const qbits_t& logical_at_pos_target);
+
     // Expectation value helpers
     py_qs_data_t ExpectationPauliTerms_(const VT<PauliTerm<calc_type>>& terms) const;
-    py_qs_data_t ExpectationSparse_(const Hamiltonian<calc_type>& ham) const;
+    py_qs_data_t ExpectationPauliTermsBraKet_(const VT<PauliTerm<calc_type>>& terms, const derived_t& bra) const;
 
  private:
     struct PauliSumCache {

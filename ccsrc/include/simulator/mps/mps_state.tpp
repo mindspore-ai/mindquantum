@@ -32,7 +32,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "core/sparse/algo.h"
 #include "core/utils.h"
 #include "simulator/mps/compiler/mps_compiler.h"
 #include "simulator/mps/linalg/gemm.h"
@@ -364,6 +363,10 @@ auto MPSState<qs_policy_t_>::PermutePhysicalToLogical_(const VT<complex_t>& phys
 
 template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
+    if (n_qubits_ > kMaxStateVectorQubits) {
+        throw std::runtime_error("mqmps: GetQS() constructs a full 2^n statevector and is limited to <=30 qubits; got " +
+                                 std::to_string(n_qubits_) + " qubits.");
+    }
     auto phys = ContractToStateVectorPhysicalOrder_();
     auto logical = PermutePhysicalToLogical_(phys);
     return logical;
@@ -498,6 +501,10 @@ void MPSState<qs_policy_t_>::SetFromStateVectorLogical_(const VT<complex_t>& vec
 
 template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs) {
+    if (n_qubits_ > kMaxStateVectorQubits) {
+        throw std::runtime_error("mqmps: SetQS() requires a full 2^n statevector and is limited to <=30 qubits; got " +
+                                 std::to_string(n_qubits_) + " qubits.");
+    }
     VT<complex_t> vec(qs.begin(), qs.end());
     // Normalize defensively.
     calc_type norm2 = 0;
@@ -674,6 +681,62 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
 }
 
 template <typename qs_policy_t_>
+void MPSState<qs_policy_t_>::ReorderToTargetMapping_(const qbits_t& logical_at_pos_target) {
+    if (logical_at_pos_target.size() != static_cast<size_t>(n_qubits_)) {
+        throw std::runtime_error("mqmps: invalid target mapping size.");
+    }
+    if (logical_at_pos_.size() != static_cast<size_t>(n_qubits_) || pos_of_logical_.size() != static_cast<size_t>(n_qubits_)) {
+        throw std::runtime_error("mqmps: internal mapping size mismatch.");
+    }
+    if (logical_at_pos_ == logical_at_pos_target) {
+        return;
+    }
+
+    // Validate target is a permutation of [0..n_qubits_-1].
+    VT<int> seen(static_cast<size_t>(n_qubits_), 0);
+    for (auto q : logical_at_pos_target) {
+        if (q < 0 || q >= n_qubits_) {
+            throw std::runtime_error("mqmps: target mapping contains out-of-range logical index.");
+        }
+        if (++seen.at(static_cast<size_t>(q)) != 1) {
+            throw std::runtime_error("mqmps: target mapping contains duplicates.");
+        }
+    }
+
+    const std::array<complex_t, 16> swap4 = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0},
+                                             complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}, complex_t{0, 0},
+                                             complex_t{0, 0}, complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0},
+                                             complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}};
+
+    const auto do_swap = [&](qbit_t bond) {
+        Apply2QOnBond_(bond, swap4);
+        const auto ql = logical_at_pos_.at(static_cast<size_t>(bond));
+        const auto qr = logical_at_pos_.at(static_cast<size_t>(bond + 1));
+        std::swap(logical_at_pos_.at(static_cast<size_t>(bond)), logical_at_pos_.at(static_cast<size_t>(bond + 1)));
+        pos_of_logical_.at(static_cast<size_t>(ql)) = bond + 1;
+        pos_of_logical_.at(static_cast<size_t>(qr)) = bond;
+    };
+
+    // Deterministic 1D swap routing to the target permutation.
+    for (qbit_t pos = 0; pos < n_qubits_; ++pos) {
+        const auto desired = logical_at_pos_target.at(static_cast<size_t>(pos));
+        qbit_t cur_pos = pos_of_logical_.at(static_cast<size_t>(desired));
+        while (cur_pos > pos) {
+            do_swap(cur_pos - 1);
+            cur_pos = pos_of_logical_.at(static_cast<size_t>(desired));
+        }
+        while (cur_pos < pos) {
+            do_swap(cur_pos);
+            cur_pos = pos_of_logical_.at(static_cast<size_t>(desired));
+        }
+    }
+
+    if (logical_at_pos_ != logical_at_pos_target) {
+        throw std::runtime_error("mqmps: failed to reach target mapping.");
+    }
+}
+
+template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                    bool diff) -> std::map<std::string, int> {
     compiler::MPSCompiler<calc_type> comp(n_qubits_);
@@ -718,89 +781,123 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
                 continue;
             }
 
-            // One-shot measurement of the final state: sample a full basis index and project.
-            auto psi = GetQS();  // logical ordering
-            const size_t dim = psi.size();
-            if (dim == 0) {
-                throw std::runtime_error("mqmps: invalid state vector size.");
-            }
-            VT<double> cum_prob(dim);
-            double acc = 0.0;
-            for (size_t i = 0; i < dim; ++i) {
-                acc += static_cast<double>(std::norm(psi[i]));
-                cum_prob[i] = acc;
-            }
-            if (acc == 0.0) {
-                throw std::runtime_error("mqmps: zero-norm state in measurement.");
-            }
-            for (auto& v : cum_prob) {
-                v /= acc;
-            }
-            const double r = rng_();
-            auto it = std::lower_bound(cum_prob.begin(), cum_prob.end(), r);
-            const size_t sampled = static_cast<size_t>(std::distance(cum_prob.begin(), it));
+            // One-shot measurement of the final state (native MPS path):
+            // - sample a full bitstring in physical order using the canonical Γ/Λ form,
+            // - project measured sites in-place (no full state-vector construction),
+            // - re-canonicalize via an identity sweep (also normalizes).
+            using Mat = detail::Mat<complex_t>;
+            using RowVec = detail::RowVec<complex_t>;
 
-            // Record measured bits (in logical qubit indices).
-            struct ResetInfo {
-                qbit_t q = 0;
+            // Sample full register bits in physical site order.
+            VT<int> bits(static_cast<size_t>(n_qubits_), 0);
+            if (n_qubits_ > 0) {
+                RowVec x(1);
+                x(0) = complex_t{1, 0};
+                for (qbit_t i = 0; i < n_qubits_; ++i) {
+                    const auto D_i = lambdas_.at(static_cast<size_t>(i)).size();
+                    const auto D_next = lambdas_.at(static_cast<size_t>(i + 1)).size();
+                    const auto& lam_next = lambdas_.at(static_cast<size_t>(i + 1));
+                    const auto& site = gammas_.at(static_cast<size_t>(i));
+                    if (site.dl != D_i || site.dr != D_next) {
+                        throw std::runtime_error("mqmps: inconsistent dimensions in measurement sampling.");
+                    }
+                    Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(D_i),
+                                             static_cast<Eigen::Index>(D_next));
+                    Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(D_i),
+                                             static_cast<Eigen::Index>(D_next));
+                    if (x.cols() != static_cast<Eigen::Index>(D_i)) {
+                        throw std::runtime_error("mqmps: internal measurement sampling dim mismatch.");
+                    }
+                    RowVec y0 = x * g0;
+                    RowVec y1 = x * g1;
+                    for (size_t k = 0; k < D_next; ++k) {
+                        y0(static_cast<Eigen::Index>(k)) *= lam_next[k];
+                        y1(static_cast<Eigen::Index>(k)) *= lam_next[k];
+                    }
+
+                    const double p0 = static_cast<double>(y0.squaredNorm());
+                    const double p1 = static_cast<double>(y1.squaredNorm());
+                    const double denom = p0 + p1;
+                    if (denom <= 0) {
+                        throw std::runtime_error("mqmps: invalid probability in measurement sampling.");
+                    }
+                    const double prob0 = p0 / denom;
+                    const bool bit0 = (rng_() < prob0);
+                    bits.at(static_cast<size_t>(i)) = bit0 ? 0 : 1;
+                    x = bit0 ? y0 : y1;
+                }
+            }
+
+            struct MeasInfo {
+                qbit_t pos = 0;  // physical site index
+                int outcome = 0;
                 bool do_reset = false;
                 index_t reset_to = 0;
-                int outcome = 0;
             };
-            VT<ResetInfo> resets;
-            resets.reserve(stage.meas.size());
+            VT<MeasInfo> meas_ops;
+            meas_ops.reserve(stage.meas.size());
             for (const auto& m : stage.meas) {
-                const auto q = logical_at_pos_.at(static_cast<size_t>(m.pos));
-                const int bit = static_cast<int>((sampled >> static_cast<size_t>(q)) & 1U);
+                if (m.pos < 0 || m.pos >= n_qubits_) {
+                    throw std::runtime_error("mqmps: invalid measurement site index.");
+                }
+                const int bit = bits.at(static_cast<size_t>(m.pos));
                 meas_result[m.key] = bit;
-                resets.push_back(ResetInfo{q, m.reset, m.reset_to, bit});
+                meas_ops.push_back(MeasInfo{m.pos, bit, m.reset, m.reset_to});
             }
 
-            // Collapse: keep only amplitudes matching all measured outcomes.
-            for (size_t i = 0; i < dim; ++i) {
-                bool keep = true;
-                for (const auto& info : resets) {
-                    const int b = static_cast<int>((i >> static_cast<size_t>(info.q)) & 1U);
-                    if (b != info.outcome) {
-                        keep = false;
-                        break;
-                    }
+            // Collapse: apply Z-basis projectors at measured physical sites (unnormalized).
+            for (const auto& info : meas_ops) {
+                auto& site = gammas_.at(static_cast<size_t>(info.pos));
+                if (info.outcome == 0) {
+                    std::fill(site.g1.begin(), site.g1.end(), complex_t{0, 0});
+                } else {
+                    std::fill(site.g0.begin(), site.g0.end(), complex_t{0, 0});
                 }
-                if (!keep) {
-                    psi[i] = complex_t{0, 0};
-                }
-            }
-            // Renormalize.
-            double new_norm2 = 0.0;
-            for (const auto& v : psi) {
-                new_norm2 += static_cast<double>(std::norm(v));
-            }
-            if (new_norm2 == 0.0) {
-                throw std::runtime_error("mqmps: collapse produced zero state.");
-            }
-            const double inv_norm = 1.0 / std::sqrt(new_norm2);
-            for (auto& v : psi) {
-                v *= static_cast<calc_type>(inv_norm);
             }
 
-            // Apply post-measure reset.
-            for (const auto& info : resets) {
+            // Apply post-measure reset as a physical X (swap Γ0/Γ1).
+            for (const auto& info : meas_ops) {
                 if (!info.do_reset) {
                     continue;
                 }
                 if (static_cast<index_t>(info.outcome) == info.reset_to) {
                     continue;
                 }
-                const size_t mask = static_cast<size_t>(1ULL) << static_cast<size_t>(info.q);
-                for (size_t i = 0; i < dim; ++i) {
-                    if ((i & mask) == 0) {
-                        std::swap(psi[i], psi[i | mask]);
-                    }
-                }
+                auto& site = gammas_.at(static_cast<size_t>(info.pos));
+                std::swap(site.g0, site.g1);
             }
 
-            // Rebuild MPS from the collapsed logical state (resets mapping to identity).
-            SetFromStateVectorLogical_(psi);
+            // Re-canonicalize + normalize by sweeping an identity 2Q update across the chain.
+            if (n_qubits_ == 1) {
+                auto& site = gammas_.at(0);
+                calc_type norm2 = 0;
+                for (const auto& v : site.g0) {
+                    norm2 += static_cast<calc_type>(std::norm(v));
+                }
+                for (const auto& v : site.g1) {
+                    norm2 += static_cast<calc_type>(std::norm(v));
+                }
+                if (norm2 == static_cast<calc_type>(0)) {
+                    throw std::runtime_error("mqmps: collapse produced zero state.");
+                }
+                const calc_type inv_norm = static_cast<calc_type>(1) / std::sqrt(norm2);
+                for (auto& v : site.g0) {
+                    v *= inv_norm;
+                }
+                for (auto& v : site.g1) {
+                    v *= inv_norm;
+                }
+            } else if (n_qubits_ > 1) {
+                const std::array<complex_t, 16> eye4 = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0},
+                                                        complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0},
+                                                        complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0},
+                                                        complex_t{0, 0}, complex_t{1, 0}, complex_t{0, 0},
+                                                        complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0},
+                                                        complex_t{1, 0}};
+                for (qbit_t bond = 0; bond < n_qubits_ - 1; ++bond) {
+                    Apply2QOnBond_(bond, eye4);
+                }
+            }
         }
     }
 
@@ -963,52 +1060,200 @@ template <typename qs_policy_t_>
 VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetReducedDensityMatrix(
     const qbits_t& kept_qubits) const {
     using Mat = detail::Mat<complex_t>;
-    const auto psi = GetQS();  // logical order
     const size_t n = static_cast<size_t>(n_qubits_);
-    const size_t k = kept_qubits.size();
-    if (k == 0 || k >= n) {
+    const size_t k_in = kept_qubits.size();
+    if (k_in == 0 || k_in >= n) {
         throw std::runtime_error("mqmps: kept_qubits must be between 1 and n_qubits-1.");
     }
-    const size_t dim_full = static_cast<size_t>(1ULL) << n;
-    const size_t dim_keep = static_cast<size_t>(1ULL) << k;
-    const size_t dim_env = static_cast<size_t>(1ULL) << (n - k);
 
-    // Build the list of environment qubits.
-    VT<qbit_t> kept = kept_qubits;
-    std::sort(kept.begin(), kept.end());
-    kept.erase(std::unique(kept.begin(), kept.end()), kept.end());
-    if (kept.size() != k) {
+    // Normalize input: unique + sorted logical qubit indices.
+    VT<qbit_t> kept_logical = kept_qubits;
+    std::sort(kept_logical.begin(), kept_logical.end());
+    kept_logical.erase(std::unique(kept_logical.begin(), kept_logical.end()), kept_logical.end());
+    if (kept_logical.size() != k_in) {
         throw std::runtime_error("mqmps: kept_qubits contains duplicates.");
     }
-    VT<qbit_t> env;
-    env.reserve(n - k);
-    for (qbit_t q = 0; q < n_qubits_; ++q) {
-        if (!std::binary_search(kept.begin(), kept.end(), q)) {
-            env.push_back(q);
+    const size_t k = kept_logical.size();
+    if (k >= 63) {
+        throw std::runtime_error("mqmps: kept_qubits is too large to build a reduced density matrix.");
+    }
+    const size_t dim_keep = static_cast<size_t>(1ULL) << k;
+
+    // Map logical kept qubits -> physical sites (dynamic mapping), then sort by physical position for contraction order.
+    struct KeepSite {
+        qbit_t pos = 0;
+        qbit_t logical = 0;
+    };
+    VT<KeepSite> kept_sites;
+    kept_sites.reserve(k);
+    for (size_t j = 0; j < k; ++j) {
+        const auto q = kept_logical.at(j);
+        if (q < 0 || q >= n_qubits_) {
+            throw std::runtime_error("mqmps: invalid kept qubit index.");
+        }
+        const auto pos = pos_of_logical_.at(static_cast<size_t>(q));
+        if (pos < 0 || pos >= n_qubits_) {
+            throw std::runtime_error("mqmps: invalid physical position for kept qubit.");
+        }
+        kept_sites.push_back(KeepSite{pos, q});
+    }
+    std::sort(kept_sites.begin(), kept_sites.end(),
+              [](const KeepSite& a, const KeepSite& b) { return (a.pos != b.pos) ? (a.pos < b.pos) : (a.logical < b.logical); });
+    for (size_t j = 1; j < kept_sites.size(); ++j) {
+        if (kept_sites[j].pos == kept_sites[j - 1].pos) {
+            throw std::runtime_error("mqmps: internal error: two logical qubits mapped to the same physical site.");
         }
     }
 
-    Mat psi_mat(static_cast<Eigen::Index>(dim_keep), static_cast<Eigen::Index>(dim_env));
-    psi_mat.setZero();
-    for (size_t idx = 0; idx < dim_full; ++idx) {
-        size_t a = 0;
-        size_t e = 0;
-        for (size_t j = 0; j < kept.size(); ++j) {
-            const auto q = static_cast<size_t>(kept[j]);
-            a |= (((idx >> q) & 1U) << j);
+    // Precompute basis index permutation: physical-kept order (ascending physical position) -> logical-kept order (ascending logical index).
+    // This matches the existing public contract: order of kept_qubits does not matter, and little-endian indexing follows qubit indices.
+    VT<size_t> logical_bit_of_phys_bit(k);
+    for (size_t phys_bit = 0; phys_bit < k; ++phys_bit) {
+        const auto logical_q = kept_sites.at(phys_bit).logical;
+        auto it = std::lower_bound(kept_logical.begin(), kept_logical.end(), logical_q);
+        if (it == kept_logical.end() || *it != logical_q) {
+            throw std::runtime_error("mqmps: internal error computing reduced density matrix permutation.");
         }
-        for (size_t j = 0; j < env.size(); ++j) {
-            const auto q = static_cast<size_t>(env[j]);
-            e |= (((idx >> q) & 1U) << j);
+        logical_bit_of_phys_bit.at(phys_bit) = static_cast<size_t>(std::distance(kept_logical.begin(), it));
+    }
+    VT<size_t> perm_phys_to_log(dim_keep);
+    for (size_t idx_phys = 0; idx_phys < dim_keep; ++idx_phys) {
+        size_t idx_log = 0;
+        for (size_t phys_bit = 0; phys_bit < k; ++phys_bit) {
+            const size_t b = (idx_phys >> phys_bit) & 1U;
+            idx_log |= (b << logical_bit_of_phys_bit.at(phys_bit));
         }
-        psi_mat(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(e)) = psi.at(idx);
+        perm_phys_to_log.at(idx_phys) = idx_log;
     }
 
-    Mat rho = psi_mat * psi_mat.adjoint();
-    VVT<complex_t> out(static_cast<size_t>(rho.rows()), VT<complex_t>(static_cast<size_t>(rho.cols())));
-    for (Eigen::Index r = 0; r < rho.rows(); ++r) {
-        for (Eigen::Index c = 0; c < rho.cols(); ++c) {
-            out.at(static_cast<size_t>(r)).at(static_cast<size_t>(c)) = rho(r, c);
+    struct RdmWs {
+        Mat tmp0;
+        Mat tmp1;
+        VT<Mat> env;
+        VT<Mat> env_next;
+    };
+    thread_local RdmWs ws;
+
+    const auto scale_by_lambda = [](const VT<calc_type>& lam_next, Mat* m) {
+        const size_t D = lam_next.size();
+        for (size_t t = 0; t < D; ++t) {
+            m->row(static_cast<Eigen::Index>(t)) *= lam_next[t];
+            m->col(static_cast<Eigen::Index>(t)) *= lam_next[t];
+        }
+    };
+
+    // env represents a grid of matrices indexed by (ket_index, bra_index) over the kept sites seen so far.
+    ws.env.clear();
+    ws.env_next.clear();
+    ws.env.emplace_back(1, 1);
+    ws.env.front()(0, 0) = complex_t{1, 0};
+    size_t dim_basis = 1;  // number of basis states for the kept sites processed so far (2^m).
+    size_t keep_cursor = 0;
+
+    for (qbit_t site = 0; site < n_qubits_; ++site) {
+        const size_t D_i = lambdas_.at(static_cast<size_t>(site)).size();
+        const size_t D_next = lambdas_.at(static_cast<size_t>(site + 1)).size();
+        const auto& lam_next = lambdas_.at(static_cast<size_t>(site + 1));
+        const auto& g = gammas_.at(static_cast<size_t>(site));
+        if (g.dl != D_i || g.dr != D_next) {
+            throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions during reduced density matrix.");
+        }
+
+        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+
+        const bool is_kept = (keep_cursor < kept_sites.size()) && (kept_sites.at(keep_cursor).pos == site);
+        if (!is_kept) {
+            ws.env_next.resize(ws.env.size());
+            for (size_t idx = 0; idx < ws.env.size(); ++idx) {
+                const Mat& e = ws.env.at(idx);
+                if (static_cast<size_t>(e.rows()) != D_i || static_cast<size_t>(e.cols()) != D_i) {
+                    throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
+                }
+                ws.tmp0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+                ws.tmp1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+                ws.tmp0.noalias() = e * g0;
+                ws.tmp1.noalias() = e * g1;
+
+                Mat& out = ws.env_next.at(idx);
+                out.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+                out.noalias() = g0.adjoint() * ws.tmp0;
+                out.noalias() += g1.adjoint() * ws.tmp1;
+                scale_by_lambda(lam_next, &out);
+            }
+            ws.env.swap(ws.env_next);
+            continue;
+        }
+
+        const size_t new_dim_basis = dim_basis * 2;
+        ws.env_next.resize(new_dim_basis * new_dim_basis);
+
+        for (size_t ket = 0; ket < dim_basis; ++ket) {
+            for (size_t bra = 0; bra < dim_basis; ++bra) {
+                const size_t idx_old = ket * dim_basis + bra;
+                const Mat& e = ws.env.at(idx_old);
+                if (static_cast<size_t>(e.rows()) != D_i || static_cast<size_t>(e.cols()) != D_i) {
+                    throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
+                }
+                ws.tmp0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+                ws.tmp1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+                ws.tmp0.noalias() = e * g0;
+                ws.tmp1.noalias() = e * g1;
+
+                auto fill_entry = [&](size_t new_ket, size_t new_bra, const auto& gl, const Mat& tmp) {
+                    Mat& out = ws.env_next.at(new_ket * new_dim_basis + new_bra);
+                    out.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+                    out.noalias() = gl.adjoint() * tmp;
+                    scale_by_lambda(lam_next, &out);
+                };
+
+                // bra_bit, ket_bit in {0,1}:
+                // out(bra_bit, ket_bit) = g_bra^† * e * g_ket
+                fill_entry(ket + 0 * dim_basis, bra + 0 * dim_basis, g0, ws.tmp0);  // 0,0
+                fill_entry(ket + 1 * dim_basis, bra + 0 * dim_basis, g0, ws.tmp1);  // 0,1
+                fill_entry(ket + 0 * dim_basis, bra + 1 * dim_basis, g1, ws.tmp0);  // 1,0
+                fill_entry(ket + 1 * dim_basis, bra + 1 * dim_basis, g1, ws.tmp1);  // 1,1
+            }
+        }
+
+        ws.env.swap(ws.env_next);
+        dim_basis = new_dim_basis;
+        ++keep_cursor;
+    }
+
+    if (dim_basis != dim_keep || keep_cursor != kept_sites.size()) {
+        throw std::runtime_error("mqmps: internal error building reduced density matrix.");
+    }
+    if (ws.env.size() != dim_keep * dim_keep) {
+        throw std::runtime_error("mqmps: internal reduced density matrix env size mismatch.");
+    }
+
+    Mat rho_phys(static_cast<Eigen::Index>(dim_keep), static_cast<Eigen::Index>(dim_keep));
+    for (size_t ket = 0; ket < dim_keep; ++ket) {
+        for (size_t bra = 0; bra < dim_keep; ++bra) {
+            const Mat& e = ws.env.at(ket * dim_keep + bra);
+            if (e.rows() != 1 || e.cols() != 1) {
+                throw std::runtime_error("mqmps: reduced density matrix did not contract to scalar.");
+            }
+            rho_phys(static_cast<Eigen::Index>(ket), static_cast<Eigen::Index>(bra)) = e(0, 0);
+        }
+    }
+
+    Mat rho_logical(static_cast<Eigen::Index>(dim_keep), static_cast<Eigen::Index>(dim_keep));
+    rho_logical.setZero();
+    for (size_t ket_phys = 0; ket_phys < dim_keep; ++ket_phys) {
+        const size_t ket_log = perm_phys_to_log.at(ket_phys);
+        for (size_t bra_phys = 0; bra_phys < dim_keep; ++bra_phys) {
+            const size_t bra_log = perm_phys_to_log.at(bra_phys);
+            rho_logical(static_cast<Eigen::Index>(ket_log), static_cast<Eigen::Index>(bra_log)) =
+                rho_phys(static_cast<Eigen::Index>(ket_phys), static_cast<Eigen::Index>(bra_phys));
+        }
+    }
+
+    VVT<complex_t> out(static_cast<size_t>(rho_logical.rows()), VT<complex_t>(static_cast<size_t>(rho_logical.cols())));
+    for (Eigen::Index r = 0; r < rho_logical.rows(); ++r) {
+        for (Eigen::Index c = 0; c < rho_logical.cols(); ++c) {
+            out.at(static_cast<size_t>(r)).at(static_cast<size_t>(c)) = rho_logical(r, c);
         }
     }
     return out;
@@ -1219,19 +1464,233 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
 }
 
 template <typename qs_policy_t_>
-auto MPSState<qs_policy_t_>::ExpectationSparse_(const Hamiltonian<calc_type>& ham) const -> py_qs_data_t {
-    auto psi = GetQS();  // logical order
-    if (ham.how_to_ == BACKEND) {
-        return sparse::ExpectationOfCsr<calc_type, calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_,
-                                                              reinterpret_cast<calc_type*>(psi.data()),
-                                                              reinterpret_cast<calc_type*>(psi.data()));
+auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<calc_type>>& terms, const derived_t& bra) const
+    -> py_qs_data_t {
+    using Mat = detail::Mat<complex_t>;
+    constexpr complex_t I{0, 1};
+
+    if (bra.n_qubits_ != n_qubits_) {
+        throw std::runtime_error("mqmps: bra/ket qubit number mismatch.");
     }
-    if (ham.how_to_ == FRONTEND) {
-        return sparse::ExpectationOfCsr<calc_type, calc_type>(ham.ham_sparse_main_,
-                                                              reinterpret_cast<calc_type*>(psi.data()),
-                                                              reinterpret_cast<calc_type*>(psi.data()));
+    if (bra.pos_of_logical_ != pos_of_logical_ || bra.logical_at_pos_ != logical_at_pos_) {
+        throw std::runtime_error("mqmps: bra/ket mapping mismatch (internal alignment required).");
     }
-    throw std::runtime_error("mqmps: sparse expectation requires a sparse Hamiltonian.");
+
+    // Convert Pauli terms from logical indices to physical sites using the (common) mapping.
+    VT<PauliTerm<calc_type>> phys_terms;
+    phys_terms.reserve(terms.size());
+    for (const auto& [pwords, coeff_in] : terms) {
+        const auto coeff = static_cast<calc_type>(coeff_in);
+        if (coeff == static_cast<calc_type>(0)) {
+            continue;
+        }
+        VT<PauliWord> phys_words;
+        phys_words.reserve(pwords.size());
+        for (const auto& [q_idx, p] : pwords) {
+            const auto q = static_cast<size_t>(q_idx);
+            if (q >= pos_of_logical_.size()) {
+                throw std::runtime_error("mqmps: invalid qubit index in Pauli term.");
+            }
+            const auto pos = pos_of_logical_.at(q);
+            if (pos < 0 || pos >= n_qubits_) {
+                throw std::runtime_error("mqmps: invalid physical position in Pauli term.");
+            }
+            if (p != 'X' && p != 'Y' && p != 'Z') {
+                throw std::runtime_error("mqmps: unknown Pauli word.");
+            }
+            phys_words.push_back(PauliWord{static_cast<Index>(pos), p});
+        }
+        std::sort(phys_words.begin(), phys_words.end(), [](const PauliWord& a, const PauliWord& b) {
+            return (a.first != b.first) ? (a.first < b.first) : (a.second < b.second);
+        });
+        for (size_t i = 1; i < phys_words.size(); ++i) {
+            if (phys_words[i].first == phys_words[i - 1].first) {
+                throw std::runtime_error("mqmps: Pauli term has repeated qubit index.");
+            }
+        }
+        phys_terms.push_back(PauliTerm<calc_type>{std::move(phys_words), coeff});
+    }
+
+    std::sort(phys_terms.begin(), phys_terms.end(), [](const PauliTerm<calc_type>& a, const PauliTerm<calc_type>& b) {
+        return std::lexicographical_compare(a.first.begin(), a.first.end(), b.first.begin(), b.first.end());
+    });
+    VT<PauliTerm<calc_type>> merged;
+    merged.reserve(phys_terms.size());
+    for (auto& t : phys_terms) {
+        if (merged.empty() || merged.back().first != t.first) {
+            merged.push_back(std::move(t));
+        } else {
+            merged.back().second += t.second;
+        }
+    }
+
+    struct CrossExpectWs {
+        Mat ek0;
+        Mat ek1;
+        Mat tmp;
+    };
+    thread_local CrossExpectWs ws;
+
+    const std::array<complex_t, 4> eye = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}};
+    const std::array<complex_t, 4> xop = {complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
+    const std::array<complex_t, 4> yop = {complex_t{0, 0}, -I, I, complex_t{0, 0}};
+    const std::array<complex_t, 4> zop = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
+
+    auto apply_local = [&](qbit_t site, const std::array<complex_t, 4>& op, const Mat& e_in, Mat* out) {
+        const size_t D_b = bra.lambdas_.at(static_cast<size_t>(site)).size();
+        const size_t D_b_next = bra.lambdas_.at(static_cast<size_t>(site + 1)).size();
+        const auto& lam_b_next = bra.lambdas_.at(static_cast<size_t>(site + 1));
+        const auto& gb = bra.gammas_.at(static_cast<size_t>(site));
+        if (gb.dl != D_b || gb.dr != D_b_next) {
+            throw std::runtime_error("mqmps: inconsistent bra gamma/lambda dimensions during expectation.");
+        }
+
+        const size_t D_k = lambdas_.at(static_cast<size_t>(site)).size();
+        const size_t D_k_next = lambdas_.at(static_cast<size_t>(site + 1)).size();
+        const auto& lam_k_next = lambdas_.at(static_cast<size_t>(site + 1));
+        const auto& gk = gammas_.at(static_cast<size_t>(site));
+        if (gk.dl != D_k || gk.dr != D_k_next) {
+            throw std::runtime_error("mqmps: inconsistent ket gamma/lambda dimensions during expectation.");
+        }
+
+        if (static_cast<size_t>(e_in.rows()) != D_b || static_cast<size_t>(e_in.cols()) != D_k) {
+            throw std::runtime_error("mqmps: internal bra/ket env dim mismatch during expectation.");
+        }
+
+        Eigen::Map<const Mat> g0b(gb.g0.data(), static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_b_next));
+        Eigen::Map<const Mat> g1b(gb.g1.data(), static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_b_next));
+        Eigen::Map<const Mat> g0k(gk.g0.data(), static_cast<Eigen::Index>(D_k), static_cast<Eigen::Index>(D_k_next));
+        Eigen::Map<const Mat> g1k(gk.g1.data(), static_cast<Eigen::Index>(D_k), static_cast<Eigen::Index>(D_k_next));
+
+        ws.ek0.resize(static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_k_next));
+        ws.ek1.resize(static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_k_next));
+        ws.ek0.noalias() = e_in * g0k;
+        ws.ek1.noalias() = e_in * g1k;
+
+        out->resize(static_cast<Eigen::Index>(D_b_next), static_cast<Eigen::Index>(D_k_next));
+        out->setZero();
+        ws.tmp.resize(static_cast<Eigen::Index>(D_b_next), static_cast<Eigen::Index>(D_k_next));
+
+        if (op[0] != complex_t{0, 0}) {
+            ws.tmp.noalias() = g0b.adjoint() * ws.ek0;
+            out->noalias() += op[0] * ws.tmp;
+        }
+        if (op[1] != complex_t{0, 0}) {
+            ws.tmp.noalias() = g0b.adjoint() * ws.ek1;
+            out->noalias() += op[1] * ws.tmp;
+        }
+        if (op[2] != complex_t{0, 0}) {
+            ws.tmp.noalias() = g1b.adjoint() * ws.ek0;
+            out->noalias() += op[2] * ws.tmp;
+        }
+        if (op[3] != complex_t{0, 0}) {
+            ws.tmp.noalias() = g1b.adjoint() * ws.ek1;
+            out->noalias() += op[3] * ws.tmp;
+        }
+
+        // out = diag(lam_b_next) * out * diag(lam_k_next)
+        for (size_t r = 0; r < D_b_next; ++r) {
+            out->row(static_cast<Eigen::Index>(r)) *= lam_b_next[r];
+        }
+        for (size_t c = 0; c < D_k_next; ++c) {
+            out->col(static_cast<Eigen::Index>(c)) *= lam_k_next[c];
+        }
+    };
+
+    std::optional<complex_t> overlap;
+    const auto inner_product = [&]() -> complex_t {
+        if (overlap) {
+            return *overlap;
+        }
+        Mat e(1, 1);
+        Mat e_tmp(1, 1);
+        e(0, 0) = complex_t{1, 0};
+        for (qbit_t s = 0; s < n_qubits_; ++s) {
+            apply_local(s, eye, e, &e_tmp);
+            e.swap(e_tmp);
+        }
+        if (e.rows() != 1 || e.cols() != 1) {
+            throw std::runtime_error("mqmps: inner product did not contract to scalar.");
+        }
+        overlap = e(0, 0);
+        return *overlap;
+    };
+
+    py_qs_data_t out{0, 0};
+    VT<PauliWord> prev_ops;
+    VT<Mat> prefix_env;
+    VT<qbit_t> prefix_next_site;
+    Mat e(1, 1);
+    Mat e_tmp(1, 1);
+
+    for (const auto& [ops, coeff] : merged) {
+        if (coeff == static_cast<calc_type>(0)) {
+            continue;
+        }
+        if (ops.empty()) {
+            out += coeff * inner_product();
+            prev_ops.clear();
+            prefix_env.clear();
+            prefix_next_site.clear();
+            continue;
+        }
+
+        size_t lcp = 0;
+        while (lcp < prev_ops.size() && lcp < ops.size() && prev_ops[lcp] == ops[lcp]) {
+            ++lcp;
+        }
+        prefix_env.resize(lcp);
+        prefix_next_site.resize(lcp);
+
+        qbit_t next_site = 0;
+        e.resize(1, 1);
+        e(0, 0) = complex_t{1, 0};
+        if (lcp > 0) {
+            e = prefix_env.at(lcp - 1);
+            next_site = prefix_next_site.at(lcp - 1);
+        }
+
+        // Process remaining sparse Pauli ops, interleaving identity sites.
+        for (size_t op_idx = lcp; op_idx < ops.size(); ++op_idx) {
+            const auto& op = ops.at(op_idx);
+            const auto op_pos = static_cast<qbit_t>(op.first);
+            if (op_pos < next_site) {
+                throw std::runtime_error("mqmps: invalid Pauli op ordering.");
+            }
+            for (qbit_t s = next_site; s < op_pos; ++s) {
+                apply_local(s, eye, e, &e_tmp);
+                e.swap(e_tmp);
+            }
+            const std::array<complex_t, 4>* local = &eye;
+            if (op.second == 'X') {
+                local = &xop;
+            } else if (op.second == 'Y') {
+                local = &yop;
+            } else if (op.second == 'Z') {
+                local = &zop;
+            } else {
+                throw std::runtime_error("mqmps: unknown Pauli word.");
+            }
+            apply_local(op_pos, *local, e, &e_tmp);
+            e.swap(e_tmp);
+            next_site = op_pos + 1;
+
+            prefix_env.push_back(e);
+            prefix_next_site.push_back(next_site);
+        }
+
+        // Tail identities to the end.
+        for (qbit_t s = next_site; s < n_qubits_; ++s) {
+            apply_local(s, eye, e, &e_tmp);
+            e.swap(e_tmp);
+        }
+        if (e.rows() != 1 || e.cols() != 1) {
+            throw std::runtime_error("mqmps: expectation did not contract to scalar.");
+        }
+        out += coeff * e(0, 0);
+        prev_ops = ops;
+    }
+    return out;
 }
 
 template <typename qs_policy_t_>
@@ -1244,78 +1703,24 @@ auto MPSState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, c
     if (ham.how_to_ == ORIGIN) {
         return ket.ExpectationPauliTerms_(ham.ham_);
     }
-    return ket.ExpectationSparse_(ham);
+    throw std::runtime_error("mqmps: sparse Hamiltonian expectation is not supported; provide Pauli terms (ORIGIN).");
 }
 
 template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
                                             const circuit_t& circ_left,
                                             const parameter::ParameterResolver& pr) const -> py_qs_data_t {
-    // Slow path: fallback to state-vector expectation for non-hermitian circuits.
     auto ket = derived_t(*this);
     auto bra = derived_t(*this);
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
-    auto v_ket = ket.GetQS();
-    auto v_bra = bra.GetQS();
-    if (v_ket.size() != v_bra.size()) {
-        throw std::runtime_error("mqmps: bra/ket dimension mismatch.");
-    }
     if (ham.how_to_ == ORIGIN) {
-        py_qs_data_t out{0, 0};
-        for (const auto& [pwords, coeff] : ham.ham_) {
-            // Apply Pauli string to ket (in-place temp) then dot with bra.
-            VT<complex_t> tmp(v_ket.begin(), v_ket.end());
-            complex_t phase{1, 0};
-            for (const auto& [q, p] : pwords) {
-                const size_t mask = static_cast<size_t>(1ULL) << static_cast<size_t>(q);
-                if (p == 'Z') {
-                    for (size_t i = 0; i < tmp.size(); ++i) {
-                        if (i & mask) {
-                            tmp[i] = -tmp[i];
-                        }
-                    }
-                } else if (p == 'X') {
-                    for (size_t i = 0; i < tmp.size(); ++i) {
-                        if ((i & mask) == 0) {
-                            std::swap(tmp[i], tmp[i | mask]);
-                        }
-                    }
-                } else if (p == 'Y') {
-                    // Y = i X Z (on computational basis), implement via X+phase.
-                    phase *= complex_t{0, 1};
-                    for (size_t i = 0; i < tmp.size(); ++i) {
-                        if (i & mask) {
-                            tmp[i] = -tmp[i];
-                        }
-                    }
-                    for (size_t i = 0; i < tmp.size(); ++i) {
-                        if ((i & mask) == 0) {
-                            std::swap(tmp[i], tmp[i | mask]);
-                        }
-                    }
-                } else {
-                    throw std::runtime_error("mqmps: unsupported pauli in non-hermitian expectation.");
-                }
-            }
-            py_qs_data_t dot{0, 0};
-            for (size_t i = 0; i < tmp.size(); ++i) {
-                dot += std::conj(v_bra[i]) * (phase * tmp[i]);
-            }
-            out += static_cast<calc_type>(coeff) * dot;
+        if (bra.logical_at_pos_ != ket.logical_at_pos_) {
+            bra.ReorderToTargetMapping_(ket.logical_at_pos_);
         }
-        return out;
+        return ket.ExpectationPauliTermsBraKet_(ham.ham_, bra);
     }
-    if (ham.how_to_ == BACKEND) {
-        return sparse::ExpectationOfCsr<calc_type, calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_,
-                                                              reinterpret_cast<calc_type*>(v_bra.data()),
-                                                              reinterpret_cast<calc_type*>(v_ket.data()));
-    }
-    if (ham.how_to_ == FRONTEND) {
-        return sparse::ExpectationOfCsr<calc_type, calc_type>(ham.ham_sparse_main_, reinterpret_cast<calc_type*>(v_bra.data()),
-                                                              reinterpret_cast<calc_type*>(v_ket.data()));
-    }
-    throw std::runtime_error("mqmps: unsupported Hamiltonian type in non-hermitian expectation.");
+    throw std::runtime_error("mqmps: sparse Hamiltonian expectation is not supported; provide Pauli terms (ORIGIN).");
 }
 
 template <typename qs_policy_t_>
@@ -1326,59 +1731,19 @@ auto MPSState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, c
     auto bra = derived_t(simulator_left);
     ket.ApplyCircuit(circ_right, pr);
     bra.ApplyCircuit(circ_left, pr);
-    auto v_ket = ket.GetQS();
-    auto v_bra = bra.GetQS();
-    if (ham.how_to_ == BACKEND) {
-        return sparse::ExpectationOfCsr<calc_type, calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_,
-                                                              reinterpret_cast<calc_type*>(v_bra.data()),
-                                                              reinterpret_cast<calc_type*>(v_ket.data()));
-    }
-    if (ham.how_to_ == FRONTEND) {
-        return sparse::ExpectationOfCsr<calc_type, calc_type>(ham.ham_sparse_main_, reinterpret_cast<calc_type*>(v_bra.data()),
-                                                              reinterpret_cast<calc_type*>(v_ket.data()));
-    }
     if (ham.how_to_ == ORIGIN) {
-        return GetExpectation(ham, circ_right, circ_left, pr);
+        if (bra.logical_at_pos_ != ket.logical_at_pos_) {
+            bra.ReorderToTargetMapping_(ket.logical_at_pos_);
+        }
+        return ket.ExpectationPauliTermsBraKet_(ham.ham_, bra);
     }
-    throw std::runtime_error("mqmps: unsupported Hamiltonian type.");
+    throw std::runtime_error("mqmps: sparse Hamiltonian expectation is not supported; provide Pauli terms (ORIGIN).");
 }
 
 template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
-    // Correctness-first fallback: apply in full state-vector form (not scalable).
-    auto psi = GetQS();
-    if (ham.how_to_ == ORIGIN) {
-        // Build sparse Hamiltonian on demand.
-        auto csr = sparse::SparseHamiltonian(ham.ham_, static_cast<Index>(n_qubits_));
-        auto new_vec_ptr = sparse::Csr_Dot_Vec<calc_type, calc_type>(csr, reinterpret_cast<calc_type*>(psi.data()));
-        auto new_vec_c = reinterpret_cast<complex_t*>(new_vec_ptr);
-        VT<complex_t> new_vec(static_cast<size_t>(psi.size()));
-        std::copy(new_vec_c, new_vec_c + psi.size(), new_vec.begin());
-        free(new_vec_ptr);
-        SetFromStateVectorLogical_(new_vec);
-        return;
-    }
-    if (ham.how_to_ == BACKEND) {
-        auto new_vec_ptr = sparse::Csr_Dot_Vec<calc_type, calc_type>(ham.ham_sparse_main_, ham.ham_sparse_second_,
-                                                                     reinterpret_cast<calc_type*>(psi.data()));
-        auto new_vec_c = reinterpret_cast<complex_t*>(new_vec_ptr);
-        VT<complex_t> new_vec(static_cast<size_t>(psi.size()));
-        std::copy(new_vec_c, new_vec_c + psi.size(), new_vec.begin());
-        free(new_vec_ptr);
-        SetFromStateVectorLogical_(new_vec);
-        return;
-    }
-    if (ham.how_to_ == FRONTEND) {
-        auto new_vec_ptr =
-            sparse::Csr_Dot_Vec<calc_type, calc_type>(ham.ham_sparse_main_, reinterpret_cast<calc_type*>(psi.data()));
-        auto new_vec_c = reinterpret_cast<complex_t*>(new_vec_ptr);
-        VT<complex_t> new_vec(static_cast<size_t>(psi.size()));
-        std::copy(new_vec_c, new_vec_c + psi.size(), new_vec.begin());
-        free(new_vec_ptr);
-        SetFromStateVectorLogical_(new_vec);
-        return;
-    }
-    throw std::runtime_error("mqmps: unsupported Hamiltonian type for ApplyHamiltonian.");
+    (void)ham;
+    throw std::runtime_error("mqmps: apply_hamiltonian is not supported (native MPO/apply path not implemented).");
 }
 
 template <typename qs_policy_t_>
@@ -1404,12 +1769,38 @@ template <typename policy_des>
 auto MPSState<qs_policy_t_>::astype(unsigned new_seed) const -> MPSState<policy_des> {
     using out_t = MPSState<policy_des>;
     out_t out(n_qubits_, new_seed, max_bond_dimension_);
-    auto v = GetQS();
-    VT<typename out_t::py_qs_data_t> casted(v.size());
-    for (size_t i = 0; i < v.size(); ++i) {
-        casted[i] = static_cast<typename out_t::py_qs_data_t>(v[i]);
+
+    out.pos_of_logical_ = pos_of_logical_;
+    out.logical_at_pos_ = logical_at_pos_;
+
+    out.lambdas_.resize(lambdas_.size());
+    for (size_t i = 0; i < lambdas_.size(); ++i) {
+        const auto& src = lambdas_.at(i);
+        auto& dst = out.lambdas_.at(i);
+        dst.resize(src.size());
+        for (size_t j = 0; j < src.size(); ++j) {
+            dst.at(j) = static_cast<typename out_t::calc_type>(src.at(j));
+        }
     }
-    out.SetQS(casted);
+
+    out.gammas_.resize(gammas_.size());
+    for (size_t i = 0; i < gammas_.size(); ++i) {
+        const auto& src = gammas_.at(i);
+        auto& dst = out.gammas_.at(i);
+        dst.dl = src.dl;
+        dst.dr = src.dr;
+        dst.g0.resize(src.g0.size());
+        dst.g1.resize(src.g1.size());
+        for (size_t j = 0; j < src.g0.size(); ++j) {
+            dst.g0.at(j) = static_cast<typename out_t::complex_t>(src.g0.at(j));
+        }
+        for (size_t j = 0; j < src.g1.size(); ++j) {
+            dst.g1.at(j) = static_cast<typename out_t::complex_t>(src.g1.at(j));
+        }
+    }
+
+    out.pauli_sum_cache_.reset();
+    out.ReserveStorage_();
     return out;
 }
 }  // namespace mindquantum::sim::mps::detail
