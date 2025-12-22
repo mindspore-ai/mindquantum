@@ -55,6 +55,7 @@ class MQSim(BackendBase):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed, dtype)
         self.internal = internal
+        self._init_kwargs = dict(kwargs)
         if internal:
             self.sim = name
         else:
@@ -93,8 +94,9 @@ class MQSim(BackendBase):
         if self.internal:
             self.sim = self.name
         else:
+            init_kwargs = getattr(self, "_init_kwargs", {})
             self.sim = getattr(SUPPORTED_SIMULATOR.c_module(self.name, self.arithmetic_type), self.name)(
-                self.n_qubits, self.seed
+                self.n_qubits, self.seed, **init_kwargs
             )
 
     def apply_circuit(
