@@ -71,6 +71,29 @@ def test_mqmps_expectation_matches_mqvector():
     assert np.allclose(e_vec, e_mps, atol=1e-8)
 
 
+def test_mqmps_get_expectation_with_circuit_matches_mqvector():
+    n_qubits = 4
+    circ = Circuit()
+    circ += H.on(0)
+    circ += RX("a").on(1)
+    circ += RZ("b").on(3)
+    circ += X.on(3, 0)
+    circ += X.on(2, 1)
+
+    ham = Hamiltonian(
+        QubitOperator("Z0 Z1", 1.0) + QubitOperator("X2", 0.25) + QubitOperator("Y3", -0.125) + QubitOperator("", 0.5)
+    )
+
+    sim_vec = Simulator("mqvector", n_qubits, seed=21)
+    sim_mps = Simulator("mqmps", n_qubits, seed=21, max_bond_dimension=0)
+
+    pr_list = [{"a": 0.25, "b": -0.7}, {"a": -0.33, "b": 1.2}, {"a": 0.0, "b": 0.0}]
+    for pr in pr_list:
+        e_vec = sim_vec.get_expectation(ham, circ, pr=pr)
+        e_mps = sim_mps.get_expectation(ham, circ, pr=pr)
+        assert np.allclose(e_vec, e_mps, atol=1e-8)
+
+
 def test_mqmps_sampling_measure_end_deterministic():
     n_qubits = 5
     circ = Circuit()
@@ -101,4 +124,3 @@ def test_mqmps_rejects_mid_circuit_measurement():
     sim_mps = Simulator("mqmps", n_qubits, seed=5)
     with pytest.raises(RuntimeError):
         sim_mps.apply_circuit(circ)
-
