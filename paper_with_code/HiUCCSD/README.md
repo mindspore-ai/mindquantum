@@ -1,0 +1,7 @@
+# Hamiltonian-Informed Point Group Symmetry-Respecting Ansatz for Variational Quantum Eigensolver
+
+**Paper:** [arXiv:2512.21087](https://doi.org/10.48550/arXiv.2512.21087)
+
+**Abstract:**
+
+Solving molecular energy levels via the Variational Quantum Eigensolver (VQE) algorithm represents one of the most promising applications for demonstrating practically meaningful quantum advantage in the noisy intermediate-scale quantum (NISQ) era. To strike a balance between ansatz complexity and computational stability in VQE calculations, we propose the HiUCCSD, a novel symmetry-respecting ansatz engineered from the intrinsic information of the Hamiltonian. We theoretically prove the effectiveness of HiUCCSD within the scope of Abelian point groups. Furthermore, we compare the performance of HiUCCSD and the established SymUCCSD via VQE and Adaptive Derivative-Assembled Pseudo-Trotter (ADAPT)-VQE numerical experiments on ten molecules with distinct point groups. The results show that HiUCCSD achieves equivalent performance to SymUCCSD for Abelian point group molecules, while avoiding the potential performance failure of SymUCCSD in the case of non-Abelian point group molecules. Across the studied molecular systems, HiUCCSD cuts the parameter count by 18%-83% for VQE and reduces the excitation operator pool size by 27%-84% for ADAPT-VQE, as compared with the UCCSD ansatz. With enhanced robustness and broader applicability, HiUCCSD offers a new ansatz option for advancing large-scale molecular VQE implementation.
