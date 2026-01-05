@@ -757,7 +757,7 @@ jobs:
           key: mingw64-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
 
       - name: Set up MinGW64
-        uses: egor-tensin/setup-mingw@v2
+        uses: egor-tensin/setup-mingw@v3
         id: mingw64-setup
         continue-on-error: true
         with:
@@ -773,7 +773,7 @@ jobs:
           "CXX='$Env:CXX'" >> $Env:GITHUB_ENV
 
       - name: Set up MinGW64 (2nd try)
-        uses: egor-tensin/setup-mingw@v2
+        uses: egor-tensin/setup-mingw@v3
         if: steps.mingw64-setup.outcome == 'failure'
         id: mingw64-setup-2
         continue-on-error: false
