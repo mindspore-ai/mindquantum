@@ -105,8 +105,6 @@ class MPSState {
     template <typename>
     friend class MPSState;
 
-    static constexpr qbit_t kMaxStateVectorQubits = 30;
-
     struct GammaSite {
         VT<complex_t> g0;
         VT<complex_t> g1;
@@ -119,7 +117,7 @@ class MPSState {
     void Apply1QOnPhysical_(qbit_t pos, const std::array<complex_t, 4>& u);
     void Apply2QOnBond_(qbit_t bond, const std::array<complex_t, 16>& u);
 
-    // Full-state helpers (explicit statevector conversion; guarded by kMaxStateVectorQubits).
+    // Full-state helpers (explicit statevector conversion; guarded by an internal output-size cap).
     VT<complex_t> ContractToStateVectorPhysicalOrder_() const;
     VT<complex_t> PermutePhysicalToLogical_(const VT<complex_t>& phys) const;
 

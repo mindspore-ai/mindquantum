@@ -203,10 +203,16 @@ def test_mqmps_rejects_mid_circuit_measurement():
         sim_mps.apply_circuit(circ)
 
 
-def test_mqmps_get_qs_raises_over_30_qubits():
+def test_mqmps_get_qs_rejects_too_large_dense_statevector():
     sim_mps = Simulator("mqmps", 31, seed=1, max_bond_dimension=0)
-    with pytest.raises(RuntimeError, match=r"<=30"):
+    with pytest.raises(RuntimeError, match=r"max output bytes"):
         sim_mps.get_qs()
+
+
+def test_mqmps_reduced_density_matrix_rejects_too_large_output():
+    sim_mps = Simulator("mqmps", 40, seed=1, max_bond_dimension=0)
+    with pytest.raises(RuntimeError, match=r"max output bytes"):
+        sim_mps.get_reduced_density_matrix(list(range(20)))
 
 
 def test_mqmps_reduced_density_matrix_matches_mqvector():

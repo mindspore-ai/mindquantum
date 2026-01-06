@@ -28,6 +28,7 @@
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -112,6 +113,148 @@ struct TwoSiteWorkspace {
         svd.EnsureCapacity(two_cap, two_cap, opts);
     }
 };
+}  // namespace detail
+
+namespace detail {
+template <typename calc_type>
+inline VT<PauliTerm<calc_type>> ToPhysicalMergedPauliTerms(const VT<PauliTerm<calc_type>>& terms,
+                                                           const qbits_t& pos_of_logical, qbit_t n_qubits) {
+    VT<PauliTerm<calc_type>> phys_terms;
+    phys_terms.reserve(terms.size());
+
+    for (const auto& [pwords, coeff_in] : terms) {
+        const auto coeff = static_cast<calc_type>(coeff_in);
+        if (coeff == static_cast<calc_type>(0)) {
+            continue;
+        }
+        VT<PauliWord> phys_words;
+        phys_words.reserve(pwords.size());
+        for (const auto& [q_idx, p] : pwords) {
+            const auto q = static_cast<size_t>(q_idx);
+            if (q >= pos_of_logical.size()) {
+                throw std::runtime_error("mqmps: invalid qubit index in Pauli term.");
+            }
+            const auto pos = pos_of_logical[q];
+            if (pos < 0 || pos >= n_qubits) {
+                throw std::runtime_error("mqmps: invalid physical position in Pauli term.");
+            }
+            if (p != 'X' && p != 'Y' && p != 'Z') {
+                throw std::runtime_error("mqmps: unknown Pauli word.");
+            }
+            phys_words.push_back(PauliWord{static_cast<Index>(pos), p});
+        }
+        std::sort(phys_words.begin(), phys_words.end(), [](const PauliWord& a, const PauliWord& b) {
+            return (a.first != b.first) ? (a.first < b.first) : (a.second < b.second);
+        });
+        for (size_t i = 1; i < phys_words.size(); ++i) {
+            if (phys_words[i].first == phys_words[i - 1].first) {
+                throw std::runtime_error("mqmps: Pauli term has repeated qubit index.");
+            }
+        }
+        phys_terms.push_back(PauliTerm<calc_type>{std::move(phys_words), coeff});
+    }
+
+    std::sort(phys_terms.begin(), phys_terms.end(), [](const PauliTerm<calc_type>& a, const PauliTerm<calc_type>& b) {
+        return std::lexicographical_compare(a.first.begin(), a.first.end(), b.first.begin(), b.first.end());
+    });
+
+    VT<PauliTerm<calc_type>> merged;
+    merged.reserve(phys_terms.size());
+    for (auto& t : phys_terms) {
+        if (merged.empty() || merged.back().first != t.first) {
+            merged.push_back(std::move(t));
+        } else {
+            merged.back().second += t.second;
+        }
+    }
+    merged.erase(std::remove_if(merged.begin(), merged.end(),
+                                [](const PauliTerm<calc_type>& t) { return t.second == static_cast<calc_type>(0); }),
+                 merged.end());
+    return merged;
+}
+
+constexpr size_t kKiB = 1024ULL;
+constexpr size_t kMiB = 1024ULL * kKiB;
+constexpr size_t kGiB = 1024ULL * kMiB;
+
+// Default safety caps for APIs that materialize dense objects (statevectors / density matrices).
+// These operations can easily allocate multiple GiB and are not typical hot paths.
+constexpr size_t kMaxDenseStateVectorOutputBytes = 1ULL * kGiB;
+constexpr size_t kMaxReducedDensityMatrixOutputBytes = 1ULL * kGiB;
+
+template <typename complex_t, typename calc_type, typename ApplyLocal, typename GetOp, typename IdentityValue>
+inline complex_t EvaluateMergedPauliSumWithPrefixReuse(qbit_t n_qubits, const VT<PauliTerm<calc_type>>& merged_terms,
+                                                       const std::array<complex_t, 4>& eye, ApplyLocal&& apply_local,
+                                                       GetOp&& get_op, IdentityValue&& identity_value,
+                                                       bool check_scalar) {
+    using MatT = Mat<complex_t>;
+
+    complex_t out{0, 0};
+    VT<PauliWord> prev_ops;
+    VT<MatT> prefix_env;
+    VT<qbit_t> prefix_next_site;
+    MatT e(1, 1);
+    MatT e_tmp(1, 1);
+
+    for (const auto& [ops, coeff] : merged_terms) {
+        if (coeff == static_cast<calc_type>(0)) {
+            continue;
+        }
+        if (ops.empty()) {
+            out += coeff * identity_value();
+            prev_ops.clear();
+            prefix_env.clear();
+            prefix_next_site.clear();
+            continue;
+        }
+
+        size_t lcp = 0;
+        while (lcp < prev_ops.size() && lcp < ops.size() && prev_ops[lcp] == ops[lcp]) {
+            ++lcp;
+        }
+        prefix_env.resize(lcp);
+        prefix_next_site.resize(lcp);
+
+        qbit_t next_site = 0;
+        e.resize(1, 1);
+        e(0, 0) = complex_t{1, 0};
+        if (lcp > 0) {
+            e = prefix_env[lcp - 1];
+            next_site = prefix_next_site[lcp - 1];
+        }
+
+        // Apply Pauli ops, interleaving identity sites.
+        for (size_t op_idx = lcp; op_idx < ops.size(); ++op_idx) {
+            const auto& op = ops[op_idx];
+            const auto op_pos = static_cast<qbit_t>(op.first);
+            if (op_pos < next_site) {
+                throw std::runtime_error("mqmps: invalid Pauli op ordering.");
+            }
+            for (qbit_t s = next_site; s < op_pos; ++s) {
+                apply_local(s, eye, e, &e_tmp);
+                e.swap(e_tmp);
+            }
+            apply_local(op_pos, get_op(op.second), e, &e_tmp);
+            e.swap(e_tmp);
+            next_site = op_pos + 1;
+
+            prefix_env.push_back(e);
+            prefix_next_site.push_back(next_site);
+        }
+
+        // Tail identities to the end.
+        for (qbit_t s = next_site; s < n_qubits; ++s) {
+            apply_local(s, eye, e, &e_tmp);
+            e.swap(e_tmp);
+        }
+        if (check_scalar && (e.rows() != 1 || e.cols() != 1)) {
+            throw std::runtime_error("mqmps: expectation did not contract to scalar.");
+        }
+        out += coeff * e(0, 0);
+        prev_ops = ops;
+    }
+    return out;
+}
 }  // namespace detail
 
 template <typename qs_policy_t_>
@@ -363,9 +506,17 @@ auto MPSState<qs_policy_t_>::PermutePhysicalToLogical_(const VT<complex_t>& phys
 
 template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
-    if (n_qubits_ > kMaxStateVectorQubits) {
-        throw std::runtime_error("mqmps: GetQS() constructs a full 2^n statevector and is limited to <=30 qubits; got " +
-                                 std::to_string(n_qubits_) + " qubits.");
+    const auto n = static_cast<size_t>(n_qubits_);
+    if (n >= std::numeric_limits<size_t>::digits) {
+        throw std::runtime_error("mqmps: GetQS() constructs a full 2^n statevector; requested n is too large.");
+    }
+    const size_t dim = size_t{1} << n;
+    if (dim > detail::kMaxDenseStateVectorOutputBytes / sizeof(complex_t)) {
+        throw std::runtime_error(
+            "mqmps: GetQS() constructs a full 2^n statevector and is limited by max output bytes; n=" +
+            std::to_string(n_qubits_) + ", elements=" + std::to_string(dim) +
+            ", bytes_per_element=" + std::to_string(sizeof(complex_t)) +
+            ", limit=" + std::to_string(detail::kMaxDenseStateVectorOutputBytes) + " bytes.");
     }
     auto phys = ContractToStateVectorPhysicalOrder_();
     auto logical = PermutePhysicalToLogical_(phys);
@@ -501,9 +652,20 @@ void MPSState<qs_policy_t_>::SetFromStateVectorLogical_(const VT<complex_t>& vec
 
 template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs) {
-    if (n_qubits_ > kMaxStateVectorQubits) {
-        throw std::runtime_error("mqmps: SetQS() requires a full 2^n statevector and is limited to <=30 qubits; got " +
-                                 std::to_string(n_qubits_) + " qubits.");
+    const auto n = static_cast<size_t>(n_qubits_);
+    if (n >= std::numeric_limits<size_t>::digits) {
+        throw std::runtime_error("mqmps: SetQS() requires a full 2^n statevector; requested n is too large.");
+    }
+    const size_t dim = size_t{1} << n;
+    if (qs.size() != dim) {
+        throw std::runtime_error("mqmps: SetQS vector size mismatch.");
+    }
+    if (dim > detail::kMaxDenseStateVectorOutputBytes / sizeof(complex_t)) {
+        throw std::runtime_error(
+            "mqmps: SetQS() requires a full 2^n statevector and is limited by max output bytes; n=" +
+            std::to_string(n_qubits_) + ", elements=" + std::to_string(dim) +
+            ", bytes_per_element=" + std::to_string(sizeof(complex_t)) +
+            ", limit=" + std::to_string(detail::kMaxDenseStateVectorOutputBytes) + " bytes.");
     }
     VT<complex_t> vec(qs.begin(), qs.end());
     // Normalize defensively.
@@ -1074,10 +1236,20 @@ VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRe
         throw std::runtime_error("mqmps: kept_qubits contains duplicates.");
     }
     const size_t k = kept_logical.size();
-    if (k >= 63) {
+    if (k >= std::numeric_limits<size_t>::digits) {
         throw std::runtime_error("mqmps: kept_qubits is too large to build a reduced density matrix.");
     }
-    const size_t dim_keep = static_cast<size_t>(1ULL) << k;
+    const size_t dim_keep = size_t{1} << k;
+    if (dim_keep > std::numeric_limits<size_t>::max() / dim_keep) {
+        throw std::runtime_error("mqmps: kept_qubits is too large to build a reduced density matrix.");
+    }
+    const size_t dim_rho = dim_keep * dim_keep;
+    if (dim_rho > detail::kMaxReducedDensityMatrixOutputBytes / sizeof(complex_t)) {
+        throw std::runtime_error(
+            "mqmps: reduced density matrix is limited by max output bytes; kept_qubits=" + std::to_string(k) +
+            ", elements=" + std::to_string(dim_rho) + ", bytes_per_element=" + std::to_string(sizeof(complex_t)) +
+            ", limit=" + std::to_string(detail::kMaxReducedDensityMatrixOutputBytes) + " bytes.");
+    }
 
     // Map logical kept qubits -> physical sites (dynamic mapping), then sort by physical position for contraction order.
     struct KeepSite {
@@ -1145,6 +1317,8 @@ VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRe
     // env represents a grid of matrices indexed by (ket_index, bra_index) over the kept sites seen so far.
     ws.env.clear();
     ws.env_next.clear();
+    ws.env.reserve(dim_rho);
+    ws.env_next.reserve(dim_rho);
     ws.env.emplace_back(1, 1);
     ws.env.front()(0, 0) = complex_t{1, 0};
     size_t dim_basis = 1;  // number of basis states for the kept sites processed so far (2^m).
@@ -1224,36 +1398,20 @@ VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRe
     if (dim_basis != dim_keep || keep_cursor != kept_sites.size()) {
         throw std::runtime_error("mqmps: internal error building reduced density matrix.");
     }
-    if (ws.env.size() != dim_keep * dim_keep) {
+    if (ws.env.size() != dim_rho) {
         throw std::runtime_error("mqmps: internal reduced density matrix env size mismatch.");
     }
 
-    Mat rho_phys(static_cast<Eigen::Index>(dim_keep), static_cast<Eigen::Index>(dim_keep));
-    for (size_t ket = 0; ket < dim_keep; ++ket) {
-        for (size_t bra = 0; bra < dim_keep; ++bra) {
-            const Mat& e = ws.env.at(ket * dim_keep + bra);
+    VVT<complex_t> out(dim_keep, VT<complex_t>(dim_keep));
+    for (size_t ket_phys = 0; ket_phys < dim_keep; ++ket_phys) {
+        const size_t ket_log = perm_phys_to_log[ket_phys];
+        for (size_t bra_phys = 0; bra_phys < dim_keep; ++bra_phys) {
+            const size_t bra_log = perm_phys_to_log[bra_phys];
+            const Mat& e = ws.env[ket_phys * dim_keep + bra_phys];
             if (e.rows() != 1 || e.cols() != 1) {
                 throw std::runtime_error("mqmps: reduced density matrix did not contract to scalar.");
             }
-            rho_phys(static_cast<Eigen::Index>(ket), static_cast<Eigen::Index>(bra)) = e(0, 0);
-        }
-    }
-
-    Mat rho_logical(static_cast<Eigen::Index>(dim_keep), static_cast<Eigen::Index>(dim_keep));
-    rho_logical.setZero();
-    for (size_t ket_phys = 0; ket_phys < dim_keep; ++ket_phys) {
-        const size_t ket_log = perm_phys_to_log.at(ket_phys);
-        for (size_t bra_phys = 0; bra_phys < dim_keep; ++bra_phys) {
-            const size_t bra_log = perm_phys_to_log.at(bra_phys);
-            rho_logical(static_cast<Eigen::Index>(ket_log), static_cast<Eigen::Index>(bra_log)) =
-                rho_phys(static_cast<Eigen::Index>(ket_phys), static_cast<Eigen::Index>(bra_phys));
-        }
-    }
-
-    VVT<complex_t> out(static_cast<size_t>(rho_logical.rows()), VT<complex_t>(static_cast<size_t>(rho_logical.cols())));
-    for (Eigen::Index r = 0; r < rho_logical.rows(); ++r) {
-        for (Eigen::Index c = 0; c < rho_logical.cols(); ++c) {
-            out.at(static_cast<size_t>(r)).at(static_cast<size_t>(c)) = rho_logical(r, c);
+            out[ket_log][bra_log] = e(0, 0);
         }
     }
     return out;
@@ -1285,54 +1443,7 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
         PauliSumCache cache;
         cache.terms_hash = terms_hash;
         cache.mapping_hash = mapping_hash;
-        cache.phys_terms.reserve(terms.size());
-
-        for (const auto& [pwords, coeff_in] : terms) {
-            const auto coeff = static_cast<calc_type>(coeff_in);
-            if (coeff == static_cast<calc_type>(0)) {
-                continue;
-            }
-            VT<PauliWord> phys_words;
-            phys_words.reserve(pwords.size());
-            for (const auto& [q_idx, p] : pwords) {
-                const auto q = static_cast<size_t>(q_idx);
-                if (q >= pos_of_logical_.size()) {
-                    throw std::runtime_error("mqmps: invalid qubit index in Pauli term.");
-                }
-                const auto pos = pos_of_logical_.at(q);
-                if (pos < 0 || pos >= n_qubits_) {
-                    throw std::runtime_error("mqmps: invalid physical position in Pauli term.");
-                }
-                if (p != 'X' && p != 'Y' && p != 'Z') {
-                    throw std::runtime_error("mqmps: unknown Pauli word.");
-                }
-                phys_words.push_back(PauliWord{static_cast<Index>(pos), p});
-            }
-            std::sort(phys_words.begin(), phys_words.end(),
-                      [](const PauliWord& a, const PauliWord& b) { return (a.first != b.first) ? (a.first < b.first) : (a.second < b.second); });
-            for (size_t k = 1; k < phys_words.size(); ++k) {
-                if (phys_words[k].first == phys_words[k - 1].first) {
-                    throw std::runtime_error("mqmps: Pauli term has repeated qubit index.");
-                }
-            }
-            cache.phys_terms.push_back(PauliTerm<calc_type>{std::move(phys_words), coeff});
-        }
-
-        std::sort(cache.phys_terms.begin(), cache.phys_terms.end(),
-                  [](const PauliTerm<calc_type>& a, const PauliTerm<calc_type>& b) {
-                      return std::lexicographical_compare(a.first.begin(), a.first.end(), b.first.begin(), b.first.end());
-                  });
-        // Merge identical Pauli strings (reduces work for some Hamiltonians).
-        VT<PauliTerm<calc_type>> merged;
-        merged.reserve(cache.phys_terms.size());
-        for (auto& t : cache.phys_terms) {
-            if (merged.empty() || merged.back().first != t.first) {
-                merged.push_back(std::move(t));
-            } else {
-                merged.back().second += t.second;
-            }
-        }
-        cache.phys_terms = std::move(merged);
+        cache.phys_terms = detail::ToPhysicalMergedPauliTerms(terms, pos_of_logical_, n_qubits_);
         pauli_sum_cache_ = std::move(cache);
     }
 
@@ -1347,6 +1458,19 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
     const std::array<complex_t, 4> xop = {complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
     const std::array<complex_t, 4> yop = {complex_t{0, 0}, -I, I, complex_t{0, 0}};
     const std::array<complex_t, 4> zop = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
+
+    const auto get_pauli_op = [&](char p) -> const std::array<complex_t, 4>& {
+        switch (p) {
+            case 'X':
+                return xop;
+            case 'Y':
+                return yop;
+            case 'Z':
+                return zop;
+            default:
+                throw std::runtime_error("mqmps: unknown Pauli word.");
+        }
+    };
 
     auto apply_local = [&](qbit_t site, const std::array<complex_t, 4>& op, const Mat& e, Mat* out) {
         const size_t D_i = lambdas_.at(static_cast<size_t>(site)).size();
@@ -1389,78 +1513,9 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
         }
     };
 
-    py_qs_data_t out{0, 0};
-    VT<PauliWord> prev_ops;
-    VT<Mat> prefix_env;
-    VT<qbit_t> prefix_next_site;
-
-    Mat e(1, 1);
-    Mat e_tmp(1, 1);
-
-    const auto& merged = pauli_sum_cache_->phys_terms;
-    for (const auto& [ops, coeff] : merged) {
-        if (coeff == static_cast<calc_type>(0)) {
-            continue;
-        }
-        if (ops.empty()) {
-            out += coeff * complex_t{1, 0};
-            prev_ops.clear();
-            prefix_env.clear();
-            prefix_next_site.clear();
-            continue;
-        }
-
-        size_t lcp = 0;
-        while (lcp < prev_ops.size() && lcp < ops.size() && prev_ops[lcp] == ops[lcp]) {
-            ++lcp;
-        }
-        prefix_env.resize(lcp);
-        prefix_next_site.resize(lcp);
-
-        qbit_t next_site = 0;
-        e.resize(1, 1);
-        e(0, 0) = complex_t{1, 0};
-        if (lcp > 0) {
-            e = prefix_env.at(lcp - 1);
-            next_site = prefix_next_site.at(lcp - 1);
-        }
-
-        // Process remaining sparse Pauli ops, interleaving identity sites.
-        for (size_t op_idx = lcp; op_idx < ops.size(); ++op_idx) {
-            const auto& op = ops.at(op_idx);
-            const auto op_pos = static_cast<qbit_t>(op.first);
-            if (op_pos < next_site) {
-                throw std::runtime_error("mqmps: invalid Pauli op ordering.");
-            }
-            for (qbit_t s = next_site; s < op_pos; ++s) {
-                apply_local(s, eye, e, &e_tmp);
-                e.swap(e_tmp);
-            }
-            const std::array<complex_t, 4>* local = &eye;
-            if (op.second == 'X') {
-                local = &xop;
-            } else if (op.second == 'Y') {
-                local = &yop;
-            } else if (op.second == 'Z') {
-                local = &zop;
-            }
-            apply_local(op_pos, *local, e, &e_tmp);
-            e.swap(e_tmp);
-            next_site = op_pos + 1;
-
-            prefix_env.push_back(e);
-            prefix_next_site.push_back(next_site);
-        }
-
-        // Tail identities to the end.
-        for (qbit_t s = next_site; s < n_qubits_; ++s) {
-            apply_local(s, eye, e, &e_tmp);
-            e.swap(e_tmp);
-        }
-        out += coeff * e(0, 0);
-        prev_ops = ops;
-    }
-    return out;
+    return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(
+        n_qubits_, pauli_sum_cache_->phys_terms, eye, apply_local, get_pauli_op,
+        []() { return complex_t{1, 0}; }, false);
 }
 
 template <typename qs_policy_t_>
@@ -1476,53 +1531,7 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<cal
         throw std::runtime_error("mqmps: bra/ket mapping mismatch (internal alignment required).");
     }
 
-    // Convert Pauli terms from logical indices to physical sites using the (common) mapping.
-    VT<PauliTerm<calc_type>> phys_terms;
-    phys_terms.reserve(terms.size());
-    for (const auto& [pwords, coeff_in] : terms) {
-        const auto coeff = static_cast<calc_type>(coeff_in);
-        if (coeff == static_cast<calc_type>(0)) {
-            continue;
-        }
-        VT<PauliWord> phys_words;
-        phys_words.reserve(pwords.size());
-        for (const auto& [q_idx, p] : pwords) {
-            const auto q = static_cast<size_t>(q_idx);
-            if (q >= pos_of_logical_.size()) {
-                throw std::runtime_error("mqmps: invalid qubit index in Pauli term.");
-            }
-            const auto pos = pos_of_logical_.at(q);
-            if (pos < 0 || pos >= n_qubits_) {
-                throw std::runtime_error("mqmps: invalid physical position in Pauli term.");
-            }
-            if (p != 'X' && p != 'Y' && p != 'Z') {
-                throw std::runtime_error("mqmps: unknown Pauli word.");
-            }
-            phys_words.push_back(PauliWord{static_cast<Index>(pos), p});
-        }
-        std::sort(phys_words.begin(), phys_words.end(), [](const PauliWord& a, const PauliWord& b) {
-            return (a.first != b.first) ? (a.first < b.first) : (a.second < b.second);
-        });
-        for (size_t i = 1; i < phys_words.size(); ++i) {
-            if (phys_words[i].first == phys_words[i - 1].first) {
-                throw std::runtime_error("mqmps: Pauli term has repeated qubit index.");
-            }
-        }
-        phys_terms.push_back(PauliTerm<calc_type>{std::move(phys_words), coeff});
-    }
-
-    std::sort(phys_terms.begin(), phys_terms.end(), [](const PauliTerm<calc_type>& a, const PauliTerm<calc_type>& b) {
-        return std::lexicographical_compare(a.first.begin(), a.first.end(), b.first.begin(), b.first.end());
-    });
-    VT<PauliTerm<calc_type>> merged;
-    merged.reserve(phys_terms.size());
-    for (auto& t : phys_terms) {
-        if (merged.empty() || merged.back().first != t.first) {
-            merged.push_back(std::move(t));
-        } else {
-            merged.back().second += t.second;
-        }
-    }
+    const auto merged = detail::ToPhysicalMergedPauliTerms(terms, pos_of_logical_, n_qubits_);
 
     struct CrossExpectWs {
         Mat ek0;
@@ -1535,6 +1544,19 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<cal
     const std::array<complex_t, 4> xop = {complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
     const std::array<complex_t, 4> yop = {complex_t{0, 0}, -I, I, complex_t{0, 0}};
     const std::array<complex_t, 4> zop = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
+
+    const auto get_pauli_op = [&](char p) -> const std::array<complex_t, 4>& {
+        switch (p) {
+            case 'X':
+                return xop;
+            case 'Y':
+                return yop;
+            case 'Z':
+                return zop;
+            default:
+                throw std::runtime_error("mqmps: unknown Pauli word.");
+        }
+    };
 
     auto apply_local = [&](qbit_t site, const std::array<complex_t, 4>& op, const Mat& e_in, Mat* out) {
         const size_t D_b = bra.lambdas_.at(static_cast<size_t>(site)).size();
@@ -1616,81 +1638,8 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<cal
         return *overlap;
     };
 
-    py_qs_data_t out{0, 0};
-    VT<PauliWord> prev_ops;
-    VT<Mat> prefix_env;
-    VT<qbit_t> prefix_next_site;
-    Mat e(1, 1);
-    Mat e_tmp(1, 1);
-
-    for (const auto& [ops, coeff] : merged) {
-        if (coeff == static_cast<calc_type>(0)) {
-            continue;
-        }
-        if (ops.empty()) {
-            out += coeff * inner_product();
-            prev_ops.clear();
-            prefix_env.clear();
-            prefix_next_site.clear();
-            continue;
-        }
-
-        size_t lcp = 0;
-        while (lcp < prev_ops.size() && lcp < ops.size() && prev_ops[lcp] == ops[lcp]) {
-            ++lcp;
-        }
-        prefix_env.resize(lcp);
-        prefix_next_site.resize(lcp);
-
-        qbit_t next_site = 0;
-        e.resize(1, 1);
-        e(0, 0) = complex_t{1, 0};
-        if (lcp > 0) {
-            e = prefix_env.at(lcp - 1);
-            next_site = prefix_next_site.at(lcp - 1);
-        }
-
-        // Process remaining sparse Pauli ops, interleaving identity sites.
-        for (size_t op_idx = lcp; op_idx < ops.size(); ++op_idx) {
-            const auto& op = ops.at(op_idx);
-            const auto op_pos = static_cast<qbit_t>(op.first);
-            if (op_pos < next_site) {
-                throw std::runtime_error("mqmps: invalid Pauli op ordering.");
-            }
-            for (qbit_t s = next_site; s < op_pos; ++s) {
-                apply_local(s, eye, e, &e_tmp);
-                e.swap(e_tmp);
-            }
-            const std::array<complex_t, 4>* local = &eye;
-            if (op.second == 'X') {
-                local = &xop;
-            } else if (op.second == 'Y') {
-                local = &yop;
-            } else if (op.second == 'Z') {
-                local = &zop;
-            } else {
-                throw std::runtime_error("mqmps: unknown Pauli word.");
-            }
-            apply_local(op_pos, *local, e, &e_tmp);
-            e.swap(e_tmp);
-            next_site = op_pos + 1;
-
-            prefix_env.push_back(e);
-            prefix_next_site.push_back(next_site);
-        }
-
-        // Tail identities to the end.
-        for (qbit_t s = next_site; s < n_qubits_; ++s) {
-            apply_local(s, eye, e, &e_tmp);
-            e.swap(e_tmp);
-        }
-        if (e.rows() != 1 || e.cols() != 1) {
-            throw std::runtime_error("mqmps: expectation did not contract to scalar.");
-        }
-        out += coeff * e(0, 0);
-        prev_ops = ops;
-    }
-    return out;
+    return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(
+        n_qubits_, merged, eye, apply_local, get_pauli_op, inner_product, true);
 }
 
 template <typename qs_policy_t_>
