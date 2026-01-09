@@ -34,8 +34,6 @@
 
 #include "core/utils.h"
 #include "simulator/mps/compiler/mps_compiler.h"
-#include "simulator/mps/linalg/gemm.h"
-#include "simulator/mps/linalg/svd.h"
 
 namespace mindquantum::sim::mps::detail {
 namespace detail {
@@ -60,9 +58,12 @@ struct TwoSiteWorkspace {
     MatT L;
     MatT R;
     MatT Theta;
-    mindquantum::sim::mps::linalg::ThinSvd<T> svd;
+    Eigen::BDCSVD<MatT> svd;
+    Eigen::Index svd_rows_cap = 0;
+    Eigen::Index svd_cols_cap = 0;
+    unsigned int svd_opts = 0;
 
-    void EnsureCapacity(size_t bond_dim_cap, unsigned int opts) {
+    void EnsureCapacity(size_t bond_dim_cap) {
         // Allocate for worst-case local sizes:
         //   L: (2*D_L) x D_M, R: D_M x (2*D_R), Theta: (2*D_L) x (2*D_R)
         // with D_L,D_M,D_R <= bond_dim_cap.
@@ -81,7 +82,21 @@ struct TwoSiteWorkspace {
         if (Theta.size() < two_cap * two_cap) {
             Theta.resize(two_cap, two_cap);
         }
-        svd.EnsureCapacity(two_cap, two_cap, opts);
+    }
+
+    void EnsureSvdCapacity(Eigen::Index rows, Eigen::Index cols, unsigned int opts) {
+        if (rows <= svd_rows_cap && cols <= svd_cols_cap && opts == svd_opts) {
+            return;
+        }
+        svd = Eigen::BDCSVD<MatT>(rows, cols, opts);
+        svd_rows_cap = rows;
+        svd_cols_cap = cols;
+        svd_opts = opts;
+    }
+
+    void ComputeSvd(const MatT& a, unsigned int opts) {
+        EnsureSvdCapacity(a.rows(), a.cols(), opts);
+        svd.compute(a, opts);
     }
 };
 }  // namespace detail
@@ -697,7 +712,7 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
         constexpr size_t kDefaultWorkspaceBondDim = 64;
         return std::max({D_L, D_M, D_R, kDefaultWorkspaceBondDim});
     }();
-    ws.EnsureCapacity(bond_dim_cap, svd_opts);
+    ws.EnsureCapacity(bond_dim_cap);
 
     auto& L = ws.L;
     auto& R = ws.R;
@@ -726,7 +741,7 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     }
 
     Theta.resize(static_cast<Eigen::Index>(2 * D_L), static_cast<Eigen::Index>(2 * D_R));
-    mindquantum::sim::mps::linalg::Gemm(L, R, &Theta);
+    Theta.noalias() = L * R;
 
     // Apply 4x4 gate to physical indices (unrolled).
     for (size_t a = 0; a < D_L; ++a) {
@@ -748,7 +763,7 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
         }
     }
 
-    ws.svd.Compute(Theta, svd_opts);
+    ws.ComputeSvd(Theta, svd_opts);
     const auto& s_all = ws.svd.singularValues();
     const size_t r_full = static_cast<size_t>(s_all.size());
     size_t r_keep = r_full;
