@@ -94,9 +94,8 @@ class MQSim(BackendBase):
         if self.internal:
             self.sim = self.name
         else:
-            init_kwargs = getattr(self, "_init_kwargs", {})
             self.sim = getattr(SUPPORTED_SIMULATOR.c_module(self.name, self.arithmetic_type), self.name)(
-                self.n_qubits, self.seed, **init_kwargs
+                self.n_qubits, self.seed, **self._init_kwargs
             )
 
     def apply_circuit(

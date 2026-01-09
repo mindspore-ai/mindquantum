@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import H, Measure, RX, RZ, X
+from mindquantum.core.gates import H, Measure, RX, RZ, Rxz, Rxy, X
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 
@@ -251,3 +251,31 @@ def test_mqmps_bra_ket_expectation_matches_mqvector():
     e_vec = sim_vec.get_expectation(ham, circ_right, circ_left)
     e_mps = sim_mps.get_expectation(ham, circ_right, circ_left)
     assert np.allclose(e_vec, e_mps, atol=1e-8)
+
+
+def test_mqmps_two_qubit_gate_obj_ordering_rxy_matches_mqvector():
+    n_qubits = 3
+    theta = 0.73
+    prep = Circuit().h(0).rx(0.31, 1).rz(-0.22, 2)
+
+    for obj in ([0, 1], [1, 0]):
+        circ = Circuit() + prep + Rxy(theta).on(obj) + RX(0.19).on(0)
+        sim_vec = Simulator("mqvector", n_qubits, seed=101)
+        sim_mps = Simulator("mqmps", n_qubits, seed=101, max_bond_dimension=0)
+        sim_vec.apply_circuit(circ)
+        sim_mps.apply_circuit(circ)
+        _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-8)
+
+
+def test_mqmps_two_qubit_gate_routing_rxz_matches_mqvector():
+    n_qubits = 4
+    theta = -0.54
+    prep = Circuit().h(0).rx(0.17, 1).h(2).rz(0.29, 3).x(3, 0)
+
+    for obj in ([0, 3], [3, 0]):
+        circ = Circuit() + prep + Rxz(theta).on(obj) + RZ(0.41).on(1)
+        sim_vec = Simulator("mqvector", n_qubits, seed=202)
+        sim_mps = Simulator("mqmps", n_qubits, seed=202, max_bond_dimension=0)
+        sim_vec.apply_circuit(circ)
+        sim_mps.apply_circuit(circ)
+        _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-8)

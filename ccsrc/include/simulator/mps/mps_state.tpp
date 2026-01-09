@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -53,34 +52,6 @@ inline calc_t SafeInv(calc_t x, calc_t floor) {
         return static_cast<calc_t>(1) / floor;
     }
     return static_cast<calc_t>(1) / x;
-}
-
-inline size_t HashCombine(size_t seed, size_t value) {
-    // boost-like hash combine
-    seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
-    return seed;
-}
-
-template <typename T>
-inline size_t HashScalarBits(T v) {
-    static_assert(std::is_floating_point_v<T>, "HashScalarBits expects a floating-point type.");
-    if constexpr (std::is_same_v<T, float>) {
-        uint32_t bits = 0;
-        std::memcpy(&bits, &v, sizeof(bits));
-        return static_cast<size_t>(bits);
-    } else if constexpr (std::is_same_v<T, double>) {
-        uint64_t bits = 0;
-        std::memcpy(&bits, &v, sizeof(bits));
-        return static_cast<size_t>(bits ^ (bits >> 32U));
-    } else {
-        // Fallback: hash as bytes.
-        size_t out = 0;
-        const auto* ptr = reinterpret_cast<const unsigned char*>(&v);
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            out = HashCombine(out, static_cast<size_t>(ptr[i]));
-        }
-        return out;
-    }
 }
 
 template <typename T>
@@ -1195,8 +1166,11 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
             const auto& Rn = R_env.at(static_cast<size_t>(i + 1));
             const complex_t p0 = (y0 * (Rn * y0.adjoint()))(0, 0);
             const complex_t p1 = (y1 * (Rn * y1.adjoint()))(0, 0);
-            const double p0r = std::max(0.0, static_cast<double>(std::real(p0)));
-            const double p1r = std::max(0.0, static_cast<double>(std::real(p1)));
+            const double p0r = static_cast<double>(std::real(p0));
+            const double p1r = static_cast<double>(std::real(p1));
+            if (p0r < 0 || p1r < 0) {
+                throw std::runtime_error("mqmps: invalid probability in sampling.");
+            }
             const double denom = p0r + p1r;
             if (denom <= 0) {
                 throw std::runtime_error("mqmps: invalid probability in sampling.");
@@ -1422,27 +1396,10 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
     using Mat = detail::Mat<complex_t>;
     constexpr complex_t I{0, 1};
 
-    // Cache key: (logical Pauli term list) + (current logical->physical mapping).
-    size_t mapping_hash = 0;
-    mapping_hash = detail::HashCombine(mapping_hash, pos_of_logical_.size());
-    for (auto p : pos_of_logical_) {
-        mapping_hash = detail::HashCombine(mapping_hash, static_cast<size_t>(p));
-    }
-    size_t terms_hash = 0;
-    terms_hash = detail::HashCombine(terms_hash, terms.size());
-    for (const auto& [pwords, coeff] : terms) {
-        terms_hash = detail::HashCombine(terms_hash, pwords.size());
-        for (const auto& [q, p] : pwords) {
-            terms_hash = detail::HashCombine(terms_hash, static_cast<size_t>(q));
-            terms_hash = detail::HashCombine(terms_hash, static_cast<size_t>(static_cast<unsigned char>(p)));
-        }
-        terms_hash = detail::HashCombine(terms_hash, detail::HashScalarBits(static_cast<calc_type>(coeff)));
-    }
-
-    if (!pauli_sum_cache_ || pauli_sum_cache_->terms_hash != terms_hash || pauli_sum_cache_->mapping_hash != mapping_hash) {
+    if (!pauli_sum_cache_ || pauli_sum_cache_->pos_of_logical != pos_of_logical_ || pauli_sum_cache_->terms != terms) {
         PauliSumCache cache;
-        cache.terms_hash = terms_hash;
-        cache.mapping_hash = mapping_hash;
+        cache.pos_of_logical = pos_of_logical_;
+        cache.terms = terms;
         cache.phys_terms = detail::ToPhysicalMergedPauliTerms(terms, pos_of_logical_, n_qubits_);
         pauli_sum_cache_ = std::move(cache);
     }

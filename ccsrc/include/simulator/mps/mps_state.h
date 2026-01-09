@@ -138,8 +138,8 @@ class MPSState {
 
  private:
     struct PauliSumCache {
-        size_t terms_hash = 0;
-        size_t mapping_hash = 0;
+        qbits_t pos_of_logical;
+        VT<PauliTerm<calc_type>> terms;
         VT<PauliTerm<calc_type>> phys_terms;  // merged/sorted, positions are physical sites
     };
 
