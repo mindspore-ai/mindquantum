@@ -66,7 +66,7 @@ class MPSState {
     virtual VT<py_qs_data_t> GetQS() const;
     virtual void SetQS(const VT<py_qs_data_t>& qs);
 
-    virtual VVT<py_qs_data_t> GetReducedDensityMatrix(const qbits_t& kept_qubits) const;
+    virtual VT<py_qs_data_t> GetReducedDensityMatrix(const qbits_t& kept_qubits) const;
 
     virtual index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
                               const parameter::ParameterResolver& pr = parameter::ParameterResolver(), bool diff = false);

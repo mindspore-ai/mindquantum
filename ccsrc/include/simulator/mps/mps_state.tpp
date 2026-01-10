@@ -1208,7 +1208,7 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
 }
 
 template <typename qs_policy_t_>
-VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetReducedDensityMatrix(
+VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetReducedDensityMatrix(
     const qbits_t& kept_qubits) const {
     using Mat = detail::Mat<complex_t>;
     const size_t n = static_cast<size_t>(n_qubits_);
@@ -1240,15 +1240,16 @@ VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRe
             ", limit=" + std::to_string(detail::kMaxReducedDensityMatrixOutputBytes) + " bytes.");
     }
 
-    // Map logical kept qubits -> physical sites (dynamic mapping), then sort by physical position for contraction order.
-    struct KeepSite {
+    // Map logical kept qubits -> physical sites (dynamic mapping).
+    // We contract in physical order (MPS sites), but output indices are in logical order (sorted qubit indices).
+    struct KeepStep {
         qbit_t pos = 0;
-        qbit_t logical = 0;
+        size_t log_bit = 0;  // bit index in the reduced density matrix basis (little-endian by logical qubit index)
     };
-    VT<KeepSite> kept_sites;
-    kept_sites.reserve(k);
-    for (size_t j = 0; j < k; ++j) {
-        const auto q = kept_logical.at(j);
+    VT<KeepStep> keep_steps;
+    keep_steps.reserve(k);
+    for (size_t log_bit = 0; log_bit < k; ++log_bit) {
+        const auto q = kept_logical.at(log_bit);
         if (q < 0 || q >= n_qubits_) {
             throw std::runtime_error("mqmps: invalid kept qubit index.");
         }
@@ -1256,44 +1257,16 @@ VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRe
         if (pos < 0 || pos >= n_qubits_) {
             throw std::runtime_error("mqmps: invalid physical position for kept qubit.");
         }
-        kept_sites.push_back(KeepSite{pos, q});
+        keep_steps.push_back(KeepStep{pos, log_bit});
     }
-    std::sort(kept_sites.begin(), kept_sites.end(),
-              [](const KeepSite& a, const KeepSite& b) { return (a.pos != b.pos) ? (a.pos < b.pos) : (a.logical < b.logical); });
-    for (size_t j = 1; j < kept_sites.size(); ++j) {
-        if (kept_sites[j].pos == kept_sites[j - 1].pos) {
+    std::sort(keep_steps.begin(), keep_steps.end(), [](const KeepStep& a, const KeepStep& b) { return a.pos < b.pos; });
+    for (size_t j = 1; j < keep_steps.size(); ++j) {
+        if (keep_steps[j].pos == keep_steps[j - 1].pos) {
             throw std::runtime_error("mqmps: internal error: two logical qubits mapped to the same physical site.");
         }
     }
 
-    // Precompute basis index permutation: physical-kept order (ascending physical position) -> logical-kept order (ascending logical index).
-    // This matches the existing public contract: order of kept_qubits does not matter, and little-endian indexing follows qubit indices.
-    VT<size_t> logical_bit_of_phys_bit(k);
-    for (size_t phys_bit = 0; phys_bit < k; ++phys_bit) {
-        const auto logical_q = kept_sites.at(phys_bit).logical;
-        auto it = std::lower_bound(kept_logical.begin(), kept_logical.end(), logical_q);
-        if (it == kept_logical.end() || *it != logical_q) {
-            throw std::runtime_error("mqmps: internal error computing reduced density matrix permutation.");
-        }
-        logical_bit_of_phys_bit.at(phys_bit) = static_cast<size_t>(std::distance(kept_logical.begin(), it));
-    }
-    VT<size_t> perm_phys_to_log(dim_keep);
-    for (size_t idx_phys = 0; idx_phys < dim_keep; ++idx_phys) {
-        size_t idx_log = 0;
-        for (size_t phys_bit = 0; phys_bit < k; ++phys_bit) {
-            const size_t b = (idx_phys >> phys_bit) & 1U;
-            idx_log |= (b << logical_bit_of_phys_bit.at(phys_bit));
-        }
-        perm_phys_to_log.at(idx_phys) = idx_log;
-    }
-
-    struct RdmWs {
-        Mat tmp0;
-        Mat tmp1;
-        VT<Mat> env;
-        VT<Mat> env_next;
-    };
-    thread_local RdmWs ws;
+    VT<complex_t> out(dim_rho);
 
     const auto scale_by_lambda = [](const VT<calc_type>& lam_next, Mat* m) {
         const size_t D = lam_next.size();
@@ -1303,106 +1276,189 @@ VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRe
         }
     };
 
-    // env represents a grid of matrices indexed by (ket_index, bra_index) over the kept sites seen so far.
-    ws.env.clear();
-    ws.env_next.clear();
-    ws.env.reserve(dim_rho);
-    ws.env_next.reserve(dim_rho);
-    ws.env.emplace_back(1, 1);
-    ws.env.front()(0, 0) = complex_t{1, 0};
-    size_t dim_basis = 1;  // number of basis states for the kept sites processed so far (2^m).
-    size_t keep_cursor = 0;
-
-    for (qbit_t site = 0; site < n_qubits_; ++site) {
-        const size_t D_i = lambdas_.at(static_cast<size_t>(site)).size();
-        const size_t D_next = lambdas_.at(static_cast<size_t>(site + 1)).size();
-        const auto& lam_next = lambdas_.at(static_cast<size_t>(site + 1));
-        const auto& g = gammas_.at(static_cast<size_t>(site));
+    const auto apply_traced_site = [&](qbit_t site, Mat* e, Mat* a0, Mat* a1, Mat* tmp) {
+        const size_t D_i = lambdas_[static_cast<size_t>(site)].size();
+        const size_t D_next = lambdas_[static_cast<size_t>(site + 1)].size();
+        const auto& lam_next = lambdas_[static_cast<size_t>(site + 1)];
+        const auto& g = gammas_[static_cast<size_t>(site)];
         if (g.dl != D_i || g.dr != D_next) {
             throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions during reduced density matrix.");
+        }
+        if (static_cast<size_t>(e->rows()) != D_i || static_cast<size_t>(e->cols()) != D_i) {
+            throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
         }
 
         Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
         Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
 
-        const bool is_kept = (keep_cursor < kept_sites.size()) && (kept_sites.at(keep_cursor).pos == site);
-        if (!is_kept) {
-            ws.env_next.resize(ws.env.size());
-            for (size_t idx = 0; idx < ws.env.size(); ++idx) {
-                const Mat& e = ws.env.at(idx);
-                if (static_cast<size_t>(e.rows()) != D_i || static_cast<size_t>(e.cols()) != D_i) {
-                    throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
-                }
-                ws.tmp0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-                ws.tmp1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-                ws.tmp0.noalias() = e * g0;
-                ws.tmp1.noalias() = e * g1;
+        a0->resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        a1->resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        a0->noalias() = (*e) * g0;
+        a1->noalias() = (*e) * g1;
 
-                Mat& out = ws.env_next.at(idx);
-                out.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
-                out.noalias() = g0.adjoint() * ws.tmp0;
-                out.noalias() += g1.adjoint() * ws.tmp1;
-                scale_by_lambda(lam_next, &out);
-            }
-            ws.env.swap(ws.env_next);
-            continue;
+        tmp->resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+        tmp->noalias() = g0.adjoint() * (*a0);
+        tmp->noalias() += g1.adjoint() * (*a1);
+        scale_by_lambda(lam_next, tmp);
+        e->swap(*tmp);
+    };
+
+    const auto contract_traced_range = [&](qbit_t begin_site, qbit_t end_site, Mat* e, Mat* a0, Mat* a1, Mat* tmp) {
+        if (end_site < begin_site) {
+            throw std::runtime_error("mqmps: internal error contracting reduced density matrix (invalid site range).");
         }
-
-        const size_t new_dim_basis = dim_basis * 2;
-        ws.env_next.resize(new_dim_basis * new_dim_basis);
-
-        for (size_t ket = 0; ket < dim_basis; ++ket) {
-            for (size_t bra = 0; bra < dim_basis; ++bra) {
-                const size_t idx_old = ket * dim_basis + bra;
-                const Mat& e = ws.env.at(idx_old);
-                if (static_cast<size_t>(e.rows()) != D_i || static_cast<size_t>(e.cols()) != D_i) {
-                    throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
-                }
-                ws.tmp0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-                ws.tmp1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-                ws.tmp0.noalias() = e * g0;
-                ws.tmp1.noalias() = e * g1;
-
-                auto fill_entry = [&](size_t new_ket, size_t new_bra, const auto& gl, const Mat& tmp) {
-                    Mat& out = ws.env_next.at(new_ket * new_dim_basis + new_bra);
-                    out.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
-                    out.noalias() = gl.adjoint() * tmp;
-                    scale_by_lambda(lam_next, &out);
-                };
-
-                // bra_bit, ket_bit in {0,1}:
-                // out(bra_bit, ket_bit) = g_bra^† * e * g_ket
-                fill_entry(ket + 0 * dim_basis, bra + 0 * dim_basis, g0, ws.tmp0);  // 0,0
-                fill_entry(ket + 1 * dim_basis, bra + 0 * dim_basis, g0, ws.tmp1);  // 0,1
-                fill_entry(ket + 0 * dim_basis, bra + 1 * dim_basis, g1, ws.tmp0);  // 1,0
-                fill_entry(ket + 1 * dim_basis, bra + 1 * dim_basis, g1, ws.tmp1);  // 1,1
-            }
+        for (qbit_t s = begin_site; s < end_site; ++s) {
+            apply_traced_site(s, e, a0, a1, tmp);
         }
+    };
 
-        ws.env.swap(ws.env_next);
-        dim_basis = new_dim_basis;
-        ++keep_cursor;
-    }
+    struct RdmWs {
+        // Temporary buffers for transfer contractions.
+        Mat a0;
+        Mat a1;
+        Mat tmp;
 
-    if (dim_basis != dim_keep || keep_cursor != kept_sites.size()) {
-        throw std::runtime_error("mqmps: internal error building reduced density matrix.");
-    }
-    if (ws.env.size() != dim_rho) {
-        throw std::runtime_error("mqmps: internal reduced density matrix env size mismatch.");
-    }
+        // Per-level storage for a DFS path within one task.
+        VT<Mat> env_stack;
+        VT<Mat> ket0_stack;
+        VT<Mat> ket1_stack;
+    };
 
-    VVT<complex_t> out(dim_keep, VT<complex_t>(dim_keep));
-    for (size_t ket_phys = 0; ket_phys < dim_keep; ++ket_phys) {
-        const size_t ket_log = perm_phys_to_log[ket_phys];
-        for (size_t bra_phys = 0; bra_phys < dim_keep; ++bra_phys) {
-            const size_t bra_log = perm_phys_to_log[bra_phys];
-            const Mat& e = ws.env[ket_phys * dim_keep + bra_phys];
+    const auto dfs_serial = [&](auto&& self, size_t depth, qbit_t next_site, size_t row_acc, size_t col_acc,
+                                RdmWs* ws) -> void {
+        if (depth == k) {
+            Mat& e = ws->env_stack[depth];
+            contract_traced_range(next_site, n_qubits_, &e, &ws->a0, &ws->a1, &ws->tmp);
             if (e.rows() != 1 || e.cols() != 1) {
                 throw std::runtime_error("mqmps: reduced density matrix did not contract to scalar.");
             }
-            out[ket_log][bra_log] = e(0, 0);
+            out[row_acc * dim_keep + col_acc] = e(0, 0);
+            return;
+        }
+
+        Mat& e = ws->env_stack[depth];
+        const qbit_t kept_pos = keep_steps[depth].pos;
+        const size_t log_bit = keep_steps[depth].log_bit;
+        if (kept_pos < next_site) {
+            throw std::runtime_error("mqmps: internal error contracting reduced density matrix (kept site ordering).");
+        }
+        contract_traced_range(next_site, kept_pos, &e, &ws->a0, &ws->a1, &ws->tmp);
+
+        const size_t D_i = lambdas_[static_cast<size_t>(kept_pos)].size();
+        const size_t D_next = lambdas_[static_cast<size_t>(kept_pos + 1)].size();
+        const auto& lam_next = lambdas_[static_cast<size_t>(kept_pos + 1)];
+        const auto& g = gammas_[static_cast<size_t>(kept_pos)];
+        if (g.dl != D_i || g.dr != D_next) {
+            throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions during reduced density matrix.");
+        }
+        if (static_cast<size_t>(e.rows()) != D_i || static_cast<size_t>(e.cols()) != D_i) {
+            throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
+        }
+
+        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+
+        Mat& ek0 = ws->ket0_stack[depth];
+        Mat& ek1 = ws->ket1_stack[depth];
+        ek0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        ek1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        ek0.noalias() = e * g0;
+        ek1.noalias() = e * g1;
+
+        for (size_t ket_bit = 0; ket_bit < 2; ++ket_bit) {
+            const Mat& tmp_k = (ket_bit == 0) ? ek0 : ek1;
+            const size_t next_row = row_acc | (ket_bit << log_bit);
+            for (size_t bra_bit = 0; bra_bit < 2; ++bra_bit) {
+                const auto& gl = (bra_bit == 0) ? g0 : g1;
+                const size_t next_col = col_acc | (bra_bit << log_bit);
+
+                Mat& child = ws->env_stack[depth + 1];
+                child.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+                child.noalias() = gl.adjoint() * tmp_k;
+                scale_by_lambda(lam_next, &child);
+
+                self(self, depth + 1, kept_pos + 1, next_row, next_col, ws);
+            }
+        }
+    };
+
+    // Parallelize only the top levels: each task owns its workspace and computes a full subtree serially.
+    constexpr size_t kParallelKeptQubits = 3;  // 4^3 = 64 tasks.
+    const size_t parallel_depth = std::min(kParallelKeptQubits, k);
+
+    std::function<void(size_t, qbit_t, Mat, size_t, size_t)> dfs_parallel;
+    dfs_parallel = [&](size_t depth, qbit_t next_site, Mat env, size_t row_acc, size_t col_acc) {
+        if (depth == parallel_depth) {
+            RdmWs ws;
+            ws.env_stack.resize(k + 1);
+            ws.ket0_stack.resize(k);
+            ws.ket1_stack.resize(k);
+            ws.env_stack[depth].swap(env);
+            dfs_serial(dfs_serial, depth, next_site, row_acc, col_acc, &ws);
+            return;
+        }
+
+        const qbit_t kept_pos = keep_steps[depth].pos;
+        const size_t log_bit = keep_steps[depth].log_bit;
+        if (kept_pos < next_site) {
+            throw std::runtime_error("mqmps: internal error contracting reduced density matrix (kept site ordering).");
+        }
+
+        Mat a0;
+        Mat a1;
+        Mat tmp;
+        contract_traced_range(next_site, kept_pos, &env, &a0, &a1, &tmp);
+
+        const size_t D_i = lambdas_[static_cast<size_t>(kept_pos)].size();
+        const size_t D_next = lambdas_[static_cast<size_t>(kept_pos + 1)].size();
+        const auto& lam_next = lambdas_[static_cast<size_t>(kept_pos + 1)];
+        const auto& g = gammas_[static_cast<size_t>(kept_pos)];
+        if (g.dl != D_i || g.dr != D_next) {
+            throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions during reduced density matrix.");
+        }
+        if (static_cast<size_t>(env.rows()) != D_i || static_cast<size_t>(env.cols()) != D_i) {
+            throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
+        }
+
+        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+
+        // Reuse a0/a1 as env*g0/env*g1 at the kept site.
+        a0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        a1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        a0.noalias() = env * g0;
+        a1.noalias() = env * g1;
+
+        const size_t next_depth = depth + 1;
+        const qbit_t next_site_child = kept_pos + 1;
+        for (size_t ket_bit = 0; ket_bit < 2; ++ket_bit) {
+            const Mat& tmp_k = (ket_bit == 0) ? a0 : a1;
+            const size_t next_row = row_acc | (ket_bit << log_bit);
+            for (size_t bra_bit = 0; bra_bit < 2; ++bra_bit) {
+                const auto& gl = (bra_bit == 0) ? g0 : g1;
+                const size_t next_col = col_acc | (bra_bit << log_bit);
+
+                Mat child(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+                child.noalias() = gl.adjoint() * tmp_k;
+                scale_by_lambda(lam_next, &child);
+
+#pragma omp task firstprivate(child, next_depth, next_site_child, next_row, next_col)
+                { dfs_parallel(next_depth, next_site_child, std::move(child), next_row, next_col); }
+            }
+        }
+    };
+
+    Mat init_env(1, 1);
+    init_env(0, 0) = complex_t{1, 0};
+#pragma omp parallel
+    {
+#pragma omp single
+        {
+#pragma omp taskgroup
+            { dfs_parallel(0, 0, std::move(init_env), 0, 0); }
         }
     }
+
     return out;
 }
 

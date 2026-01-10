@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <pybind11/complex.h>
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -49,7 +50,22 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("reset", &sim_t::Reset)
         .def("get_qs", &sim_t::GetQS)
         .def("set_qs", &sim_t::SetQS)
-        .def("get_reduced_density_matrix", &sim_t::GetReducedDensityMatrix)
+        .def(
+            "get_reduced_density_matrix",
+            [](const sim_t& sim, const std::vector<qbit_t>& kept_qubits) {
+                auto rdm = sim.GetReducedDensityMatrix(kept_qubits);
+                const size_t dim = size_t{1} << kept_qubits.size();
+
+                auto* buf = new mindquantum::VT<py_qs_data_t>(std::move(rdm));
+                pybind11::capsule owner(buf, [](void* p) {
+                    delete reinterpret_cast<mindquantum::VT<py_qs_data_t>*>(p);  // NOLINT
+                });
+
+                const auto dim_ss = static_cast<pybind11::ssize_t>(dim);
+                const auto stride0 = static_cast<pybind11::ssize_t>(dim * sizeof(py_qs_data_t));
+                const auto stride1 = static_cast<pybind11::ssize_t>(sizeof(py_qs_data_t));
+                return pybind11::array_t<py_qs_data_t>({dim_ss, dim_ss}, {stride0, stride1}, buf->data(), owner);
+            })
         .def("purity", &sim_t::Purity)
         .def("pure_state_vector", &sim_t::PureStateVector)
         .def("apply_hamiltonian", &sim_t::ApplyHamiltonian)
@@ -102,4 +118,3 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
 }
 
 #endif  // PYTHON_LIB_QUANTUMSTATE_BIND_MPS_STATE_HPP
-
