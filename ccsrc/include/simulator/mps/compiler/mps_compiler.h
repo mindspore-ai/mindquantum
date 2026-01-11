@@ -22,6 +22,7 @@
 #include <cmath>
 #include <complex>
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -613,9 +614,9 @@ class MPSCompiler {
         qbits_t logical_at_pos = logical_at_pos_in;
 
         std::vector<Mat2<complex_t>> pending1(static_cast<size_t>(n_qubits_), Eye2<complex_t>());
-        std::vector<bool> pending1_active(static_cast<size_t>(n_qubits_), false);
+        std::vector<uint8_t> pending1_active(static_cast<size_t>(n_qubits_), false);
         std::vector<Mat4<complex_t>> pending2(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), Eye4<complex_t>());
-        std::vector<bool> pending2_active(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), false);
+        std::vector<uint8_t> pending2_active(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), false);
 
         using UnitOp = std::variant<Op1Q<complex_t>, Op2Q<complex_t>>;
         std::vector<Stage<complex_t>> program_stages;
