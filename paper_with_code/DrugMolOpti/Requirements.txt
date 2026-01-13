@@ -1,0 +1,7 @@
+pyscf>=2.8
+openfermion>=1.7.0
+openfermionpyscf>=0.5
+h5py>=3.13.0
+quimb>=1.7.3
+mindquantum>=0.10.0
+tangelo-gc>=0.4.3
