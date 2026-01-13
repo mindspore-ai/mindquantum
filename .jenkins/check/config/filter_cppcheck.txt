@@ -67,6 +67,7 @@
 "mindquantum/ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp"    "unknownMacro"
 "mindquantum/ccsrc/include/simulator/vector/detail/cpu_vector_policy.h"                                   "unknownMacro"
 "mindquantum/ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"                     "unknownMacro"
+"mindquantum/ccsrc/include/simulator/mps/mps_state.tpp"                                                   "unknownMacro"
 
 "mindquantum/ccsrc/include/config/tsl_ordered_map.h"                                                      "useStlAlgorithm"
 "mindquantum/ccsrc/include/ops/gates/terms_coeff_dict.h"                                                  "useStlAlgorithm"

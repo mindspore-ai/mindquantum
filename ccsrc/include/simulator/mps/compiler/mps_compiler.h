@@ -137,6 +137,33 @@ inline Mat4<complex_t> KronRight(const Mat2<complex_t>& u) {
 }
 
 template <typename complex_t>
+inline Mat4<complex_t> Kron(const Mat2<complex_t>& u_left, const Mat2<complex_t>& u_right) {
+    // (u_left ⊗ u_right) in basis |00>,|01>,|10>,|11> (left,right)
+    Mat4<complex_t> out{};
+    // block (0,0)
+    out[0] = u_left[0] * u_right[0];
+    out[1] = u_left[0] * u_right[1];
+    out[4] = u_left[0] * u_right[2];
+    out[5] = u_left[0] * u_right[3];
+    // block (0,1)
+    out[2] = u_left[1] * u_right[0];
+    out[3] = u_left[1] * u_right[1];
+    out[6] = u_left[1] * u_right[2];
+    out[7] = u_left[1] * u_right[3];
+    // block (1,0)
+    out[8] = u_left[2] * u_right[0];
+    out[9] = u_left[2] * u_right[1];
+    out[12] = u_left[2] * u_right[2];
+    out[13] = u_left[2] * u_right[3];
+    // block (1,1)
+    out[10] = u_left[3] * u_right[0];
+    out[11] = u_left[3] * u_right[1];
+    out[14] = u_left[3] * u_right[2];
+    out[15] = u_left[3] * u_right[3];
+    return out;
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> SwapQubits(const Mat4<complex_t>& u_lr) {
     // Convert a 2Q matrix from order (left,right) to (right,left) (i.e. conjugate by SWAP permutation).
     // perm maps new basis index -> old basis index.
@@ -164,83 +191,125 @@ constexpr Mat4<complex_t> SwapMatrix() {
 }
 
 template <typename complex_t>
-inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
-                                    bool diff) {
-    if (diff) {
-        throw std::runtime_error("mqmps does not support applying differential gates yet.");
-    }
+constexpr Mat2<complex_t> XMatrix1Q() {
+    return Mat2<complex_t>{complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> YMatrix1Q() {
+    return Mat2<complex_t>{complex_t{0, 0}, complex_t{0, -1}, complex_t{0, 1}, complex_t{0, 0}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> ZMatrix1Q() {
+    return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> HMatrix1Q() {
     using calc_t = typename complex_t::value_type;
-    constexpr calc_t inv_sqrt2 = static_cast<calc_t>(0.7071067811865475244);
-    constexpr complex_t I{0, 1};
+    constexpr calc_t inv_sqrt2 = static_cast<calc_t>(M_SQRT1_2);
+    return Mat2<complex_t>{complex_t{inv_sqrt2, 0}, complex_t{inv_sqrt2, 0}, complex_t{inv_sqrt2, 0},
+                           complex_t{-inv_sqrt2, 0}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> SMatrix1Q() {
+    return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 1}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> SdagMatrix1Q() {
+    return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{0, -1}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> TMatrix1Q() {
+    using calc_t = typename complex_t::value_type;
+    constexpr calc_t inv_sqrt2 = static_cast<calc_t>(M_SQRT1_2);
+    return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{inv_sqrt2, inv_sqrt2}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> TdagMatrix1Q() {
+    using calc_t = typename complex_t::value_type;
+    constexpr calc_t inv_sqrt2 = static_cast<calc_t>(M_SQRT1_2);
+    return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{inv_sqrt2, -inv_sqrt2}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> SXMatrix1Q() {
+    using calc_t = typename complex_t::value_type;
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    return Mat2<complex_t>{complex_t{half, half}, complex_t{half, -half}, complex_t{half, -half},
+                           complex_t{half, half}};
+}
+
+template <typename complex_t>
+constexpr Mat2<complex_t> SXdagMatrix1Q() {
+    using calc_t = typename complex_t::value_type;
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    return Mat2<complex_t>{complex_t{half, -half}, complex_t{half, half}, complex_t{half, half},
+                           complex_t{half, -half}};
+}
+
+template <typename complex_t>
+inline Mat2<complex_t> ToMat2(const tensor::Matrix& m) {
+    const auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
+    // tensor::Matrix is row-major in nested vector form: mat[row][col]
+    return Mat2<complex_t>{mat[0][0], mat[0][1], mat[1][0], mat[1][1]};
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> ToMat4(const tensor::Matrix& m) {
+    const auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
+    Mat4<complex_t> out{};
+    for (size_t r = 0; r < 4; ++r) {
+        for (size_t c = 0; c < 4; ++c) {
+            out[r * 4 + c] = mat[r][c];
+        }
+    }
+    return out;
+}
+
+template <typename calc_t, typename gate_t>
+inline calc_t GetSingleCoeffValue(const gate_t* gate, const parameter::ParameterResolver& pr) {
+    return tensor::ops::cpu::to_vector<calc_t>(gate->GetCoeffs()[0].Combination(pr).const_value)[0];
+}
+
+template <typename complex_t>
+inline Mat2<complex_t> GateMatrix1QParam(const std::shared_ptr<BasicGate>& gate,
+                                         const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
     const auto id = gate->GetID();
     switch (id) {
-        case GateID::I:
-            return Eye2<complex_t>();
-        case GateID::X:
-            return Mat2<complex_t>{complex_t{0, 0}, complex_t{1, 0}, complex_t{1, 0}, complex_t{0, 0}};
-        case GateID::Y:
-            return Mat2<complex_t>{complex_t{0, 0}, -I, I, complex_t{0, 0}};
-        case GateID::Z:
-            return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{-1, 0}};
-        case GateID::H:
-            return Mat2<complex_t>{complex_t{inv_sqrt2, 0}, complex_t{inv_sqrt2, 0}, complex_t{inv_sqrt2, 0},
-                                   complex_t{-inv_sqrt2, 0}};
-        case GateID::S:
-            return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, I};
-        case GateID::Sdag:
-            return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, -I};
-        case GateID::T: {
-            calc_t pi = static_cast<calc_t>(M_PI);
-            complex_t phase = std::exp(I * (pi / static_cast<calc_t>(4)));
-            return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, phase};
-        }
-        case GateID::Tdag: {
-            calc_t pi = static_cast<calc_t>(M_PI);
-            complex_t phase = std::exp(-I * (pi / static_cast<calc_t>(4)));
-            return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, phase};
-        }
-        case GateID::SX: {
-            // SX = sqrt(X)
-            complex_t a{static_cast<calc_t>(0.5), static_cast<calc_t>(0.5)};
-            complex_t b{static_cast<calc_t>(0.5), static_cast<calc_t>(-0.5)};
-            return Mat2<complex_t>{a, b, b, a};
-        }
-        case GateID::SXdag: {
-            complex_t a{static_cast<calc_t>(0.5), static_cast<calc_t>(-0.5)};
-            complex_t b{static_cast<calc_t>(0.5), static_cast<calc_t>(0.5)};
-            return Mat2<complex_t>{a, b, b, a};
-        }
         case GateID::RX: {
-            auto g = static_cast<RXGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
+            const auto val = GetSingleCoeffValue<calc_t>(static_cast<RXGate*>(gate.get()), pr);
+            const calc_t c = std::cos(val / static_cast<calc_t>(2));
+            const calc_t s = std::sin(val / static_cast<calc_t>(2));
             return Mat2<complex_t>{complex_t{c, 0}, -I * s, -I * s, complex_t{c, 0}};
         }
         case GateID::RY: {
-            auto g = static_cast<RYGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
+            const auto val = GetSingleCoeffValue<calc_t>(static_cast<RYGate*>(gate.get()), pr);
+            const calc_t c = std::cos(val / static_cast<calc_t>(2));
+            const calc_t s = std::sin(val / static_cast<calc_t>(2));
             return Mat2<complex_t>{complex_t{c, 0}, complex_t{-s, 0}, complex_t{s, 0}, complex_t{c, 0}};
         }
         case GateID::RZ: {
-            auto g = static_cast<RZGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            complex_t e0 = std::exp(-I * (val / static_cast<calc_t>(2)));
-            complex_t e1 = std::exp(I * (val / static_cast<calc_t>(2)));
+            const auto val = GetSingleCoeffValue<calc_t>(static_cast<RZGate*>(gate.get()), pr);
+            const complex_t e0 = std::exp(-I * (val / static_cast<calc_t>(2)));
+            const complex_t e1 = std::exp(I * (val / static_cast<calc_t>(2)));
             return Mat2<complex_t>{e0, complex_t{0, 0}, complex_t{0, 0}, e1};
         }
         case GateID::PS: {
-            auto g = static_cast<PSGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            complex_t e1 = std::exp(I * val);
+            const auto val = GetSingleCoeffValue<calc_t>(static_cast<PSGate*>(gate.get()), pr);
+            const complex_t e1 = std::exp(I * val);
             return Mat2<complex_t>{complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, e1};
         }
         case GateID::GP: {
-            auto g = static_cast<GPGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            complex_t e = std::exp(-I * val);
+            const auto val = GetSingleCoeffValue<calc_t>(static_cast<GPGate*>(gate.get()), pr);
+            const complex_t e = std::exp(-I * val);
             return Mat2<complex_t>{e, complex_t{0, 0}, complex_t{0, 0}, e};
         }
         case GateID::U3: {
@@ -254,9 +323,7 @@ inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, cons
                 auto lambda = g->GetLambda().Combination(pr).const_value;
                 m = U3Matrix(theta, phi, lambda);
             }
-            auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
-            // tensor::Matrix is row-major in nested vector form: mat[row][col]
-            return Mat2<complex_t>{mat[0][0], mat[0][1], mat[1][0], mat[1][1]};
+            return ToMat2<complex_t>(m);
         }
         case GateID::Rn: {
             auto g = static_cast<Rn*>(gate.get());
@@ -269,8 +336,7 @@ inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, cons
                 auto gamma = g->GetGamma().Combination(pr).const_value;
                 m = RnMatrix(alpha, beta, gamma);
             }
-            auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
-            return Mat2<complex_t>{mat[0][0], mat[0][1], mat[1][0], mat[1][1]};
+            return ToMat2<complex_t>(m);
         }
         case GateID::CUSTOM: {
             auto g = static_cast<CustomGate*>(gate.get());
@@ -281,7 +347,7 @@ inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, cons
                 auto val = tensor::ops::cpu::to_vector<double>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
                 m = g->GetMatrixWrapper()(val);
             }
-            auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
+            const auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
             if (mat.size() != 2 || mat[0].size() != 2) {
                 throw std::runtime_error("mqmps only supports 1-qubit CUSTOM gate in this path.");
             }
@@ -293,242 +359,279 @@ inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, cons
 }
 
 template <typename complex_t>
+inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
+                                    bool diff) {
+    if (diff) {
+        throw std::runtime_error("mqmps does not support applying differential gates yet.");
+    }
+    const auto id = gate->GetID();
+    switch (id) {
+        case GateID::I:
+            return Eye2<complex_t>();
+        case GateID::X:
+            return XMatrix1Q<complex_t>();
+        case GateID::Y:
+            return YMatrix1Q<complex_t>();
+        case GateID::Z:
+            return ZMatrix1Q<complex_t>();
+        case GateID::H:
+            return HMatrix1Q<complex_t>();
+        case GateID::S:
+            return SMatrix1Q<complex_t>();
+        case GateID::Sdag:
+            return SdagMatrix1Q<complex_t>();
+        case GateID::T:
+            return TMatrix1Q<complex_t>();
+        case GateID::Tdag:
+            return TdagMatrix1Q<complex_t>();
+        case GateID::SX:
+            return SXMatrix1Q<complex_t>();
+        case GateID::SXdag:
+            return SXdagMatrix1Q<complex_t>();
+        default:
+            return GateMatrix1QParam<complex_t>(gate, pr);
+    }
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> ISWAPMatrix2Q(const ISWAPGate* gate) {
+    const complex_t I{0, 1};
+    const complex_t phase = gate->Daggered() ? -I : I;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{1, 0};
+    out[6] = phase;
+    out[9] = phase;
+    out[15] = complex_t{1, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> SWAPalphaMatrix2Q(const SWAPalphaGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const complex_t e = std::exp(I * (static_cast<calc_t>(M_PI) * val));
+    const complex_t a = (complex_t{1, 0} + e) / static_cast<calc_t>(2);
+    const complex_t b = (complex_t{1, 0} - e) / static_cast<calc_t>(2);
+    Mat4<complex_t> out{};
+    out[0] = complex_t{1, 0};
+    out[5] = a;
+    out[6] = b;
+    out[9] = b;
+    out[10] = a;
+    out[15] = complex_t{1, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RxxMatrix2Q(const RxxGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val / static_cast<calc_t>(2));
+    const calc_t s = std::sin(val / static_cast<calc_t>(2));
+    const complex_t is = -I * s;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{c, 0};
+    out[3] = is;
+    out[5] = complex_t{c, 0};
+    out[6] = is;
+    out[9] = is;
+    out[10] = complex_t{c, 0};
+    out[12] = is;
+    out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RyyMatrix2Q(const RyyGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val / static_cast<calc_t>(2));
+    const calc_t s = std::sin(val / static_cast<calc_t>(2));
+    const complex_t is = -I * s;
+    Mat4<complex_t> out{};
+    // exp(-i θ/2 Y⊗Y)
+    out[0] = complex_t{c, 0};
+    out[3] = -is;
+    out[5] = complex_t{c, 0};
+    out[6] = is;
+    out[9] = is;
+    out[10] = complex_t{c, 0};
+    out[12] = -is;
+    out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RzzMatrix2Q(const RzzGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const complex_t e0 = std::exp(-I * (val / static_cast<calc_t>(2)));
+    const complex_t e1 = std::exp(I * (val / static_cast<calc_t>(2)));
+    Mat4<complex_t> out{};
+    out[0] = e0;
+    out[5] = e1;
+    out[10] = e1;
+    out[15] = e0;
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RxyMatrix2Q(const RxyGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val / static_cast<calc_t>(2));
+    const calc_t s = std::sin(val / static_cast<calc_t>(2));
+    Mat4<complex_t> out{};
+    out[0] = complex_t{c, 0};
+    out[3] = complex_t{-s, 0};
+    out[5] = complex_t{c, 0};
+    out[6] = complex_t{-s, 0};
+    out[9] = complex_t{s, 0};
+    out[10] = complex_t{c, 0};
+    out[12] = complex_t{s, 0};
+    out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RxzMatrix2Q(const RxzGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val / static_cast<calc_t>(2));
+    const calc_t s = std::sin(val / static_cast<calc_t>(2));
+    Mat4<complex_t> out{};
+    out[0] = complex_t{c, 0};
+    out[1] = -I * s;
+    out[4] = -I * s;
+    out[5] = complex_t{c, 0};
+    out[10] = complex_t{c, 0};
+    out[11] = I * s;
+    out[14] = I * s;
+    out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RyzMatrix2Q(const RyzGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val / static_cast<calc_t>(2));
+    const calc_t s = std::sin(val / static_cast<calc_t>(2));
+    Mat4<complex_t> out{};
+    out[0] = complex_t{c, 0};
+    out[1] = complex_t{-s, 0};
+    out[4] = complex_t{s, 0};
+    out[5] = complex_t{c, 0};
+    out[10] = complex_t{c, 0};
+    out[11] = complex_t{s, 0};
+    out[14] = complex_t{-s, 0};
+    out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> GivensMatrix2Q(const GivensGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val);
+    const calc_t s = std::sin(val);
+    Mat4<complex_t> out{};
+    out[0] = complex_t{1, 0};
+    out[5] = complex_t{c, 0};
+    out[6] = complex_t{-s, 0};
+    out[9] = complex_t{s, 0};
+    out[10] = complex_t{c, 0};
+    out[15] = complex_t{1, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> FSimMatrix2Q(const FSim* gate, const parameter::ParameterResolver& pr) {
+    tensor::Matrix m;
+    if (!gate->Parameterized()) {
+        m = gate->GetBaseMatrix();
+    } else {
+        auto theta = gate->GetTheta().Combination(pr).const_value;
+        auto phi = gate->GetPhi().Combination(pr).const_value;
+        m = FSimMatrix(theta, phi);
+    }
+    return ToMat4<complex_t>(m);
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> CustomMatrix2Q(const CustomGate* gate, const parameter::ParameterResolver& pr) {
+    tensor::Matrix m;
+    if (!gate->Parameterized()) {
+        m = gate->GetBaseMatrix();
+    } else {
+        auto val = tensor::ops::cpu::to_vector<double>(gate->GetCoeffs()[0].Combination(pr).const_value)[0];
+        m = gate->GetMatrixWrapper()(val);
+    }
+    const auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
+    if (mat.size() != 4 || mat[0].size() != 4) {
+        throw std::runtime_error("mqmps only supports 2-qubit CUSTOM gate in this path.");
+    }
+    return ToMat4<complex_t>(m);
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> CustomTwoParamMatrix2Q(const CustomTwoParamGate* gate, const parameter::ParameterResolver& pr) {
+    tensor::Matrix m;
+    if (!gate->Parameterized()) {
+        m = gate->GetBaseMatrix();
+    } else {
+        const auto coeffs = gate->GetCoeffs();
+        const auto p1 = tensor::ops::cpu::to_vector<double>(coeffs[0].Combination(pr).const_value)[0];
+        const auto p2 = tensor::ops::cpu::to_vector<double>(coeffs[1].Combination(pr).const_value)[0];
+        m = gate->GetMatrixWrapper()(p1, p2);
+    }
+    const auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
+    if (mat.size() != 4 || mat[0].size() != 4) {
+        throw std::runtime_error("mqmps only supports 2-qubit CUSTOM_TWO_PARAM gate in this path.");
+    }
+    return ToMat4<complex_t>(m);
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> GateMatrix2QObjOrder12(const std::shared_ptr<BasicGate>& gate,
                                               const parameter::ParameterResolver& pr, bool diff) {
     // Returns matrix in basis |00>,|01>,|10>,|11> with qubit order (obj[1], obj[0]) for 2-object-qubit gates.
     if (diff) {
         throw std::runtime_error("mqmps does not support applying differential gates yet.");
     }
-    using calc_t = typename complex_t::value_type;
-    constexpr complex_t I{0, 1};
     const auto id = gate->GetID();
     switch (id) {
         case GateID::SWAP:
             return SwapMatrix<complex_t>();
-        case GateID::ISWAP: {
-            bool daggered = static_cast<ISWAPGate*>(gate.get())->Daggered();
-            complex_t phase = daggered ? -I : I;
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{1, 0};
-            out[6] = phase;
-            out[9] = phase;
-            out[15] = complex_t{1, 0};
-            return out;
-        }
-        case GateID::SWAPalpha: {
-            auto g = static_cast<SWAPalphaGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            complex_t e = std::exp(I * (static_cast<calc_t>(M_PI) * val));
-            complex_t a = (complex_t{1, 0} + e) / static_cast<calc_t>(2);
-            complex_t b = (complex_t{1, 0} - e) / static_cast<calc_t>(2);
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{1, 0};
-            out[5] = a;
-            out[6] = b;
-            out[9] = b;
-            out[10] = a;
-            out[15] = complex_t{1, 0};
-            return out;
-        }
-        case GateID::Rxx: {
-            auto g = static_cast<RxxGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
-            complex_t is = -I * s;
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{c, 0};
-            out[3] = is;
-            out[5] = complex_t{c, 0};
-            out[6] = is;
-            out[9] = is;
-            out[10] = complex_t{c, 0};
-            out[12] = is;
-            out[15] = complex_t{c, 0};
-            return out;
-        }
-        case GateID::Ryy: {
-            auto g = static_cast<RyyGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
-            complex_t is = -I * s;
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            // exp(-i θ/2 Y⊗Y)
-            out[0] = complex_t{c, 0};
-            out[3] = -is;
-            out[5] = complex_t{c, 0};
-            out[6] = is;
-            out[9] = is;
-            out[10] = complex_t{c, 0};
-            out[12] = -is;
-            out[15] = complex_t{c, 0};
-            return out;
-        }
-        case GateID::Rzz: {
-            auto g = static_cast<RzzGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            complex_t e0 = std::exp(-I * (val / static_cast<calc_t>(2)));
-            complex_t e1 = std::exp(I * (val / static_cast<calc_t>(2)));
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = e0;
-            out[5] = e1;
-            out[10] = e1;
-            out[15] = e0;
-            return out;
-        }
-        case GateID::Rxy: {
-            auto g = static_cast<RxyGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{c, 0};
-            out[3] = complex_t{-s, 0};
-            out[5] = complex_t{c, 0};
-            out[6] = complex_t{-s, 0};
-            out[9] = complex_t{s, 0};
-            out[10] = complex_t{c, 0};
-            out[12] = complex_t{s, 0};
-            out[15] = complex_t{c, 0};
-            return out;
-        }
-        case GateID::Rxz: {
-            auto g = static_cast<RxzGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{c, 0};
-            out[1] = -I * s;
-            out[4] = -I * s;
-            out[5] = complex_t{c, 0};
-            out[10] = complex_t{c, 0};
-            out[11] = I * s;
-            out[14] = I * s;
-            out[15] = complex_t{c, 0};
-            return out;
-        }
-        case GateID::Ryz: {
-            auto g = static_cast<RyzGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val / static_cast<calc_t>(2));
-            calc_t s = std::sin(val / static_cast<calc_t>(2));
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{c, 0};
-            out[1] = complex_t{-s, 0};
-            out[4] = complex_t{s, 0};
-            out[5] = complex_t{c, 0};
-            out[10] = complex_t{c, 0};
-            out[11] = complex_t{s, 0};
-            out[14] = complex_t{-s, 0};
-            out[15] = complex_t{c, 0};
-            return out;
-        }
-        case GateID::Givens: {
-            auto g = static_cast<GivensGate*>(gate.get());
-            auto val = tensor::ops::cpu::to_vector<calc_t>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            calc_t c = std::cos(val);
-            calc_t s = std::sin(val);
-            Mat4<complex_t> out{};
-            for (size_t i = 0; i < 16; ++i) {
-                out[i] = complex_t{0, 0};
-            }
-            out[0] = complex_t{1, 0};
-            out[5] = complex_t{c, 0};
-            out[6] = complex_t{-s, 0};
-            out[9] = complex_t{s, 0};
-            out[10] = complex_t{c, 0};
-            out[15] = complex_t{1, 0};
-            return out;
-        }
-        case GateID::FSim: {
-            auto fsim = static_cast<FSim*>(gate.get());
-            tensor::Matrix m;
-            if (!fsim->Parameterized()) {
-                m = fsim->GetBaseMatrix();
-            } else {
-                auto theta = fsim->GetTheta().Combination(pr).const_value;
-                auto phi = fsim->GetPhi().Combination(pr).const_value;
-                m = FSimMatrix(theta, phi);
-            }
-            auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
-            Mat4<complex_t> out{};
-            for (size_t r = 0; r < 4; ++r) {
-                for (size_t c = 0; c < 4; ++c) {
-                    out[r * 4 + c] = mat[r][c];
-                }
-            }
-            return out;
-        }
-        case GateID::CUSTOM: {
-            auto g = static_cast<CustomGate*>(gate.get());
-            tensor::Matrix m;
-            if (!g->Parameterized()) {
-                m = g->GetBaseMatrix();
-            } else {
-                auto val = tensor::ops::cpu::to_vector<double>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-                m = g->GetMatrixWrapper()(val);
-            }
-            auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
-            if (mat.size() != 4 || mat[0].size() != 4) {
-                throw std::runtime_error("mqmps only supports 2-qubit CUSTOM gate in this path.");
-            }
-            Mat4<complex_t> out{};
-            for (size_t r = 0; r < 4; ++r) {
-                for (size_t c = 0; c < 4; ++c) {
-                    out[r * 4 + c] = mat[r][c];
-                }
-            }
-            return out;
-        }
-        case GateID::CUSTOM_TWO_PARAM: {
-            auto g = static_cast<CustomTwoParamGate*>(gate.get());
-            tensor::Matrix m;
-            if (!g->Parameterized()) {
-                m = g->GetBaseMatrix();
-            } else {
-                auto coeffs = g->GetCoeffs();
-                auto p1 = tensor::ops::cpu::to_vector<double>(coeffs[0].Combination(pr).const_value)[0];
-                auto p2 = tensor::ops::cpu::to_vector<double>(coeffs[1].Combination(pr).const_value)[0];
-                m = g->GetMatrixWrapper()(p1, p2);
-            }
-            auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
-            if (mat.size() != 4 || mat[0].size() != 4) {
-                throw std::runtime_error("mqmps only supports 2-qubit CUSTOM_TWO_PARAM gate in this path.");
-            }
-            Mat4<complex_t> out{};
-            for (size_t r = 0; r < 4; ++r) {
-                for (size_t c = 0; c < 4; ++c) {
-                    out[r * 4 + c] = mat[r][c];
-                }
-            }
-            return out;
-        }
+        case GateID::ISWAP:
+            return ISWAPMatrix2Q<complex_t>(static_cast<ISWAPGate*>(gate.get()));
+        case GateID::SWAPalpha:
+            return SWAPalphaMatrix2Q<complex_t>(static_cast<SWAPalphaGate*>(gate.get()), pr);
+        case GateID::Rxx:
+            return RxxMatrix2Q<complex_t>(static_cast<RxxGate*>(gate.get()), pr);
+        case GateID::Ryy:
+            return RyyMatrix2Q<complex_t>(static_cast<RyyGate*>(gate.get()), pr);
+        case GateID::Rzz:
+            return RzzMatrix2Q<complex_t>(static_cast<RzzGate*>(gate.get()), pr);
+        case GateID::Rxy:
+            return RxyMatrix2Q<complex_t>(static_cast<RxyGate*>(gate.get()), pr);
+        case GateID::Rxz:
+            return RxzMatrix2Q<complex_t>(static_cast<RxzGate*>(gate.get()), pr);
+        case GateID::Ryz:
+            return RyzMatrix2Q<complex_t>(static_cast<RyzGate*>(gate.get()), pr);
+        case GateID::Givens:
+            return GivensMatrix2Q<complex_t>(static_cast<GivensGate*>(gate.get()), pr);
+        case GateID::FSim:
+            return FSimMatrix2Q<complex_t>(static_cast<FSim*>(gate.get()), pr);
+        case GateID::CUSTOM:
+            return CustomMatrix2Q<complex_t>(static_cast<CustomGate*>(gate.get()), pr);
+        case GateID::CUSTOM_TWO_PARAM:
+            return CustomTwoParamMatrix2Q<complex_t>(static_cast<CustomTwoParamGate*>(gate.get()), pr);
         default:
             throw std::runtime_error(fmt::format("mqmps: unsupported 2-qubit gate id {}.", id));
     }
@@ -578,6 +681,401 @@ inline std::vector<Stage<complex_t>> ScheduleUnitary(
     }
     return stages;
 }
+
+template <typename complex_t>
+class MPSCompileState {
+ public:
+    using circuit_t = std::vector<std::shared_ptr<BasicGate>>;
+
+    MPSCompileState(qbit_t n_qubits, const parameter::ParameterResolver& pr, bool diff,
+                    const qbits_t& pos_of_logical_in, const qbits_t& logical_at_pos_in)
+        : n_qubits_(n_qubits)
+        , pr_(pr)
+        , diff_(diff)
+        , pos_of_logical_(pos_of_logical_in)
+        , logical_at_pos_(logical_at_pos_in)
+        , pending1_(static_cast<size_t>(n_qubits_), Eye2<complex_t>())
+        , pending1_active_(static_cast<size_t>(n_qubits_), false)
+        , pending2_(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), Eye4<complex_t>())
+        , pending2_active_(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), false) {
+        if (pos_of_logical_in.size() != static_cast<size_t>(n_qubits_)
+            || logical_at_pos_in.size() != static_cast<size_t>(n_qubits_)) {
+            throw std::runtime_error("mqmps compiler: invalid mapping size.");
+        }
+    }
+
+    MPSProgram<complex_t> Compile(const circuit_t& circ) {
+        for (const auto& g : circ) {
+            ApplyGate(g);
+        }
+        Finalize();
+
+        MPSProgram<complex_t> program;
+        program.stages = std::move(program_stages_);
+        program.pos_of_logical_final = std::move(pos_of_logical_);
+        program.logical_at_pos_final = std::move(logical_at_pos_);
+        return program;
+    }
+
+ private:
+    using Mat2 = detail::Mat2<complex_t>;
+    using Mat4 = detail::Mat4<complex_t>;
+    using UnitOp = std::variant<Op1Q<complex_t>, Op2Q<complex_t>>;
+
+    void ApplyGate(const std::shared_ptr<BasicGate>& g) {
+        const auto id = g->GetID();
+        if (id == GateID::I) {
+            return;
+        }
+        if (TryApplyMeasurement(g, id)) {
+            return;
+        }
+        if (seen_measure_) {
+            throw std::runtime_error("mqmps: mid-circuit measurement is not supported.");
+        }
+        if (TryApplyPauliString(g, id)) {
+            return;
+        }
+        if (TryApplySingleQubitGate(g)) {
+            return;
+        }
+        ApplyTwoQubitGate(g, id);
+    }
+
+    bool TryApplyMeasurement(const std::shared_ptr<BasicGate>& g, GateID id) {
+        if (id != GateID::M) {
+            return false;
+        }
+        // Measurement is only supported at the end of the circuit.
+        if (!seen_measure_) {
+            FlushAllPending();
+            EmitCurrentSegmentStages();
+            seen_measure_ = true;
+        }
+        auto mg = static_cast<MeasureGate*>(g.get());
+        const auto q = g->GetObjQubits().at(0);
+        const auto pos = pos_of_logical_.at(static_cast<size_t>(q));
+        measure_ops_.push_back(OpMeasure{mg->Name(), pos, mg->WillReset(), mg->GetRestTo()});
+        return true;
+    }
+
+    bool TryApplyPauliString(const std::shared_ptr<BasicGate>& g, GateID id) {
+        if (id != GateID::PauliString) {
+            return false;
+        }
+        auto ps = static_cast<PauliString*>(g.get());
+        if (!ps->GetCtrlQubits().empty()) {
+            throw std::runtime_error("mqmps: controlled PauliString is not supported.");
+        }
+        const auto mask = ps->GetPauliMask();
+        for (qbit_t q = 0; q < n_qubits_; ++q) {
+            char p = '\0';
+            if ((mask.mask_x >> q) & 1U) {
+                p = 'X';
+            }
+            if ((mask.mask_y >> q) & 1U) {
+                p = 'Y';
+            }
+            if ((mask.mask_z >> q) & 1U) {
+                p = 'Z';
+            }
+            if (p == '\0') {
+                continue;
+            }
+            std::shared_ptr<BasicGate> local;
+            switch (p) {
+                case 'X':
+                    local = std::make_shared<XGate>(qbits_t{q}, qbits_t{});
+                    break;
+                case 'Y':
+                    local = std::make_shared<YGate>(qbits_t{q}, qbits_t{});
+                    break;
+                default:
+                    local = std::make_shared<ZGate>(qbits_t{q}, qbits_t{});
+                    break;
+            }
+            const auto u = GateMatrix1Q<complex_t>(local, pr_, diff_);
+            AbsorbSingleQubitOnPos(pos_of_logical_.at(static_cast<size_t>(q)), u);
+        }
+        return true;
+    }
+
+    bool TryApplySingleQubitGate(const std::shared_ptr<BasicGate>& g) {
+        const auto& obj = g->GetObjQubits();
+        const auto& ctrl = g->GetCtrlQubits();
+        const auto total_qubits = obj.size() + ctrl.size();
+        if (total_qubits != 1 || !ctrl.empty()) {
+            return false;
+        }
+        const auto q = obj.at(0);
+        const auto pos = pos_of_logical_.at(static_cast<size_t>(q));
+        const auto u = GateMatrix1Q<complex_t>(g, pr_, diff_);
+        AbsorbSingleQubitOnPos(pos, u);
+        return true;
+    }
+
+    void ApplyTwoQubitGate(const std::shared_ptr<BasicGate>& g, GateID id) {
+        const auto& obj = g->GetObjQubits();
+        const auto& ctrl = g->GetCtrlQubits();
+        const auto total_qubits = obj.size() + ctrl.size();
+        if (total_qubits != 2) {
+            throw std::runtime_error(
+                fmt::format("mqmps: only 1Q/2Q gates supported, got id {} with {} qubits.", id, total_qubits));
+        }
+
+        qbit_t q_first = -1;
+        qbit_t q_second = -1;
+        Mat4 u_qfirst_qsecond{};
+
+        if (obj.size() == 2 && ctrl.empty()) {
+            // MindQuantum convention: matrix is for (obj[1], obj[0]).
+            q_first = obj.at(1);
+            q_second = obj.at(0);
+            u_qfirst_qsecond = GateMatrix2QObjOrder12<complex_t>(g, pr_, diff_);
+        } else if (obj.size() == 1 && ctrl.size() == 1) {
+            // Controlled single-qubit gate: build matrix in (control, target) order.
+            q_first = ctrl.at(0);
+            q_second = obj.at(0);
+            u_qfirst_qsecond = ControlledSingleQubitGateMatrix(id, g, q_second);
+        } else {
+            throw std::runtime_error("mqmps: unsupported 2-qubit gate form.");
+        }
+
+        // Route the two logical qubits to be adjacent.
+        RouteToAdjacent(q_first, q_second);
+
+        // Determine the bond and physical ordering.
+        const auto p_first = pos_of_logical_.at(static_cast<size_t>(q_first));
+        const auto p_second = pos_of_logical_.at(static_cast<size_t>(q_second));
+        const auto bond = std::min(p_first, p_second);
+        const auto left_pos = bond;
+        const auto right_pos = bond + 1;
+        const auto q_left = logical_at_pos_.at(static_cast<size_t>(left_pos));
+        const auto q_right = logical_at_pos_.at(static_cast<size_t>(right_pos));
+
+        Mat4 u_lr = u_qfirst_qsecond;
+        if (q_left == q_first && q_right == q_second) {
+            // ok
+        } else if (q_left == q_second && q_right == q_first) {
+            u_lr = SwapQubits(u_lr);
+        } else {
+            throw std::runtime_error("mqmps: internal routing error (qubits not on the expected bond).");
+        }
+
+        ApplyAdjacentTwoQubitOnBond(bond, u_lr);
+    }
+
+    Mat4 ControlledSingleQubitGateMatrix(GateID id, const std::shared_ptr<BasicGate>& g, qbit_t target) {
+        const auto bare = MakeBareSingleQubitGate(id, g, target);
+        const auto u_target = GateMatrix1Q<complex_t>(bare, pr_, diff_);
+        return detail::ControlledMatrix<complex_t>(u_target);
+    }
+
+    std::shared_ptr<BasicGate> MakeBareSingleQubitGate(GateID id, const std::shared_ptr<BasicGate>& g, qbit_t target) {
+        switch (id) {
+            case GateID::X:
+                return std::make_shared<XGate>(qbits_t{target}, qbits_t{});
+            case GateID::Y:
+                return std::make_shared<YGate>(qbits_t{target}, qbits_t{});
+            case GateID::Z:
+                return std::make_shared<ZGate>(qbits_t{target}, qbits_t{});
+            case GateID::H:
+                return std::make_shared<HGate>(qbits_t{target}, qbits_t{});
+            case GateID::S:
+                return std::make_shared<SGate>(qbits_t{target}, qbits_t{});
+            case GateID::Sdag:
+                return std::make_shared<SdagGate>(qbits_t{target}, qbits_t{});
+            case GateID::T:
+                return std::make_shared<TGate>(qbits_t{target}, qbits_t{});
+            case GateID::Tdag:
+                return std::make_shared<TdagGate>(qbits_t{target}, qbits_t{});
+            case GateID::SX:
+                return std::make_shared<SXGate>(qbits_t{target}, qbits_t{});
+            case GateID::SXdag:
+                return std::make_shared<SXdagGate>(qbits_t{target}, qbits_t{});
+            case GateID::RX: {
+                auto gg = static_cast<RXGate*>(g.get());
+                return std::make_shared<RXGate>(gg->GetCoeffs()[0], qbits_t{target}, qbits_t{});
+            }
+            case GateID::RY: {
+                auto gg = static_cast<RYGate*>(g.get());
+                return std::make_shared<RYGate>(gg->GetCoeffs()[0], qbits_t{target}, qbits_t{});
+            }
+            case GateID::RZ: {
+                auto gg = static_cast<RZGate*>(g.get());
+                return std::make_shared<RZGate>(gg->GetCoeffs()[0], qbits_t{target}, qbits_t{});
+            }
+            case GateID::PS: {
+                auto gg = static_cast<PSGate*>(g.get());
+                return std::make_shared<PSGate>(gg->GetCoeffs()[0], qbits_t{target}, qbits_t{});
+            }
+            case GateID::GP: {
+                auto gg = static_cast<GPGate*>(g.get());
+                return std::make_shared<GPGate>(gg->GetCoeffs()[0], qbits_t{target}, qbits_t{});
+            }
+            default:
+                throw std::runtime_error(fmt::format("mqmps: controlled gate id {} not supported.", id));
+        }
+    }
+
+    void FlushPending1Pos(qbit_t pos) {
+        if (pos < 0 || pos >= n_qubits_) {
+            return;
+        }
+        const auto idx = static_cast<size_t>(pos);
+        if (!pending1_active_[idx]) {
+            return;
+        }
+        unit_ops_segment_.emplace_back(Op1Q<complex_t>{pos, pending1_[idx]});
+        pending1_[idx] = Eye2<complex_t>();
+        pending1_active_[idx] = false;
+    }
+
+    void FlushPending2Bond(qbit_t bond) {
+        if (bond < 0 || bond >= n_qubits_ - 1) {
+            return;
+        }
+        const auto idx = static_cast<size_t>(bond);
+        if (!pending2_active_[idx]) {
+            return;
+        }
+        unit_ops_segment_.emplace_back(Op2Q<complex_t>{bond, pending2_[idx]});
+        pending2_[idx] = Eye4<complex_t>();
+        pending2_active_[idx] = false;
+    }
+
+    void FlushPendingForSites(qbit_t left, qbit_t right) {
+        FlushPending1Pos(left);
+        FlushPending1Pos(right);
+        FlushPending2Bond(left - 1);
+        FlushPending2Bond(left);
+        FlushPending2Bond(right);
+    }
+
+    void FlushConflictingBondsForTwoQ(qbit_t bond) {
+        FlushPending2Bond(bond - 1);
+        FlushPending2Bond(bond + 1);
+    }
+
+    void FlushAllPending() {
+        for (qbit_t b = 0; b < n_qubits_ - 1; ++b) {
+            FlushPending2Bond(b);
+        }
+        for (qbit_t p = 0; p < n_qubits_; ++p) {
+            FlushPending1Pos(p);
+        }
+    }
+
+    void EmitCurrentSegmentStages() {
+        if (unit_ops_segment_.empty()) {
+            return;
+        }
+        const auto stages = ScheduleUnitary(unit_ops_segment_, n_qubits_);
+        program_stages_.insert(program_stages_.end(), stages.begin(), stages.end());
+        unit_ops_segment_.clear();
+    }
+
+    void SwapPositions(qbit_t bond) {
+        // Ensure no pending ops touch this bond.
+        FlushPendingForSites(bond, bond + 1);
+        // Emit SWAP as a standalone 2Q op.
+        unit_ops_segment_.emplace_back(Op2Q<complex_t>{bond, SwapMatrix<complex_t>()});
+
+        // Update mapping.
+        const auto lq = logical_at_pos_.at(static_cast<size_t>(bond));
+        const auto rq = logical_at_pos_.at(static_cast<size_t>(bond + 1));
+        std::swap(logical_at_pos_.at(static_cast<size_t>(bond)), logical_at_pos_.at(static_cast<size_t>(bond + 1)));
+        pos_of_logical_.at(static_cast<size_t>(lq)) = bond + 1;
+        pos_of_logical_.at(static_cast<size_t>(rq)) = bond;
+    }
+
+    void RouteToAdjacent(qbit_t qa, qbit_t qb) {
+        while (std::abs(pos_of_logical_.at(static_cast<size_t>(qa)) - pos_of_logical_.at(static_cast<size_t>(qb)))
+               > 1) {
+            const auto pa = pos_of_logical_.at(static_cast<size_t>(qa));
+            const auto pb = pos_of_logical_.at(static_cast<size_t>(qb));
+            if (pa < pb) {
+                SwapPositions(pb - 1);
+            } else {
+                SwapPositions(pa - 1);
+            }
+        }
+    }
+
+    void AbsorbSingleQubitOnPos(qbit_t pos, const Mat2& u) {
+        // If a pending 2Q touches this pos, absorb into that bond.
+        if (pos > 0 && pending2_active_.at(static_cast<size_t>(pos - 1))) {
+            const auto b = pos - 1;
+            const auto factor = KronRight(u);  // pos is right site of bond b
+            pending2_.at(static_cast<size_t>(b)) = MatMul(factor, pending2_.at(static_cast<size_t>(b)));
+            pending2_active_.at(static_cast<size_t>(b)) = true;
+            return;
+        }
+        if (pos < n_qubits_ - 1 && pending2_active_.at(static_cast<size_t>(pos))) {
+            const auto b = pos;
+            const auto factor = KronLeft(u);  // pos is left site of bond b
+            pending2_.at(static_cast<size_t>(b)) = MatMul(factor, pending2_.at(static_cast<size_t>(b)));
+            pending2_active_.at(static_cast<size_t>(b)) = true;
+            return;
+        }
+        // Otherwise accumulate into pending 1Q.
+        const auto idx = static_cast<size_t>(pos);
+        pending1_[idx] = MatMul(u, pending1_[idx]);
+        pending1_active_[idx] = true;
+    }
+
+    void ApplyAdjacentTwoQubitOnBond(qbit_t bond, Mat4 u_lr) {
+        // Flush neighbor bonds that would conflict.
+        FlushConflictingBondsForTwoQ(bond);
+
+        // Fold in pending 1Q gates on the two sites.
+        const auto left = bond;
+        const auto right = bond + 1;
+
+        const auto& u_left = pending1_.at(static_cast<size_t>(left));
+        const auto& u_right = pending1_.at(static_cast<size_t>(right));
+        const auto kron_lr = Kron(u_left, u_right);
+
+        pending1_.at(static_cast<size_t>(left)) = Eye2<complex_t>();
+        pending1_.at(static_cast<size_t>(right)) = Eye2<complex_t>();
+        pending1_active_.at(static_cast<size_t>(left)) = false;
+        pending1_active_.at(static_cast<size_t>(right)) = false;
+
+        u_lr = MatMul(u_lr, kron_lr);
+
+        // Accumulate into pending 2Q on that bond.
+        pending2_.at(static_cast<size_t>(bond)) = MatMul(u_lr, pending2_.at(static_cast<size_t>(bond)));
+        pending2_active_.at(static_cast<size_t>(bond)) = true;
+    }
+
+    void Finalize() {
+        FlushAllPending();
+        EmitCurrentSegmentStages();
+        if (!measure_ops_.empty()) {
+            Stage<complex_t> st;
+            st.meas = std::move(measure_ops_);
+            program_stages_.push_back(std::move(st));
+        }
+    }
+
+ private:
+    qbit_t n_qubits_ = 0;
+    const parameter::ParameterResolver& pr_;
+    bool diff_ = false;
+
+    qbits_t pos_of_logical_;
+    qbits_t logical_at_pos_;
+
+    std::vector<Mat2> pending1_;
+    std::vector<uint8_t> pending1_active_;
+    std::vector<Mat4> pending2_;
+    std::vector<uint8_t> pending2_active_;
+
+    std::vector<UnitOp> unit_ops_segment_;
+    std::vector<Stage<complex_t>> program_stages_;
+    std::vector<OpMeasure> measure_ops_;
+    bool seen_measure_ = false;
+};
 }  // namespace mindquantum::sim::mps::compiler::detail
 
 namespace mindquantum::sim::mps::compiler {
@@ -593,390 +1091,8 @@ class MPSCompiler {
     MPSProgram<complex_t> Compile(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                   const qbits_t& pos_of_logical_in, const qbits_t& logical_at_pos_in,
                                   bool diff = false) const {
-        using detail::Eye2;
-        using detail::Eye4;
-        using detail::GateMatrix1Q;
-        using detail::GateMatrix2QObjOrder12;
-        using detail::KronLeft;
-        using detail::KronRight;
-        using detail::Mat2;
-        using detail::Mat4;
-        using detail::MatMul;
-        using detail::ScheduleUnitary;
-        using detail::SwapMatrix;
-        using detail::SwapQubits;
-
-        if (pos_of_logical_in.size() != static_cast<size_t>(n_qubits_)
-            || logical_at_pos_in.size() != static_cast<size_t>(n_qubits_)) {
-            throw std::runtime_error("mqmps compiler: invalid mapping size.");
-        }
-
-        qbits_t pos_of_logical = pos_of_logical_in;
-        qbits_t logical_at_pos = logical_at_pos_in;
-
-        std::vector<Mat2<complex_t>> pending1(static_cast<size_t>(n_qubits_), Eye2<complex_t>());
-        std::vector<uint8_t> pending1_active(static_cast<size_t>(n_qubits_), false);
-        std::vector<Mat4<complex_t>> pending2(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)),
-                                              Eye4<complex_t>());
-        std::vector<uint8_t> pending2_active(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), false);
-
-        using UnitOp = std::variant<Op1Q<complex_t>, Op2Q<complex_t>>;
-        std::vector<Stage<complex_t>> program_stages;
-        std::vector<UnitOp> unit_ops_segment;
-        std::vector<OpMeasure> measure_ops;
-        bool seen_measure = false;
-
-        auto flush_pending1_pos = [&](qbit_t pos) {
-            if (pos < 0 || pos >= n_qubits_) {
-                return;
-            }
-            auto idx = static_cast<size_t>(pos);
-            if (!pending1_active[idx]) {
-                return;
-            }
-            unit_ops_segment.emplace_back(Op1Q<complex_t>{pos, pending1[idx]});
-            pending1[idx] = Eye2<complex_t>();
-            pending1_active[idx] = false;
-        };
-
-        auto flush_pending2_bond = [&](qbit_t bond) {
-            if (bond < 0 || bond >= n_qubits_ - 1) {
-                return;
-            }
-            auto idx = static_cast<size_t>(bond);
-            if (!pending2_active[idx]) {
-                return;
-            }
-            unit_ops_segment.emplace_back(Op2Q<complex_t>{bond, pending2[idx]});
-            pending2[idx] = Eye4<complex_t>();
-            pending2_active[idx] = false;
-        };
-
-        auto flush_pending_for_sites = [&](qbit_t left, qbit_t right) {
-            flush_pending1_pos(left);
-            flush_pending1_pos(right);
-            flush_pending2_bond(left - 1);
-            flush_pending2_bond(left);
-            flush_pending2_bond(right);
-        };
-
-        auto flush_conflicting_bonds_for_2q = [&](qbit_t bond) {
-            flush_pending2_bond(bond - 1);
-            flush_pending2_bond(bond + 1);
-        };
-
-        auto flush_all_pending = [&]() {
-            for (qbit_t b = 0; b < n_qubits_ - 1; ++b) {
-                flush_pending2_bond(b);
-            }
-            for (qbit_t p = 0; p < n_qubits_; ++p) {
-                flush_pending1_pos(p);
-            }
-        };
-
-        auto emit_current_segment_stages = [&]() {
-            if (unit_ops_segment.empty()) {
-                return;
-            }
-            auto stages = ScheduleUnitary(unit_ops_segment, n_qubits_);
-            program_stages.insert(program_stages.end(), stages.begin(), stages.end());
-            unit_ops_segment.clear();
-        };
-
-        auto swap_positions = [&](qbit_t bond) {
-            // Ensure no pending ops touch this bond.
-            flush_pending_for_sites(bond, bond + 1);
-            // Emit SWAP as a standalone 2Q op.
-            unit_ops_segment.emplace_back(Op2Q<complex_t>{bond, SwapMatrix<complex_t>()});
-
-            // Update mapping.
-            auto lq = logical_at_pos.at(static_cast<size_t>(bond));
-            auto rq = logical_at_pos.at(static_cast<size_t>(bond + 1));
-            std::swap(logical_at_pos.at(static_cast<size_t>(bond)), logical_at_pos.at(static_cast<size_t>(bond + 1)));
-            pos_of_logical.at(static_cast<size_t>(lq)) = bond + 1;
-            pos_of_logical.at(static_cast<size_t>(rq)) = bond;
-        };
-
-        auto route_to_adjacent = [&](qbit_t qa, qbit_t qb) {
-            while (std::abs(pos_of_logical.at(static_cast<size_t>(qa)) - pos_of_logical.at(static_cast<size_t>(qb)))
-                   > 1) {
-                auto pa = pos_of_logical.at(static_cast<size_t>(qa));
-                auto pb = pos_of_logical.at(static_cast<size_t>(qb));
-                if (pa < pb) {
-                    swap_positions(pb - 1);
-                } else {
-                    swap_positions(pa - 1);
-                }
-            }
-        };
-
-        auto absorb_1q_on_pos = [&](qbit_t pos, const Mat2<complex_t>& u) {
-            // If a pending 2Q touches this pos, absorb into that bond.
-            if (pos > 0 && pending2_active.at(static_cast<size_t>(pos - 1))) {
-                auto b = pos - 1;
-                auto factor = KronRight(u);  // pos is right site of bond b
-                pending2.at(static_cast<size_t>(b)) = MatMul(factor, pending2.at(static_cast<size_t>(b)));
-                pending2_active.at(static_cast<size_t>(b)) = true;
-                return;
-            }
-            if (pos < n_qubits_ - 1 && pending2_active.at(static_cast<size_t>(pos))) {
-                auto b = pos;
-                auto factor = KronLeft(u);  // pos is left site of bond b
-                pending2.at(static_cast<size_t>(b)) = MatMul(factor, pending2.at(static_cast<size_t>(b)));
-                pending2_active.at(static_cast<size_t>(b)) = true;
-                return;
-            }
-            // Otherwise accumulate into pending 1Q.
-            auto idx = static_cast<size_t>(pos);
-            pending1[idx] = MatMul(u, pending1[idx]);
-            pending1_active[idx] = true;
-        };
-
-        auto apply_adjacent_2q_on_bond = [&](qbit_t bond, Mat4<complex_t> u_lr) {
-            // Flush neighbor bonds that would conflict.
-            flush_conflicting_bonds_for_2q(bond);
-
-            // Fold in pending 1Q gates on the two sites.
-            auto left = bond;
-            auto right = bond + 1;
-            auto kron_lr = detail::Mat4<complex_t>{};
-            // kron(P1_left, P1_right) in basis (left,right)
-            // Build explicitly from the two 2x2 matrices.
-            // kron = [[a00*b, a01*b],[a10*b,a11*b]] with b=P1_right.
-            const auto& a = pending1.at(static_cast<size_t>(left));
-            const auto& b = pending1.at(static_cast<size_t>(right));
-            for (size_t i = 0; i < 16; ++i) {
-                kron_lr[i] = complex_t{0, 0};
-            }
-            // block (0,0)
-            kron_lr[0] = a[0] * b[0];
-            kron_lr[1] = a[0] * b[1];
-            kron_lr[4] = a[0] * b[2];
-            kron_lr[5] = a[0] * b[3];
-            // block (0,1)
-            kron_lr[2] = a[1] * b[0];
-            kron_lr[3] = a[1] * b[1];
-            kron_lr[6] = a[1] * b[2];
-            kron_lr[7] = a[1] * b[3];
-            // block (1,0)
-            kron_lr[8] = a[2] * b[0];
-            kron_lr[9] = a[2] * b[1];
-            kron_lr[12] = a[2] * b[2];
-            kron_lr[13] = a[2] * b[3];
-            // block (1,1)
-            kron_lr[10] = a[3] * b[0];
-            kron_lr[11] = a[3] * b[1];
-            kron_lr[14] = a[3] * b[2];
-            kron_lr[15] = a[3] * b[3];
-
-            pending1.at(static_cast<size_t>(left)) = Eye2<complex_t>();
-            pending1.at(static_cast<size_t>(right)) = Eye2<complex_t>();
-            pending1_active.at(static_cast<size_t>(left)) = false;
-            pending1_active.at(static_cast<size_t>(right)) = false;
-
-            u_lr = MatMul(u_lr, kron_lr);
-
-            // Accumulate into pending 2Q on that bond.
-            pending2.at(static_cast<size_t>(bond)) = MatMul(u_lr, pending2.at(static_cast<size_t>(bond)));
-            pending2_active.at(static_cast<size_t>(bond)) = true;
-        };
-
-        // -------------------------
-        // Main compilation loop
-        // -------------------------
-        for (const auto& g : circ) {
-            const auto id = g->GetID();
-            if (id == GateID::I) {
-                continue;
-            }
-            if (id == GateID::M) {
-                // Measurement is only supported at the end of the circuit.
-                if (!seen_measure) {
-                    flush_all_pending();
-                    emit_current_segment_stages();
-                    seen_measure = true;
-                }
-                auto mg = static_cast<MeasureGate*>(g.get());
-                const auto q = g->GetObjQubits().at(0);
-                const auto pos = pos_of_logical.at(static_cast<size_t>(q));
-                measure_ops.push_back(OpMeasure{mg->Name(), pos, mg->WillReset(), mg->GetRestTo()});
-                continue;
-            }
-            if (seen_measure) {
-                throw std::runtime_error("mqmps: mid-circuit measurement is not supported.");
-            }
-
-            // Multi-qubit pauli string gate: expand to local 1Q ops (no routing, no entanglement).
-            if (id == GateID::PauliString) {
-                auto ps = static_cast<PauliString*>(g.get());
-                if (ps->GetCtrlQubits().size() != 0) {
-                    throw std::runtime_error("mqmps: controlled PauliString is not supported.");
-                }
-                auto mask = ps->GetPauliMask();
-                for (qbit_t q = 0; q < n_qubits_; ++q) {
-                    char p = '\0';
-                    if ((mask.mask_x >> q) & 1U) {
-                        p = 'X';
-                    }
-                    if ((mask.mask_y >> q) & 1U) {
-                        p = 'Y';
-                    }
-                    if ((mask.mask_z >> q) & 1U) {
-                        p = 'Z';
-                    }
-                    if (p == '\0') {
-                        continue;
-                    }
-                    std::shared_ptr<BasicGate> local;
-                    if (p == 'X') {
-                        local = std::make_shared<XGate>(qbits_t{q}, qbits_t{});
-                    } else if (p == 'Y') {
-                        local = std::make_shared<YGate>(qbits_t{q}, qbits_t{});
-                    } else {
-                        local = std::make_shared<ZGate>(qbits_t{q}, qbits_t{});
-                    }
-                    auto u = GateMatrix1Q<complex_t>(local, pr, diff);
-                    absorb_1q_on_pos(pos_of_logical.at(static_cast<size_t>(q)), u);
-                }
-                continue;
-            }
-
-            const auto& obj = g->GetObjQubits();
-            const auto& ctrl = g->GetCtrlQubits();
-            const auto total_qubits = obj.size() + ctrl.size();
-
-            if (total_qubits == 1 && ctrl.empty()) {
-                auto q = obj.at(0);
-                auto pos = pos_of_logical.at(static_cast<size_t>(q));
-                auto u = GateMatrix1Q<complex_t>(g, pr, diff);
-                absorb_1q_on_pos(pos, u);
-                continue;
-            }
-
-            if (total_qubits != 2) {
-                throw std::runtime_error(
-                    fmt::format("mqmps: only 1Q/2Q gates supported, got id {} with {} qubits.", id, total_qubits));
-            }
-
-            // 2-qubit gate handling.
-            qbit_t q_first = -1;
-            qbit_t q_second = -1;
-            Mat4<complex_t> u_qfirst_qsecond{};
-
-            if (obj.size() == 2 && ctrl.empty()) {
-                // MindQuantum convention: matrix is for (obj[1], obj[0]).
-                q_first = obj.at(1);
-                q_second = obj.at(0);
-                u_qfirst_qsecond = GateMatrix2QObjOrder12<complex_t>(g, pr, diff);
-            } else if (obj.size() == 1 && ctrl.size() == 1) {
-                // Controlled single-qubit gate: build matrix in (control, target) order.
-                q_first = ctrl.at(0);
-                q_second = obj.at(0);
-                Mat2<complex_t> u_target = Eye2<complex_t>();
-                std::shared_ptr<BasicGate> bare;
-                switch (id) {
-                    case GateID::X:
-                        bare = std::make_shared<XGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::Y:
-                        bare = std::make_shared<YGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::Z:
-                        bare = std::make_shared<ZGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::H:
-                        bare = std::make_shared<HGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::S:
-                        bare = std::make_shared<SGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::Sdag:
-                        bare = std::make_shared<SdagGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::T:
-                        bare = std::make_shared<TGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::Tdag:
-                        bare = std::make_shared<TdagGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::SX:
-                        bare = std::make_shared<SXGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::SXdag:
-                        bare = std::make_shared<SXdagGate>(qbits_t{q_second}, qbits_t{});
-                        break;
-                    case GateID::RX: {
-                        auto gg = static_cast<RXGate*>(g.get());
-                        bare = std::make_shared<RXGate>(gg->GetCoeffs()[0], qbits_t{q_second}, qbits_t{});
-                        break;
-                    }
-                    case GateID::RY: {
-                        auto gg = static_cast<RYGate*>(g.get());
-                        bare = std::make_shared<RYGate>(gg->GetCoeffs()[0], qbits_t{q_second}, qbits_t{});
-                        break;
-                    }
-                    case GateID::RZ: {
-                        auto gg = static_cast<RZGate*>(g.get());
-                        bare = std::make_shared<RZGate>(gg->GetCoeffs()[0], qbits_t{q_second}, qbits_t{});
-                        break;
-                    }
-                    case GateID::PS: {
-                        auto gg = static_cast<PSGate*>(g.get());
-                        bare = std::make_shared<PSGate>(gg->GetCoeffs()[0], qbits_t{q_second}, qbits_t{});
-                        break;
-                    }
-                    case GateID::GP: {
-                        auto gg = static_cast<GPGate*>(g.get());
-                        bare = std::make_shared<GPGate>(gg->GetCoeffs()[0], qbits_t{q_second}, qbits_t{});
-                        break;
-                    }
-                    default:
-                        throw std::runtime_error(fmt::format("mqmps: controlled gate id {} not supported.", id));
-                }
-                u_target = GateMatrix1Q<complex_t>(bare, pr, diff);
-                u_qfirst_qsecond = detail::ControlledMatrix<complex_t>(u_target);
-            } else {
-                throw std::runtime_error("mqmps: unsupported 2-qubit gate form.");
-            }
-
-            // Route the two logical qubits to be adjacent.
-            route_to_adjacent(q_first, q_second);
-
-            // Determine the bond and physical ordering.
-            const auto p_first = pos_of_logical.at(static_cast<size_t>(q_first));
-            const auto p_second = pos_of_logical.at(static_cast<size_t>(q_second));
-            const auto bond = std::min(p_first, p_second);
-            const auto left_pos = bond;
-            const auto right_pos = bond + 1;
-            const auto q_left = logical_at_pos.at(static_cast<size_t>(left_pos));
-            const auto q_right = logical_at_pos.at(static_cast<size_t>(right_pos));
-
-            Mat4<complex_t> u_lr = u_qfirst_qsecond;
-            if (q_left == q_first && q_right == q_second) {
-                // ok
-            } else if (q_left == q_second && q_right == q_first) {
-                u_lr = SwapQubits(u_lr);
-            } else {
-                throw std::runtime_error("mqmps: internal routing error (qubits not on the expected bond).");
-            }
-
-            apply_adjacent_2q_on_bond(bond, u_lr);
-        }
-
-        // Final flush.
-        flush_all_pending();
-        emit_current_segment_stages();
-        if (!measure_ops.empty()) {
-            Stage<complex_t> st;
-            st.meas = std::move(measure_ops);
-            program_stages.push_back(std::move(st));
-        }
-
-        MPSProgram<complex_t> program;
-        program.stages = std::move(program_stages);
-        program.pos_of_logical_final = std::move(pos_of_logical);
-        program.logical_at_pos_final = std::move(logical_at_pos);
-        return program;
+        detail::MPSCompileState<complex_t> state(n_qubits_, pr, diff, pos_of_logical_in, logical_at_pos_in);
+        return state.Compile(circ);
     }
 
  private:
