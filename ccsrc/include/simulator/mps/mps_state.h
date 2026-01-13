@@ -18,7 +18,6 @@
 #define INCLUDE_SIMULATOR_MPS_MPS_STATE_HPP
 
 #include <cstdint>
-
 #include <functional>
 #include <limits>
 #include <map>
@@ -69,17 +68,18 @@ class MPSState {
     virtual VT<py_qs_data_t> GetReducedDensityMatrix(const qbits_t& kept_qubits) const;
 
     virtual index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
-                              const parameter::ParameterResolver& pr = parameter::ParameterResolver(), bool diff = false);
+                              const parameter::ParameterResolver& pr = parameter::ParameterResolver(),
+                              bool diff = false);
 
-    virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ,
-                                                    const parameter::ParameterResolver& pr = parameter::ParameterResolver());
+    virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr
+                                                                           = parameter::ParameterResolver());
 
     virtual VT<unsigned> Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
                                   const MST<size_t>& key_map, unsigned seed) const;
 
-    virtual VT<unsigned> SamplingMeasurementEndingWithoutNoise(const circuit_t& circ, const parameter::ParameterResolver& pr,
-                                                               size_t shots, const MST<size_t>& key_map,
-                                                               unsigned seed) const;
+    virtual VT<unsigned> SamplingMeasurementEndingWithoutNoise(const circuit_t& circ,
+                                                               const parameter::ParameterResolver& pr, size_t shots,
+                                                               const MST<size_t>& key_map, unsigned seed) const;
 
     virtual void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
@@ -151,18 +151,18 @@ class MPSState {
     std::function<double()> rng_;
 
     // Vidal Γ/Λ form in physical position order [0..n_qubits_-1].
-    VT<VT<calc_type>> lambdas_;   // size n_qubits_ + 1
-    VT<GammaSite> gammas_;        // size n_qubits_
+    VT<VT<calc_type>> lambdas_;  // size n_qubits_ + 1
+    VT<GammaSite> gammas_;       // size n_qubits_
 
     // Dynamic mapping between logical qubits (bit positions) and MPS physical sites.
-    qbits_t pos_of_logical_;   // size n_qubits_
-    qbits_t logical_at_pos_;   // size n_qubits_
+    qbits_t pos_of_logical_;  // size n_qubits_
+    qbits_t logical_at_pos_;  // size n_qubits_
 
     // Cached compilation for large Pauli-sums (depends on current logical<->physical mapping).
     mutable std::optional<PauliSumCache> pauli_sum_cache_;
 };
 }  // namespace mindquantum::sim::mps::detail
 
-#include "simulator/mps/mps_state.tpp"
+#include "simulator/mps/mps_state.tpp"  // NOLINT
 
 #endif  // INCLUDE_SIMULATOR_MPS_MPS_STATE_HPP

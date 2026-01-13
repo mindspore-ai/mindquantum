@@ -33,13 +33,13 @@ struct Op1Q {
 
 template <typename complex_t>
 struct Op2Q {
-    qbit_t bond = 0;                 // left site index (bond between bond and bond+1)
+    qbit_t bond = 0;                  // left site index (bond between bond and bond+1)
     std::array<complex_t, 16> mat{};  // row-major 4x4, basis |00>,|01>,|10>,|11> (left,right)
 };
 
 struct OpMeasure {
     std::string key;
-    qbit_t pos = 0;       // physical position to measure
+    qbit_t pos = 0;  // physical position to measure
     bool reset = false;
     index_t reset_to = 0;
 };
@@ -60,4 +60,3 @@ struct MPSProgram {
 }  // namespace mindquantum::sim::mps::compiler
 
 #endif  // INCLUDE_SIMULATOR_MPS_COMPILER_MPS_PROGRAM_HPP
-

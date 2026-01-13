@@ -17,9 +17,10 @@
 #ifndef INCLUDE_SIMULATOR_MPS_COMPILER_MPS_COMPILER_HPP
 #define INCLUDE_SIMULATOR_MPS_COMPILER_MPS_COMPILER_HPP
 
+#include <cmath>
+
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <complex>
 #include <cstddef>
 #include <cstdint>
@@ -546,8 +547,8 @@ inline Mat4<complex_t> ControlledMatrix(const Mat2<complex_t>& u_target) {
 }
 
 template <typename complex_t>
-inline std::vector<Stage<complex_t>> ScheduleUnitary(const std::vector<std::variant<Op1Q<complex_t>, Op2Q<complex_t>>>& ops,
-                                                     qbit_t n_qubits) {
+inline std::vector<Stage<complex_t>> ScheduleUnitary(
+    const std::vector<std::variant<Op1Q<complex_t>, Op2Q<complex_t>>>& ops, qbit_t n_qubits) {
     std::vector<size_t> last_layer(static_cast<size_t>(n_qubits), 0);
     std::vector<Stage<complex_t>> stages;
     for (const auto& opv : ops) {
@@ -615,7 +616,8 @@ class MPSCompiler {
 
         std::vector<Mat2<complex_t>> pending1(static_cast<size_t>(n_qubits_), Eye2<complex_t>());
         std::vector<uint8_t> pending1_active(static_cast<size_t>(n_qubits_), false);
-        std::vector<Mat4<complex_t>> pending2(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), Eye4<complex_t>());
+        std::vector<Mat4<complex_t>> pending2(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)),
+                                              Eye4<complex_t>());
         std::vector<uint8_t> pending2_active(static_cast<size_t>(std::max<qbit_t>(0, n_qubits_ - 1)), false);
 
         using UnitOp = std::variant<Op1Q<complex_t>, Op2Q<complex_t>>;
@@ -696,7 +698,8 @@ class MPSCompiler {
         };
 
         auto route_to_adjacent = [&](qbit_t qa, qbit_t qb) {
-            while (std::abs(pos_of_logical.at(static_cast<size_t>(qa)) - pos_of_logical.at(static_cast<size_t>(qb))) > 1) {
+            while (std::abs(pos_of_logical.at(static_cast<size_t>(qa)) - pos_of_logical.at(static_cast<size_t>(qb)))
+                   > 1) {
                 auto pa = pos_of_logical.at(static_cast<size_t>(qa));
                 auto pb = pos_of_logical.at(static_cast<size_t>(qb));
                 if (pa < pb) {
@@ -851,8 +854,8 @@ class MPSCompiler {
             }
 
             if (total_qubits != 2) {
-                throw std::runtime_error(fmt::format("mqmps: only 1Q/2Q gates supported, got id {} with {} qubits.", id,
-                                                     total_qubits));
+                throw std::runtime_error(
+                    fmt::format("mqmps: only 1Q/2Q gates supported, got id {} with {} qubits.", id, total_qubits));
             }
 
             // 2-qubit gate handling.

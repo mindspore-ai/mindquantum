@@ -35,7 +35,9 @@ def _assert_statevector_close_up_to_global_phase(a: np.ndarray, b: np.ndarray, *
     assert np.allclose(a, b * phase, atol=atol)
 
 
-def _collapse_statevector_z_basis(psi: np.ndarray, measured_bits: Dict[int, int], *, resets: Optional[Dict[int, int]] = None):
+def _collapse_statevector_z_basis(
+    psi: np.ndarray, measured_bits: Dict[int, int], *, resets: Optional[Dict[int, int]] = None
+):
     """Project `psi` onto computational-basis outcomes on the given qubits, then (optionally) apply X resets."""
     out = psi.copy()
     dim = out.size
@@ -64,6 +66,11 @@ def _collapse_statevector_z_basis(psi: np.ndarray, measured_bits: Dict[int, int]
 
 
 def test_mqmps_statevector_matches_mqvector():
+    """
+    Feature: MPS simulator statevector output.
+    Description: Apply a circuit with adjacent and non-adjacent gates on mqmps and mqvector simulators.
+    Expectation: Statevectors match up to global phase.
+    """
     n_qubits = 4
     circ = Circuit()
     circ += H.on(0)
@@ -84,6 +91,11 @@ def test_mqmps_statevector_matches_mqvector():
 
 
 def test_mqmps_expectation_matches_mqvector():
+    """
+    Feature: MPS simulator expectation value calculation.
+    Description: Compute Hamiltonian expectation on a prepared state using mqmps and mqvector.
+    Expectation: Expectation values match within tolerance.
+    """
     n_qubits = 4
     prep = Circuit().h(0).rx(0.3, 1).rz(-0.2, 3).x(2, 0)
 
@@ -102,6 +114,11 @@ def test_mqmps_expectation_matches_mqvector():
 
 
 def test_mqmps_get_expectation_with_circuit_matches_mqvector():
+    """
+    Feature: MPS simulator expectation with circuit application.
+    Description: Compute Hamiltonian expectation while applying a parameterized circuit.
+    Expectation: Expectation values match mqvector for multiple parameter sets.
+    """
     n_qubits = 4
     circ = Circuit()
     circ += H.on(0)
@@ -125,6 +142,11 @@ def test_mqmps_get_expectation_with_circuit_matches_mqvector():
 
 
 def test_mqmps_sampling_measure_end_deterministic():
+    """
+    Feature: MPS simulator sampling with end-of-circuit measurement.
+    Description: Sample from a deterministic basis state prepared by X gates.
+    Expectation: Sampling results match mqvector and all shots yield the same bitstring.
+    """
     n_qubits = 5
     circ = Circuit()
     circ += X.on(0)
@@ -147,6 +169,11 @@ def test_mqmps_sampling_measure_end_deterministic():
 
 
 def test_mqmps_measurement_collapse_basis_state_subset_and_reset():
+    """
+    Feature: MPS simulator measurement collapse and reset.
+    Description: Measure a subset of qubits on a basis state with reset_to option.
+    Expectation: Measurement outcomes are deterministic and state collapses correctly with reset.
+    """
     n_qubits = 4
     circ = Circuit()
     circ += X.on(0)  # prepare |...1> on q0
@@ -172,6 +199,11 @@ def test_mqmps_measurement_collapse_basis_state_subset_and_reset():
 
 
 def test_mqmps_measurement_collapse_matches_projector():
+    """
+    Feature: MPS simulator measurement collapse correctness.
+    Description: Measure qubits on a superposition state and verify post-measurement state.
+    Expectation: Collapsed state matches projector-based reference with reset applied.
+    """
     n_qubits = 4
     prep = Circuit().h(0).x(3, 0).h(2)  # includes non-adjacent 2Q gate (routing)
 
@@ -194,6 +226,11 @@ def test_mqmps_measurement_collapse_matches_projector():
 
 
 def test_mqmps_rejects_mid_circuit_measurement():
+    """
+    Feature: MPS simulator mid-circuit measurement rejection.
+    Description: Apply a circuit with measurement followed by gates.
+    Expectation: RuntimeError is raised for mid-circuit measurement.
+    """
     n_qubits = 2
     circ = Circuit()
     circ += Measure("q0").on(0)
@@ -204,18 +241,33 @@ def test_mqmps_rejects_mid_circuit_measurement():
 
 
 def test_mqmps_get_qs_rejects_too_large_dense_statevector():
+    """
+    Feature: MPS simulator statevector size limit.
+    Description: Request dense statevector for a large qubit count (31 qubits).
+    Expectation: RuntimeError is raised due to max output bytes limit.
+    """
     sim_mps = Simulator("mqmps", 31, seed=1, max_bond_dimension=0)
     with pytest.raises(RuntimeError, match=r"max output bytes"):
         sim_mps.get_qs()
 
 
 def test_mqmps_reduced_density_matrix_rejects_too_large_output():
+    """
+    Feature: MPS simulator reduced density matrix size limit.
+    Description: Request reduced density matrix for too many qubits (20 qubits).
+    Expectation: RuntimeError is raised due to max output bytes limit.
+    """
     sim_mps = Simulator("mqmps", 40, seed=1, max_bond_dimension=0)
     with pytest.raises(RuntimeError, match=r"max output bytes"):
         sim_mps.get_reduced_density_matrix(list(range(20)))
 
 
 def test_mqmps_reduced_density_matrix_matches_mqvector():
+    """
+    Feature: MPS simulator reduced density matrix calculation.
+    Description: Compute reduced density matrix for a subset of qubits after circuit application.
+    Expectation: Reduced density matrix matches mqvector result.
+    """
     n_qubits = 5
     circ = Circuit()
     circ += H.on(0)
@@ -236,6 +288,11 @@ def test_mqmps_reduced_density_matrix_matches_mqvector():
 
 
 def test_mqmps_bra_ket_expectation_matches_mqvector():
+    """
+    Feature: MPS simulator bra-ket expectation value.
+    Description: Compute expectation with different left and right circuits (bra-ket form).
+    Expectation: Bra-ket expectation matches mqvector result.
+    """
     n_qubits = 4
     base = Circuit().h(0).rx(0.4, 1).x(3, 0)
     circ_right = Circuit().rz(0.1, 0).x(2, 1)
@@ -254,6 +311,11 @@ def test_mqmps_bra_ket_expectation_matches_mqvector():
 
 
 def test_mqmps_two_qubit_gate_obj_ordering_rxy_matches_mqvector():
+    """
+    Feature: MPS simulator two-qubit gate object ordering for Rxy.
+    Description: Apply Rxy gate with different qubit orderings on adjacent qubits.
+    Expectation: Statevectors match mqvector for both orderings.
+    """
     n_qubits = 3
     theta = 0.73
     prep = Circuit().h(0).rx(0.31, 1).rz(-0.22, 2)
@@ -268,6 +330,11 @@ def test_mqmps_two_qubit_gate_obj_ordering_rxy_matches_mqvector():
 
 
 def test_mqmps_two_qubit_gate_routing_rxz_matches_mqvector():
+    """
+    Feature: MPS simulator two-qubit gate routing for Rxz.
+    Description: Apply Rxz gate on non-adjacent qubits requiring routing.
+    Expectation: Statevectors match mqvector for both qubit orderings.
+    """
     n_qubits = 4
     theta = -0.54
     prep = Circuit().h(0).rx(0.17, 1).h(2).rz(0.29, 3).x(3, 0)

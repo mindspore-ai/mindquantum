@@ -17,12 +17,10 @@
 #ifndef INCLUDE_SIMULATOR_MPS_MPS_STATE_TPP
 #define INCLUDE_SIMULATOR_MPS_MPS_STATE_TPP
 
-#include <Eigen/Dense>
-#include <Eigen/SVD>
+#include <cmath>
 
 #include <algorithm>
 #include <cstdint>
-#include <cmath>
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -32,8 +30,12 @@
 #include <type_traits>
 #include <utility>
 
+#include <Eigen/Dense>
+#include <Eigen/SVD>
+
 #include "core/utils.h"
 #include "simulator/mps/compiler/mps_compiler.h"
+#include "simulator/mps/mps_state.h"
 
 namespace mindquantum::sim::mps::detail {
 namespace detail {
@@ -416,7 +418,7 @@ void MPSState<qs_policy_t_>::Reset() {
 
 template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::Display(qbit_t qubits_limit) const {
-    (void)qubits_limit;
+    (void) qubits_limit;
     // Keep output minimal (similar to other backends).
     std::cout << "mqmps state: n_qubits=" << n_qubits_ << ", max_bond_dimension=" << max_bond_dimension_ << std::endl;
 }
@@ -442,8 +444,10 @@ auto MPSState<qs_policy_t_>::ContractToStateVectorPhysicalOrder_() const -> VT<c
             throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions.");
         }
 
-        Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(site.dl), static_cast<Eigen::Index>(site.dr));
-        Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(site.dl), static_cast<Eigen::Index>(site.dr));
+        Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(site.dl),
+                                 static_cast<Eigen::Index>(site.dr));
+        Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(site.dl),
+                                 static_cast<Eigen::Index>(site.dr));
 
         Mat a0 = acc * g0;
         Mat a1 = acc * g1;
@@ -499,10 +503,10 @@ auto MPSState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
     const size_t dim = size_t{1} << n;
     if (dim > detail::kMaxDenseStateVectorOutputBytes / sizeof(complex_t)) {
         throw std::runtime_error(
-            "mqmps: GetQS() constructs a full 2^n statevector and is limited by max output bytes; n=" +
-            std::to_string(n_qubits_) + ", elements=" + std::to_string(dim) +
-            ", bytes_per_element=" + std::to_string(sizeof(complex_t)) +
-            ", limit=" + std::to_string(detail::kMaxDenseStateVectorOutputBytes) + " bytes.");
+            "mqmps: GetQS() constructs a full 2^n statevector and is limited by max output bytes; n="
+            + std::to_string(n_qubits_) + ", elements=" + std::to_string(dim)
+            + ", bytes_per_element=" + std::to_string(sizeof(complex_t))
+            + ", limit=" + std::to_string(detail::kMaxDenseStateVectorOutputBytes) + " bytes.");
     }
     auto phys = ContractToStateVectorPhysicalOrder_();
     auto logical = PermutePhysicalToLogical_(phys);
@@ -550,10 +554,10 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
         for (size_t cr = 0; cr < cols_rest; ++cr) {
             const size_t c0 = 2 * cr;
             const size_t c1 = 2 * cr + 1;
-            M.block(0, static_cast<Eigen::Index>(cr), static_cast<Eigen::Index>(D_i), 1) =
-                B.col(static_cast<Eigen::Index>(c0));
-            M.block(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(cr), static_cast<Eigen::Index>(D_i), 1) =
-                B.col(static_cast<Eigen::Index>(c1));
+            M.block(0, static_cast<Eigen::Index>(cr), static_cast<Eigen::Index>(D_i), 1) = B.col(
+                static_cast<Eigen::Index>(c0));
+            M.block(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(cr), static_cast<Eigen::Index>(D_i), 1)
+                = B.col(static_cast<Eigen::Index>(c1));
         }
 
         Eigen::BDCSVD<Mat> svd(M, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -602,8 +606,7 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
             const calc_type inv = detail::SafeInv(lambdas_.at(static_cast<size_t>(i)).at(a), lambda_floor);
             for (size_t k = 0; k < D_next; ++k) {
                 site.g0.at(a * D_next + k) = U(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(k)) * inv;
-                site.g1.at(a * D_next + k) =
-                    U(static_cast<Eigen::Index>(a + D_i), static_cast<Eigen::Index>(k)) * inv;
+                site.g1.at(a * D_next + k) = U(static_cast<Eigen::Index>(a + D_i), static_cast<Eigen::Index>(k)) * inv;
             }
         }
 
@@ -647,11 +650,10 @@ void MPSState<qs_policy_t_>::SetQS(const VT<py_qs_data_t>& qs) {
         throw std::runtime_error("mqmps: SetQS vector size mismatch.");
     }
     if (dim > detail::kMaxDenseStateVectorOutputBytes / sizeof(complex_t)) {
-        throw std::runtime_error(
-            "mqmps: SetQS() requires a full 2^n statevector and is limited by max output bytes; n=" +
-            std::to_string(n_qubits_) + ", elements=" + std::to_string(dim) +
-            ", bytes_per_element=" + std::to_string(sizeof(complex_t)) +
-            ", limit=" + std::to_string(detail::kMaxDenseStateVectorOutputBytes) + " bytes.");
+        throw std::runtime_error("mqmps: SetQS() requires a full 2^n statevector and is limited by max output bytes; n="
+                                 + std::to_string(n_qubits_) + ", elements=" + std::to_string(dim)
+                                 + ", bytes_per_element=" + std::to_string(sizeof(complex_t))
+                                 + ", limit=" + std::to_string(detail::kMaxDenseStateVectorOutputBytes) + " bytes.");
     }
     VT<complex_t> vec(qs.begin(), qs.end());
     // Normalize defensively.
@@ -822,8 +824,8 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
             const calc_type inv = detail::SafeInv(lambdas_.at(static_cast<size_t>(i + 2)).at(r), lambda_floor);
             // Vh(k, r) = conj(V(r, k))
             site_j.g0.at(k * D_R + r) = std::conj(V(static_cast<Eigen::Index>(r), static_cast<Eigen::Index>(k))) * inv;
-            site_j.g1.at(k * D_R + r) =
-                std::conj(V(static_cast<Eigen::Index>(r + D_R), static_cast<Eigen::Index>(k))) * inv;
+            site_j.g1.at(k * D_R + r) = std::conj(V(static_cast<Eigen::Index>(r + D_R), static_cast<Eigen::Index>(k)))
+                                        * inv;
         }
     }
 }
@@ -833,7 +835,8 @@ void MPSState<qs_policy_t_>::ReorderToTargetMapping_(const qbits_t& logical_at_p
     if (logical_at_pos_target.size() != static_cast<size_t>(n_qubits_)) {
         throw std::runtime_error("mqmps: invalid target mapping size.");
     }
-    if (logical_at_pos_.size() != static_cast<size_t>(n_qubits_) || pos_of_logical_.size() != static_cast<size_t>(n_qubits_)) {
+    if (logical_at_pos_.size() != static_cast<size_t>(n_qubits_)
+        || pos_of_logical_.size() != static_cast<size_t>(n_qubits_)) {
         throw std::runtime_error("mqmps: internal mapping size mismatch.");
     }
     if (logical_at_pos_ == logical_at_pos_target) {
@@ -1036,12 +1039,11 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
                     v *= inv_norm;
                 }
             } else if (n_qubits_ > 1) {
-                const std::array<complex_t, 16> eye4 = {complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0},
-                                                        complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0},
-                                                        complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0},
-                                                        complex_t{0, 0}, complex_t{1, 0}, complex_t{0, 0},
-                                                        complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0},
-                                                        complex_t{1, 0}};
+                const std::array<complex_t, 16> eye4 = {
+                    complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0},
+                    complex_t{0, 0}, complex_t{1, 0}, complex_t{0, 0}, complex_t{0, 0},
+                    complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}, complex_t{0, 0},
+                    complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0}, complex_t{1, 0}};
                 for (qbit_t bond = 0; bond < n_qubits_ - 1; ++bond) {
                     Apply2QOnBond_(bond, eye4);
                 }
@@ -1053,8 +1055,8 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
 }
 
 template <typename qs_policy_t_>
-index_t MPSState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
-                                          bool diff) {
+index_t MPSState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
+                                          const parameter::ParameterResolver& pr, bool diff) {
     if (gate->GetID() == GateID::M) {
         auto res = ApplyCircuit({gate}, pr);
         if (res.empty()) {
@@ -1092,9 +1094,10 @@ auto MPSState<qs_policy_t_>::Sampling(const circuit_t& circ, const parameter::Pa
 }
 
 template <typename qs_policy_t_>
-auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit_t& circ, const parameter::ParameterResolver& pr,
-                                                                   size_t shots, const MST<size_t>& key_map,
-                                                                   unsigned seed) const -> VT<unsigned> {
+auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit_t& circ,
+                                                                   const parameter::ParameterResolver& pr, size_t shots,
+                                                                   const MST<size_t>& key_map, unsigned seed) const
+    -> VT<unsigned> {
     using Mat = detail::Mat<complex_t>;
     using RowVec = detail::RowVec<complex_t>;
 
@@ -1235,9 +1238,9 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
     const size_t dim_rho = dim_keep * dim_keep;
     if (dim_rho > detail::kMaxReducedDensityMatrixOutputBytes / sizeof(complex_t)) {
         throw std::runtime_error(
-            "mqmps: reduced density matrix is limited by max output bytes; kept_qubits=" + std::to_string(k) +
-            ", elements=" + std::to_string(dim_rho) + ", bytes_per_element=" + std::to_string(sizeof(complex_t)) +
-            ", limit=" + std::to_string(detail::kMaxReducedDensityMatrixOutputBytes) + " bytes.");
+            "mqmps: reduced density matrix is limited by max output bytes; kept_qubits=" + std::to_string(k)
+            + ", elements=" + std::to_string(dim_rho) + ", bytes_per_element=" + std::to_string(sizeof(complex_t))
+            + ", limit=" + std::to_string(detail::kMaxReducedDensityMatrixOutputBytes) + " bytes.");
     }
 
     // Map logical kept qubits -> physical sites (dynamic mapping).
@@ -1443,7 +1446,9 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
                 scale_by_lambda(lam_next, &child);
 
 #pragma omp task firstprivate(child, next_depth, next_site_child, next_row, next_col)
-                { dfs_parallel(next_depth, next_site_child, std::move(child), next_row, next_col); }
+                {
+                    dfs_parallel(next_depth, next_site_child, std::move(child), next_row, next_col);
+                }
             }
         }
     };
@@ -1455,7 +1460,9 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
 #pragma omp single
         {
 #pragma omp taskgroup
-            { dfs_parallel(0, 0, std::move(init_env), 0, 0); }
+            {
+                dfs_parallel(0, 0, std::move(init_env), 0, 0);
+            }
         }
     }
 
@@ -1542,13 +1549,13 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
     };
 
     return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(
-        n_qubits_, pauli_sum_cache_->phys_terms, eye, apply_local, get_pauli_op,
-        []() { return complex_t{1, 0}; }, false);
+        n_qubits_, pauli_sum_cache_->phys_terms, eye, apply_local, get_pauli_op, []() { return complex_t{1, 0}; },
+        false);
 }
 
 template <typename qs_policy_t_>
-auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<calc_type>>& terms, const derived_t& bra) const
-    -> py_qs_data_t {
+auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<calc_type>>& terms,
+                                                          const derived_t& bra) const -> py_qs_data_t {
     using Mat = detail::Mat<complex_t>;
     constexpr complex_t I{0, 1};
 
@@ -1666,8 +1673,8 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<cal
         return *overlap;
     };
 
-    return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(
-        n_qubits_, merged, eye, apply_local, get_pauli_op, inner_product, true);
+    return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(n_qubits_, merged, eye, apply_local,
+                                                                               get_pauli_op, inner_product, true);
 }
 
 template <typename qs_policy_t_>
@@ -1685,8 +1692,8 @@ auto MPSState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, c
 
 template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
-                                            const circuit_t& circ_left,
-                                            const parameter::ParameterResolver& pr) const -> py_qs_data_t {
+                                            const circuit_t& circ_left, const parameter::ParameterResolver& pr) const
+    -> py_qs_data_t {
     auto ket = derived_t(*this);
     auto bra = derived_t(*this);
     ket.ApplyCircuit(circ_right, pr);
@@ -1719,15 +1726,15 @@ auto MPSState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, c
 
 template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& ham) {
-    (void)ham;
+    (void) ham;
     throw std::runtime_error("mqmps: apply_hamiltonian is not supported (native MPO/apply path not implemented).");
 }
 
 template <typename qs_policy_t_>
 VVT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetCircuitMatrix(
     const circuit_t& circ, const parameter::ParameterResolver& pr) const {
-    (void)circ;
-    (void)pr;
+    (void) circ;
+    (void) pr;
     throw std::runtime_error("mqmps: get_circuit_matrix is not supported yet.");
 }
 
