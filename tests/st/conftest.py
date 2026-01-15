@@ -16,6 +16,8 @@
 
 import os
 
+os.environ.setdefault("MQ_SKIP_MQMPS", "1")
+
 from mindquantum import logging
 
 # pylint: disable=no-member

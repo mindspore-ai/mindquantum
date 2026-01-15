@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """List available simulators."""
+import os
 import typing
 import warnings
 
@@ -135,7 +136,10 @@ class _AvailableSimulator:
 
     def __iter__(self):
         """List available simulator with data type."""
+        skip_mqmps = os.getenv("MQ_SKIP_MQMPS", "").lower() in {"1", "true", "yes", "on"}
         for k, v in self.sims.items():
+            if skip_mqmps and k == "mqmps":
+                continue
             if not isinstance(v, dict):
                 yield k
             else:
