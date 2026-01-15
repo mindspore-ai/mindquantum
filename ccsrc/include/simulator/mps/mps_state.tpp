@@ -23,11 +23,8 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
-#include <numeric>
 #include <stdexcept>
 #include <string>
-#include <string_view>
-#include <type_traits>
 #include <utility>
 
 #include <Eigen/Dense>
@@ -688,7 +685,7 @@ void MPSState<qs_policy_t_>::Apply1QOnPhysical_(qbit_t pos, const std::array<com
 }
 
 template <typename qs_policy_t_>
-void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<complex_t, 16>& u) {
+void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<complex_t, 16>& u, bool renormalize) {
     using Mat = detail::Mat<complex_t>;
     constexpr calc_type eps_rel = qs_policy_t::kEpsRel;
     constexpr calc_type lambda_floor = qs_policy_t::kLambdaFloor;
@@ -785,15 +782,23 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     }
 
     VT<calc_type> s_kept(r_keep);
-    calc_type norm2 = 0;
     for (size_t k = 0; k < r_keep; ++k) {
         s_kept[k] = s_all(static_cast<Eigen::Index>(k));
-        norm2 += s_kept[k] * s_kept[k];
     }
-    const calc_type norm = std::sqrt(norm2);
-    if (norm > 0) {
-        for (auto& v : s_kept) {
-            v /= norm;
+    if (renormalize) {
+        // Keep the MPS state normalized when simulating unitary circuits (and when truncation is enabled).
+        //
+        // For non-unitary operations (e.g., `diff=True` derivative gates), the norm carries meaning and must be
+        // preserved.
+        calc_type norm2 = 0;
+        for (size_t k = 0; k < r_keep; ++k) {
+            norm2 += s_kept[k] * s_kept[k];
+        }
+        const calc_type norm = std::sqrt(norm2);
+        if (norm > 0) {
+            for (auto& v : s_kept) {
+                v /= norm;
+            }
         }
     }
 
@@ -913,7 +918,7 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
         THRESHOLD_OMP_FOR(
             ops2.size(), 2, for (omp::idx_t idx = 0; idx < static_cast<omp::idx_t>(ops2.size()); ++idx) {
                 const auto& op = ops2.at(static_cast<size_t>(idx));
-                Apply2QOnBond_(op.bond, op.mat);
+                Apply2QOnBond_(op.bond, op.mat, !diff);
             })
     }
 
@@ -979,43 +984,46 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
                 }
             }
 
-            struct MeasInfo {
-                qbit_t pos = 0;  // physical site index
-                int outcome = 0;
-                bool do_reset = false;
-                index_t reset_to = 0;
-            };
-            VT<MeasInfo> meas_ops;
-            meas_ops.reserve(stage.meas.size());
+            // Apply measurement gates sequentially to support multiple measurements on the same qubit
+            // (e.g. measure with reset_to, then measure again to verify the reset).
+            //
+            // A repeated measurement on a collapsed/reset qubit is deterministic; we track the current
+            // post-operation bit value for each physical site to assign outcomes to subsequent measure keys.
+            VT<uint8_t> has_known_bit(static_cast<size_t>(n_qubits_), 0);
+            VT<int> current_bit(static_cast<size_t>(n_qubits_), 0);
+
             for (const auto& m : stage.meas) {
                 if (m.pos < 0 || m.pos >= n_qubits_) {
                     throw std::runtime_error("mqmps: invalid measurement site index.");
                 }
-                const int bit = bits.at(static_cast<size_t>(m.pos));
-                meas_result[m.key] = bit;
-                meas_ops.push_back(MeasInfo{m.pos, bit, m.reset, m.reset_to});
-            }
+                const auto pos = static_cast<size_t>(m.pos);
 
-            // Collapse: apply Z-basis projectors at measured physical sites (unnormalized).
-            for (const auto& info : meas_ops) {
-                auto& site = gammas_.at(static_cast<size_t>(info.pos));
-                if (info.outcome == 0) {
-                    std::fill(site.g1.begin(), site.g1.end(), complex_t{0, 0});
+                int outcome = 0;
+                if (has_known_bit.at(pos) == 0) {
+                    outcome = bits.at(pos);
+                    has_known_bit.at(pos) = 1;
+                    current_bit.at(pos) = outcome;
+
+                    // Collapse (unnormalized) on first measurement for this site.
+                    auto& site = gammas_.at(pos);
+                    if (outcome == 0) {
+                        std::fill(site.g1.begin(), site.g1.end(), complex_t{0, 0});
+                    } else {
+                        std::fill(site.g0.begin(), site.g0.end(), complex_t{0, 0});
+                    }
                 } else {
-                    std::fill(site.g0.begin(), site.g0.end(), complex_t{0, 0});
+                    // Deterministic: state on this site is already |current_bit⟩ after collapse/reset.
+                    outcome = current_bit.at(pos);
                 }
-            }
 
-            // Apply post-measure reset as a physical X (swap Γ0/Γ1).
-            for (const auto& info : meas_ops) {
-                if (!info.do_reset) {
-                    continue;
+                meas_result[m.key] = outcome;
+
+                // Apply post-measure reset as a physical X (swap Γ0/Γ1).
+                if (m.reset && static_cast<index_t>(outcome) != m.reset_to) {
+                    auto& site = gammas_.at(pos);
+                    std::swap(site.g0, site.g1);
+                    current_bit.at(pos) = static_cast<int>(m.reset_to);
                 }
-                if (static_cast<index_t>(info.outcome) == info.reset_to) {
-                    continue;
-                }
-                auto& site = gammas_.at(static_cast<size_t>(info.pos));
-                std::swap(site.g0, site.g1);
             }
 
             // Re-canonicalize + normalize by sweeping an identity 2Q update across the chain.
@@ -1058,13 +1066,13 @@ template <typename qs_policy_t_>
 index_t MPSState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& gate,
                                           const parameter::ParameterResolver& pr, bool diff) {
     if (gate->GetID() == GateID::M) {
-        auto res = ApplyCircuit({gate}, pr);
+        auto res = ApplyCircuitCompiled_({gate}, pr, false);
         if (res.empty()) {
             return 2;
         }
         return static_cast<index_t>(res.begin()->second);
     }
-    ApplyCircuit({gate}, pr);
+    ApplyCircuitCompiled_({gate}, pr, diff);
     return 2;
 }
 

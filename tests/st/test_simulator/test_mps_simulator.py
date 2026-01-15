@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import H, Measure, RX, RZ, Rxz, Rxy, X
+from mindquantum.core.gates import Givens, H, Measure, RX, Rxx, Rxy, Rxz, Ryy, Ryz, RZ, Rzz, SWAPalpha, X
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 
@@ -166,6 +166,89 @@ def test_mqmps_sampling_measure_end_deterministic():
     assert res_vec.bit_string_data == res_mps.bit_string_data
     assert sum(res_mps.bit_string_data.values()) == shots
     assert len(res_mps.bit_string_data) == 1
+
+
+def test_mqmps_sampling_repeated_measurement_with_reset():
+    """
+    Feature: MPS simulator repeated measurement with reset.
+    Description: Measure qubits with reset_to and then measure again; second measurement is deterministic.
+    Expectation: Second measurement keys always reflect the requested reset values.
+    """
+    circ = Circuit().rx(2.2, 0).ry(1.2, 1)
+    circ.measure(0, reset_to=1)
+    circ.measure(1, reset_to=0)
+    circ.measure('q0_1', 0)
+    circ.measure('q1_1', 1)
+
+    sim_mps = Simulator("mqmps", circ.n_qubits, seed=3, max_bond_dimension=0)
+    res = sim_mps.sampling(circ, shots=50, seed=123)
+    for bitstring in res.data.keys():
+        assert bitstring[res.keys_map["q1_1"]] == "0"
+        assert bitstring[res.keys_map["q0_1"]] == "1"
+
+
+def test_mqmps_apply_gate_diff_matches_mqvector():
+    """
+    Feature: MPS simulator differential gate application.
+    Description: Apply differential-form single-parameter gates and compare against mqvector.
+    Expectation: Output statevectors match.
+    """
+    pr = {"a": 0.7}
+    for g in (RX("a").on(0), RZ("a").on(0)):
+        sim_vec = Simulator("mqvector", 1, seed=11)
+        sim_mps = Simulator("mqmps", 1, seed=11, max_bond_dimension=0)
+        sim_vec.apply_gate(g, pr, diff=True)
+        sim_mps.apply_gate(g, pr, diff=True)
+        assert np.allclose(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-10)
+
+
+def test_mqmps_apply_controlled_gate_diff_matches_mqvector():
+    """
+    Feature: MPS simulator differential application of controlled single-qubit gates.
+    Description: Apply a controlled RX in differential form on a superposition control state.
+    Expectation: mqmps matches mqvector output statevector.
+    """
+    pr = {"a": 0.7}
+    prep = Circuit().h(1)  # ensure both control=0 and control=1 components exist
+    g = RX("a").on(0, 1)
+
+    sim_vec = Simulator("mqvector", 2, seed=11)
+    sim_mps = Simulator("mqmps", 2, seed=11, max_bond_dimension=0)
+    sim_vec.apply_circuit(prep)
+    sim_mps.apply_circuit(prep)
+    sim_vec.apply_gate(g, pr, diff=True)
+    sim_mps.apply_gate(g, pr, diff=True)
+    _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-10)
+
+
+def test_mqmps_apply_two_qubit_gate_diff_matches_mqvector():
+    """
+    Feature: MPS simulator differential application of supported 2-qubit parameterized gates.
+    Description: Apply differential-form 2-qubit gates and compare mqmps vs mqvector.
+    Expectation: Output statevectors match (up to global phase).
+    """
+    pr = {"a": 0.7}
+    prep = Circuit().h(0).h(1).rz(0.23, 0).rx(-0.4, 1)
+
+    gates = (
+        SWAPalpha("a").on([0, 1]),
+        Rxx("a").on([0, 1]),
+        Ryy("a").on([0, 1]),
+        Rzz("a").on([0, 1]),
+        Rxy("a").on([0, 1]),
+        Rxz("a").on([0, 1]),
+        Ryz("a").on([0, 1]),
+        Givens("a").on([0, 1]),
+    )
+
+    for g in gates:
+        sim_vec = Simulator("mqvector", 2, seed=11)
+        sim_mps = Simulator("mqmps", 2, seed=11, max_bond_dimension=0)
+        sim_vec.apply_circuit(prep)
+        sim_mps.apply_circuit(prep)
+        sim_vec.apply_gate(g, pr, diff=True)
+        sim_mps.apply_gate(g, pr, diff=True)
+        _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-10)
 
 
 def test_mqmps_measurement_collapse_basis_state_subset_and_reset():

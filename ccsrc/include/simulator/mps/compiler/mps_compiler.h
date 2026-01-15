@@ -362,7 +362,52 @@ template <typename complex_t>
 inline Mat2<complex_t> GateMatrix1Q(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
                                     bool diff) {
     if (diff) {
-        throw std::runtime_error("mqmps does not support applying differential gates yet.");
+        // Match mqvector semantics: only apply the differential form when the gate is marked as grad-required.
+        // This keeps `diff=True` as an internal/advanced feature without affecting normal circuit execution.
+        if (!gate->GradRequired()) {
+            diff = false;
+        } else {
+            using calc_t = typename complex_t::value_type;
+            const complex_t I{0, 1};
+            constexpr calc_t half = static_cast<calc_t>(0.5);
+            const auto id = gate->GetID();
+            switch (id) {
+                case GateID::RX: {
+                    const auto val = GetSingleCoeffValue<calc_t>(static_cast<RXGate*>(gate.get()), pr);
+                    const calc_t c = std::cos(val * half);
+                    const calc_t s = std::sin(val * half);
+                    const calc_t dc = -s * half;
+                    const calc_t ds = c * half;
+                    return Mat2<complex_t>{complex_t{dc, 0}, -I * ds, -I * ds, complex_t{dc, 0}};
+                }
+                case GateID::RY: {
+                    const auto val = GetSingleCoeffValue<calc_t>(static_cast<RYGate*>(gate.get()), pr);
+                    const calc_t c = std::cos(val * half);
+                    const calc_t s = std::sin(val * half);
+                    const calc_t dc = -s * half;
+                    const calc_t ds = c * half;
+                    return Mat2<complex_t>{complex_t{dc, 0}, complex_t{-ds, 0}, complex_t{ds, 0}, complex_t{dc, 0}};
+                }
+                case GateID::RZ: {
+                    const auto val = GetSingleCoeffValue<calc_t>(static_cast<RZGate*>(gate.get()), pr);
+                    const complex_t e0 = std::exp(-I * (val * half));
+                    const complex_t e1 = std::exp(I * (val * half));
+                    return Mat2<complex_t>{(-I * half) * e0, complex_t{0, 0}, complex_t{0, 0}, (I * half) * e1};
+                }
+                case GateID::PS: {
+                    const auto val = GetSingleCoeffValue<calc_t>(static_cast<PSGate*>(gate.get()), pr);
+                    const complex_t e1 = std::exp(I * val);
+                    return Mat2<complex_t>{complex_t{0, 0}, complex_t{0, 0}, complex_t{0, 0}, I * e1};
+                }
+                case GateID::GP: {
+                    const auto val = GetSingleCoeffValue<calc_t>(static_cast<GPGate*>(gate.get()), pr);
+                    const complex_t e = std::exp(-I * val);
+                    return Mat2<complex_t>{-I * e, complex_t{0, 0}, complex_t{0, 0}, -I * e};
+                }
+                default:
+                    throw std::runtime_error(fmt::format("mqmps: differential 1-qubit gate id {} not supported.", id));
+            }
+        }
     }
     const auto id = gate->GetID();
     switch (id) {
@@ -424,6 +469,23 @@ inline Mat4<complex_t> SWAPalphaMatrix2Q(const SWAPalphaGate* gate, const parame
 }
 
 template <typename complex_t>
+inline Mat4<complex_t> SWAPalphaDiffMatrix2Q(const SWAPalphaGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const complex_t e = std::exp(I * (static_cast<calc_t>(M_PI) * val));
+    const complex_t de = (I * static_cast<calc_t>(M_PI)) * e;
+    const complex_t da = de / static_cast<calc_t>(2);
+    const complex_t db = -de / static_cast<calc_t>(2);
+    Mat4<complex_t> out{};
+    out[5] = da;
+    out[6] = db;
+    out[9] = db;
+    out[10] = da;
+    return out;
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> RxxMatrix2Q(const RxxGate* gate, const parameter::ParameterResolver& pr) {
     using calc_t = typename complex_t::value_type;
     const complex_t I{0, 1};
@@ -440,6 +502,29 @@ inline Mat4<complex_t> RxxMatrix2Q(const RxxGate* gate, const parameter::Paramet
     out[10] = complex_t{c, 0};
     out[12] = is;
     out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RxxDiffMatrix2Q(const RxxGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val * half);
+    const calc_t s = std::sin(val * half);
+    const calc_t dc = -s * half;
+    const calc_t ds = c * half;
+    const complex_t ids = -I * ds;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{dc, 0};
+    out[3] = ids;
+    out[5] = complex_t{dc, 0};
+    out[6] = ids;
+    out[9] = ids;
+    out[10] = complex_t{dc, 0};
+    out[12] = ids;
+    out[15] = complex_t{dc, 0};
     return out;
 }
 
@@ -465,6 +550,29 @@ inline Mat4<complex_t> RyyMatrix2Q(const RyyGate* gate, const parameter::Paramet
 }
 
 template <typename complex_t>
+inline Mat4<complex_t> RyyDiffMatrix2Q(const RyyGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val * half);
+    const calc_t s = std::sin(val * half);
+    const calc_t dc = -s * half;
+    const calc_t ds = c * half;
+    const complex_t ids = -I * ds;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{dc, 0};
+    out[3] = -ids;
+    out[5] = complex_t{dc, 0};
+    out[6] = ids;
+    out[9] = ids;
+    out[10] = complex_t{dc, 0};
+    out[12] = -ids;
+    out[15] = complex_t{dc, 0};
+    return out;
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> RzzMatrix2Q(const RzzGate* gate, const parameter::ParameterResolver& pr) {
     using calc_t = typename complex_t::value_type;
     const complex_t I{0, 1};
@@ -476,6 +584,22 @@ inline Mat4<complex_t> RzzMatrix2Q(const RzzGate* gate, const parameter::Paramet
     out[5] = e1;
     out[10] = e1;
     out[15] = e0;
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RzzDiffMatrix2Q(const RzzGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const complex_t e0 = std::exp(-I * (val * half));
+    const complex_t e1 = std::exp(I * (val * half));
+    Mat4<complex_t> out{};
+    out[0] = (-I * half) * e0;
+    out[5] = (I * half) * e1;
+    out[10] = (I * half) * e1;
+    out[15] = (-I * half) * e0;
     return out;
 }
 
@@ -494,6 +618,27 @@ inline Mat4<complex_t> RxyMatrix2Q(const RxyGate* gate, const parameter::Paramet
     out[10] = complex_t{c, 0};
     out[12] = complex_t{s, 0};
     out[15] = complex_t{c, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> RxyDiffMatrix2Q(const RxyGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val * half);
+    const calc_t s = std::sin(val * half);
+    const calc_t dc = -s * half;
+    const calc_t ds = c * half;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{dc, 0};
+    out[3] = complex_t{-ds, 0};
+    out[5] = complex_t{dc, 0};
+    out[6] = complex_t{-ds, 0};
+    out[9] = complex_t{ds, 0};
+    out[10] = complex_t{dc, 0};
+    out[12] = complex_t{ds, 0};
+    out[15] = complex_t{dc, 0};
     return out;
 }
 
@@ -517,6 +662,29 @@ inline Mat4<complex_t> RxzMatrix2Q(const RxzGate* gate, const parameter::Paramet
 }
 
 template <typename complex_t>
+inline Mat4<complex_t> RxzDiffMatrix2Q(const RxzGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const complex_t I{0, 1};
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val * half);
+    const calc_t s = std::sin(val * half);
+    const calc_t dc = -s * half;
+    const calc_t ds = c * half;
+    const complex_t ids = -I * ds;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{dc, 0};
+    out[1] = ids;
+    out[4] = ids;
+    out[5] = complex_t{dc, 0};
+    out[10] = complex_t{dc, 0};
+    out[11] = -ids;
+    out[14] = -ids;
+    out[15] = complex_t{dc, 0};
+    return out;
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> RyzMatrix2Q(const RyzGate* gate, const parameter::ParameterResolver& pr) {
     using calc_t = typename complex_t::value_type;
     const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
@@ -535,6 +703,27 @@ inline Mat4<complex_t> RyzMatrix2Q(const RyzGate* gate, const parameter::Paramet
 }
 
 template <typename complex_t>
+inline Mat4<complex_t> RyzDiffMatrix2Q(const RyzGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    constexpr calc_t half = static_cast<calc_t>(0.5);
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val * half);
+    const calc_t s = std::sin(val * half);
+    const calc_t dc = -s * half;
+    const calc_t ds = c * half;
+    Mat4<complex_t> out{};
+    out[0] = complex_t{dc, 0};
+    out[1] = complex_t{-ds, 0};
+    out[4] = complex_t{ds, 0};
+    out[5] = complex_t{dc, 0};
+    out[10] = complex_t{dc, 0};
+    out[11] = complex_t{ds, 0};
+    out[14] = complex_t{-ds, 0};
+    out[15] = complex_t{dc, 0};
+    return out;
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> GivensMatrix2Q(const GivensGate* gate, const parameter::ParameterResolver& pr) {
     using calc_t = typename complex_t::value_type;
     const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
@@ -547,6 +736,22 @@ inline Mat4<complex_t> GivensMatrix2Q(const GivensGate* gate, const parameter::P
     out[9] = complex_t{s, 0};
     out[10] = complex_t{c, 0};
     out[15] = complex_t{1, 0};
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> GivensDiffMatrix2Q(const GivensGate* gate, const parameter::ParameterResolver& pr) {
+    using calc_t = typename complex_t::value_type;
+    const auto val = GetSingleCoeffValue<calc_t>(gate, pr);
+    const calc_t c = std::cos(val);
+    const calc_t s = std::sin(val);
+    const calc_t dc = -s;
+    const calc_t ds = c;
+    Mat4<complex_t> out{};
+    out[5] = complex_t{dc, 0};
+    out[6] = complex_t{-ds, 0};
+    out[9] = complex_t{ds, 0};
+    out[10] = complex_t{dc, 0};
     return out;
 }
 
@@ -598,12 +803,34 @@ inline Mat4<complex_t> CustomTwoParamMatrix2Q(const CustomTwoParamGate* gate, co
 }
 
 template <typename complex_t>
-inline Mat4<complex_t> GateMatrix2QObjOrder12(const std::shared_ptr<BasicGate>& gate,
-                                              const parameter::ParameterResolver& pr, bool diff) {
-    // Returns matrix in basis |00>,|01>,|10>,|11> with qubit order (obj[1], obj[0]) for 2-object-qubit gates.
-    if (diff) {
-        throw std::runtime_error("mqmps does not support applying differential gates yet.");
+inline Mat4<complex_t> GateMatrix2QObjOrder12Diff(const std::shared_ptr<BasicGate>& gate,
+                                                  const parameter::ParameterResolver& pr) {
+    const auto id = gate->GetID();
+    switch (id) {
+        case GateID::SWAPalpha:
+            return SWAPalphaDiffMatrix2Q<complex_t>(static_cast<SWAPalphaGate*>(gate.get()), pr);
+        case GateID::Rxx:
+            return RxxDiffMatrix2Q<complex_t>(static_cast<RxxGate*>(gate.get()), pr);
+        case GateID::Ryy:
+            return RyyDiffMatrix2Q<complex_t>(static_cast<RyyGate*>(gate.get()), pr);
+        case GateID::Rzz:
+            return RzzDiffMatrix2Q<complex_t>(static_cast<RzzGate*>(gate.get()), pr);
+        case GateID::Rxy:
+            return RxyDiffMatrix2Q<complex_t>(static_cast<RxyGate*>(gate.get()), pr);
+        case GateID::Rxz:
+            return RxzDiffMatrix2Q<complex_t>(static_cast<RxzGate*>(gate.get()), pr);
+        case GateID::Ryz:
+            return RyzDiffMatrix2Q<complex_t>(static_cast<RyzGate*>(gate.get()), pr);
+        case GateID::Givens:
+            return GivensDiffMatrix2Q<complex_t>(static_cast<GivensGate*>(gate.get()), pr);
+        default:
+            throw std::runtime_error(fmt::format("mqmps: differential 2-qubit gate id {} not supported.", id));
     }
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> GateMatrix2QObjOrder12NoDiff(const std::shared_ptr<BasicGate>& gate,
+                                                    const parameter::ParameterResolver& pr) {
     const auto id = gate->GetID();
     switch (id) {
         case GateID::SWAP:
@@ -638,6 +865,19 @@ inline Mat4<complex_t> GateMatrix2QObjOrder12(const std::shared_ptr<BasicGate>& 
 }
 
 template <typename complex_t>
+inline Mat4<complex_t> GateMatrix2QObjOrder12(const std::shared_ptr<BasicGate>& gate,
+                                              const parameter::ParameterResolver& pr, bool diff) {
+    // Returns matrix in basis |00>,|01>,|10>,|11> with qubit order (obj[1], obj[0]) for 2-object-qubit gates.
+    // Match mqvector semantics: only apply the differential form when the gate is marked as grad-required.
+    // This keeps `diff=true` as an internal/advanced feature without affecting normal circuit execution.
+    const bool diff_active = diff && gate->GradRequired();
+    if (diff_active) {
+        return GateMatrix2QObjOrder12Diff<complex_t>(gate, pr);
+    }
+    return GateMatrix2QObjOrder12NoDiff<complex_t>(gate, pr);
+}
+
+template <typename complex_t>
 inline Mat4<complex_t> ControlledMatrix(const Mat2<complex_t>& u_target) {
     // Matrix in order (control, target), basis |00>,|01>,|10>,|11>.
     Mat4<complex_t> out = Eye4<complex_t>();
@@ -646,6 +886,18 @@ inline Mat4<complex_t> ControlledMatrix(const Mat2<complex_t>& u_target) {
     out[11] = u_target[1];
     out[14] = u_target[2];
     out[15] = u_target[3];
+    return out;
+}
+
+template <typename complex_t>
+inline Mat4<complex_t> ControlledDiffMatrix(const Mat2<complex_t>& du_target) {
+    // Differential of a controlled single-qubit gate w.r.t. the target parameter:
+    // d(|0><0|⊗I + |1><1|⊗U)/dθ = |1><1|⊗dU.
+    Mat4<complex_t> out{};
+    out[10] = du_target[0];
+    out[11] = du_target[1];
+    out[14] = du_target[2];
+    out[15] = du_target[3];
     return out;
 }
 
@@ -867,7 +1119,11 @@ class MPSCompileState {
 
     Mat4 ControlledSingleQubitGateMatrix(GateID id, const std::shared_ptr<BasicGate>& g, qbit_t target) {
         const auto bare = MakeBareSingleQubitGate(id, g, target);
+        const bool diff_active = diff_ && bare->GradRequired();
         const auto u_target = GateMatrix1Q<complex_t>(bare, pr_, diff_);
+        if (diff_active) {
+            return detail::ControlledDiffMatrix<complex_t>(u_target);
+        }
         return detail::ControlledMatrix<complex_t>(u_target);
     }
 

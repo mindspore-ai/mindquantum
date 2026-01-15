@@ -115,7 +115,7 @@ class MPSState {
     void InitZeroState_();
 
     void Apply1QOnPhysical_(qbit_t pos, const std::array<complex_t, 4>& u);
-    void Apply2QOnBond_(qbit_t bond, const std::array<complex_t, 16>& u);
+    void Apply2QOnBond_(qbit_t bond, const std::array<complex_t, 16>& u, bool renormalize = true);
 
     // Full-state helpers (explicit statevector conversion; guarded by an internal output-size cap).
     VT<complex_t> ContractToStateVectorPhysicalOrder_() const;
