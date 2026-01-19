@@ -28,13 +28,13 @@ namespace mindquantum::sim::mps::compiler {
 template <typename complex_t>
 struct Op1Q {
     qbit_t pos = 0;
-    std::array<complex_t, 4> mat{};  // row-major 2x2
+    std::array<complex_t, 4> mat{};  // gate coefficients (row-major 2x2; independent of MPS column-major linalg)
 };
 
 template <typename complex_t>
 struct Op2Q {
     qbit_t bond = 0;                  // left site index (bond between bond and bond+1)
-    std::array<complex_t, 16> mat{};  // row-major 4x4, basis |00>,|01>,|10>,|11> (left,right)
+    std::array<complex_t, 16> mat{};  // gate coefficients (row-major 4x4; basis |00>,|01>,|10>,|11> (left,right))
 };
 
 struct OpMeasure {

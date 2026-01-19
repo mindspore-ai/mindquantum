@@ -256,7 +256,7 @@ constexpr Mat2<complex_t> SXdagMatrix1Q() {
 template <typename complex_t>
 inline Mat2<complex_t> ToMat2(const tensor::Matrix& m) {
     const auto mat = tensor::ops::cpu::to_vector<complex_t>(m);
-    // tensor::Matrix is row-major in nested vector form: mat[row][col]
+    // tensor::Matrix converts to a nested vector in row/col order; we pack gate coefficients in row-major order.
     return Mat2<complex_t>{mat[0][0], mat[0][1], mat[1][0], mat[1][1]};
 }
 

@@ -34,6 +34,11 @@
 #include "ops/basic_gate.h"
 #include "ops/hamiltonian.h"
 
+namespace mindquantum::sim::mps::detail::linalg {
+template <typename T>
+class MatrixView;
+}  // namespace mindquantum::sim::mps::detail::linalg
+
 namespace mindquantum::sim::mps::detail {
 template <typename qs_policy_t_>
 class MPSState {
@@ -111,6 +116,11 @@ class MPSState {
         size_t dl = 1;
         size_t dr = 1;
     };
+
+    static linalg::MatrixView<const complex_t> GammaView0(const GammaSite& site);
+    static linalg::MatrixView<const complex_t> GammaView1(const GammaSite& site);
+    static linalg::MatrixView<complex_t> GammaView0Mut(GammaSite& site);
+    static linalg::MatrixView<complex_t> GammaView1Mut(GammaSite& site);
 
     void InitZeroState_();
 

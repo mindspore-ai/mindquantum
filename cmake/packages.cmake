@@ -201,6 +201,15 @@ find_package(Python 3.7.0 COMPONENTS Interpreter Development.Module)
 
 # ------------------------------------------------------------------------------
 
+# ==============================================================================
+# BLAS/LAPACK (required for mqmps)
+
+# Enforce LP64 BLAS/LAPACK integers (32-bit Fortran INTEGER).
+set(BLA_SIZEOF_INTEGER 4)
+
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
 # Check if we are being used directly or via add_subdirectory()
 if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
   if(NOT MQ_PYTHON_PACKAGE_NAME)

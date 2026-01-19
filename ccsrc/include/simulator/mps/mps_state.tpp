@@ -27,21 +27,17 @@
 #include <string>
 #include <utility>
 
-#include <Eigen/Dense>
-#include <Eigen/SVD>
-
 #include "core/utils.h"
+#include "simulator/mps/detail/linalg/blas.h"
+#include "simulator/mps/detail/linalg/lapack_svd.h"
+#include "simulator/mps/detail/linalg/matrix.h"
 #include "simulator/mps/compiler/mps_compiler.h"
 #include "simulator/mps/mps_state.h"
 
 namespace mindquantum::sim::mps::detail {
 namespace detail {
 template <typename T>
-using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-template <typename T>
-using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-template <typename T>
-using RowVec = Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>;
+using Mat = linalg::Matrix<T>;
 
 template <typename calc_t>
 inline calc_t SafeInv(calc_t x, calc_t floor) {
@@ -57,45 +53,27 @@ struct TwoSiteWorkspace {
     MatT L;
     MatT R;
     MatT Theta;
-    Eigen::BDCSVD<MatT> svd;
-    Eigen::Index svd_rows_cap = 0;
-    Eigen::Index svd_cols_cap = 0;
-    unsigned int svd_opts = 0;
+    linalg::SvdWorkspace<T> svd;
 
     void EnsureCapacity(size_t bond_dim_cap) {
         // Allocate for worst-case local sizes:
         //   L: (2*D_L) x D_M, R: D_M x (2*D_R), Theta: (2*D_L) x (2*D_R)
         // with D_L,D_M,D_R <= bond_dim_cap.
-        const auto cap = static_cast<Eigen::Index>(bond_dim_cap);
-        if (cap <= 0) {
+        const auto cap = static_cast<size_t>(bond_dim_cap);
+        if (cap == 0) {
             return;
         }
-        const Eigen::Index two_cap = 2 * cap;
+        const size_t two_cap = 2 * cap;
 
-        if (L.size() < two_cap * cap) {
-            L.resize(two_cap, cap);
+        if (L.storage_size() < two_cap * cap) {
+            L.reserve(two_cap, cap);
         }
-        if (R.size() < cap * two_cap) {
-            R.resize(cap, two_cap);
+        if (R.storage_size() < cap * two_cap) {
+            R.reserve(cap, two_cap);
         }
-        if (Theta.size() < two_cap * two_cap) {
-            Theta.resize(two_cap, two_cap);
+        if (Theta.storage_size() < two_cap * two_cap) {
+            Theta.reserve(two_cap, two_cap);
         }
-    }
-
-    void EnsureSvdCapacity(Eigen::Index rows, Eigen::Index cols, unsigned int opts) {
-        if (rows <= svd_rows_cap && cols <= svd_cols_cap && opts == svd_opts) {
-            return;
-        }
-        svd = Eigen::BDCSVD<MatT>(rows, cols, opts);
-        svd_rows_cap = rows;
-        svd_cols_cap = cols;
-        svd_opts = opts;
-    }
-
-    void ComputeSvd(const MatT& a, unsigned int opts) {
-        EnsureSvdCapacity(a.rows(), a.cols(), opts);
-        svd.compute(a, opts);
     }
 };
 }  // namespace detail
@@ -241,6 +219,66 @@ inline complex_t EvaluateMergedPauliSumWithPrefixReuse(qbit_t n_qubits, const VT
     return out;
 }
 }  // namespace detail
+
+template <typename qs_policy_t_>
+auto MPSState<qs_policy_t_>::GammaView0(const GammaSite& site) -> linalg::MatrixView<const complex_t> {
+    if (site.dl == 0 || site.dr == 0) {
+        throw std::runtime_error("mqmps: invalid GammaSite dimensions (zero bond dimension).");
+    }
+    if (site.dl != 0 && site.dr > std::numeric_limits<size_t>::max() / site.dl) {
+        throw std::runtime_error("mqmps: GammaSite size overflow.");
+    }
+    const size_t expected = site.dl * site.dr;
+    if (site.g0.size() != expected) {
+        throw std::runtime_error("mqmps: GammaSite g0 buffer size mismatch.");
+    }
+    return linalg::MatrixView<const complex_t>(site.g0.data(), site.dl, site.dr, site.dl);
+}
+
+template <typename qs_policy_t_>
+auto MPSState<qs_policy_t_>::GammaView1(const GammaSite& site) -> linalg::MatrixView<const complex_t> {
+    if (site.dl == 0 || site.dr == 0) {
+        throw std::runtime_error("mqmps: invalid GammaSite dimensions (zero bond dimension).");
+    }
+    if (site.dl != 0 && site.dr > std::numeric_limits<size_t>::max() / site.dl) {
+        throw std::runtime_error("mqmps: GammaSite size overflow.");
+    }
+    const size_t expected = site.dl * site.dr;
+    if (site.g1.size() != expected) {
+        throw std::runtime_error("mqmps: GammaSite g1 buffer size mismatch.");
+    }
+    return linalg::MatrixView<const complex_t>(site.g1.data(), site.dl, site.dr, site.dl);
+}
+
+template <typename qs_policy_t_>
+auto MPSState<qs_policy_t_>::GammaView0Mut(GammaSite& site) -> linalg::MatrixView<complex_t> {
+    if (site.dl == 0 || site.dr == 0) {
+        throw std::runtime_error("mqmps: invalid GammaSite dimensions (zero bond dimension).");
+    }
+    if (site.dl != 0 && site.dr > std::numeric_limits<size_t>::max() / site.dl) {
+        throw std::runtime_error("mqmps: GammaSite size overflow.");
+    }
+    const size_t expected = site.dl * site.dr;
+    if (site.g0.size() != expected) {
+        throw std::runtime_error("mqmps: GammaSite g0 buffer size mismatch.");
+    }
+    return linalg::MatrixView<complex_t>(site.g0.data(), site.dl, site.dr, site.dl);
+}
+
+template <typename qs_policy_t_>
+auto MPSState<qs_policy_t_>::GammaView1Mut(GammaSite& site) -> linalg::MatrixView<complex_t> {
+    if (site.dl == 0 || site.dr == 0) {
+        throw std::runtime_error("mqmps: invalid GammaSite dimensions (zero bond dimension).");
+    }
+    if (site.dl != 0 && site.dr > std::numeric_limits<size_t>::max() / site.dl) {
+        throw std::runtime_error("mqmps: GammaSite size overflow.");
+    }
+    const size_t expected = site.dl * site.dr;
+    if (site.g1.size() != expected) {
+        throw std::runtime_error("mqmps: GammaSite g1 buffer size mismatch.");
+    }
+    return linalg::MatrixView<complex_t>(site.g1.data(), site.dl, site.dr, site.dl);
+}
 
 template <typename qs_policy_t_>
 MPSState<qs_policy_t_>::MPSState(qbit_t n_qubits, unsigned seed, uint32_t max_bond_dimension)
@@ -441,32 +479,39 @@ auto MPSState<qs_policy_t_>::ContractToStateVectorPhysicalOrder_() const -> VT<c
             throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions.");
         }
 
-        Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(site.dl),
-                                 static_cast<Eigen::Index>(site.dr));
-        Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(site.dl),
-                                 static_cast<Eigen::Index>(site.dr));
+        const auto g0 = GammaView0(site);
+        const auto g1 = GammaView1(site);
 
-        Mat a0 = acc * g0;
-        Mat a1 = acc * g1;
+        Mat a0(acc.rows(), dr);
+        Mat a1(acc.rows(), dr);
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(acc).view(), g0, complex_t{0, 0}, a0.view());
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(acc).view(), g1, complex_t{0, 0}, a1.view());
 
         // Scale columns by lambda[p+1]
         for (size_t j = 0; j < dr; ++j) {
-            a0.col(static_cast<Eigen::Index>(j)) *= lam_next[j];
-            a1.col(static_cast<Eigen::Index>(j)) *= lam_next[j];
+            const auto s = lam_next[j];
+            for (size_t i = 0; i < a0.rows(); ++i) {
+                a0(i, j) *= s;
+                a1(i, j) *= s;
+            }
         }
 
-        Mat next(2 * acc.rows(), a0.cols());
-        next.topRows(acc.rows()) = a0;
-        next.bottomRows(acc.rows()) = a1;
-        acc = std::move(next);
+        Mat next(2 * acc.rows(), dr);
+        for (size_t j = 0; j < dr; ++j) {
+            for (size_t i = 0; i < acc.rows(); ++i) {
+                next(i, j) = a0(i, j);
+                next(i + acc.rows(), j) = a1(i, j);
+            }
+        }
+        acc.swap(next);
     }
 
     if (acc.cols() != 1) {
         throw std::runtime_error("mqmps: final bond dimension is not 1; cannot convert to full state vector.");
     }
     VT<complex_t> out(static_cast<size_t>(acc.rows()));
-    for (Eigen::Index i = 0; i < acc.rows(); ++i) {
-        out.at(static_cast<size_t>(i)) = acc(i, 0);
+    for (size_t i = 0; i < acc.rows(); ++i) {
+        out.at(i) = acc(i, 0);
     }
     return out;
 }
@@ -513,7 +558,6 @@ auto MPSState<qs_policy_t_>::GetQS() const -> VT<py_qs_data_t> {
 template <typename qs_policy_t_>
 void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& vec_phys) {
     using Mat = detail::Mat<complex_t>;
-    using VecR = detail::Vec<calc_type>;
     constexpr calc_type eps_rel = qs_policy_t::kEpsRel;
     constexpr calc_type lambda_floor = qs_policy_t::kLambdaFloor;
 
@@ -532,9 +576,9 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
     lambdas_.at(0) = VT<calc_type>{static_cast<calc_type>(1)};
 
     // B has shape (D_i, 2^(n-i)), with i=0 -> (1, 2^n)
-    Mat B(1, static_cast<Eigen::Index>(dim));
+    Mat B(1, dim);
     for (size_t i = 0; i < dim; ++i) {
-        B(0, static_cast<Eigen::Index>(i)) = vec_phys.at(i);
+        B(0, i) = vec_phys.at(i);
     }
 
     for (qbit_t i = 0; i < n_qubits_; ++i) {
@@ -547,19 +591,21 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
             throw std::runtime_error("mqmps: internal SetQS reshape mismatch.");
         }
 
-        Mat M(static_cast<Eigen::Index>(2 * D_i), static_cast<Eigen::Index>(cols_rest));
+        Mat M(2 * D_i, cols_rest);
         for (size_t cr = 0; cr < cols_rest; ++cr) {
             const size_t c0 = 2 * cr;
             const size_t c1 = 2 * cr + 1;
-            M.block(0, static_cast<Eigen::Index>(cr), static_cast<Eigen::Index>(D_i), 1) = B.col(
-                static_cast<Eigen::Index>(c0));
-            M.block(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(cr), static_cast<Eigen::Index>(D_i), 1)
-                = B.col(static_cast<Eigen::Index>(c1));
+            for (size_t a = 0; a < D_i; ++a) {
+                M(a, cr) = B(a, c0);
+                M(a + D_i, cr) = B(a, c1);
+            }
         }
 
-        Eigen::BDCSVD<Mat> svd(M, Eigen::ComputeThinU | Eigen::ComputeThinV);
-        const auto s_all = svd.singularValues();  // real
-        const auto r_full = static_cast<size_t>(s_all.size());
+        thread_local linalg::SvdWorkspace<complex_t> svd_ws;
+        linalg::ComputeThinSvd(&M, &svd_ws);
+
+        const auto& s_all = svd_ws.S;
+        const auto r_full = s_all.size();
         size_t r_keep = r_full;
         if (max_bond_dimension_ != 0) {
             r_keep = std::min(r_keep, static_cast<size_t>(max_bond_dimension_));
@@ -567,9 +613,9 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
         if (r_keep == 0) {
             r_keep = 1;
         }
-        if (r_keep > 1 && s_all(0) > 0) {
+        if (r_keep > 1 && s_all.at(0) > 0) {
             for (size_t k = 0; k < r_keep; ++k) {
-                if (s_all(static_cast<Eigen::Index>(k)) / s_all(0) < eps_rel) {
+                if (s_all.at(k) / s_all.at(0) < eps_rel) {
                     r_keep = std::max<size_t>(1, k);
                     break;
                 }
@@ -580,7 +626,7 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
         VT<calc_type> s_kept(r_keep);
         calc_type s_norm2 = 0;
         for (size_t k = 0; k < r_keep; ++k) {
-            s_kept[k] = s_all(static_cast<Eigen::Index>(k));
+            s_kept[k] = s_all.at(k);
             s_norm2 += s_kept[k] * s_kept[k];
         }
         const calc_type s_norm = std::sqrt(s_norm2);
@@ -598,24 +644,33 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
         site.g0.resize(D_i * D_next);
         site.g1.resize(D_i * D_next);
 
-        const auto U = svd.matrixU().leftCols(static_cast<Eigen::Index>(D_next));
+        const auto& U = svd_ws.U;
+        const auto& lam_left = lambdas_.at(static_cast<size_t>(i));
+        VT<calc_type> inv_left(D_i);
         for (size_t a = 0; a < D_i; ++a) {
-            const calc_type inv = detail::SafeInv(lambdas_.at(static_cast<size_t>(i)).at(a), lambda_floor);
-            for (size_t k = 0; k < D_next; ++k) {
-                site.g0.at(a * D_next + k) = U(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(k)) * inv;
-                site.g1.at(a * D_next + k) = U(static_cast<Eigen::Index>(a + D_i), static_cast<Eigen::Index>(k)) * inv;
+            inv_left[a] = detail::SafeInv(lam_left.at(a), lambda_floor);
+        }
+
+        auto g0 = GammaView0Mut(site);
+        auto g1 = GammaView1Mut(site);
+        for (size_t k = 0; k < D_next; ++k) {
+            for (size_t a = 0; a < D_i; ++a) {
+                const auto inv = inv_left[a];
+                g0(a, k) = U(a, k) * inv;
+                g1(a, k) = U(a + D_i, k) * inv;
             }
         }
 
         // Build next B = diag(S) * Vh
-        const auto V = svd.matrixV().leftCols(static_cast<Eigen::Index>(D_next));  // (cols_rest x D_next)
-        Mat B_next(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(cols_rest));
-        B_next.setZero();
-        for (size_t k = 0; k < D_next; ++k) {
-            const calc_type s_k = lambdas_.at(static_cast<size_t>(i + 1)).at(k);
-            B_next.row(static_cast<Eigen::Index>(k)) = s_k * V.col(static_cast<Eigen::Index>(k)).adjoint();
+        const auto& Vh = svd_ws.Vh;  // (r_full x cols_rest)
+        Mat B_next(D_next, cols_rest);
+        for (size_t c = 0; c < cols_rest; ++c) {
+            for (size_t k = 0; k < D_next; ++k) {
+                const calc_type s_k = lambdas_.at(static_cast<size_t>(i + 1)).at(k);
+                B_next(k, c) = static_cast<complex_t>(s_k) * Vh(k, c);
+            }
         }
-        B = std::move(B_next);
+        B.swap(B_next);
     }
 
     // Ensure mapping is identity after SetQS.
@@ -702,7 +757,6 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
         throw std::runtime_error("mqmps: inconsistent bond dimensions for 2-site update.");
     }
 
-    constexpr unsigned int svd_opts = Eigen::ComputeThinU | Eigen::ComputeThinV;
     thread_local detail::TwoSiteWorkspace<complex_t> ws;
     const size_t bond_dim_cap = [&]() {
         if (max_bond_dimension_ != 0) {
@@ -716,55 +770,68 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     auto& L = ws.L;
     auto& R = ws.R;
     auto& Theta = ws.Theta;
-    L.resize(static_cast<Eigen::Index>(2 * D_L), static_cast<Eigen::Index>(D_M));
-    R.resize(static_cast<Eigen::Index>(D_M), static_cast<Eigen::Index>(2 * D_R));
+    L.resize(2 * D_L, D_M);
+    R.resize(D_M, 2 * D_R);
 
-    // Build L
-    for (size_t a = 0; a < D_L; ++a) {
-        const calc_type lam_left = lambdas_.at(static_cast<size_t>(i)).at(a);
-        for (size_t m = 0; m < D_M; ++m) {
-            const calc_type lam_mid = lambdas_.at(static_cast<size_t>(i + 1)).at(m);
-            const auto scale = lam_left * lam_mid;
-            L(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(m)) = site_i.g0.at(a * D_M + m) * scale;
-            L(static_cast<Eigen::Index>(a + D_L), static_cast<Eigen::Index>(m)) = site_i.g1.at(a * D_M + m) * scale;
-        }
-    }
+    const auto& lam_left = lambdas_.at(static_cast<size_t>(i));
+    const auto& lam_mid = lambdas_.at(static_cast<size_t>(i + 1));
+    const auto& lam_right = lambdas_.at(static_cast<size_t>(i + 2));
+    const auto gi0 = GammaView0(site_i);
+    const auto gi1 = GammaView1(site_i);
+    const auto gj0 = GammaView0(site_j);
+    const auto gj1 = GammaView1(site_j);
 
-    // Build R
+    // Build L (column-major: fill each column contiguously).
     for (size_t m = 0; m < D_M; ++m) {
-        for (size_t r = 0; r < D_R; ++r) {
-            const calc_type lam_right = lambdas_.at(static_cast<size_t>(i + 2)).at(r);
-            R(static_cast<Eigen::Index>(m), static_cast<Eigen::Index>(r)) = site_j.g0.at(m * D_R + r) * lam_right;
-            R(static_cast<Eigen::Index>(m), static_cast<Eigen::Index>(r + D_R)) = site_j.g1.at(m * D_R + r) * lam_right;
+        const calc_type lam_m = lam_mid.at(m);
+        for (size_t a = 0; a < D_L; ++a) {
+            const auto scale = lam_left.at(a) * lam_m;
+            L(a, m) = gi0(a, m) * scale;
+        }
+        for (size_t a = 0; a < D_L; ++a) {
+            const auto scale = lam_left.at(a) * lam_m;
+            L(a + D_L, m) = gi1(a, m) * scale;
         }
     }
 
-    Theta.resize(static_cast<Eigen::Index>(2 * D_L), static_cast<Eigen::Index>(2 * D_R));
-    Theta.noalias() = L * R;
+    // Build R (column-major: fill each column contiguously).
+    for (size_t r = 0; r < D_R; ++r) {
+        const calc_type lam_r = lam_right.at(r);
+        for (size_t m = 0; m < D_M; ++m) {
+            R(m, r) = gj0(m, r) * lam_r;
+        }
+        for (size_t m = 0; m < D_M; ++m) {
+            R(m, r + D_R) = gj1(m, r) * lam_r;
+        }
+    }
+
+    Theta.resize(2 * D_L, 2 * D_R);
+    linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(L).view(), static_cast<const Mat&>(R).view(),
+                 complex_t{0, 0}, Theta.view());
 
     // Apply 4x4 gate to physical indices (unrolled).
-    for (size_t a = 0; a < D_L; ++a) {
-        for (size_t r = 0; r < D_R; ++r) {
-            const auto t00 = Theta(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(r));
-            const auto t01 = Theta(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(r + D_R));
-            const auto t10 = Theta(static_cast<Eigen::Index>(a + D_L), static_cast<Eigen::Index>(r));
-            const auto t11 = Theta(static_cast<Eigen::Index>(a + D_L), static_cast<Eigen::Index>(r + D_R));
+    for (size_t r = 0; r < D_R; ++r) {
+        for (size_t a = 0; a < D_L; ++a) {
+            const auto t00 = Theta(a, r);
+            const auto t01 = Theta(a, r + D_R);
+            const auto t10 = Theta(a + D_L, r);
+            const auto t11 = Theta(a + D_L, r + D_R);
 
             const auto v00 = u[0] * t00 + u[1] * t01 + u[2] * t10 + u[3] * t11;
             const auto v01 = u[4] * t00 + u[5] * t01 + u[6] * t10 + u[7] * t11;
             const auto v10 = u[8] * t00 + u[9] * t01 + u[10] * t10 + u[11] * t11;
             const auto v11 = u[12] * t00 + u[13] * t01 + u[14] * t10 + u[15] * t11;
 
-            Theta(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(r)) = v00;
-            Theta(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(r + D_R)) = v01;
-            Theta(static_cast<Eigen::Index>(a + D_L), static_cast<Eigen::Index>(r)) = v10;
-            Theta(static_cast<Eigen::Index>(a + D_L), static_cast<Eigen::Index>(r + D_R)) = v11;
+            Theta(a, r) = v00;
+            Theta(a, r + D_R) = v01;
+            Theta(a + D_L, r) = v10;
+            Theta(a + D_L, r + D_R) = v11;
         }
     }
 
-    ws.ComputeSvd(Theta, svd_opts);
-    const auto& s_all = ws.svd.singularValues();
-    const size_t r_full = static_cast<size_t>(s_all.size());
+    linalg::ComputeThinSvd(&Theta, &ws.svd);
+    const auto& s_all = ws.svd.S;
+    const size_t r_full = s_all.size();
     size_t r_keep = r_full;
     if (max_bond_dimension_ != 0) {
         r_keep = std::min(r_keep, static_cast<size_t>(max_bond_dimension_));
@@ -772,9 +839,9 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     if (r_keep == 0) {
         r_keep = 1;
     }
-    if (r_keep > 1 && s_all(0) > 0) {
+    if (r_keep > 1 && s_all[0] > 0) {
         for (size_t k = 0; k < r_keep; ++k) {
-            if (s_all(static_cast<Eigen::Index>(k)) / s_all(0) < eps_rel) {
+            if (s_all[k] / s_all[0] < eps_rel) {
                 r_keep = std::max<size_t>(1, k);
                 break;
             }
@@ -783,7 +850,7 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
 
     VT<calc_type> s_kept(r_keep);
     for (size_t k = 0; k < r_keep; ++k) {
-        s_kept[k] = s_all(static_cast<Eigen::Index>(k));
+        s_kept[k] = s_all[k];
     }
     if (renormalize) {
         // Keep the MPS state normalized when simulating unitary circuits (and when truncation is enabled).
@@ -805,18 +872,24 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     lambdas_.at(static_cast<size_t>(i + 1)) = std::move(s_kept);
 
     const size_t D_new = lambdas_.at(static_cast<size_t>(i + 1)).size();
-    const auto U = ws.svd.matrixU().leftCols(static_cast<Eigen::Index>(D_new));
-    const auto V = ws.svd.matrixV().leftCols(static_cast<Eigen::Index>(D_new));  // (2*D_R x D_new)
+    const auto& U = ws.svd.U;
+    const auto& Vh = ws.svd.Vh;  // (r_full x 2*D_R)
 
     // Update left site gamma (D_L x D_new)
     site_i.dr = D_new;
     site_i.g0.resize(D_L * D_new);
     site_i.g1.resize(D_L * D_new);
+    VT<calc_type> inv_left(D_L);
     for (size_t a = 0; a < D_L; ++a) {
-        const calc_type inv = detail::SafeInv(lambdas_.at(static_cast<size_t>(i)).at(a), lambda_floor);
-        for (size_t k = 0; k < D_new; ++k) {
-            site_i.g0.at(a * D_new + k) = U(static_cast<Eigen::Index>(a), static_cast<Eigen::Index>(k)) * inv;
-            site_i.g1.at(a * D_new + k) = U(static_cast<Eigen::Index>(a + D_L), static_cast<Eigen::Index>(k)) * inv;
+        inv_left[a] = detail::SafeInv(lam_left.at(a), lambda_floor);
+    }
+    auto site_i_g0 = GammaView0Mut(site_i);
+    auto site_i_g1 = GammaView1Mut(site_i);
+    for (size_t k = 0; k < D_new; ++k) {
+        for (size_t a = 0; a < D_L; ++a) {
+            const auto inv = inv_left[a];
+            site_i_g0(a, k) = U(a, k) * inv;
+            site_i_g1(a, k) = U(a + D_L, k) * inv;
         }
     }
 
@@ -824,13 +897,13 @@ void MPSState<qs_policy_t_>::Apply2QOnBond_(qbit_t bond, const std::array<comple
     site_j.dl = D_new;
     site_j.g0.resize(D_new * D_R);
     site_j.g1.resize(D_new * D_R);
-    for (size_t k = 0; k < D_new; ++k) {
-        for (size_t r = 0; r < D_R; ++r) {
-            const calc_type inv = detail::SafeInv(lambdas_.at(static_cast<size_t>(i + 2)).at(r), lambda_floor);
-            // Vh(k, r) = conj(V(r, k))
-            site_j.g0.at(k * D_R + r) = std::conj(V(static_cast<Eigen::Index>(r), static_cast<Eigen::Index>(k))) * inv;
-            site_j.g1.at(k * D_R + r) = std::conj(V(static_cast<Eigen::Index>(r + D_R), static_cast<Eigen::Index>(k)))
-                                        * inv;
+    auto site_j_g0 = GammaView0Mut(site_j);
+    auto site_j_g1 = GammaView1Mut(site_j);
+    for (size_t r = 0; r < D_R; ++r) {
+        const calc_type inv = detail::SafeInv(lam_right.at(r), lambda_floor);
+        for (size_t k = 0; k < D_new; ++k) {
+            site_j_g0(k, r) = Vh(k, r) * inv;
+            site_j_g1(k, r) = Vh(k, r + D_R) * inv;
         }
     }
 }
@@ -942,13 +1015,12 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
             // - project measured sites in-place (no full state-vector construction),
             // - re-canonicalize via an identity sweep (also normalizes).
             using Mat = detail::Mat<complex_t>;
-            using RowVec = detail::RowVec<complex_t>;
 
             // Sample full register bits in physical site order.
             VT<int> bits(static_cast<size_t>(n_qubits_), 0);
             if (n_qubits_ > 0) {
-                RowVec x(1);
-                x(0) = complex_t{1, 0};
+                Mat x(1, 1);
+                x(0, 0) = complex_t{1, 0};
                 for (qbit_t i = 0; i < n_qubits_; ++i) {
                     const auto D_i = lambdas_.at(static_cast<size_t>(i)).size();
                     const auto D_next = lambdas_.at(static_cast<size_t>(i + 1)).size();
@@ -957,22 +1029,29 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
                     if (site.dl != D_i || site.dr != D_next) {
                         throw std::runtime_error("mqmps: inconsistent dimensions in measurement sampling.");
                     }
-                    Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(D_i),
-                                             static_cast<Eigen::Index>(D_next));
-                    Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(D_i),
-                                             static_cast<Eigen::Index>(D_next));
-                    if (x.cols() != static_cast<Eigen::Index>(D_i)) {
+                    const auto g0 = GammaView0(site);
+                    const auto g1 = GammaView1(site);
+                    if (x.cols() != D_i) {
                         throw std::runtime_error("mqmps: internal measurement sampling dim mismatch.");
                     }
-                    RowVec y0 = x * g0;
-                    RowVec y1 = x * g1;
+                    Mat y0(1, D_next);
+                    Mat y1(1, D_next);
+                    linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g0, complex_t{0, 0},
+                                 y0.view());
+                    linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g1, complex_t{0, 0},
+                                 y1.view());
+
                     for (size_t k = 0; k < D_next; ++k) {
-                        y0(static_cast<Eigen::Index>(k)) *= lam_next[k];
-                        y1(static_cast<Eigen::Index>(k)) *= lam_next[k];
+                        y0(0, k) *= lam_next[k];
+                        y1(0, k) *= lam_next[k];
                     }
 
-                    const double p0 = static_cast<double>(y0.squaredNorm());
-                    const double p1 = static_cast<double>(y1.squaredNorm());
+                    double p0 = 0;
+                    double p1 = 0;
+                    for (size_t k = 0; k < D_next; ++k) {
+                        p0 += static_cast<double>(std::norm(y0(0, k)));
+                        p1 += static_cast<double>(std::norm(y1(0, k)));
+                    }
                     const double denom = p0 + p1;
                     if (denom <= 0) {
                         throw std::runtime_error("mqmps: invalid probability in measurement sampling.");
@@ -980,7 +1059,11 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
                     const double prob0 = p0 / denom;
                     const bool bit0 = (rng_() < prob0);
                     bits.at(static_cast<size_t>(i)) = bit0 ? 0 : 1;
-                    x = bit0 ? y0 : y1;
+                    if (bit0) {
+                        x.swap(y0);
+                    } else {
+                        x.swap(y1);
+                    }
                 }
             }
 
@@ -1107,7 +1190,6 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
                                                                    const MST<size_t>& key_map, unsigned seed) const
     -> VT<unsigned> {
     using Mat = detail::Mat<complex_t>;
-    using RowVec = detail::RowVec<complex_t>;
 
     auto sim = derived_t(*this);
     sim.SetSeed(seed);
@@ -1141,6 +1223,7 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
     VT<Mat> R_env(static_cast<size_t>(sim.n_qubits_) + 1);
     R_env.at(static_cast<size_t>(sim.n_qubits_)) = Mat(1, 1);
     R_env.at(static_cast<size_t>(sim.n_qubits_))(0, 0) = complex_t{1, 0};
+    Mat tmp;
     for (qbit_t i = sim.n_qubits_ - 1; i >= 0; --i) {
         const auto D_i = sim.lambdas_.at(static_cast<size_t>(i)).size();
         const auto D_next = sim.lambdas_.at(static_cast<size_t>(i + 1)).size();
@@ -1149,16 +1232,26 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
         if (site.dl != D_i || site.dr != D_next) {
             throw std::runtime_error("mqmps: inconsistent dimensions in sampling env.");
         }
-        Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        const auto g0 = GammaView0(site);
+        const auto g1 = GammaView1(site);
         const auto& Rn = R_env.at(static_cast<size_t>(i + 1));
         Mat Rscaled = Rn;
         // Rscaled = diag(lambda_next) * Rn * diag(lambda_next)
-        for (size_t k = 0; k < D_next; ++k) {
-            Rscaled.row(static_cast<Eigen::Index>(k)) *= lam_next[k];
-            Rscaled.col(static_cast<Eigen::Index>(k)) *= lam_next[k];
-        }
-        Mat Ri = g0 * Rscaled * g0.adjoint() + g1 * Rscaled * g1.adjoint();
+        linalg::ScaleByDiagonals(Rscaled.view(), lam_next, lam_next, "sampling env Rscaled");
+
+        Mat Ri(D_i, D_i);
+        tmp.resize(D_i, D_next);
+
+        // Ri = g0 * Rscaled * g0^H
+        linalg::Gemm('N', 'N', complex_t{1, 0}, g0, static_cast<const Mat&>(Rscaled).view(), complex_t{0, 0},
+                     tmp.view());
+        linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(tmp).view(), g0, complex_t{0, 0}, Ri.view());
+
+        // Ri += g1 * Rscaled * g1^H
+        linalg::Gemm('N', 'N', complex_t{1, 0}, g1, static_cast<const Mat&>(Rscaled).view(), complex_t{0, 0},
+                     tmp.view());
+        linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(tmp).view(), g1, complex_t{1, 0}, Ri.view());
+
         R_env.at(static_cast<size_t>(i)) = std::move(Ri);
     }
 
@@ -1168,8 +1261,12 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
     for (size_t shot = 0; shot < shots; ++shot) {
         // Sample full register bits in physical site order.
         VT<int> bits(static_cast<size_t>(sim.n_qubits_), 0);
-        RowVec x(1);
-        x(0) = complex_t{1, 0};
+        Mat x(1, 1);
+        x(0, 0) = complex_t{1, 0};
+        Mat y0;
+        Mat y1;
+        Mat tmp_vec;
+        Mat scalar(1, 1);
         for (qbit_t i = 0; i < sim.n_qubits_; ++i) {
             const auto D_i = sim.lambdas_.at(static_cast<size_t>(i)).size();
             const auto D_next = sim.lambdas_.at(static_cast<size_t>(i + 1)).size();
@@ -1178,20 +1275,36 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
             if (site.dl != D_i || site.dr != D_next) {
                 throw std::runtime_error("mqmps: inconsistent dimensions in sampling.");
             }
-            Eigen::Map<const Mat> g0(site.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-            Eigen::Map<const Mat> g1(site.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-            if (x.cols() != static_cast<Eigen::Index>(D_i)) {
+            const auto g0 = GammaView0(site);
+            const auto g1 = GammaView1(site);
+            if (x.cols() != D_i) {
                 throw std::runtime_error("mqmps: internal sampling left-vector dim mismatch.");
             }
-            RowVec y0 = x * g0;
-            RowVec y1 = x * g1;
+            y0.resize(1, D_next);
+            y1.resize(1, D_next);
+            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g0, complex_t{0, 0},
+                         y0.view());
+            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g1, complex_t{0, 0},
+                         y1.view());
             for (size_t k = 0; k < D_next; ++k) {
-                y0(static_cast<Eigen::Index>(k)) *= lam_next[k];
-                y1(static_cast<Eigen::Index>(k)) *= lam_next[k];
+                y0(0, k) *= lam_next[k];
+                y1(0, k) *= lam_next[k];
             }
             const auto& Rn = R_env.at(static_cast<size_t>(i + 1));
-            const complex_t p0 = (y0 * (Rn * y0.adjoint()))(0, 0);
-            const complex_t p1 = (y1 * (Rn * y1.adjoint()))(0, 0);
+
+            tmp_vec.resize(D_next, 1);
+            linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(Rn).view(), static_cast<const Mat&>(y0).view(),
+                         complex_t{0, 0}, tmp_vec.view());
+            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(y0).view(),
+                         static_cast<const Mat&>(tmp_vec).view(), complex_t{0, 0}, scalar.view());
+            const complex_t p0 = scalar(0, 0);
+
+            linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(Rn).view(), static_cast<const Mat&>(y1).view(),
+                         complex_t{0, 0}, tmp_vec.view());
+            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(y1).view(),
+                         static_cast<const Mat&>(tmp_vec).view(), complex_t{0, 0}, scalar.view());
+            const complex_t p1 = scalar(0, 0);
+
             const double p0r = static_cast<double>(std::real(p0));
             const double p1r = static_cast<double>(std::real(p1));
             if (p0r < 0 || p1r < 0) {
@@ -1204,7 +1317,11 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
             const double prob0 = p0r / denom;
             const bool bit0 = (sim.rng_() < prob0);
             bits.at(static_cast<size_t>(i)) = bit0 ? 0 : 1;
-            x = bit0 ? y0 : y1;
+            if (bit0) {
+                x.swap(y0);
+            } else {
+                x.swap(y1);
+            }
         }
 
         // Report only measured logical qubits.
@@ -1280,11 +1397,7 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
     VT<complex_t> out(dim_rho);
 
     const auto scale_by_lambda = [](const VT<calc_type>& lam_next, Mat* m) {
-        const size_t D = lam_next.size();
-        for (size_t t = 0; t < D; ++t) {
-            m->row(static_cast<Eigen::Index>(t)) *= lam_next[t];
-            m->col(static_cast<Eigen::Index>(t)) *= lam_next[t];
-        }
+        linalg::ScaleByDiagonals(m->view(), lam_next, lam_next, "reduced density matrix lambda scaling");
     };
 
     const auto apply_traced_site = [&](qbit_t site, Mat* e, Mat* a0, Mat* a1, Mat* tmp) {
@@ -1299,17 +1412,19 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
             throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
         }
 
-        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        const auto g0 = GammaView0(g);
+        const auto g1 = GammaView1(g);
 
-        a0->resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        a1->resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        a0->noalias() = (*e) * g0;
-        a1->noalias() = (*e) * g1;
+        a0->resize(D_i, D_next);
+        a1->resize(D_i, D_next);
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(*e).view(), g0, complex_t{0, 0}, a0->view());
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(*e).view(), g1, complex_t{0, 0}, a1->view());
 
-        tmp->resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
-        tmp->noalias() = g0.adjoint() * (*a0);
-        tmp->noalias() += g1.adjoint() * (*a1);
+        tmp->resize(D_next, D_next);
+        linalg::Gemm('C', 'N', complex_t{1, 0}, g0, static_cast<const Mat&>(*a0).view(), complex_t{0, 0},
+                     tmp->view());
+        linalg::Gemm('C', 'N', complex_t{1, 0}, g1, static_cast<const Mat&>(*a1).view(), complex_t{1, 0},
+                     tmp->view());
         scale_by_lambda(lam_next, tmp);
         e->swap(*tmp);
     };
@@ -1366,15 +1481,15 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
             throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
         }
 
-        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        const auto g0 = GammaView0(g);
+        const auto g1 = GammaView1(g);
 
         Mat& ek0 = ws->ket0_stack[depth];
         Mat& ek1 = ws->ket1_stack[depth];
-        ek0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        ek1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        ek0.noalias() = e * g0;
-        ek1.noalias() = e * g1;
+        ek0.resize(D_i, D_next);
+        ek1.resize(D_i, D_next);
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(e).view(), g0, complex_t{0, 0}, ek0.view());
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(e).view(), g1, complex_t{0, 0}, ek1.view());
 
         for (size_t ket_bit = 0; ket_bit < 2; ++ket_bit) {
             const Mat& tmp_k = (ket_bit == 0) ? ek0 : ek1;
@@ -1384,8 +1499,9 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
                 const size_t next_col = col_acc | (bra_bit << log_bit);
 
                 Mat& child = ws->env_stack[depth + 1];
-                child.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
-                child.noalias() = gl.adjoint() * tmp_k;
+                child.resize(D_next, D_next);
+                linalg::Gemm('C', 'N', complex_t{1, 0}, gl, static_cast<const Mat&>(tmp_k).view(), complex_t{0, 0},
+                             child.view());
                 scale_by_lambda(lam_next, &child);
 
                 self(self, depth + 1, kept_pos + 1, next_row, next_col, ws);
@@ -1431,14 +1547,14 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
             throw std::runtime_error("mqmps: internal env dim mismatch in reduced density matrix.");
         }
 
-        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        const auto g0 = GammaView0(g);
+        const auto g1 = GammaView1(g);
 
         // Reuse a0/a1 as env*g0/env*g1 at the kept site.
-        a0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        a1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        a0.noalias() = env * g0;
-        a1.noalias() = env * g1;
+        a0.resize(D_i, D_next);
+        a1.resize(D_i, D_next);
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(env).view(), g0, complex_t{0, 0}, a0.view());
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(env).view(), g1, complex_t{0, 0}, a1.view());
 
         const size_t next_depth = depth + 1;
         const qbit_t next_site_child = kept_pos + 1;
@@ -1449,8 +1565,9 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
                 const auto& gl = (bra_bit == 0) ? g0 : g1;
                 const size_t next_col = col_acc | (bra_bit << log_bit);
 
-                Mat child(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
-                child.noalias() = gl.adjoint() * tmp_k;
+                Mat child(D_next, D_next);
+                linalg::Gemm('C', 'N', complex_t{1, 0}, gl, static_cast<const Mat&>(tmp_k).view(), complex_t{0, 0},
+                             child.view());
                 scale_by_lambda(lam_next, &child);
 
 #pragma omp task firstprivate(child, next_depth, next_site_child, next_row, next_col)
@@ -1493,7 +1610,6 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
     struct ExpectWs {
         Mat a0;
         Mat a1;
-        Mat tmp;
     };
     thread_local ExpectWs ws;
 
@@ -1524,36 +1640,30 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
             throw std::runtime_error("mqmps: inconsistent gamma/lambda dimensions during expectation.");
         }
 
-        Eigen::Map<const Mat> g0(g.g0.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        Eigen::Map<const Mat> g1(g.g1.data(), static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
+        const auto g0 = GammaView0(g);
+        const auto g1 = GammaView1(g);
 
-        ws.a0.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        ws.a1.resize(static_cast<Eigen::Index>(D_i), static_cast<Eigen::Index>(D_next));
-        ws.a0.noalias() = e * g0;
-        ws.a1.noalias() = e * g1;
+        ws.a0.resize(D_i, D_next);
+        ws.a1.resize(D_i, D_next);
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(e).view(), g0, complex_t{0, 0}, ws.a0.view());
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(e).view(), g1, complex_t{0, 0}, ws.a1.view());
 
-        out->resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
-        ws.tmp.resize(static_cast<Eigen::Index>(D_next), static_cast<Eigen::Index>(D_next));
+        out->resize(D_next, D_next);
 
         // out = o00*(g0^H a0) + o01*(g0^H a1) + o10*(g1^H a0) + o11*(g1^H a1)
-        ws.tmp.noalias() = g0.adjoint() * ws.a0;
-        *out = op[0] * ws.tmp;
+        linalg::Gemm('C', 'N', op[0], g0, static_cast<const Mat&>(ws.a0).view(), complex_t{0, 0}, out->view());
         if (op[1] != complex_t{0, 0}) {
-            ws.tmp.noalias() = g0.adjoint() * ws.a1;
-            *out += op[1] * ws.tmp;
+            linalg::Gemm('C', 'N', op[1], g0, static_cast<const Mat&>(ws.a1).view(), complex_t{1, 0}, out->view());
         }
         if (op[2] != complex_t{0, 0}) {
-            ws.tmp.noalias() = g1.adjoint() * ws.a0;
-            *out += op[2] * ws.tmp;
+            linalg::Gemm('C', 'N', op[2], g1, static_cast<const Mat&>(ws.a0).view(), complex_t{1, 0}, out->view());
         }
-        ws.tmp.noalias() = g1.adjoint() * ws.a1;
-        *out += op[3] * ws.tmp;
+        if (op[3] != complex_t{0, 0}) {
+            linalg::Gemm('C', 'N', op[3], g1, static_cast<const Mat&>(ws.a1).view(), complex_t{1, 0}, out->view());
+        }
 
         // out = diag(lam_next) * out * diag(lam_next)
-        for (size_t k = 0; k < D_next; ++k) {
-            out->row(static_cast<Eigen::Index>(k)) *= lam_next[k];
-            out->col(static_cast<Eigen::Index>(k)) *= lam_next[k];
-        }
+        linalg::ScaleByDiagonals(out->view(), lam_next, lam_next, "expectation lambda scaling");
     };
 
     return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(
@@ -1622,44 +1732,36 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTermsBraKet_(const VT<PauliTerm<cal
             throw std::runtime_error("mqmps: internal bra/ket env dim mismatch during expectation.");
         }
 
-        Eigen::Map<const Mat> g0b(gb.g0.data(), static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_b_next));
-        Eigen::Map<const Mat> g1b(gb.g1.data(), static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_b_next));
-        Eigen::Map<const Mat> g0k(gk.g0.data(), static_cast<Eigen::Index>(D_k), static_cast<Eigen::Index>(D_k_next));
-        Eigen::Map<const Mat> g1k(gk.g1.data(), static_cast<Eigen::Index>(D_k), static_cast<Eigen::Index>(D_k_next));
+        const auto g0b = GammaView0(gb);
+        const auto g1b = GammaView1(gb);
+        const auto g0k = GammaView0(gk);
+        const auto g1k = GammaView1(gk);
 
-        ws.ek0.resize(static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_k_next));
-        ws.ek1.resize(static_cast<Eigen::Index>(D_b), static_cast<Eigen::Index>(D_k_next));
-        ws.ek0.noalias() = e_in * g0k;
-        ws.ek1.noalias() = e_in * g1k;
+        ws.ek0.resize(D_b, D_k_next);
+        ws.ek1.resize(D_b, D_k_next);
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(e_in).view(), g0k, complex_t{0, 0},
+                     ws.ek0.view());
+        linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(e_in).view(), g1k, complex_t{0, 0},
+                     ws.ek1.view());
 
-        out->resize(static_cast<Eigen::Index>(D_b_next), static_cast<Eigen::Index>(D_k_next));
-        out->setZero();
-        ws.tmp.resize(static_cast<Eigen::Index>(D_b_next), static_cast<Eigen::Index>(D_k_next));
+        out->resize(D_b_next, D_k_next);
+        out->set_zero();
 
         if (op[0] != complex_t{0, 0}) {
-            ws.tmp.noalias() = g0b.adjoint() * ws.ek0;
-            out->noalias() += op[0] * ws.tmp;
+            linalg::Gemm('C', 'N', op[0], g0b, static_cast<const Mat&>(ws.ek0).view(), complex_t{1, 0}, out->view());
         }
         if (op[1] != complex_t{0, 0}) {
-            ws.tmp.noalias() = g0b.adjoint() * ws.ek1;
-            out->noalias() += op[1] * ws.tmp;
+            linalg::Gemm('C', 'N', op[1], g0b, static_cast<const Mat&>(ws.ek1).view(), complex_t{1, 0}, out->view());
         }
         if (op[2] != complex_t{0, 0}) {
-            ws.tmp.noalias() = g1b.adjoint() * ws.ek0;
-            out->noalias() += op[2] * ws.tmp;
+            linalg::Gemm('C', 'N', op[2], g1b, static_cast<const Mat&>(ws.ek0).view(), complex_t{1, 0}, out->view());
         }
         if (op[3] != complex_t{0, 0}) {
-            ws.tmp.noalias() = g1b.adjoint() * ws.ek1;
-            out->noalias() += op[3] * ws.tmp;
+            linalg::Gemm('C', 'N', op[3], g1b, static_cast<const Mat&>(ws.ek1).view(), complex_t{1, 0}, out->view());
         }
 
         // out = diag(lam_b_next) * out * diag(lam_k_next)
-        for (size_t r = 0; r < D_b_next; ++r) {
-            out->row(static_cast<Eigen::Index>(r)) *= lam_b_next[r];
-        }
-        for (size_t c = 0; c < D_k_next; ++c) {
-            out->col(static_cast<Eigen::Index>(c)) *= lam_k_next[c];
-        }
+        linalg::ScaleByDiagonals(out->view(), lam_b_next, lam_k_next, "bra/ket expectation lambda scaling");
     };
 
     std::optional<complex_t> overlap;
