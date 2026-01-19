@@ -18,6 +18,7 @@
 #define INCLUDE_SIMULATOR_MPS_DETAIL_LINALG_LAPACK_SVD_HPP
 
 #include <algorithm>
+#include <cmath>
 #include <complex>
 #include <limits>
 #include <stdexcept>
@@ -89,9 +90,10 @@ struct SvdWorkspace {
     std::vector<real_t> rwork;
     std::vector<blas_int> iwork;
 
-    // Capacity watermark for the LAPACK workspace query (in column-major dimensions).
-    size_t m_cap = 0;
-    size_t n_cap = 0;
+    // Cached dimensions for the last LAPACK LWORK query.
+    // Note: LWORK is not safely cacheable by per-dimension maxima; it depends on the (m, n) pair.
+    size_t m_last = 0;
+    size_t n_last = 0;
 };
 
 namespace lapack::detail {
@@ -143,8 +145,10 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
 
     const char jobz = 'S';
 
-    // Query work size only when we exceed previous dimensions.
-    if (m > ws->m_cap || n > ws->n_cap) {
+    // Query work size whenever the shape changes.
+    // `*gesdd`'s optimal LWORK depends on the (m, n) pair (not on per-dimension maxima), so caching by
+    // "largest seen m/n" can under-allocate for later calls with different aspect ratios.
+    if (m != ws->m_last || n != ws->n_last) {
         T work_query{};
         blas_int lwork = -1;
         blas_int info = 0;
@@ -166,10 +170,10 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
         if (!(lwork_opt_real > 0)) {
             throw std::runtime_error("mqmps: invalid LAPACK work query result.");
         }
-        const size_t lwork_req = static_cast<size_t>(lwork_opt_real);
+        const size_t lwork_req = static_cast<size_t>(std::ceil(lwork_opt_real));
         ws->work.resize(std::max(ws->work.size(), lwork_req));
-        ws->m_cap = std::max(ws->m_cap, m);
-        ws->n_cap = std::max(ws->n_cap, n);
+        ws->m_last = m;
+        ws->n_last = n;
     }
 
     if (ws->work.empty()) {
