@@ -47,12 +47,12 @@ template <typename T>
 using real_type_t = typename RealType<T>::type;
 
 extern "C" {
-void cgesdd_(const char* jobz, const blas_int* m, const blas_int* n, std::complex<float>* a, const blas_int* lda,
-             float* s, std::complex<float>* u, const blas_int* ldu, std::complex<float>* vt, const blas_int* ldvt,
-             std::complex<float>* work, const blas_int* lwork, float* rwork, blas_int* iwork, blas_int* info);
-void zgesdd_(const char* jobz, const blas_int* m, const blas_int* n, std::complex<double>* a, const blas_int* lda,
-             double* s, std::complex<double>* u, const blas_int* ldu, std::complex<double>* vt, const blas_int* ldvt,
-             std::complex<double>* work, const blas_int* lwork, double* rwork, blas_int* iwork, blas_int* info);
+void cgesvd_(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n, std::complex<float>* a,
+             const blas_int* lda, float* s, std::complex<float>* u, const blas_int* ldu, std::complex<float>* vt,
+             const blas_int* ldvt, std::complex<float>* work, const blas_int* lwork, float* rwork, blas_int* info);
+void zgesvd_(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n, std::complex<double>* a,
+             const blas_int* lda, double* s, std::complex<double>* u, const blas_int* ldu, std::complex<double>* vt,
+             const blas_int* ldvt, std::complex<double>* work, const blas_int* lwork, double* rwork, blas_int* info);
 }  // extern "C"
 
 template <typename T>
@@ -60,21 +60,21 @@ struct Lapack;
 
 template <>
 struct Lapack<std::complex<float>> {
-    static void gesdd(const char* jobz, const blas_int* m, const blas_int* n, std::complex<float>* a, const blas_int* lda,
-                      float* s, std::complex<float>* u, const blas_int* ldu, std::complex<float>* vt,
-                      const blas_int* ldvt, std::complex<float>* work, const blas_int* lwork, float* rwork,
-                      blas_int* iwork, blas_int* info) {
-        cgesdd_(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, iwork, info);
+    static void gesvd(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n, std::complex<float>* a,
+                      const blas_int* lda, float* s, std::complex<float>* u, const blas_int* ldu,
+                      std::complex<float>* vt, const blas_int* ldvt, std::complex<float>* work, const blas_int* lwork,
+                      float* rwork, blas_int* info) {
+        cgesvd_(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info);
     }
 };
 
 template <>
 struct Lapack<std::complex<double>> {
-    static void gesdd(const char* jobz, const blas_int* m, const blas_int* n, std::complex<double>* a,
-                      const blas_int* lda, double* s, std::complex<double>* u, const blas_int* ldu,
-                      std::complex<double>* vt, const blas_int* ldvt, std::complex<double>* work, const blas_int* lwork,
-                      double* rwork, blas_int* iwork, blas_int* info) {
-        zgesdd_(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, iwork, info);
+    static void gesvd(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n,
+                      std::complex<double>* a, const blas_int* lda, double* s, std::complex<double>* u,
+                      const blas_int* ldu, std::complex<double>* vt, const blas_int* ldvt, std::complex<double>* work,
+                      const blas_int* lwork, double* rwork, blas_int* info) {
+        zgesvd_(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info);
     }
 };
 
@@ -88,7 +88,6 @@ struct SvdWorkspace {
 
     std::vector<T> work;
     std::vector<real_t> rwork;
-    std::vector<blas_int> iwork;
 
     // Cached dimensions for the last LAPACK LWORK query.
     // Note: LWORK is not safely cacheable by per-dimension maxima; it depends on the (m, n) pair.
@@ -108,9 +107,10 @@ inline blas_int ToBlasInt(size_t v, const char* what) {
     return blas::detail::ToBlasInt(v, what);
 }
 
-inline std::runtime_error SvdError(const char* routine, char jobz, size_t m, size_t n, blas_int info) {
-    std::string msg = std::string("mqmps: ") + routine + " failed (jobz=" + jobz + ", m=" + std::to_string(m)
-                      + ", n=" + std::to_string(n) + ", info=" + std::to_string(info) + ")";
+inline std::runtime_error SvdError(const char* routine, char jobu, char jobvt, size_t m, size_t n, blas_int info) {
+    std::string msg = std::string("mqmps: ") + routine + " failed (jobu=" + jobu + ", jobvt=" + jobvt
+                      + ", m=" + std::to_string(m) + ", n=" + std::to_string(n) + ", info=" + std::to_string(info)
+                      + ")";
     if (info < 0) {
         msg += "; invalid argument " + std::to_string(-info);
     } else if (info > 0) {
@@ -136,18 +136,16 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
     ws->Vh.resize(r, n);
     ws->S.resize(r);
 
-    ws->iwork.resize(std::max<size_t>(ws->iwork.size(), lapack::detail::CheckedMul(8, r)));
-
-    // For complex *gesdd with jobz='S':
-    //   LRWORK >= 5*r*r + 7*r,  where r=min(m,n).
-    const size_t rwork_req = lapack::detail::CheckedMul(5, lapack::detail::CheckedMul(r, r)) + lapack::detail::CheckedMul(7, r);
+    // For complex *gesvd:
+    //   LRWORK >= 5*r,  where r=min(m,n).
+    const size_t rwork_req = lapack::detail::CheckedMul(5, r);
     ws->rwork.resize(std::max(ws->rwork.size(), rwork_req));
 
-    const char jobz = 'S';
+    const char jobu = 'S';
+    const char jobvt = 'S';
 
     // Query work size whenever the shape changes.
-    // `*gesdd`'s optimal LWORK depends on the (m, n) pair (not on per-dimension maxima), so caching by
-    // "largest seen m/n" can under-allocate for later calls with different aspect ratios.
+    // `*gesvd`'s optimal LWORK depends on the (m, n) pair (not on per-dimension maxima).
     if (m != ws->m_last || n != ws->n_last) {
         T work_query{};
         blas_int lwork = -1;
@@ -159,11 +157,11 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
         const auto ldu_i = lapack::detail::ToBlasInt(ws->U.leading_dim(), "ldu");
         const auto ldvt_i = lapack::detail::ToBlasInt(ws->Vh.leading_dim(), "ldvt");
 
-        Lapack<T>::gesdd(&jobz, &m_i, &n_i, a->data(), &lda_i, ws->S.data(), ws->U.data(), &ldu_i, ws->Vh.data(),
-                         &ldvt_i, &work_query, &lwork, ws->rwork.data(), ws->iwork.data(), &info);
+        Lapack<T>::gesvd(&jobu, &jobvt, &m_i, &n_i, a->data(), &lda_i, ws->S.data(), ws->U.data(), &ldu_i,
+                         ws->Vh.data(), &ldvt_i, &work_query, &lwork, ws->rwork.data(), &info);
 
         if (info != 0) {
-            throw lapack::detail::SvdError("gesdd(work_query)", jobz, m, n, info);
+            throw lapack::detail::SvdError("gesvd(work_query)", jobu, jobvt, m, n, info);
         }
 
         const auto lwork_opt_real = std::real(work_query);
@@ -176,10 +174,6 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
         ws->n_last = n;
     }
 
-    if (ws->work.empty()) {
-        ws->work.resize(1);
-    }
-
     const auto m_i = lapack::detail::ToBlasInt(m, "m");
     const auto n_i = lapack::detail::ToBlasInt(n, "n");
     const auto lda_i = lapack::detail::ToBlasInt(a->leading_dim(), "lda");
@@ -188,10 +182,10 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
     const auto lwork_i = lapack::detail::ToBlasInt(ws->work.size(), "lwork");
 
     blas_int info = 0;
-    Lapack<T>::gesdd(&jobz, &m_i, &n_i, a->data(), &lda_i, ws->S.data(), ws->U.data(), &ldu_i, ws->Vh.data(),
-                     &ldvt_i, ws->work.data(), &lwork_i, ws->rwork.data(), ws->iwork.data(), &info);
+    Lapack<T>::gesvd(&jobu, &jobvt, &m_i, &n_i, a->data(), &lda_i, ws->S.data(), ws->U.data(), &ldu_i, ws->Vh.data(),
+                     &ldvt_i, ws->work.data(), &lwork_i, ws->rwork.data(), &info);
     if (info != 0) {
-        throw lapack::detail::SvdError("gesdd", jobz, m, n, info);
+        throw lapack::detail::SvdError("gesvd", jobu, jobvt, m, n, info);
     }
 }
 }  // namespace mindquantum::sim::mps::detail::linalg
