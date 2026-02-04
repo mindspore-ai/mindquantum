@@ -13,7 +13,7 @@ body:
     attributes:
       label: 漏洞分析结构反馈
       description: |
-        Provide a thorough analysis of the vulnerability's impact, including vulnerability scoring for the MindSpore.
+        Provide a thorough analysis of the vulnerability's impact, including vulnerability scoring for the MindQuantum.
       placeholder: "Vulnerability analysis."
     validations:
       required: true
