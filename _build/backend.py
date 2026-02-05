@@ -26,7 +26,15 @@ from pathlib import Path
 
 import setuptools.build_meta
 from utils import fdopen, get_executable_in_path
-from wheel_filename import parse_wheel_filename
+
+try:
+    from wheel_filename import parse_wheel_filename
+except ImportError:  # wheel-filename >= 2.0
+    from wheel_filename import WheelFilename
+
+    def parse_wheel_filename(filename):
+        return WheelFilename.parse(filename)
+
 
 # ==============================================================================
 
@@ -355,7 +363,14 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
                     logging.info('----------------------------------------')
                     logging.info('Trying to delocate to platform: %s', plat)
                     if call_auditwheel(
-                        'repair', '--plat', plat, '-w', delocated_wheel_directory, *exclude_args, name_full, allow_failure=True
+                        'repair',
+                        '--plat',
+                        plat,
+                        '-w',
+                        delocated_wheel_directory,
+                        *exclude_args,
+                        name_full,
+                        allow_failure=True,
                     ):
                         break
         elif platform.system() == 'Darwin':
