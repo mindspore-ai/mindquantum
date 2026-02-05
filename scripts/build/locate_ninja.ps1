@@ -67,6 +67,8 @@ if (-Not $has_ninja) {
         $pip_args += '-i', 'https://pypi.tuna.tsinghua.edu.cn/simple'
     }
 
+    Write-Output ("Upgrading pip: $PYTHON -m pip install " + ($pip_args -Join ' ') + " -U pip")
+    Call-Cmd "$PYTHON" -m pip install @pip_args -U pip
     Write-Output "Installing Ninja inside the Python virtual environment"
     Call-Cmd "$PYTHON" -m pip install @pip_args ninja
     foreach($_ninja in @("$python_venv_path\Scripts\ninja",
