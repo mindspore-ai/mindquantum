@@ -87,6 +87,8 @@ if (-Not $has_cmake) {
         $pip_args += '-i', 'https://pypi.tuna.tsinghua.edu.cn/simple'
     }
 
+    Write-Output ("Upgrading pip: $PYTHON -m pip install " + ($pip_args -Join ' ') + " -U pip")
+    Call-Cmd "$PYTHON" -m pip install @pip_args -U pip
     Write-Output "Installing CMake inside the Python virtual environment"
     Call-Cmd "$PYTHON" -m pip install @pip_args "cmake>=$cmake_version_min"
     foreach($_cmake in @("$python_venv_path\Scripts\cmake",

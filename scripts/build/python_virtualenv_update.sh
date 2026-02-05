@@ -41,7 +41,10 @@ fi
 # ==============================================================================
 
 if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
-    critical_pkgs=(pip 'build==0.9.0')
+    echo "Upgrading pip: $PYTHON -m pip install -U pip"
+    call_cmd "$PYTHON" -m pip install -U pip
+
+    critical_pkgs=('build==0.9.0')
 
     read_build_system_requires "$ROOTDIR/pyproject.toml"
     critical_pkgs+=("${build_requires[@]}")

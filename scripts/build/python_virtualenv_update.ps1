@@ -35,7 +35,10 @@ if ($null -eq $ROOTDIR) {
 # ==============================================================================
 
 if ($created_venv -or $do_update_venv) {
-    $critical_pkgs = @('pip')
+    Write-Output "Upgrading pip: $PYTHON -m pip install -U pip"
+    Call-Cmd "$PYTHON" -m pip install -U pip
+
+    $critical_pkgs = @()
 
     $build_requires = Read-BuildSystemRequires "$ROOTDIR/pyproject.toml"
     $critical_pkgs += $build_requires
