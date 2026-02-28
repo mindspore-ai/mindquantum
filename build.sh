@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # shellcheck disable=SC2154,SC2034
-
+set -x
 BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd )
 ROOTDIR="$BASEPATH"
 PROGRAM=$(basename "${BASH_SOURCE[0]:-$0}")
