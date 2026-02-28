@@ -31,6 +31,7 @@
 #include "simulator/mps/detail/linalg/blas.h"
 #include "simulator/mps/detail/linalg/lapack_svd.h"
 #include "simulator/mps/detail/linalg/matrix.h"
+#include "simulator/mps/detail/linalg/threading.h"
 #include "simulator/mps/compiler/mps_compiler.h"
 #include "simulator/mps/mps_state.h"
 
@@ -968,6 +969,7 @@ void MPSState<qs_policy_t_>::ReorderToTargetMapping_(const qbits_t& logical_at_p
 template <typename qs_policy_t_>
 auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                    bool diff) -> std::map<std::string, int> {
+    linalg::ScopedOpenBlasNumThreads openblas_threads(1);
     compiler::MPSCompiler<calc_type> comp(n_qubits_);
     auto program = comp.Compile(circ, pr, pos_of_logical_, logical_at_pos_, diff);
 
@@ -1395,6 +1397,7 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
     }
 
     VT<complex_t> out(dim_rho);
+    linalg::ScopedOpenBlasNumThreads openblas_threads(1);
 
     const auto scale_by_lambda = [](const VT<calc_type>& lam_next, Mat* m) {
         linalg::ScaleByDiagonals(m->view(), lam_next, lam_next, "reduced density matrix lambda scaling");
