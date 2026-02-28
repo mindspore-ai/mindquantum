@@ -101,6 +101,6 @@ constexpr T* launder(T* t) noexcept {
 
 }  // namespace std
 
-#endif // End of C++20 compatibility checks
+#endif  // End of C++20 compatibility checks
 
 #endif /* CORE_CXX20_COMPATIBILITY_HPP */

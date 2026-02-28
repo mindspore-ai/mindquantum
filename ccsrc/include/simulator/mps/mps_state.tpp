@@ -28,11 +28,11 @@
 #include <utility>
 
 #include "core/utils.h"
+#include "simulator/mps/compiler/mps_compiler.h"
 #include "simulator/mps/detail/linalg/blas.h"
 #include "simulator/mps/detail/linalg/lapack_svd.h"
 #include "simulator/mps/detail/linalg/matrix.h"
 #include "simulator/mps/detail/linalg/threading.h"
-#include "simulator/mps/compiler/mps_compiler.h"
 #include "simulator/mps/mps_state.h"
 
 namespace mindquantum::sim::mps::detail {
@@ -1284,10 +1284,8 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
             }
             y0.resize(1, D_next);
             y1.resize(1, D_next);
-            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g0, complex_t{0, 0},
-                         y0.view());
-            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g1, complex_t{0, 0},
-                         y1.view());
+            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g0, complex_t{0, 0}, y0.view());
+            linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(x).view(), g1, complex_t{0, 0}, y1.view());
             for (size_t k = 0; k < D_next; ++k) {
                 y0(0, k) *= lam_next[k];
                 y1(0, k) *= lam_next[k];
@@ -1295,14 +1293,14 @@ auto MPSState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(const circuit
             const auto& Rn = R_env.at(static_cast<size_t>(i + 1));
 
             tmp_vec.resize(D_next, 1);
-            linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(Rn).view(), static_cast<const Mat&>(y0).view(),
-                         complex_t{0, 0}, tmp_vec.view());
+            linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(Rn).view(),
+                         static_cast<const Mat&>(y0).view(), complex_t{0, 0}, tmp_vec.view());
             linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(y0).view(),
                          static_cast<const Mat&>(tmp_vec).view(), complex_t{0, 0}, scalar.view());
             const complex_t p0 = scalar(0, 0);
 
-            linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(Rn).view(), static_cast<const Mat&>(y1).view(),
-                         complex_t{0, 0}, tmp_vec.view());
+            linalg::Gemm('N', 'C', complex_t{1, 0}, static_cast<const Mat&>(Rn).view(),
+                         static_cast<const Mat&>(y1).view(), complex_t{0, 0}, tmp_vec.view());
             linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(y1).view(),
                          static_cast<const Mat&>(tmp_vec).view(), complex_t{0, 0}, scalar.view());
             const complex_t p1 = scalar(0, 0);
@@ -1424,10 +1422,8 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
         linalg::Gemm('N', 'N', complex_t{1, 0}, static_cast<const Mat&>(*e).view(), g1, complex_t{0, 0}, a1->view());
 
         tmp->resize(D_next, D_next);
-        linalg::Gemm('C', 'N', complex_t{1, 0}, g0, static_cast<const Mat&>(*a0).view(), complex_t{0, 0},
-                     tmp->view());
-        linalg::Gemm('C', 'N', complex_t{1, 0}, g1, static_cast<const Mat&>(*a1).view(), complex_t{1, 0},
-                     tmp->view());
+        linalg::Gemm('C', 'N', complex_t{1, 0}, g0, static_cast<const Mat&>(*a0).view(), complex_t{0, 0}, tmp->view());
+        linalg::Gemm('C', 'N', complex_t{1, 0}, g1, static_cast<const Mat&>(*a1).view(), complex_t{1, 0}, tmp->view());
         scale_by_lambda(lam_next, tmp);
         e->swap(*tmp);
     };
@@ -1574,9 +1570,7 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
                 scale_by_lambda(lam_next, &child);
 
 #pragma omp task firstprivate(child, next_depth, next_site_child, next_row, next_col)
-                {
-                    dfs_parallel(next_depth, next_site_child, std::move(child), next_row, next_col);
-                }
+                { dfs_parallel(next_depth, next_site_child, std::move(child), next_row, next_col); }
             }
         }
     };
@@ -1588,9 +1582,7 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
 #pragma omp single
         {
 #pragma omp taskgroup
-            {
-                dfs_parallel(0, 0, std::move(init_env), 0, 0);
-            }
+            { dfs_parallel(0, 0, std::move(init_env), 0, 0); }
         }
     }
 
@@ -1670,7 +1662,10 @@ auto MPSState<qs_policy_t_>::ExpectationPauliTerms_(const VT<PauliTerm<calc_type
     };
 
     return detail::EvaluateMergedPauliSumWithPrefixReuse<complex_t, calc_type>(
-        n_qubits_, pauli_sum_cache_->phys_terms, eye, apply_local, get_pauli_op, []() { return complex_t{1, 0}; },
+        n_qubits_, pauli_sum_cache_->phys_terms, eye, apply_local, get_pauli_op,
+        []() {
+            return complex_t{1, 0};
+        },
         false);
 }
 

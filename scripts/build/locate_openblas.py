@@ -21,7 +21,7 @@ from pathlib import Path
 
 def main():
     # Import intentionally local to keep script fast-failing with a clear error.
-    import scipy_openblas32 as openblas
+    import scipy_openblas32 as openblas  # pylint: disable=import-outside-toplevel
 
     lib_dir = Path(openblas.get_lib_dir()).resolve()
     lib_file = lib_dir / openblas.get_library(fullname=True)
@@ -41,4 +41,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
