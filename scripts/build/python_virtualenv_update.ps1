@@ -34,6 +34,96 @@ if ($null -eq $ROOTDIR) {
 
 # ==============================================================================
 
+$openblas_python_pkg = 'scipy-openblas32==0.3.31.22.1'
+
+function Query-OpenBlasInfo {
+    &"$PYTHON" (Join-Path $ROOTDIR 'scripts\build\locate_openblas.py')
+}
+
+function Configure-OpenBlas {
+    if ($dry_run) {
+        Write-Warning "Dry-run mode: using placeholder OpenBLAS paths."
+        $openblas_root = Join-Path $ROOTDIR 'build\.dry-run\scipy_openblas32'
+        $openblas_lib_dir = Join-Path $openblas_root 'lib'
+        if ($IsWindowsEnv) {
+            $openblas_lib = Join-Path $openblas_lib_dir 'libscipy_openblas.dll'
+        }
+        elseif ($IsMacOSEnv) {
+            $openblas_lib = Join-Path $openblas_lib_dir 'libscipy_openblas.dylib'
+        }
+        else {
+            $openblas_lib = Join-Path $openblas_lib_dir 'libscipy_openblas.so'
+        }
+        $openblas_cmake_dir = Join-Path $openblas_lib_dir 'cmake\openblas'
+
+        $Env:MQ_OPENBLAS_ROOT = "$openblas_root"
+        $Env:MQ_OPENBLAS_LIB_DIR = "$openblas_lib_dir"
+        $Env:MQ_OPENBLAS_LIB = "$openblas_lib"
+        $Env:MQ_OPENBLAS_CMAKE_DIR = "$openblas_cmake_dir"
+        $Env:MQ_OPENBLAS_SYMBOL_PREFIX = 'scipy_'
+    }
+    else {
+        $openblas_info = @(Query-OpenBlasInfo 2>$null)
+        if ($LastExitCode -ne 0 -or $openblas_info.Count -eq 0) {
+            Write-Output "Installing $openblas_python_pkg inside the Python virtual environment"
+            Call-Cmd "$PYTHON" -m pip install --prefer-binary "$openblas_python_pkg"
+            $openblas_info = @(Query-OpenBlasInfo)
+            if ($LastExitCode -ne 0 -or $openblas_info.Count -eq 0) {
+                die "Unable to locate OpenBLAS from scipy-openblas32 after installation."
+            }
+        }
+
+        foreach ($line in $openblas_info) {
+            if ($line -match '^([^=]+)=(.*)$') {
+                Set-Item -Path "Env:$($Matches[1])" -Value $Matches[2]
+            }
+        }
+
+        if (-Not (Test-Path -Path "$Env:MQ_OPENBLAS_LIB")) {
+            die "OpenBLAS library file does not exist: $Env:MQ_OPENBLAS_LIB"
+        }
+    }
+
+    if ($IsWindowsEnv) {
+        if ([string]::IsNullOrEmpty($Env:PATH)) {
+            $Env:PATH = "$Env:MQ_OPENBLAS_LIB_DIR"
+        }
+        else {
+            $Env:PATH = "$Env:MQ_OPENBLAS_LIB_DIR;$Env:PATH"
+        }
+        if ([string]::IsNullOrEmpty($Env:MQ_LIB)) {
+            $Env:MQ_LIB = "$Env:MQ_OPENBLAS_LIB_DIR"
+        }
+        else {
+            $Env:MQ_LIB = "$Env:MQ_OPENBLAS_LIB_DIR;$Env:MQ_LIB"
+        }
+    }
+    elseif ($IsMacOSEnv) {
+        if ([string]::IsNullOrEmpty($Env:DYLD_LIBRARY_PATH)) {
+            $Env:DYLD_LIBRARY_PATH = "$Env:MQ_OPENBLAS_LIB_DIR"
+        }
+        else {
+            $Env:DYLD_LIBRARY_PATH = "$Env:MQ_OPENBLAS_LIB_DIR:$Env:DYLD_LIBRARY_PATH"
+        }
+    }
+    else {
+        if ([string]::IsNullOrEmpty($Env:LD_LIBRARY_PATH)) {
+            $Env:LD_LIBRARY_PATH = "$Env:MQ_OPENBLAS_LIB_DIR"
+        }
+        else {
+            $Env:LD_LIBRARY_PATH = "$Env:MQ_OPENBLAS_LIB_DIR:$Env:LD_LIBRARY_PATH"
+        }
+    }
+
+    Write-Output 'Using OpenBLAS from Python package:'
+    Write-Output "  root       = $Env:MQ_OPENBLAS_ROOT"
+    Write-Output "  lib dir    = $Env:MQ_OPENBLAS_LIB_DIR"
+    Write-Output "  library    = $Env:MQ_OPENBLAS_LIB"
+    Write-Output "  cmake dir  = $Env:MQ_OPENBLAS_CMAKE_DIR"
+}
+
+# ==============================================================================
+
 if ($created_venv -or $do_update_venv) {
     $critical_pkgs = @('pip')
 
@@ -43,7 +133,7 @@ if ($created_venv -or $do_update_venv) {
     Write-Output ("Updating critical Python packages: $PYTHON -m pip install -U " + ($critical_pkgs -Join ' '))
     Call-Cmd "$PYTHON" -m pip install -U @critical_pkgs
 
-    $pkgs = @('pybind11')
+    $pkgs = @('pybind11', "$openblas_python_pkg")
 
     if ($IsLinuxEnv) {
         $pkgs += 'auditwheel'
@@ -99,5 +189,9 @@ if ($created_venv -or $do_update_venv) {
     Write-Output ("Updating Python packages: $PYTHON -m pip install " + ($pip_args -Join ' ')  + ($pkgs -Join ' '))
     Call-Cmd "$PYTHON" -m pip install @pip_args @pkgs
 }
+
+# ==============================================================================
+
+Configure-OpenBlas
 
 # ==============================================================================

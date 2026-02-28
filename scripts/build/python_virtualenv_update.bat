@@ -33,10 +33,12 @@ if "!ROOTDIR!" == "" (
 
 rem ============================================================================
 
+set openblas_python_pkg=scipy-openblas32==0.3.31.22.1
+
 if !created_venv! == 1 goto :update_venv
 if !do_update_venv! == 1 goto :update_venv
 
-goto :EOF
+goto :configure_openblas
 
 :update_venv
 
@@ -44,7 +46,7 @@ set critical_pkgs=pip "setuptools>=61,<=65.5.1;python_version<'3.12'" "setuptool
 echo Updating critical Python packages: !PYTHON! -m pip install -U !critical_pkgs!
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install -U !critical_pkgs!
 
-set pkgs=pybind11
+set pkgs=pybind11 !openblas_python_pkg!
 
 if !cmake_from_venv! == 1 set pkgs=!pkgs! cmake
 
@@ -88,7 +90,68 @@ call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install !pip_args! !pkgs!
 set pip_args=
 set pkgs=
 
-goto :EOF
+goto :configure_openblas
+
+rem ============================================================================
+
+:configure_openblas
+if !dry_run! == 1 (
+  echo Dry-run mode: using placeholder OpenBLAS paths.
+  set MQ_OPENBLAS_ROOT=!ROOTDIR!\build\.dry-run\scipy_openblas32
+  set MQ_OPENBLAS_LIB_DIR=!MQ_OPENBLAS_ROOT!\lib
+  set MQ_OPENBLAS_LIB=!MQ_OPENBLAS_LIB_DIR!\libscipy_openblas.dll
+  set MQ_OPENBLAS_CMAKE_DIR=!MQ_OPENBLAS_LIB_DIR!\cmake\openblas
+  set MQ_OPENBLAS_SYMBOL_PREFIX=scipy_
+  goto :openblas_done
+)
+
+"!PYTHON!" "!ROOTDIR!\scripts\build\locate_openblas.py" >NUL 2>&1
+if !ERRORLEVEL! NEQ 0 (
+  echo Installing !openblas_python_pkg! inside the Python virtual environment
+  call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install --prefer-binary !openblas_python_pkg!
+  if !ERRORLEVEL! NEQ 0 exit /B !ERRORLEVEL!
+)
+
+for /F "usebackq tokens=1,* delims==" %%i in (`"!PYTHON!" "!ROOTDIR!\scripts\build\locate_openblas.py"`) do set %%i=%%j
+
+if NOT DEFINED MQ_OPENBLAS_ROOT (
+  echo ERROR: Unable to detect OpenBLAS root from scipy-openblas32.
+  exit /B 1
+)
+if NOT DEFINED MQ_OPENBLAS_LIB_DIR (
+  echo ERROR: Unable to detect OpenBLAS lib directory from scipy-openblas32.
+  exit /B 1
+)
+if NOT DEFINED MQ_OPENBLAS_LIB (
+  echo ERROR: Unable to detect OpenBLAS library file from scipy-openblas32.
+  exit /B 1
+)
+if NOT DEFINED MQ_OPENBLAS_CMAKE_DIR (
+  echo ERROR: Unable to detect OpenBLAS CMake config directory from scipy-openblas32.
+  exit /B 1
+)
+if NOT EXIST "!MQ_OPENBLAS_LIB!" (
+  echo ERROR: OpenBLAS library file does not exist: !MQ_OPENBLAS_LIB!
+  exit /B 1
+)
+
+:openblas_done
+if "!PATH!" == "" (
+  set PATH=!MQ_OPENBLAS_LIB_DIR!
+) else (
+  set PATH=!MQ_OPENBLAS_LIB_DIR!;!PATH!
+)
+if "!MQ_LIB!" == "" (
+  set MQ_LIB=!MQ_OPENBLAS_LIB_DIR!
+) else (
+  set MQ_LIB=!MQ_OPENBLAS_LIB_DIR!;!MQ_LIB!
+)
+
+echo Using OpenBLAS from Python package:
+echo   root      = !MQ_OPENBLAS_ROOT!
+echo   lib dir   = !MQ_OPENBLAS_LIB_DIR!
+echo   library   = !MQ_OPENBLAS_LIB!
+echo   cmake dir = !MQ_OPENBLAS_CMAKE_DIR!
 
 rem ============================================================================
 

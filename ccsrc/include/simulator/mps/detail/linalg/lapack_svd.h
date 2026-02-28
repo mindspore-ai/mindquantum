@@ -29,6 +29,14 @@
 #include "simulator/mps/detail/linalg/blas.h"
 #include "simulator/mps/detail/linalg/matrix.h"
 
+#ifndef BLAS_SYMBOL_PREFIX
+#define BLAS_SYMBOL_PREFIX
+#endif
+
+#define MQ_LAPACK_CAT_IMPL(x, y) x##y
+#define MQ_LAPACK_CAT(x, y) MQ_LAPACK_CAT_IMPL(x, y)
+#define MQ_LAPACK_SYM(name) MQ_LAPACK_CAT(BLAS_SYMBOL_PREFIX, name)
+
 namespace mindquantum::sim::mps::detail::linalg {
 template <typename T>
 struct RealType;
@@ -47,12 +55,14 @@ template <typename T>
 using real_type_t = typename RealType<T>::type;
 
 extern "C" {
-void cgesvd_(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n, std::complex<float>* a,
-             const blas_int* lda, float* s, std::complex<float>* u, const blas_int* ldu, std::complex<float>* vt,
-             const blas_int* ldvt, std::complex<float>* work, const blas_int* lwork, float* rwork, blas_int* info);
-void zgesvd_(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n, std::complex<double>* a,
-             const blas_int* lda, double* s, std::complex<double>* u, const blas_int* ldu, std::complex<double>* vt,
-             const blas_int* ldvt, std::complex<double>* work, const blas_int* lwork, double* rwork, blas_int* info);
+void MQ_LAPACK_SYM(cgesvd_)(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n,
+                            std::complex<float>* a, const blas_int* lda, float* s, std::complex<float>* u,
+                            const blas_int* ldu, std::complex<float>* vt, const blas_int* ldvt,
+                            std::complex<float>* work, const blas_int* lwork, float* rwork, blas_int* info);
+void MQ_LAPACK_SYM(zgesvd_)(const char* jobu, const char* jobvt, const blas_int* m, const blas_int* n,
+                            std::complex<double>* a, const blas_int* lda, double* s, std::complex<double>* u,
+                            const blas_int* ldu, std::complex<double>* vt, const blas_int* ldvt,
+                            std::complex<double>* work, const blas_int* lwork, double* rwork, blas_int* info);
 }  // extern "C"
 
 template <typename T>
@@ -64,7 +74,7 @@ struct Lapack<std::complex<float>> {
                       const blas_int* lda, float* s, std::complex<float>* u, const blas_int* ldu,
                       std::complex<float>* vt, const blas_int* ldvt, std::complex<float>* work, const blas_int* lwork,
                       float* rwork, blas_int* info) {
-        cgesvd_(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info);
+        MQ_LAPACK_SYM(cgesvd_)(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info);
     }
 };
 
@@ -74,7 +84,7 @@ struct Lapack<std::complex<double>> {
                       std::complex<double>* a, const blas_int* lda, double* s, std::complex<double>* u,
                       const blas_int* ldu, std::complex<double>* vt, const blas_int* ldvt, std::complex<double>* work,
                       const blas_int* lwork, double* rwork, blas_int* info) {
-        zgesvd_(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info);
+        MQ_LAPACK_SYM(zgesvd_)(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, rwork, info);
     }
 };
 
@@ -189,5 +199,9 @@ inline void ComputeThinSvd(Matrix<T>* a, SvdWorkspace<T>* ws) {
     }
 }
 }  // namespace mindquantum::sim::mps::detail::linalg
+
+#undef MQ_LAPACK_SYM
+#undef MQ_LAPACK_CAT
+#undef MQ_LAPACK_CAT_IMPL
 
 #endif  // INCLUDE_SIMULATOR_MPS_DETAIL_LINALG_LAPACK_SVD_HPP

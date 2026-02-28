@@ -69,6 +69,9 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail)
 
 add_library(mqsim_mps_cpu INTERFACE)
 target_link_libraries(mqsim_mps_cpu INTERFACE mqsim_common mq_math intrin_flag_CXX LAPACK::LAPACK BLAS::BLAS)
+if(BLAS_SYMBOL_PREFIX)
+  target_compile_definitions(mqsim_mps_cpu INTERFACE BLAS_SYMBOL_PREFIX=${BLAS_SYMBOL_PREFIX})
+endif()
 force_at_least_cxx17_workaround(mqsim_mps_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_mps_cpu)
 
