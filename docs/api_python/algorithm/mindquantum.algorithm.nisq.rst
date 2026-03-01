@@ -39,6 +39,7 @@ Ansatz
     mindquantum.algorithm.nisq.Max2SATAnsatz
     mindquantum.algorithm.nisq.MaxCutAnsatz
     mindquantum.algorithm.nisq.QubitUCCAnsatz
+    mindquantum.algorithm.nisq.SequentialUCCAnsatz
     mindquantum.algorithm.nisq.SGAnsatz
     mindquantum.algorithm.nisq.SGAnsatz2D
     mindquantum.algorithm.nisq.StronglyEntangling
