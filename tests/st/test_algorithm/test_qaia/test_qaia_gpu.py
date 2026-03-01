@@ -25,6 +25,10 @@ import pytest
 from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM, TSB, USB, LSB
 from mindquantum.utils.fdopen import fdopen
 
+pytestmark = pytest.mark.skip(
+    reason="Temporarily disabled: QAIA GPU tests require a newer PyTorch version than the current CI environment."
+)
+
 
 OPTIMAL_CUT_G43 = 6660.0
 TOLERANCE = 0.05  # 5% relative tolerance for cut value
