@@ -38,6 +38,6 @@ mindquantum.algorithm.mapping.SABRE
               由于一个 SWAP 等于三个 CNOT，SWAP 操作会给衰减值增加 3*delta2。默认值：0.2。
 
         返回：
-            - mapped_circuit (:class:`~.core.circuit.Circuit`)：添加 SWAP 门后与硬件拓扑兼容的量子线路
-            - initial_mapping (List[int])：执行开始时从逻辑量子比特到物理量子比特的映射
-            - final_mapping (List[int])：执行结束时从逻辑量子比特到物理量子比特的映射
+            - mapped_circuit (:class:`~.core.circuit.Circuit`)，插入 SWAP 门后的量子线路。
+            - initial_mapping (List[int])，执行开始时逻辑量子比特到物理量子比特的映射。 ``initial_mapping[i]`` 表示逻辑量子比特 ``i`` 所在的物理量子比特。例如 ``[1, 2, 0]`` （即 ``{逻辑: 物理}`` = ``{0: 1, 1: 2, 2: 0}`` ）表示逻辑量子比特 0 映射到物理量子比特 1，逻辑量子比特 1 映射到物理量子比特 2，逻辑量子比特 2 映射到物理量子比特 0。
+            - final_mapping (List[int])，格式与 initial_mapping 相同，表示所有 SWAP 门执行完毕后的映射。
