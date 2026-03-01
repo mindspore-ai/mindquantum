@@ -49,6 +49,6 @@ mindquantum.algorithm.mapping.MQSABRE
             - **alpha3** (float，可选) - 门时间度量（T）的权重。较高的值优先考虑更快的门执行路径。默认值：0.1。
 
         返回：
-            - mapped_circuit (:class:`~.core.circuit.Circuit`)：插入 SWAP 门后的转换电路
-            - initial_mapping (List[int])：从逻辑量子比特到物理量子比特的初始映射
-            - final_mapping (List[int])：从逻辑量子比特到物理量子比特的最终映射
+            - mapped_circuit (:class:`~.core.circuit.Circuit`)，插入 SWAP 门后的量子线路。
+            - initial_mapping (List[int])，执行开始时逻辑量子比特到物理量子比特的映射。 ``initial_mapping[i]`` 表示逻辑量子比特 ``i`` 所在的物理量子比特。例如 ``[1, 2, 0]`` （即 ``{逻辑: 物理}`` = ``{0: 1, 1: 2, 2: 0}`` ）表示逻辑量子比特 0 映射到物理量子比特 1，逻辑量子比特 1 映射到物理量子比特 2，逻辑量子比特 2 映射到物理量子比特 0。
+            - final_mapping (List[int])，格式与 initial_mapping 相同，表示所有 SWAP 门执行完毕后的映射。

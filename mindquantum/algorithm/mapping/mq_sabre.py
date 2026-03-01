@@ -145,9 +145,13 @@ class MQSABRE:
                 Higher values prioritize faster gate execution paths. Defaults: 0.1.
 
         Returns:
-            - mapped_circuit (:class:`~.core.circuit.Circuit`), The transformed circuit with inserted SWAP gates
-            - initial_mapping (List[int]), Initial mapping from logical to physical qubits
-            - final_mapping (List[int]), Final mapping from logical to physical qubits
+            - mapped_circuit (:class:`~.core.circuit.Circuit`), Quantum circuit with SWAP gates inserted.
+            - initial_mapping (List[int]), ``initial_mapping[i]`` is the physical qubit that logical
+              qubit ``i`` is placed on before execution. E.g. ``[1, 2, 0]`` (i.e.
+              ``{logical: physical}`` = ``{0: 1, 1: 2, 2: 0}``) means logical qubit 0 → physical
+              qubit 1, logical qubit 1 → physical qubit 2, logical qubit 2 → physical qubit 0.
+            - final_mapping (List[int]), Same format as initial_mapping, but after all SWAP gates
+              have been applied.
 
         Examples:
             >>> # Use default parameters
