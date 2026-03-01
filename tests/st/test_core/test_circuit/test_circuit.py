@@ -95,6 +95,59 @@ def test_circuit_apply():
     assert circuit == circuit_exp
 
 
+def test_circuit_apply_multi_param_gates():
+    """
+    Description: Test apply_value with multi-parameter gates (U3, FSim)
+    Expectation: Parameters are substituted correctly and qubit assignments are preserved
+    """
+    # U3 gate with symbolic parameters and ctrl qubit
+    circuit = Circuit()
+    circuit += G.U3('a', 'b', 'c').on(0, 1)
+    circuit += G.H.on(1)
+    pr = {'a': 0.1, 'b': 0.2, 'c': 0.3}
+    applied = circuit.apply_value(pr)
+    expected = Circuit()
+    expected += G.U3(0.1, 0.2, 0.3).on(0, 1)
+    expected += G.H.on(1)
+    assert applied == expected
+
+    # FSim gate with symbolic parameters
+    circuit2 = Circuit()
+    circuit2 += G.FSim('theta', 'phi').on([0, 1])
+    pr2 = {'theta': 0.5, 'phi': 0.6}
+    applied2 = circuit2.apply_value(pr2)
+    expected2 = Circuit()
+    expected2 += G.FSim(0.5, 0.6).on([0, 1])
+    assert applied2 == expected2
+
+    # Verify matrices match between parameterized and applied circuits
+    mat_param = circuit.matrix(pr)
+    mat_applied = applied.matrix()
+    assert np.allclose(mat_param, mat_applied)
+
+
+def test_circuit_apply_ucc_excitation_gate():
+    """
+    Description: Test apply_value with UCCExcitationGate.
+    Expectation: Parameters are substituted while preserving gate-specific internal state.
+    """
+    mqchem = pytest.importorskip("mindquantum.simulator.mqchem")
+    from mindquantum.core.operators import FermionOperator
+
+    gate = mqchem.UCCExcitationGate(FermionOperator('2^ 0', 'theta'))
+    circuit = Circuit([gate])
+
+    applied = circuit.apply_value({'theta': 0.7})
+    applied_gate = applied[0]
+
+    assert isinstance(applied_gate, mqchem.UCCExcitationGate)
+    assert applied_gate.obj_qubits == gate.obj_qubits
+    assert applied_gate.ctrl_qubits == gate.ctrl_qubits
+    assert applied_gate.fermion_operator == gate.fermion_operator
+    assert applied_gate.coeff.is_const()
+    assert np.isclose(applied_gate.coeff.const, 0.7)
+
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
@@ -141,7 +194,7 @@ def test_depth():
     Description:
     Expectation:
     """
-    circ = Circuit().x(0).x(1,0).x(0).barrier().x(3,2).x(1).x(2,1)
+    circ = Circuit().x(0).x(1, 0).x(0).barrier().x(3, 2).x(1).x(2, 1)
     assert circ.depth(with_single=True, with_barrier=True) == 5
     assert circ.depth(with_single=True, with_barrier=False) == 4
     assert circ.depth(with_single=False, with_barrier=True) == 3

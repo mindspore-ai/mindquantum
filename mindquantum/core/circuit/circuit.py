@@ -1013,6 +1013,9 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
             q0: ──┨╺╋╸┠─┨ RX(3) ┠───
                   ┗━━━┛ ┗━━━━━━━┛
         """
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from ..gates.basicgate import MultiParamsGate
+
         circuit = Circuit()
         for gate in self:
             if not gate.parameterized:
@@ -1026,7 +1029,13 @@ class Circuit(list):  # pylint: disable=too-many-instance-attributes,too-many-pu
                             coeff.const += pr[k] * v
                             coeff.pop(k)
                     coeffs.append(coeff)
-                circuit += gate.__class__(*coeffs).on(gate.obj_qubits, gate.ctrl_qubits)
+                # For default MultiParamsGate.__call__(prs), pass one list argument.
+                # Subclasses that override __call__ expect unpacked parameters.
+                if isinstance(gate, MultiParamsGate) and type(gate).__call__ is MultiParamsGate.__call__:
+                    new_gate = gate(coeffs)
+                else:
+                    new_gate = gate(*coeffs)
+                circuit += new_gate
         return circuit
 
     @staticmethod
