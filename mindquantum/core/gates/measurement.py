@@ -205,21 +205,7 @@ class MeasureResult:
     def keys(self):
         """
         Get the list of measurement keys.
-
-        .. note::
-            The variable `MeasureResult.keys` has been unified to little-endian order in version 0.10,
-            which means the order of keys has been reversed from the previous big-endian format.
-            If you used this variable in version 0.9, please review and adjust your code carefully.
         """
-        import warnings
-
-        warnings.warn(
-            "The variable `MeasureResult.keys` has been unified to little-endian order in version 0.10, "
-            "which means the order of keys has been reversed from the previous big-endian format. "
-            "If you used this variable in version 0.9, please review and adjust your code carefully.",
-            UserWarning,
-            stacklevel=2,
-        )
         return self._keys
 
     @keys.setter
@@ -230,21 +216,7 @@ class MeasureResult:
     def samples(self):
         """
         Get the sampling result array.
-
-        .. note::
-            The variable `MeasureResult.samples` has been unified to little-endian order in version 0.10,
-            which means the columns of the samples array have been reversed from the previous big-endian format.
-            If you used this variable in version 0.9, please review and adjust your code carefully.
         """
-        import warnings
-
-        warnings.warn(
-            "The variable `MeasureResult.samples` has been unified to little-endian order in version 0.10, "
-            "which means the columns of the samples array have been reversed from the previous big-endian format. "
-            "If you used this variable in version 0.9, please review and adjust your code carefully.",
-            UserWarning,
-            stacklevel=2,
-        )
         return self._samples
 
     @samples.setter
