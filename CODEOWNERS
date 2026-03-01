@@ -7,6 +7,3 @@
 # The rules are applied from top to bottom, and the last matching rule will take effect.
 
 * @dsdsdshe
-/mindquantum/algorithm/qaia/ @mangrovecoder
-/tests/ @mangrovecoder
-/mindquantum/algorithm/nisq/ @herunhong
