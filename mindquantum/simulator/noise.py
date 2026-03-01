@@ -62,6 +62,40 @@ class NoiseBackendImpl(BackendBase):
             circ_left = self.adder(circ_left)
         return self.base_sim.get_expectation(hamiltonian, circ_right, circ_left, simulator_left, pr)
 
+    # pylint: disable=too-many-arguments
+    def get_expectation_with_grad(
+        self,
+        hams,
+        circ_right,
+        circ_left=None,
+        simulator_left=None,
+        parallel_worker=None,
+        pr_shift=False,
+    ):
+        """Get expectation and gradient of a hamiltonian."""
+        # pylint: disable=import-outside-toplevel
+        from mindquantum.simulator import Simulator
+
+        circ_right = self.adder(circ_right)
+        if circ_left is not None:
+            circ_left = self.adder(circ_left)
+
+        if isinstance(simulator_left, NoiseBackendImpl):
+            simulator_left = simulator_left.base_sim
+        elif isinstance(simulator_left, Simulator):
+            pass
+        elif simulator_left is not None:
+            simulator_left = Simulator(simulator_left)
+
+        return self.base_sim.get_expectation_with_grad(
+            hams,
+            circ_right,
+            circ_left,
+            simulator_left,
+            parallel_worker,
+            pr_shift,
+        )
+
     def get_qs(self, ket=False):
         """Get quantum state."""
         return self.base_sim.get_qs(ket)
