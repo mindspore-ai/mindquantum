@@ -16,26 +16,55 @@
 
 """Locate OpenBLAS paths from scipy-openblas32."""
 
+from importlib import util as importlib_util
 from pathlib import Path
+import sys
+
+
+def _pkg_root():
+    """Return the scipy_openblas32 package directory without importing it."""
+    spec = importlib_util.find_spec("scipy_openblas32")
+    if spec is None or not spec.submodule_search_locations:
+        raise ModuleNotFoundError("scipy_openblas32")
+    return Path(next(iter(spec.submodule_search_locations))).resolve()
+
+
+def _pick_lib_file(lib_dir):
+    """Pick the best OpenBLAS link target for the current platform."""
+    if sys.platform == "win32":
+        preferred = sorted(lib_dir.glob("*.lib"))
+        fallback = sorted(lib_dir.glob("*.dll"))
+    elif sys.platform == "darwin":
+        preferred = sorted(lib_dir.glob("libscipy_openblas*.dylib"))
+        fallback = sorted(lib_dir.glob("libscipy_openblas*"))
+    else:
+        preferred = sorted(lib_dir.glob("libscipy_openblas*.so*"))
+        fallback = sorted(lib_dir.glob("libscipy_openblas*"))
+
+    if preferred:
+        return preferred[0].resolve()
+    if fallback:
+        return fallback[0].resolve()
+    raise FileNotFoundError(f"No OpenBLAS library found under: {lib_dir}")
 
 
 def main():
-    # Import intentionally local to keep script fast-failing with a clear error.
-    import scipy_openblas32 as openblas  # pylint: disable=import-outside-toplevel
+    pkg_root = _pkg_root()
+    lib_dir = (pkg_root / "lib").resolve()
 
-    lib_dir = Path(openblas.get_lib_dir()).resolve()
-    lib_file = lib_dir / openblas.get_library(fullname=True)
+    if not lib_dir.exists():
+        raise FileNotFoundError(lib_dir)
+
     cmake_dir = (lib_dir / "cmake" / "openblas").resolve()
+    lib_file = _pick_lib_file(lib_dir)
 
-    if not lib_file.exists():
-        raise FileNotFoundError(lib_file)
     if not cmake_dir.exists():
         raise FileNotFoundError(cmake_dir)
 
-    print(f"MQ_OPENBLAS_ROOT={lib_dir.parent.as_posix()}")
-    print(f"MQ_OPENBLAS_LIB_DIR={lib_dir.as_posix()}")
-    print(f"MQ_OPENBLAS_LIB={lib_file.as_posix()}")
-    print(f"MQ_OPENBLAS_CMAKE_DIR={cmake_dir.as_posix()}")
+    print(f"MQ_OPENBLAS_ROOT={lib_dir.parent}")
+    print(f"MQ_OPENBLAS_LIB_DIR={lib_dir}")
+    print(f"MQ_OPENBLAS_LIB={lib_file}")
+    print(f"MQ_OPENBLAS_CMAKE_DIR={cmake_dir}")
     print("MQ_OPENBLAS_SYMBOL_PREFIX=scipy_")
 
 
