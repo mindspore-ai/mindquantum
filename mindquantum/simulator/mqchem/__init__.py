@@ -19,18 +19,20 @@ MindQuantum Chemistry Simulator based on Configuration Interaction.
 This module provides a specialized simulator (`MQChemSimulator`) and its
 associated components (`UCCExcitationGate`, `CIHamiltonian`) for efficient
 quantum chemistry simulations within a defined electron-number subspace.
-It also includes a high-level utility `generate_ucc_ansatz` to streamline
+It also includes a high-level utility `prepare_uccsd_vqe` to streamline
 the setup of VQE calculations.
 """
 
 from .mqchem_simulator import MQChemSimulator
 from .ci_hamiltonian import CIHamiltonian
 from .ucc_excitation_gate import UCCExcitationGate
+from .sequential_ucc_ansatz import SequentialUCCAnsatz
 from .vqe_preparation import prepare_uccsd_vqe
 
 __all__ = [
     'MQChemSimulator',
     'CIHamiltonian',
     'UCCExcitationGate',
+    'SequentialUCCAnsatz',
     'prepare_uccsd_vqe',
 ]

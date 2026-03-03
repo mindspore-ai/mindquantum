@@ -16,8 +16,8 @@
 
 import pytest
 
-from mindquantum.algorithm.nisq import SequentialUCCAnsatz
 from mindquantum.core.operators import FermionOperator
+from mindquantum.simulator.mqchem import SequentialUCCAnsatz
 
 
 @pytest.mark.level0

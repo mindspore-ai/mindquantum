@@ -3,6 +3,14 @@ mindquantum.simulator
 
 .. automodule:: mindquantum.simulator
 
+Module
+-------
+
+.. autosummary::
+    :toctree: simulator
+
+    mindquantum.simulator.mqchem
+
 Class
 ------
 
@@ -14,9 +22,6 @@ Class
     mindquantum.simulator.GradOpsWrapper
     mindquantum.simulator.Simulator
     mindquantum.simulator.NoiseBackend
-    mindquantum.simulator.mqchem.MQChemSimulator
-    mindquantum.simulator.mqchem.CIHamiltonian
-    mindquantum.simulator.mqchem.UCCExcitationGate
 
 Function
 ---------
@@ -32,4 +37,3 @@ Function
     mindquantum.simulator.get_stabilizer_string
     mindquantum.simulator.get_tableau_string
     mindquantum.simulator.decompose_stabilizer
-    mindquantum.simulator.mqchem.prepare_uccsd_vqe
