@@ -662,6 +662,16 @@ void MPSState<qs_policy_t_>::SetFromStateVectorPhysical_(const VT<complex_t>& ve
             }
         }
 
+        // At the last SVD split, Vh is 1x1 and carries the residual global phase.
+        // If not absorbed, SetQS/GetQS returns the input state up to an arbitrary phase.
+        if (i + 1 == n_qubits_) {
+            const auto phase = svd_ws.Vh(0, 0);
+            for (size_t a = 0; a < D_i; ++a) {
+                g0(a, 0) *= phase;
+                g1(a, 0) *= phase;
+            }
+        }
+
         // Build next B = diag(S) * Vh
         const auto& Vh = svd_ws.Vh;  // (r_full x cols_rest)
         Mat B_next(D_next, cols_rest);
