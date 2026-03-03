@@ -2,6 +2,52 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindQuantum 0.12.0 Release Notes
+
+### Major Features and Enhancements
+
+#### Device
+
+- [BETA] [`QPU`](https://www.mindspore.cn/mindquantum/docs/en/master/device/mindquantum.device.QPU.html): Added an abstract base class for real quantum hardware execution. This class standardizes a `sampling`-driven interface that mirrors `mindquantum.simulator.Simulator`, enabling seamless backend swapping between simulators and real QPUs. Key capabilities include ([`!2842`](https://atomgit.com/mindspore/mindquantum/pull/2842)):
+    - **Minimal vendor burden**: Hardware providers only need to implement the abstract `sampling()` method.
+    - **Shot-based expectation estimation**: `get_expectation()` automatically performs Pauli basis rotations and statistical estimation from measurement shots.
+    - **Shot-based Gradient estimation**: `get_expectation_with_grad()` returns a `GradOpsWrapper` supporting both parameter-shift rules (for RX, RY, RZ, U3, Rxx, Ryy, Rzz, and 10+ other gate families) and central finite-difference fallback, with intelligent per-parameter strategy selection.
+    - **Batch optimization hook**: Vendors can optionally override `_sampling_batch()` for batched job submission.
+
+#### Simulator
+
+- [BETA] [`mqmps`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.Simulator.html) backend: Added a Matrix Product State (MPS) simulator that represents quantum states as tensor networks instead of full state vectors. When circuit entanglement is moderate, this backend can simulate many more qubits than state-vector methods with significantly less memory ([`!3088`](https://atomgit.com/mindspore/mindquantum/pull/3088)).
+    - Supports single- and two-qubit gates (automatic SWAP insertion for non-adjacent qubits), measurement, sampling, reduced density matrix computation, and Pauli expectation values.
+    - High-performance C++ core with BLAS/LAPACK backend for numerical stability.
+- [STABLE] [`SequentialUCCAnsatz`](https://www.mindspore.cn/mindquantum/docs/en/master/simulator/mindquantum.simulator.mqchem.SequentialUCCAnsatz.html): Added a sequential UCC ansatz builder under `mindquantum.simulator.mqchem` that preserves excitation insertion order. Unlike standard UCC, the same excitation operator can appear multiple times with independent parameters, enabling layered/Trotter-style ansatz constructions for VQE workflows ([`!3096`](https://atomgit.com/mindspore/mindquantum/pull/3096), [`!3103`](https://atomgit.com/mindspore/mindquantum/pull/3103)).
+
+#### Algorithm
+
+- [BETA] QAIA family extension: Added quantized simulated bifurcation variants [`TSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.TSB.html) (Ternary), [`USB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.USB.html) (Unary), and [`LSB`](https://www.mindspore.cn/mindquantum/docs/en/master/algorithm/qaia/mindquantum.algorithm.qaia.LSB.html) (Linear) under `mindquantum.algorithm.qaia`, supporting both CPU and GPU backends ([`!2820`](https://atomgit.com/mindspore/mindquantum/pull/2820)).
+
+### Improvements
+
+- Improved error messages when submodules fail to import, now showing the actual cause ([`!2828`](https://atomgit.com/mindspore/mindquantum/pull/2828)).
+- Clarified return value documentation for SABRE and MQSABRE mapping algorithms ([`!3099`](https://atomgit.com/mindspore/mindquantum/pull/3099)).
+
+### Bug Fixes
+
+- **MQSABRE mapping**: `InitialMapping` could produce invalid qubit assignments on certain topologies, potentially causing segfaults. Fixed ([`!2793`](https://atomgit.com/mindspore/mindquantum/pull/2793), [`!2794`](https://atomgit.com/mindspore/mindquantum/pull/2794)).
+- **OpenQASM export**: Circuits with repeated measurements on the same qubit produced invalid OpenQASM output. Each measurement now maps to a distinct classical bit ([`!2826`](https://atomgit.com/mindspore/mindquantum/pull/2826)).
+- **OpenQASM import**: The parser could not handle arithmetic expressions in gate parameters (e.g., `pi/4 + 0.5`). Replaced with a general expression evaluator ([`!2825`](https://atomgit.com/mindspore/mindquantum/pull/2825)).
+- **`Circuit.apply_value`**: Custom gate internal state (e.g., `UCCExcitationGate`) was corrupted during parameter substitution. Gate state is now preserved ([`!3095`](https://atomgit.com/mindspore/mindquantum/pull/3095)).
+- **Noise backend gradients API missing**: Fixed missing `NoiseBackend.get_expectation_with_grad` support. ([`!3097`](https://atomgit.com/mindspore/mindquantum/pull/3097)).
+- **QAIA SB initialization**: `xi` was initialized incorrectly when external field `h` was provided, causing wrong optimization results ([`!2818`](https://atomgit.com/mindspore/mindquantum/pull/2818)).
+- **QAIA error messaging**: Improved GPU import error message for SB solver to clearly indicate what is needed ([`!2788`](https://atomgit.com/mindspore/mindquantum/pull/2788)).
+
+### Contributors
+
+Thanks to the following developers for their contributions:
+
+dsdsdshe, Waikikilick, Yaocheng Chen, MangroveCoder, liudongmei2025, wangyin888, zhoushijie2025, 宦晓玲.
+
+Welcome contributions to the project in any form!
+
 ## MindQuantum 0.11.0 Release Notes
 
 ### Major Features and Enhancements

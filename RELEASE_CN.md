@@ -2,6 +2,52 @@
 
 [View English](./RELEASE.md)
 
+## MindQuantum 0.12.0 Release Notes
+
+### 主要特性和增强
+
+#### Device
+
+- [BETA] [`QPU`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/device/mindquantum.device.QPU.html)：新增用于真实量子硬件执行的抽象基类。该类标准化了基于 `sampling` 的接口，与 `mindquantum.simulator.Simulator` 保持一致，实现模拟器与真实 QPU 之间的无缝后端切换。核心能力包括（[`!2842`](https://atomgit.com/mindspore/mindquantum/pull/2842)）：
+    - **最小化厂商接入成本**：硬件厂商仅需实现 `sampling()` 抽象方法。
+    - **基于采样的期望值估计**：`get_expectation()` 自动执行 Pauli 基旋转并从测量结果进行统计估计。
+    - **基于采样的梯度估计**：`get_expectation_with_grad()` 返回 `GradOpsWrapper`，支持参数平移规则（适用于 RX、RY、RZ、U3、Rxx、Ryy、Rzz 等 10+ 种门族）和中心有限差分回退策略，并具备智能的逐参数策略选择。
+    - **批量优化接口**：厂商可选择性重写 `_sampling_batch()` 以实现批量任务提交。
+
+#### Simulator
+
+- [BETA] [`mqmps`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html) 后端：新增矩阵乘积态（MPS）模拟器，以张量网络而非全态矢量方式表示量子态。当线路纠缠度适中时，该后端可以用远少于态矢量方法的内存模拟更多量子比特（[`!3088`](https://atomgit.com/mindspore/mindquantum/pull/3088)）。
+    - 支持单比特和双比特门（非相邻比特自动插入 SWAP 门）、测量、采样、约化密度矩阵计算和 Pauli 期望值。
+    - 高性能 C++ 内核，基于 BLAS/LAPACK 后端确保数值稳定性。
+- [STABLE] [`SequentialUCCAnsatz`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.mqchem.SequentialUCCAnsatz.html)：在 `mindquantum.simulator.mqchem` 下新增顺序 UCC 拟设构建器，保留激发算符的插入顺序。与标准 UCC 不同，相同的激发算符可以独立参数多次出现，支持分层/Trotter 风格的拟设构建，有助于改善 VQE 工作流的收敛性（[`!3096`](https://atomgit.com/mindspore/mindquantum/pull/3096)、[`!3103`](https://atomgit.com/mindspore/mindquantum/pull/3103)）。
+
+#### Algorithm
+
+- [BETA] QAIA 算法族扩展：在 `mindquantum.algorithm.qaia` 下新增量化模拟分叉变体 [`TSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.TSB.html)（三元）、[`USB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.USB.html)（一元）和 [`LSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.LSB.html)（线性），支持 CPU 和 GPU 后端（[`!2820`](https://atomgit.com/mindspore/mindquantum/pull/2820)）。
+
+### 改进
+
+- 改进了子模块导入失败时的错误提示，现在显示实际原因（[`!2828`](https://atomgit.com/mindspore/mindquantum/pull/2828)）。
+- 完善了 SABRE 和 MQSABRE 映射算法的返回值文档说明（[`!3099`](https://atomgit.com/mindspore/mindquantum/pull/3099)）。
+
+### 问题修复
+
+- **MQSABRE 映射**：`InitialMapping` 在某些拓扑下可能产生无效比特分配，导致线路执行时段错误。已修复（[`!2793`](https://atomgit.com/mindspore/mindquantum/pull/2793)、[`!2794`](https://atomgit.com/mindspore/mindquantum/pull/2794)）。
+- **OpenQASM 导出**：对同一量子比特重复测量的线路导出为无效 OpenQASM。现在每次测量会正确映射到独立经典比特（[`!2826`](https://atomgit.com/mindspore/mindquantum/pull/2826)）。
+- **OpenQASM 导入**：解析器无法处理门参数中的算术表达式（如 `pi/4 + 0.5`）。已替换为通用表达式求值器（[`!2825`](https://atomgit.com/mindspore/mindquantum/pull/2825)）。
+- **`Circuit.apply_value`**：参数替换时自定义门（如 `UCCExcitationGate`）的内部状态被破坏。门状态现已正确保留（[`!3095`](https://atomgit.com/mindspore/mindquantum/pull/3095)）。
+- **NoiseBackend 梯度接口缺失**：修复 `NoiseBackend.get_expectation_with_grad` 支持缺失的问题。（[`!3097`](https://atomgit.com/mindspore/mindquantum/pull/3097)）
+- **QAIA SB 初始化**：提供外场 `h` 时 `xi` 初始化错误，导致优化结果不正确（[`!2818`](https://atomgit.com/mindspore/mindquantum/pull/2818)）。
+- **QAIA 错误提示**：改进了 SB 求解器的 GPU 导入错误信息，清楚说明所需条件（[`!2788`](https://atomgit.com/mindspore/mindquantum/pull/2788)）。
+
+### 贡献者
+
+感谢以下开发者做出的贡献：
+
+dsdsdshe, Waikikilick, Yaocheng Chen, MangroveCoder, liudongmei2025, wangyin888, zhoushijie2025, 宦晓玲.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindQuantum 0.11.0 Release Notes
 
 ### 主要特性和增强
