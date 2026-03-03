@@ -14,6 +14,7 @@ Class
     :nosignatures:
     :template: classtemplate.rst
 
+    mindquantum.device.QPU
     mindquantum.device.QubitNode
     mindquantum.device.QubitsTopology
     mindquantum.device.GridQubits

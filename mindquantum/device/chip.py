@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Real device chip."""
+"""Chip topology / property examples.
+
+This module provides lightweight *physical* chip descriptions (e.g. topology and a
+simple noise model wrapper). For execution on real hardware, see
+:class:`mindquantum.device.QPU`.
+"""
+
 from ..core.circuit import Circuit
-from . import QubitNode, QubitsTopology
-from .vigo_property import vigo_noise_model
+from .topology import QubitNode, QubitsTopology
 
 
 # pylint: disable=too-few-public-methods
@@ -41,6 +46,9 @@ class Vigo(NaiveChip):
         topology[3].set_poi(1, 1)
         topology[4].set_poi(1, 2)
         super().__init__(topology)
+        # Lazy import to avoid large module import cost when importing `mindquantum.device`.
+        from .vigo_property import vigo_noise_model  # pylint: disable=import-outside-toplevel
+
         self.noise_model = vigo_noise_model
 
     def gene_noise_circuit(self, circ):

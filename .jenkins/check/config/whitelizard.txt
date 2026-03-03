@@ -20,6 +20,7 @@ mindquantum/mindquantum/io/qasm/qcis.py:to_string
 mindquantum/mindquantum/simulator/mqsim.py:get_expectation_with_grad
 mindquantum/mindquantum/simulator/mqsim.py:grad_ops
 mindquantum/mindquantum/simulator/simulator.py:get_expectation_with_grad
+mindquantum/mindquantum/device/qpu.py:get_expectation_with_grad
 mindquantum/mindquantum/third_party/unitary_cc.py:uccsd_singlet_generator
 mindquantum/mindquantum/io/display/circuit_text_drawer.py:brick_model
 mindquantum/algorithm/compiler/decompose/universal_decompose/two_qubit_decompose.py:kak_decompose
