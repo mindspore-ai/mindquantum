@@ -1,7 +1,7 @@
-mindquantum.algorithm.nisq.SequentialUCCAnsatz
-================================================
+mindquantum.simulator.mqchem.SequentialUCCAnsatz
+=================================================
 
-.. py:class:: mindquantum.algorithm.nisq.SequentialUCCAnsatz(n_qubits=None, n_electrons=None)
+.. py:class:: mindquantum.simulator.mqchem.SequentialUCCAnsatz(n_qubits=None, n_electrons=None)
 
     顺序幺正耦合簇（Sequential UCC）ansatz。
 
@@ -23,9 +23,15 @@ mindquantum.algorithm.nisq.SequentialUCCAnsatz
             - **operator** (FermionOperator) - 待追加的费米子激发算符。该算符会先进行规范化与合法性检查：
               必须是单项、非恒等项、且单项内不允许重复轨道索引；若设置了 ``n_qubits``，算符作用索引不得越界。
 
-        异常：
-            - **TypeError** - `operator` 不是 :class:`~.core.operators.FermionOperator`。
-            - **ValueError** - `operator` 不满足项数、索引唯一性或边界约束。
+    .. py:method:: circuit
+        :property:
+
+        返回当前ansatz构建得到的量子线路。
+
+    .. py:method:: operators
+        :property:
+
+        返回当前算符列表的副本。
 
     .. py:method:: remove(index)
 
@@ -36,15 +42,3 @@ mindquantum.algorithm.nisq.SequentialUCCAnsatz
 
         返回：
             FermionOperator，删除算符的副本。
-
-        异常：
-            - **TypeError** - `index` 不是整数。
-            - **IndexError** - `index` 越界。
-
-    .. py:method:: operators
-        :property:
-
-        返回当前算符列表的副本。
-
-        返回：
-            list[FermionOperator]，内部算符的拷贝列表。对返回列表或其中元素的修改，不会影响ansatz内部状态。

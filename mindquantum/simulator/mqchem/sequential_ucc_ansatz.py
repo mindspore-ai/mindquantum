@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Sequential Unitary Coupled-Cluster Ansatz."""
+"""Sequential UCC ansatz for MQ Chemistry simulator."""
 
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.operators import FermionOperator
-from mindquantum.simulator.mqchem import UCCExcitationGate
-from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
-
-from .._ansatz import Ansatz
+from ...core.circuit import Circuit
+from ...core.operators import FermionOperator
+from ...utils.type_value_check import _check_int_type, _check_value_should_not_less
+from .ucc_excitation_gate import UCCExcitationGate
 
 
-class SequentialUCCAnsatz(Ansatz):
+class SequentialUCCAnsatz:
     """
     Sequential Unitary Coupled-Cluster (UCC) Ansatz.
 
@@ -41,9 +39,9 @@ class SequentialUCCAnsatz(Ansatz):
         n_electrons (int): The number of electrons of the given molecule. Default: ``None``.
 
     Examples:
-        >>> from mindquantum.algorithm.nisq import SequentialUCCAnsatz
+        >>> from mindquantum.simulator import mqchem
         >>> from mindquantum.core.operators import FermionOperator
-        >>> ansatz = SequentialUCCAnsatz()
+        >>> ansatz = mqchem.SequentialUCCAnsatz()
         >>> ansatz.append(FermionOperator("3^ 1", "a"))
         >>> ansatz.append(FermionOperator("4^ 2", "b"))
         >>> ansatz.append(FermionOperator("3^ 1", "c"))
@@ -65,11 +63,10 @@ class SequentialUCCAnsatz(Ansatz):
             raise ValueError(
                 "The number of electrons must be smaller than the number of qubits (spin-orbitals) in the ansatz!"
             )
+        self.name = "Sequential UCC"
+        self.n_qubits = n_qubits
         self._operators = []
-        super().__init__("Sequential UCC", n_qubits, n_qubits, n_electrons)
-
-    def _implement(self, *args, **kwargs):
-        """Implement the ansatz. No-op; operators are added sequentially via append()."""
+        self._circuit = Circuit()
 
     def _sanitize_operator(self, operator: FermionOperator) -> FermionOperator:
         """Validate operator invariants and return a detached canonical copy."""
@@ -154,6 +151,11 @@ class SequentialUCCAnsatz(Ansatz):
         if index < -len(self._operators) or index >= len(self._operators):
             raise IndexError("Index out of range.")
         return FermionOperator(self._operators[index])
+
+    @property
+    def circuit(self) -> Circuit:
+        """Get the generated ansatz circuit."""
+        return self._circuit
 
     @property
     def operators(self):

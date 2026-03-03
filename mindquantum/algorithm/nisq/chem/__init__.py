@@ -34,7 +34,6 @@ from .qubit_hamiltonian import get_qubit_hamiltonian
 from .qubit_ucc_ansatz import QubitUCCAnsatz
 from .quccsd import quccsd_generator
 from .reference_state import get_reference_circuit
-from .sequential_ucc_ansatz import SequentialUCCAnsatz
 from .transform import Transform
 from .uccsd import generate_uccsd
 from .uccsd0 import uccsd0_singlet_generator
@@ -51,7 +50,6 @@ __all__ = [
     'HardwareEfficientAnsatz',
     'QubitUCCAnsatz',
     'generate_uccsd',
-    'SequentialUCCAnsatz',
     'UCCAnsatz',
     'get_reference_circuit',
     'RYLinear',
