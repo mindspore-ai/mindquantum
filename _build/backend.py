@@ -241,8 +241,7 @@ def get_requires_for_build_wheel(config_settings=None):
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
     if delocate_wheel:
         if platform.system() == 'Linux':
-            requirements.append('auditwheel')
-            executable_list.append('patchelf')
+            executable_list.extend(('auditwheel', 'patchelf'))
         elif platform.system() == 'Darwin':
             requirements.append('delocate')
         elif platform.system() == 'Windows':

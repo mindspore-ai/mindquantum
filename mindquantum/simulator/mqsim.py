@@ -51,10 +51,11 @@ from .utils import GradOpsWrapper, _thread_balance
 class MQSim(BackendBase):
     """Mindquantum Backend."""
 
-    def __init__(self, name: str, n_qubits: int, seed=None, dtype=complex128, internal=False):
+    def __init__(self, name: str, n_qubits: int, seed=None, dtype=complex128, internal=False, **kwargs):
         """Initialize a mindquantum backend."""
         super().__init__(name, n_qubits, seed, dtype)
         self.internal = internal
+        self._init_kwargs = dict(kwargs)
         if internal:
             self.sim = name
         else:
@@ -62,7 +63,7 @@ class MQSim(BackendBase):
                 dtype = complex128
                 self.arithmetic_type = dtype
             _check_mq_type(dtype)
-            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed)
+            self.sim = getattr(SUPPORTED_SIMULATOR.c_module(name, dtype), name)(n_qubits, seed, **kwargs)
 
     def __str__(self):
         """Return a string representation of the object."""
@@ -94,7 +95,7 @@ class MQSim(BackendBase):
             self.sim = self.name
         else:
             self.sim = getattr(SUPPORTED_SIMULATOR.c_module(self.name, self.arithmetic_type), self.name)(
-                self.n_qubits, self.seed
+                self.n_qubits, self.seed, **self._init_kwargs
             )
 
     def apply_circuit(
@@ -341,43 +342,65 @@ class MQSim(BackendBase):
         if self.n_qubits < circ_n_qubits:
             raise ValueError(f"Simulator has {self.n_qubits} qubits, but circuit has {circ_n_qubits} qubits.")
 
-        def grad_ops(*inputs_):
+        hams_cpp = [ham.get_cpp_obj() for ham in hams]
+        hams_cpp_herm = [ham.get_cpp_obj(hermitian=True) for ham in hams] if non_hermitian else None
+        circ_left_cpp = circ_left.get_cpp_obj()
+        circ_left_cpp_herm = circ_left.get_cpp_obj(hermitian=True)
+        circ_right_cpp = circ_right.get_cpp_obj()
+        circ_right_cpp_herm = circ_right.get_cpp_obj(hermitian=True)
+
+        def _normalize_inputs(inputs_):
             inputs = list(inputs_)
             for i, item in enumerate(inputs):
                 if isinstance(item, list):
                     inputs[i] = np.array(item)
-            if version == "both" and len(inputs) != 2:
+            return inputs
+
+        def _prepare_inputs_both(inputs):
+            if len(inputs) != 2:
                 raise ValueError("Need two inputs!")
-            if version in ("encoder", "ansatz") and len(inputs) != 1:
+            encoder = inputs[0]
+            ansatz = inputs[1]
+            if len(encoder.shape) == 1:
+                encoder = np.array([encoder])
+            _check_encoder(encoder, len(encoder_params_name))
+            _check_ansatz(ansatz, len(ansatz_params_name))
+            batch_threads, mea_threads = _thread_balance(encoder.shape[0], len(hams), parallel_worker)
+            return encoder, ansatz, batch_threads, mea_threads
+
+        def _prepare_inputs_encoder(inputs):
+            if len(inputs) != 1:
                 raise ValueError("Need one input!")
-            if version == "both":
-                if len(inputs[0].shape) == 1:
-                    inputs[0] = np.array([inputs[0]])
-                _check_encoder(inputs[0], len(encoder_params_name))
-                _check_ansatz(inputs[1], len(ansatz_params_name))
-                batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
-                inputs0 = inputs[0]
-                inputs1 = inputs[1]
-            if version == "encoder":
-                if len(inputs[0].shape) == 1:
-                    inputs[0] = np.array([inputs[0]])
-                _check_encoder(inputs[0], len(encoder_params_name))
-                batch_threads, mea_threads = _thread_balance(inputs[0].shape[0], len(hams), parallel_worker)
-                inputs0 = inputs[0]
-                inputs1 = np.array([])
-            if version == "ansatz":
-                _check_ansatz(inputs[0], len(ansatz_params_name))
-                batch_threads, mea_threads = _thread_balance(1, len(hams), parallel_worker)
-                inputs0 = np.array([[]])
-                inputs1 = inputs[0]
+            encoder = inputs[0]
+            if len(encoder.shape) == 1:
+                encoder = np.array([encoder])
+            _check_encoder(encoder, len(encoder_params_name))
+            batch_threads, mea_threads = _thread_balance(encoder.shape[0], len(hams), parallel_worker)
+            return encoder, np.array([]), batch_threads, mea_threads
+
+        def _prepare_inputs_ansatz(inputs):
+            if len(inputs) != 1:
+                raise ValueError("Need one input!")
+            ansatz = inputs[0]
+            _check_ansatz(ansatz, len(ansatz_params_name))
+            batch_threads, mea_threads = _thread_balance(1, len(hams), parallel_worker)
+            return np.array([[]]), ansatz, batch_threads, mea_threads
+
+        prepare_inputs = {
+            "both": _prepare_inputs_both,
+            "encoder": _prepare_inputs_encoder,
+            "ansatz": _prepare_inputs_ansatz,
+        }[version]
+
+        def _get_expectation_with_grad(inputs0, inputs1, batch_threads, mea_threads):
             if non_hermitian:
-                f_g1_g2 = self.sim.get_expectation_with_grad_non_hermitian_multi_multi(
-                    [i.get_cpp_obj() for i in hams],
-                    [i.get_cpp_obj(hermitian=True) for i in hams],
-                    circ_left.get_cpp_obj(),
-                    circ_left.get_cpp_obj(hermitian=True),
-                    circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True),
+                return self.sim.get_expectation_with_grad_non_hermitian_multi_multi(
+                    hams_cpp,
+                    hams_cpp_herm,
+                    circ_left_cpp,
+                    circ_left_cpp_herm,
+                    circ_right_cpp,
+                    circ_right_cpp_herm,
                     inputs0,
                     inputs1,
                     encoder_params_name,
@@ -386,11 +409,11 @@ class MQSim(BackendBase):
                     batch_threads,
                     mea_threads,
                 )
-            elif circ_right.is_noise_circuit and self.name.startswith('mqmatrix'):
-                f_g1_g2 = self.sim.get_expectation_with_noise_grad_multi_multi(
-                    [i.get_cpp_obj() for i in hams],
-                    circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True),
+            if circ_right.is_noise_circuit and self.name.startswith('mqmatrix'):
+                return self.sim.get_expectation_with_noise_grad_multi_multi(
+                    hams_cpp,
+                    circ_right_cpp,
+                    circ_right_cpp_herm,
                     inputs0,
                     inputs1,
                     encoder_params_name,
@@ -398,10 +421,10 @@ class MQSim(BackendBase):
                     batch_threads,
                     mea_threads,
                 )
-            elif pr_shift:
-                f_g1_g2 = self.sim.get_expectation_with_grad_parameter_shift_multi_multi(
-                    [i.get_cpp_obj() for i in hams],
-                    circ_right.get_cpp_obj(),
+            if pr_shift:
+                return self.sim.get_expectation_with_grad_parameter_shift_multi_multi(
+                    hams_cpp,
+                    circ_right_cpp,
                     inputs0,
                     inputs1,
                     encoder_params_name,
@@ -409,26 +432,32 @@ class MQSim(BackendBase):
                     batch_threads,
                     mea_threads,
                 )
-            else:
-                f_g1_g2 = self.sim.get_expectation_with_grad_multi_multi(
-                    [i.get_cpp_obj() for i in hams],
-                    circ_right.get_cpp_obj(),
-                    circ_right.get_cpp_obj(hermitian=True),
-                    inputs0,
-                    inputs1,
-                    encoder_params_name,
-                    ansatz_params_name,
-                    batch_threads,
-                    mea_threads,
-                )
-            res = np.array(f_g1_g2)
-            if version == 'both':
+            return self.sim.get_expectation_with_grad_multi_multi(
+                hams_cpp,
+                circ_right_cpp,
+                circ_right_cpp_herm,
+                inputs0,
+                inputs1,
+                encoder_params_name,
+                ansatz_params_name,
+                batch_threads,
+                mea_threads,
+            )
+
+        def _format_result(res):
+            if version == "both":
                 return (
                     res[:, :, 0],
                     res[:, :, 1 : 1 + len(encoder_params_name)],  # noqa:E203
                     res[:, :, 1 + len(encoder_params_name) :],  # noqa:E203
                 )  # f, g1, g2
             return res[:, :, 0], res[:, :, 1:]  # f, g
+
+        def grad_ops(*inputs_):
+            inputs = _normalize_inputs(inputs_)
+            inputs0, inputs1, batch_threads, mea_threads = prepare_inputs(inputs)
+            res = np.array(_get_expectation_with_grad(inputs0, inputs1, batch_threads, mea_threads))
+            return _format_result(res)
 
         grad_wrapper = GradOpsWrapper(
             grad_ops, hams, circ_right, circ_left, encoder_params_name, ansatz_params_name, parallel_worker, self
@@ -554,7 +583,7 @@ class MQSim(BackendBase):
             raise ValueError(f"object qubits {obj_qubits} is higher than simulator qubits.")
         if not self.name.startswith('mqmatrix'):
             raise ValueError(f"{self.name} simulator not support partial trace method.")
-        return np.array(self.sim.get_partial_trace(obj_qubits))
+        return np.asarray(self.sim.get_partial_trace(obj_qubits))
 
     def get_reduced_density_matrix(self, kept_qubits) -> np.ndarray:
         """Get the reduced density matrix by keeping specified qubits."""
@@ -567,7 +596,7 @@ class MQSim(BackendBase):
             raise ValueError("Number of kept qubits must be less than total number of qubits.")
         if max(kept_qubits) >= self.n_qubits:
             raise ValueError(f"Qubit index {max(kept_qubits)} is out of range for a {self.n_qubits}-qubit system.")
-        return np.array(self.sim.get_reduced_density_matrix(kept_qubits))
+        return np.asarray(self.sim.get_reduced_density_matrix(kept_qubits))
 
     def entropy(self) -> float:
         """Get the von-Neumann entropy of quantum state."""

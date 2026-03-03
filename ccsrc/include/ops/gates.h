@@ -74,7 +74,7 @@ class U3 : public Parameterizable {
  public:
     U3(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi,
        const parameter::ParameterResolver& lambda, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
-    const tensor::Matrix& GetBaseMatrix() {
+    const tensor::Matrix& GetBaseMatrix() const {
         return base_matrix_;
     }
     parameter::ParameterResolver GetTheta() const {
@@ -98,7 +98,7 @@ class FSim : public Parameterizable {
  public:
     FSim(const parameter::ParameterResolver& theta, const parameter::ParameterResolver& phi, const qbits_t& obj_qubits,
          const qbits_t& ctrl_qubits);
-    const tensor::Matrix& GetBaseMatrix() {
+    const tensor::Matrix& GetBaseMatrix() const {
         return base_matrix_;
     }
     parameter::ParameterResolver GetTheta() const {
@@ -118,7 +118,7 @@ class Rn : public Parameterizable {
  public:
     Rn(const parameter::ParameterResolver& alpha, const parameter::ParameterResolver& beta,
        const parameter::ParameterResolver& gamma, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits);
-    const tensor::Matrix& GetBaseMatrix() {
+    const tensor::Matrix& GetBaseMatrix() const {
         return base_matrix_;
     }
     parameter::ParameterResolver GetAlpha() const {

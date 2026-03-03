@@ -13,10 +13,11 @@
 # limitations under the License.
 # ============================================================================
 """List available simulators."""
+import os
 import typing
 import warnings
 
-from mindquantum import _mq_matrix, _mq_vector, _mq_stabilizer, mqbackend
+from mindquantum import _mq_matrix, _mq_mps, _mq_stabilizer, _mq_vector, mqbackend
 from mindquantum.dtype import complex64, complex128
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.error import SimNotAvailableError
@@ -58,6 +59,7 @@ class _AvailableSimulator:
             'mqvector': _mq_vector,
             'mqmatrix': _mq_matrix,
             'stabilizer': _mq_stabilizer,
+            'mqmps': _mq_mps,
         }
         self.sims = {
             'mqvector': {
@@ -67,6 +69,10 @@ class _AvailableSimulator:
             'mqmatrix': {
                 complex64: _mq_matrix.float,
                 complex128: _mq_matrix.double,
+            },
+            'mqmps': {
+                complex64: _mq_mps.float,
+                complex128: _mq_mps.double,
             },
             'stabilizer': _mq_stabilizer,
         }
@@ -116,7 +122,7 @@ class _AvailableSimulator:
             raise ValueError(f"{CUQUANTUM_DISABLED_REASON}")
 
         if sim in self.sims:
-            if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix', 'mqvector_cq']:
+            if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix', 'mqvector_cq', 'mqmps']:
                 # pylint: disable=import-outside-toplevel
                 from mindquantum.simulator.mqsim import MQSim
 
@@ -130,7 +136,10 @@ class _AvailableSimulator:
 
     def __iter__(self):
         """List available simulator with data type."""
+        skip_mqmps = os.getenv("MQ_SKIP_MQMPS", "").lower() in {"1", "true", "yes", "on"}
         for k, v in self.sims.items():
+            if skip_mqmps and k == "mqmps":
+                continue
             if not isinstance(v, dict):
                 yield k
             else:

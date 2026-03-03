@@ -201,6 +201,64 @@ find_package(Python 3.7.0 COMPONENTS Interpreter Development.Module)
 
 # ------------------------------------------------------------------------------
 
+# ==============================================================================
+# BLAS/LAPACK (required for mqmps)
+
+# Enforce LP64 BLAS/LAPACK integers (32-bit Fortran INTEGER).
+set(BLA_SIZEOF_INTEGER 4)
+
+set(_mq_env_openblas_lib "$ENV{MQ_OPENBLAS_LIB}")
+set(_mq_env_openblas_symbol_prefix "$ENV{MQ_OPENBLAS_SYMBOL_PREFIX}")
+
+if(NOT MQ_BLAS_LIBRARIES AND NOT "${_mq_env_openblas_lib}" STREQUAL "")
+  set(MQ_BLAS_LIBRARIES "${_mq_env_openblas_lib}")
+endif()
+if(NOT MQ_LAPACK_LIBRARIES AND NOT "${_mq_env_openblas_lib}" STREQUAL "")
+  set(MQ_LAPACK_LIBRARIES "${_mq_env_openblas_lib}")
+endif()
+if(NOT BLAS_SYMBOL_PREFIX AND NOT "${_mq_env_openblas_symbol_prefix}" STREQUAL "")
+  set(BLAS_SYMBOL_PREFIX
+      "${_mq_env_openblas_symbol_prefix}"
+      CACHE STRING "Optional prefix for BLAS/LAPACK Fortran symbol names")
+endif()
+if(NOT BLAS_SYMBOL_PREFIX AND MQ_BLAS_LIBRARIES MATCHES "scipy_openblas32")
+  set(BLAS_SYMBOL_PREFIX
+      "scipy_"
+      CACHE STRING "Optional prefix for BLAS/LAPACK Fortran symbol names")
+endif()
+
+set(MQ_BLAS_LIBRARIES
+    "${MQ_BLAS_LIBRARIES}"
+    CACHE STRING "Optional explicit BLAS library list used to bypass FindBLAS")
+set(MQ_LAPACK_LIBRARIES
+    "${MQ_LAPACK_LIBRARIES}"
+    CACHE STRING "Optional explicit LAPACK library list used to bypass FindLAPACK")
+
+if(MQ_BLAS_LIBRARIES)
+  set(BLAS_LIBRARIES "${MQ_BLAS_LIBRARIES}")
+  if(MQ_LAPACK_LIBRARIES)
+    set(LAPACK_LIBRARIES "${MQ_LAPACK_LIBRARIES}")
+  else()
+    set(LAPACK_LIBRARIES "${BLAS_LIBRARIES}")
+  endif()
+
+  if(NOT TARGET BLAS::BLAS)
+    add_library(BLAS::BLAS INTERFACE IMPORTED)
+  endif()
+  set_property(TARGET BLAS::BLAS PROPERTY INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
+
+  if(NOT TARGET LAPACK::LAPACK)
+    add_library(LAPACK::LAPACK INTERFACE IMPORTED)
+  endif()
+  set_property(TARGET LAPACK::LAPACK PROPERTY INTERFACE_LINK_LIBRARIES "${LAPACK_LIBRARIES}")
+
+  set(BLAS_FOUND TRUE)
+  set(LAPACK_FOUND TRUE)
+else()
+  find_package(BLAS REQUIRED)
+  find_package(LAPACK REQUIRED)
+endif()
+
 # Check if we are being used directly or via add_subdirectory()
 if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
   if(NOT MQ_PYTHON_PACKAGE_NAME)

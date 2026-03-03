@@ -161,7 +161,7 @@ class ISWAPGate : public BasicGate {
     ISWAPGate(bool daggered, const qbits_t& obj_qubits, const qbits_t& ctrl_qubits = {})
         : BasicGate(GateID::ISWAP, obj_qubits, ctrl_qubits), daggered_(daggered) {
     }
-    bool Daggered() {
+    bool Daggered() const {
         return daggered_;
     }
 

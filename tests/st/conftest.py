@@ -18,6 +18,7 @@ import os
 
 from mindquantum import logging
 
+os.environ.setdefault("MQ_SKIP_MQMPS", "1")
 # pylint: disable=no-member
 
 level = os.getenv('MQ_LOG', logging.LogLevel.INFO)
