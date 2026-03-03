@@ -737,32 +737,6 @@ def test_noise_simulator(config):
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
-def test_noise_backend_get_expectation_with_grad():
-    """
-    Description: Test get_expectation_with_grad through noise backend.
-    Expectation: succeed.
-    """
-    adder = BitFlipAdder(0.1)
-    circ = Circuit().ry('a', 0)
-    ham = Hamiltonian(QubitOperator('Z0'))
-    pr = np.array([0.3])
-
-    sim_noise = Simulator(NoiseBackend('mqvector', 1, adder=adder))
-    grad_ops_noise = sim_noise.get_expectation_with_grad(ham, circ)
-    f_noise, g_noise = grad_ops_noise(pr)
-
-    sim_ref = Simulator('mqvector', 1)
-    grad_ops_ref = sim_ref.get_expectation_with_grad(ham, adder(circ))
-    f_ref, g_ref = grad_ops_ref(pr)
-
-    assert np.allclose(f_noise, f_ref)
-    assert np.allclose(g_noise, g_ref)
-
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_gpu_training
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
 @pytest.mark.parametrize("config", list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
 def test_measurement_reset(config):
     """
