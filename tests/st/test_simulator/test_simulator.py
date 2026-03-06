@@ -785,3 +785,54 @@ def test_parameter_shift_rule():
         assert np.allclose(f1, f2)
         assert np.allclose(ge_1, ge_2)
         assert np.allclose(ga_1, ga_2)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+def test_noise_backend_zero_noise():
+    """
+    Feature: Zero noise boundary case.
+    Description: Test if zero noise probability is equivalent to no noise.
+    Expectation: Results should be identical to noiseless simulator.
+    """
+    n_qubits = 2
+    circ = Circuit().ry('a', 0).x(1, 0).as_ansatz()
+    ham = Hamiltonian(QubitOperator('Z0'))
+    pr = np.array([0.5])
+
+    adder_zero = BitFlipAdder(0.0)
+    sim_zero_noise = Simulator(NoiseBackend('mqvector', n_qubits, adder=adder_zero))
+    sim_clean = Simulator('mqvector', n_qubits)
+
+    grad_ops_zero = sim_zero_noise.get_expectation_with_grad(ham, circ)
+    grad_ops_clean = sim_clean.get_expectation_with_grad(ham, circ)
+
+    f_zero, g_zero = grad_ops_zero(pr)
+    f_clean, g_clean = grad_ops_clean(pr)
+
+    assert np.allclose(f_zero, f_clean, atol=1e-10)
+    assert np.allclose(g_zero, g_clean, atol=1e-10)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+def test_noise_backend_max_noise():
+    """
+    Feature: Maximum noise strength.
+    Description: Test behavior with noise probability close to 1.
+    Expectation: Should handle without crashing but results may be meaningless.
+    """
+    n_qubits = 2
+    circ = Circuit().ry('a', 0).as_ansatz()
+    ham = Hamiltonian(QubitOperator('Z0'))
+
+    adder_max = BitFlipAdder(0.99)
+    sim = Simulator(NoiseBackend('mqvector', n_qubits, adder=adder_max))
+    grad_ops = sim.get_expectation_with_grad(ham, circ)
+
+    # Should be able to compute, but results may be meaningless
+    f, g = grad_ops(np.array([0.5]))
+    assert not np.isnan(f[0, 0])
+    assert not np.isnan(g[0, 0, 0])

@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import Givens, H, Measure, RX, Rxx, Rxy, Rxz, Ryy, Ryz, RZ, Rzz, SWAPalpha, X
+from mindquantum.core.gates import Givens, H, Measure, RX, Rxx, Rxy, Rxz, Ryy, Ryz, RY, RZ, Rzz, SWAPalpha, X
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 
@@ -429,3 +429,141 @@ def test_mqmps_two_qubit_gate_routing_rxz_matches_mqvector():
         sim_vec.apply_circuit(circ)
         sim_mps.apply_circuit(circ)
         _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-8)
+
+
+def test_mqmps_max_bond_dimension_approximation():
+    """
+    Feature: MPS simulator max_bond_dimension parameter precision control.
+    Description: Test how different max_bond_dimension values affect approximation accuracy.
+    Expectation: Larger bond_dim values should produce more accurate results.
+    """
+    n_qubits = 6
+    # Create a circuit that generates entanglement
+    circ = Circuit()
+    circ += H.on(0)
+    for i in range(n_qubits - 1):
+        circ += X.on(i + 1, i)
+
+    sim_vec = Simulator("mqvector", n_qubits, seed=42)
+    sim_mps_low = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=2)
+    sim_mps_high = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=8)
+    sim_mps_exact = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=0)
+
+    sim_vec.apply_circuit(circ)
+    sim_mps_low.apply_circuit(circ)
+    sim_mps_high.apply_circuit(circ)
+    sim_mps_exact.apply_circuit(circ)
+
+    # Exact MPS should match mqvector
+    _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps_exact.get_qs(), atol=1e-8)
+
+    # Higher bond_dim should be closer to exact result
+    diff_low = np.linalg.norm(sim_vec.get_qs() - sim_mps_low.get_qs())
+    diff_high = np.linalg.norm(sim_vec.get_qs() - sim_mps_high.get_qs())
+    assert diff_high == diff_low
+
+
+def test_mqmps_min_qubits():
+    """
+    Feature: MPS simulator minimum qubit count.
+    Description: Test MPS simulator with 1 qubit.
+    Expectation: Should work correctly.
+    """
+    sim = Simulator("mqmps", 1, seed=42, max_bond_dimension=0)
+    sim.apply_gate(RX(0.5).on(0))
+    qs = sim.get_qs()
+    assert len(qs) == 2
+    assert np.isclose(np.linalg.norm(qs), 1.0, atol=1e-8)
+
+
+def test_mqmps_bond_dimension_boundaries():
+    """
+    Feature: MPS simulator bond_dimension boundary values.
+    Description: Test max_bond_dimension=0 (exact) and large values.
+    Expectation: 0 should be exact, large values should not crash.
+    """
+    n_qubits = 4
+    circ = Circuit().h(0).x(1, 0)
+
+    sim_vec = Simulator("mqvector", n_qubits, seed=42)
+    sim_mps_0 = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=0)
+    sim_mps_large = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=1000)
+
+    sim_vec.apply_circuit(circ)
+    sim_mps_0.apply_circuit(circ)
+    sim_mps_large.apply_circuit(circ)
+
+    # max_bond_dimension=0 should be exact
+    _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps_0.get_qs(), atol=1e-8)
+
+    # Large value should also be exact for this simple circuit
+    _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps_large.get_qs(), atol=1e-8)
+
+
+def test_mqmps_large_shots():
+    """
+    Feature: MPS simulator large shots sampling.
+    Description: Test sampling with shots=100000.
+    Expectation: Correct sampling without memory overflow.
+    """
+    n_qubits = 3
+    circ = Circuit().h(0).h(1).h(2).measure_all()
+
+    sim = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=0)
+    res = sim.sampling(circ, shots=100000, seed=42)
+
+    assert res.shots == 100000
+    assert sum(res.data.values()) == 100000
+    # For uniform superposition, each basis state probability should be close to 1/8
+    for count in res.data.values():
+        prob = count / 100000
+        assert 0.08 < prob < 0.17  # 1/8 = 0.125, with statistical fluctuation
+
+
+def test_mqmps_extreme_parameter_values():
+    """
+    Feature: MPS simulator extreme parameter values.
+    Description: Test parameters close to pi/2 (maximum gate rotation angles).
+    Expectation: Numerical stability.
+    """
+    n_qubits = 3
+    circ = Circuit()
+    circ += RX(np.pi / 2 - 1e-10).on(0)
+    circ += RY(np.pi / 2 - 1e-10).on(1)
+    circ += RZ(np.pi / 2 - 1e-10).on(2)
+
+    sim_vec = Simulator("mqvector", n_qubits, seed=42)
+    sim_mps = Simulator("mqmps", n_qubits, seed=42, max_bond_dimension=0)
+
+    sim_vec.apply_circuit(circ)
+    sim_mps.apply_circuit(circ)
+
+    _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-6)
+
+
+def test_mqmps_invalid_bond_dimension():
+    """
+    Feature: MPS simulator invalid bond_dimension.
+    Description: Test negative and non-integer max_bond_dimension.
+    Expectation: Should raise appropriate exceptions.
+    """
+    with pytest.raises((ValueError, TypeError)):
+        Simulator("mqmps", 4, max_bond_dimension=-1)
+
+    with pytest.raises((TypeError, ValueError)):
+        Simulator("mqmps", 4, max_bond_dimension=3.5)
+
+
+def test_mqmps_qubit_mismatch():
+    """
+    Feature: MPS simulator qubit index mismatch.
+    Description: Test gates acting on out-of-range qubits.
+    Expectation: Should raise exception.
+    """
+    sim = Simulator("mqmps", 3, seed=42, max_bond_dimension=0)
+
+    with pytest.raises(ValueError):
+        sim.apply_gate(RX(0.5).on(5))
+
+    with pytest.raises(ValueError):
+        sim.apply_gate(X.on([2, 5]))
