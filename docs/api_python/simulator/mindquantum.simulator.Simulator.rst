@@ -5,11 +5,34 @@ mindquantum.simulator.Simulator
 
     模拟量子线路的量子模拟器。
 
+    MindQuantum 提供了多种模拟后端，每种后端具有不同的状态表示、内存特性和功能集。
+    请根据实际需求选择合适的后端：
+
+    - **mqvector** -- 全态矢量模拟器。默认且功能最完整的后端。内存消耗为 :math:`O(2^n)`。
+      支持所有量子门、梯度计算（伴随微分法和 parameter-shift rule）以及含噪声模拟（通过
+      parameter-shift rule）。
+    - **mqmatrix** -- 密度矩阵模拟器。内存消耗为 :math:`O(4^n)`。原生支持噪声信道和
+      混合态操作，如 :meth:`entropy`、:meth:`purity`、:meth:`get_partial_trace` 和
+      :meth:`get_pure_state_vector`。在 :meth:`get_expectation_with_grad` 中不支持
+      ``circ_left`` 和 ``simulator_left``。
+    - **mqmps** -- 矩阵乘积态（张量网络）模拟器。内存消耗为 :math:`O(n \chi^2)`，其中
+      :math:`\chi` 为键维度。对纠缠度有限的线路非常高效；对于高度纠缠态，结果可能是近似的。
+    - **stabilizer** -- Clifford tableau 模拟器。内存消耗为 :math:`O(n^2)`。对于
+      仅包含 Clifford 门（H、S、CNOT 等）的线路非常高效，但仅限于 Clifford 门。
+      不支持含参量子门、梯度计算和密度矩阵操作。
+    - **mqvector_gpu** -- GPU 加速的态矢量模拟器。与 ``mqvector`` 具有相同的功能，
+      但在 NVIDIA GPU 上运行。需要 CUDA 11 或更高版本。
+    - **mqvector_cq** -- 基于 NVIDIA cuQuantum SDK 的态矢量模拟器。与 ``mqvector_gpu``
+      具有相同的功能，但利用 cuQuantum 进行优化。需要 CUDA 11+ 和 cuQuantum SDK。
+
+    使用 :func:`mindquantum.simulator.get_supported_simulator` 查看当前环境中可用的后端。
+
     参数：
         - **backend** (str) - 想要的后端。通过调用 `get_supported_simulator()` 可以返回支持的后端。
         - **n_qubits** (int) - 量子模拟器的量子比特数量。默认值： ``None``。
         - **seed** (int) - 模拟器的随机种子，如果为 ``None``，种子将由 `numpy.random.randint` 生成。默认值： ``None``。
-        - **dtype** (mindquantum.dtype) - 模拟器的数据类型。
+        - **dtype** (mindquantum.dtype) - 模拟器的数据类型。支持 ``mindquantum.complex64`` 和
+          ``mindquantum.complex128``。默认值： ``None`` （使用 ``complex128``）。
 
     异常：
         - **TypeError** - 如果 `backend` 不是str。
@@ -17,7 +40,7 @@ mindquantum.simulator.Simulator
         - **TypeError** - 如果 `seed` 不是int。
         - **ValueError** - 如果不支持 `backend` 。
         - **ValueError** - 如果 `n_qubits` 为负数。
-        - **ValueError** - 如果 `seed` 小于0或大于 :math:`2^23 - 1` 。
+        - **ValueError** - 如果 `seed` 小于0或大于 :math:`2^{23} - 1` 。
 
     .. py:method:: apply_circuit(circuit, pr=None)
 

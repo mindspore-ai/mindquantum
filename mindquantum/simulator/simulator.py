@@ -41,16 +41,51 @@ def get_supported_simulator():
 
 
 class Simulator:
-    """
-    Quantum simulator that simulate quantum circuit.
+    r"""
+    Quantum simulator that simulates quantum circuit.
+
+    MindQuantum provides multiple simulation backends, each with different
+    state representations, memory characteristics, and feature sets. Choose
+    the backend that best fits your use case:
+
+    - **mqvector** -- Full state vector simulator. The default and most
+      full-featured backend. Memory scales as :math:`O(2^n)`. Supports all
+      gates, gradient computation (adjoint differentiation and parameter-shift
+      rule), and noise simulation (via parameter-shift rule).
+    - **mqmatrix** -- Density matrix simulator. Memory scales as
+      :math:`O(4^n)`. Natively supports noise channels and mixed-state
+      operations such as :meth:`entropy`, :meth:`purity`,
+      :meth:`get_partial_trace`, and :meth:`get_pure_state_vector`.
+      Does not support ``circ_left`` or ``simulator_left`` in
+      :meth:`get_expectation_with_grad`.
+    - **mqmps** -- Matrix Product State (tensor network) simulator.
+      Memory scales as :math:`O(n \chi^2)` where :math:`\chi` is the bond
+      dimension. Efficient for circuits with limited entanglement; results
+      may be approximate for highly entangled states.
+    - **stabilizer** -- Clifford tableau simulator. Memory scales as
+      :math:`O(n^2)`. Extremely efficient for Clifford-only circuits but
+      restricted to Clifford gates (H, S, CNOT, etc.). Does not support
+      parameterized gates, gradient computation, or density matrix operations.
+    - **mqvector_gpu** -- GPU-accelerated state vector simulator. Same
+      capabilities as ``mqvector`` but runs on NVIDIA GPUs. Requires
+      CUDA 11 or higher.
+    - **mqvector_cq** -- State vector simulator powered by NVIDIA cuQuantum
+      SDK. Same capabilities as ``mqvector_gpu`` but leverages cuQuantum
+      for optimized performance. Requires both CUDA 11+ and the
+      cuQuantum SDK.
+
+    Use :func:`mindquantum.simulator.get_supported_simulator` to list backends
+    available in your current environment.
 
     Args:
         backend (str): which backend you want. The supported backend can be found
-            in SUPPORTED_SIMULATOR
-        n_qubits (int): number of quantum simulator. Default: ``None``.
+            in :data:`SUPPORTED_SIMULATOR`.
+        n_qubits (int): number of qubits for the simulator. Default: ``None``.
         seed (int): the random seed for this simulator, if ``None``, seed will generate
             by `numpy.random.randint`. Default: ``None``.
-        dtype (mindquantum.dtype): the data type of simulator. Default: ``None``.
+        dtype (mindquantum.dtype): the data type of simulator. Supports
+            ``mindquantum.complex64`` and ``mindquantum.complex128``.
+            Default: ``None`` (uses ``complex128``).
 
     Raises:
         TypeError: if `backend` is not str.
@@ -58,7 +93,7 @@ class Simulator:
         TypeError: if `seed` is not int.
         ValueError: if `backend` is not supported.
         ValueError: if `n_qubits` is negative.
-        ValueError: if `seed` is less than 0 or great than :math:`2^23 - 1`.
+        ValueError: if `seed` is less than 0 or greater than :math:`2^{23} - 1`.
 
     Examples:
         >>> from mindquantum.algorithm.library import qft
