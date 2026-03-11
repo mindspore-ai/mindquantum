@@ -257,3 +257,54 @@ def test_sequential_ucc_append_is_defensive_copy():
     removed = ansatz.remove(0)
     assert removed == FermionOperator("3^ 1", "a")
     assert len(ansatz.circuit) == 0
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+def test_sequential_ucc_slicing():
+    """
+    Feature: SequentialUCCAnsatz slicing operations.
+    Description: Test __getitem__ with slice objects.
+    Expectation: Correctly returns sliced operator list.
+    """
+    ansatz = SequentialUCCAnsatz()
+    ansatz.append(FermionOperator("3^ 1", "a"))
+    ansatz.append(FermionOperator("4^ 2", "b"))
+    ansatz.append(FermionOperator("5^ 3", "c"))
+    ansatz.append(FermionOperator("6^ 4", "d"))
+
+    # Test different slices
+    assert len(ansatz[1:3]) == 2
+    assert ansatz[1:3][0] == FermionOperator("4^ 2", "b")
+    assert ansatz[1:3][1] == FermionOperator("5^ 3", "c")
+
+    assert len(ansatz[::2]) == 2
+    assert len(ansatz[::-1]) == 4
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+def test_sequential_ucc_iteration():
+    """
+    Feature: SequentialUCCAnsatz iterator protocol.
+    Description: Test iteration through for loop.
+    Expectation: Correctly iterates all operators.
+    """
+    ansatz = SequentialUCCAnsatz()
+    ops = [
+        FermionOperator("3^ 1", "a"),
+        FermionOperator("4^ 2", "b"),
+        FermionOperator("5^ 3", "c"),
+    ]
+
+    for op in ops:
+        ansatz.append(op)
+
+    # Test iteration
+    count = 0
+    for op in ansatz:
+        assert op in ops
+        count += 1
+    assert count == 3

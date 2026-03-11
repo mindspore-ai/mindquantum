@@ -533,3 +533,66 @@ def test_qpu_grad_perturbed_circuit_preserves_encoder_ansatz_behavior():
     assert np.allclose(qpu_f, ref_f, atol=1e-12)
     assert np.allclose(qpu_g_enc, ref_g_enc, atol=1e-6)
     assert np.allclose(qpu_g_ans, ref_g_ans, atol=1e-6)
+
+
+def test_qpu_min_qubits():
+    """
+    Feature: QPU minimum qubit count.
+    Description: Test QPU with 1 qubit.
+    Expectation: Should work correctly.
+    """
+    sim = Simulator("mqvector", 1)
+    qpu = _SamplingOnlyQPU(sim)
+    assert qpu.n_qubits == 1
+
+    circ = Circuit().ry("a", 0).as_ansatz()
+    ham = Hamiltonian(QubitOperator("Z0"))
+    grad_ops = qpu.get_expectation_with_grad(ham, circ, shots=1000, seed=42)
+    f, g = grad_ops(np.array([0.5]))
+
+    assert f.shape == (1, 1)
+    assert g.shape == (1, 1, 1)
+
+
+def test_qpu_shots_boundaries():
+    """
+    Feature: QPU shots boundary values.
+    Description: Test shots=1 and large shots values.
+    Expectation: Should handle correctly.
+    """
+    sim = Simulator("mqvector", 1)
+    qpu = _SamplingOnlyQPU(sim)
+
+    circ = Circuit().ry("a", 0).as_ansatz()
+    ham = Hamiltonian(QubitOperator("Z0"))
+
+    # shots=1
+    f1, g1 = qpu.get_expectation_with_grad(ham, circ, shots=1, seed=42)(np.array([0.5]))
+    assert not np.isnan(f1[0, 0])
+
+    # Large shots
+    f2, g2 = qpu.get_expectation_with_grad(ham, circ, shots=100000, seed=42)(np.array([0.5]))
+    assert not np.isnan(f2[0, 0])
+
+
+def test_qpu_fd_gap_boundaries():
+    """
+    Feature: QPU fd_gap boundary values.
+    Description: Test fd_gap close to 0 and large values.
+    Expectation: Should handle boundary cases.
+    """
+    sim = Simulator("mqvector", 1)
+    qpu = _ExactExpectationQPU(sim)
+
+    circ = Circuit().ry("a", 0).as_ansatz()
+    ham = Hamiltonian(QubitOperator("Z0"))
+
+    # Small fd_gap
+    grad_ops_small = qpu.get_expectation_with_grad(ham, circ, fd_gap=1e-6)
+    f_small, g_small = grad_ops_small(np.array([0.5]))
+    assert not np.isnan(g_small[0, 0, 0])
+
+    # Large fd_gap
+    grad_ops_large = qpu.get_expectation_with_grad(ham, circ, fd_gap=1.0)
+    f_large, g_large = grad_ops_large(np.array([0.5]))
+    assert not np.isnan(g_large[0, 0, 0])
