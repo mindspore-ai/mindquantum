@@ -163,7 +163,7 @@ class _QPUGradEvaluator:
     For each circuit parameter the evaluator selects either the parameter-shift
     rule (when applicable and ``pr_shift=True``) or central finite differences,
     then exposes a single :meth:`grad_ops` callable compatible with
-    :class:`~mindquantum.simulator.utils.GradOpsWrapper`.
+    :class:`~mindquantum.simulator.GradOpsWrapper`.
 
     Args:
         qpu (QPU): The QPU instance used for sampling.
@@ -593,9 +593,8 @@ class QPU(abc.ABC):
                 Default: ``None`` (empty circuit).
             circ_left: Not supported. Must be ``None``.
             simulator_left: Not supported. Must be ``None``.
-            pr (Union[Dict[str, numbers.Number], ParameterResolver,
-                numpy.ndarray, list, numbers.Number]): Parameter values for
-                ``circ_right``. Default: ``None``.
+            pr (Union[Dict[str, numbers.Number], ParameterResolver, numpy.ndarray, list, numbers.Number]):
+                Parameter values for ``circ_right``. Default: ``None``.
             shots (int): Shots per Pauli-term measurement circuit. If ``None``,
                 uses :attr:`default_shots`. Default: ``None``.
             seed (int): Optional seed forwarded to :meth:`sampling`.
@@ -738,7 +737,7 @@ class QPU(abc.ABC):
         Get a function that returns expectation values and gradients w.r.t. circuit parameters.
 
         The returned object is a
-        :class:`~mindquantum.simulator.utils.GradOpsWrapper`, preserving
+        :class:`~mindquantum.simulator.GradOpsWrapper`, preserving
         compatibility with MindQuantum's VQA / MindSpore integration.
 
         For real hardware, gradients are estimated by repeatedly executing
@@ -755,9 +754,8 @@ class QPU(abc.ABC):
           differences.
 
         Args:
-            hams (Union[:class:`~.core.operators.Hamiltonian`,
-                List[:class:`~.core.operators.Hamiltonian`]]): A Hamiltonian
-                or a list of Hamiltonians whose expectations are evaluated.
+            hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
+                A Hamiltonian or a list of Hamiltonians whose expectations are evaluated.
             circ_right (Circuit): The variational circuit :math:`U`.
             circ_left: Not supported. Must be ``None``.
             simulator_left: Not supported. Must be ``None``.
