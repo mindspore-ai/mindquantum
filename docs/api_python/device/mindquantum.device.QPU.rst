@@ -24,30 +24,6 @@ mindquantum.device.QPU
         - **TypeError** - 如果 `n_qubits` 或 `default_shots` 不是int。
         - **ValueError** - 如果 `n_qubits` 或 `default_shots` 小于1。
 
-    .. py:method:: n_qubits
-        :property:
-
-        获取该QPU上可用的量子比特数。
-
-        返回：
-            int，量子比特数。
-
-    .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
-        :abstractmethod:
-
-        在该QPU上执行 `circuit` 并返回采样结果。
-
-        这是硬件后端 **必须** 实现的唯一方法。所有其他公共方法（期望值、梯度）均基于此方法构建。
-
-        参数：
-            - **circuit** (Circuit) - 包含至少一个测量门的量子线路。
-            - **pr** (Union[dict, ParameterResolver]) - 含参线路的参数值。默认值： ``None``。
-            - **shots** (int) - 测量次数。默认值： ``1``。
-            - **seed** (int) - 可选的随机种子，用于结果可复现（真实硬件可能忽略此参数）。默认值： ``None``。
-
-        返回：
-            MeasureResult，采样的统计结果。
-
     .. py:method:: get_expectation(hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None, shots=None, seed=None)
 
         通过采样来估计哈密顿量的期望值。
@@ -84,7 +60,7 @@ mindquantum.device.QPU
 
         获取一个返回期望值和关于线路参数梯度的函数。
 
-        返回的对象是 :class:`~mindquantum.simulator.utils.GradOpsWrapper`，
+        返回的对象是 :class:`~mindquantum.simulator.GradOpsWrapper`，
         以保持与MindQuantum现有VQA / MindSpore集成的兼容性。
 
         对于真实硬件，梯度通过反复执行线路来估计：
@@ -113,3 +89,27 @@ mindquantum.device.QPU
             - **TypeError** - 如果 `hams` 不是Hamiltonian或Hamiltonian列表，或者 `circ_right` 不是Circuit。
             - **NotImplementedError** - 如果 `circ_left` 或 `simulator_left` 不为 ``None``，或者任何哈密顿量不是由 :class:`~.core.operators.QubitOperator` 构造的。
             - **ValueError** - 如果 `circ_right` 包含测量门，如果线路所需的量子比特数超过QPU提供的量子比特数，如果 `fd_gap` 不为正数，或者如果编码器参数和拟设参数集合存在重叠。
+
+    .. py:method:: n_qubits
+        :property:
+
+        获取该QPU上可用的量子比特数。
+
+        返回：
+            int，量子比特数。
+
+    .. py:method:: sampling(circuit, pr=None, shots=1, seed=None)
+        :abstractmethod:
+
+        在该QPU上执行 `circuit` 并返回采样结果。
+
+        这是硬件后端 **必须** 实现的唯一方法。所有其他公共方法（期望值、梯度）均基于此方法构建。
+
+        参数：
+            - **circuit** (Circuit) - 包含至少一个测量门的量子线路。
+            - **pr** (Union[dict, ParameterResolver]) - 含参线路的参数值。默认值： ``None``。
+            - **shots** (int) - 测量次数。默认值： ``1``。
+            - **seed** (int) - 可选的随机种子，用于结果可复现（真实硬件可能忽略此参数）。默认值： ``None``。
+
+        返回：
+            MeasureResult，采样的统计结果。

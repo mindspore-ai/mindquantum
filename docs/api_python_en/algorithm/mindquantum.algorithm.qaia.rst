@@ -16,5 +16,8 @@ mindquantum.algorithm.qaia
     mindquantum.algorithm.qaia.ASB
     mindquantum.algorithm.qaia.BSB
     mindquantum.algorithm.qaia.DSB
+    mindquantum.algorithm.qaia.TSB
+    mindquantum.algorithm.qaia.USB
+    mindquantum.algorithm.qaia.LSB
     mindquantum.algorithm.qaia.SFC
     mindquantum.algorithm.qaia.SimCIM
