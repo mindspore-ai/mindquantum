@@ -45,6 +45,8 @@ mindquantum.device.QPU
             - **circ_left** - 不支持。必须为 ``None``。
             - **simulator_left** - 不支持。必须为 ``None``。
             - **pr** (Union[Dict[str, numbers.Number], ParameterResolver, numpy.ndarray, list, numbers.Number]) - ``circ_right`` 的参数值。默认值： ``None``。
+
+        关键字参数：
             - **shots** (int) - 每个泡利项测量线路的采样次数。如果为 ``None``，则使用 ``default_shots``。默认值： ``None``。
             - **seed** (int) - 可选的随机种子，传递给 :meth:`sampling`。默认值： ``None``。
 
@@ -78,6 +80,8 @@ mindquantum.device.QPU
             - **simulator_left** - 不支持。必须为 ``None``。
             - **parallel_worker** (int) - 为保持接口兼容性而接受，但不使用。默认值： ``None``。
             - **pr_shift** (bool) - 是否在适用时优先使用参数移位规则。默认值： ``False``。
+
+        关键字参数：
             - **shots** (int) - 每次线路执行的采样次数。如果为 ``None``，则使用 ``default_shots``。默认值： ``None``。
             - **seed** (int) - 可选的基础随机种子，用于梯度估计的可复现性。默认值： ``None``。
             - **fd_gap** (float) - 中心有限差分法的步长。默认值： ``0.001``。
