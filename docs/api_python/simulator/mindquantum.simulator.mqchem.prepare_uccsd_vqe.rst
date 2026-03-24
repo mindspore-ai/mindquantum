@@ -6,7 +6,7 @@ mindquantum.simulator.mqchem.prepare_uccsd_vqe
     为使用 MQChemSimulator 进行 UCCSD-VQE 模拟准备所有组件。
 
     该工厂函数通过以下步骤简化了VQE模拟的设置：
-    1. 使用 :function:`~.algorithm.nisq.chem.uccsd_singlet_generator` 生成所有单重态UCCSD激发算符。
+    1. 使用 :function:`~.algorithm.nisq.uccsd_singlet_generator` 生成所有单重态UCCSD激发算符。
     2. 从 `molecular` 数据中包含的预先计算的CCSD结果中提取相应的振幅。
     3. 根据 `threshold` 筛选激发（基于它们的CCSD振幅）。
     4. 使用 :class:`~.simulator.mqchem.UCCExcitationGate` 构建参数化的UCCSD拟设线路。
