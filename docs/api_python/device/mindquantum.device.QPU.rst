@@ -10,7 +10,7 @@ mindquantum.device.QPU
 
     .. note::
         - 默认的期望值/梯度实现仅支持由 :class:`~.core.operators.QubitOperator` 构造的
-          :class:`~.core.operators.Hamiltonian`（硬件可测量的泡利和）。
+          :class:`~.core.operators.Hamiltonian` （硬件可测量的泡利和）。
         - 不支持非厄米期望值以及 ``circ_left`` / ``simulator_left`` 重叠形式。
         - 传入 :meth:`get_expectation` 或 :meth:`get_expectation_with_grad` 的线路不能包含
           测量门；测量基由内部自动生成。
@@ -41,7 +41,7 @@ mindquantum.device.QPU
 
         参数：
             - **hamiltonian** (Hamiltonian) - 需要计算期望的哈密顿量。必须由 :class:`~.core.operators.QubitOperator` 构造。
-            - **circ_right** (Circuit) - 制备量子态的线路 :math:`U`。默认值： ``None``（空线路）。
+            - **circ_right** (Circuit) - 制备量子态的线路 :math:`U`。默认值： ``None`` （空线路）。
             - **circ_left** - 不支持。必须为 ``None``。
             - **simulator_left** - 不支持。必须为 ``None``。
             - **pr** (Union[Dict[str, numbers.Number], ParameterResolver, numpy.ndarray, list, numbers.Number]) - ``circ_right`` 的参数值。默认值： ``None``。
@@ -71,7 +71,7 @@ mindquantum.device.QPU
           且其门匹配移位规则表（RX、RY、RZ、Rxx、Ryy、Rzz、Rxy、Rxz、Ryz、RPS、GP、PS、U3，
           以及具有特殊移位常数的SWAPalpha）的参数，使用参数移位规则。
           受控门和不支持的门（如Givens、FSim、自定义门）回退到有限差分法。
-        - 当 ``pr_shift=False``（默认）时，所有梯度均使用中心有限差分法。
+        - 当 ``pr_shift=False`` （默认）时，所有梯度均使用中心有限差分法。
 
         参数：
             - **hams** (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]) - 需要计算期望的 :class:`~.core.operators.Hamiltonian` 或一组 :class:`~.core.operators.Hamiltonian`。
