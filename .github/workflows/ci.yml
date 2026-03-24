@@ -21,17 +21,16 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest]
         python:
-          - 3.7
-          - 3.8
           - 3.9
           - '3.10'
+          - '3.11'
         include:
           - test_install: false
           - test_bdist_wheel: false
           - python: 3.9
             test_install: true
             VENV_PYTHON_TEST_PKGS:
-          - python: 3.8
+          - python: 3.9
             test_bdist_wheel: true
     name: "Python ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
     runs-on: ${{ matrix.runs-on }}

@@ -17,23 +17,23 @@
 
 ### 获取MindSpore镜像
 
-对于CPU后端，可以直接使用以下命令获取最新的稳定镜像：
+对于CPU后端，请先参考MindSpore Docker[安装指南](https://www.mindspore.cn/install)确认当前推荐的官方镜像名称与标签，然后执行：
 
 ```shell
-docker pull swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag}
+docker pull {mindspore_image}:{tag}
 ```
 
-其中{tag}为x.y.z或者devel或者runtime，具体请参考MindSpore的docker[安装指南](https://www.mindspore.cn/install)
+其中 `{mindspore_image}` 和 `{tag}` 请以MindSpore官方安装指南中的说明为准。
 
 ### 运行MindSpore镜像
 
 执行以下命令启动Docker容器实例：
 
 ```shell
-docker run -it swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag} /bin/bash
+docker run -it {mindspore_image}:{tag} /bin/bash
 ```
 
-其中{tag}与上述tag保持一直。
+其中 `{mindspore_image}` 和 `{tag}` 与上一步保持一致。
 
 ### 验证Mindspore是否安装成功
 
@@ -82,7 +82,7 @@ print(ops.add(x, y))
     **编译安装：**
 
     ```shell
-    git clone https://gitee.com/mindspore/mindquantum.git
+    git clone https://atomgit.com/mindspore/mindquantum.git
     cd ~/mindquantum
     python setup.py install --user
     ```
@@ -90,7 +90,7 @@ print(ops.add(x, y))
     **pip安装：**
 
     ```shell
-    pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install mindquantum
     ```
 
 ### 验证MindQuantum是否安装成功

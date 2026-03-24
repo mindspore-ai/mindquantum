@@ -64,7 +64,7 @@ try:
             "Some functions might not work or even raise error. Please install MindSpore "
             "version >= 1.4.0. For more details about dependency setting, please check "
             "the instructions at MindSpore official website https://www.mindspore.cn/install "
-            "or check the README.md at https://gitee.com/mindspore/mindquantum",
+            "or check the README.md at https://atomgit.com/mindspore/mindquantum",
             stacklevel=2,
         )
 

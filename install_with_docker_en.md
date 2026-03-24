@@ -17,23 +17,23 @@ This document describes how to use Docker to quickly install MindQuantum. First,
 
 ### Obtaining the MindSpore Image
 
-For the CPU backend, you can directly use the following command to obtain the latest stable image:
+For the CPU backend, first refer to the MindSpore Docker [installation guide](https://www.mindspore.cn/install/en) to confirm the currently recommended official image name and tag, and then run:
 
 ```shell
-docker pull swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag}
+docker pull {mindspore_image}:{tag}
 ```
 
-In which, {tag} corresponds to the tag in the above table.
+Here `{mindspore_image}` and `{tag}` should follow the official MindSpore installation guide.
 
 ### Running the MindSpore Image
 
 Execute the following command to start the Docker container instance:
 
 ```shell
-docker run -it swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-cpu:{tag} /bin/bash
+docker run -it {mindspore_image}:{tag} /bin/bash
 ```
 
-In which, {tag} corresponds to the tag in the above table.
+Here `{mindspore_image}` and `{tag}` should match the previous step.
 
 ### MindSpore Installation Verification
 
@@ -86,7 +86,7 @@ At this point, you have successfully installed the MindSpore CPU version by Dock
     **Install by compiling:**
 
     ```shell
-    git clone https://gitee.com/mindspore/mindquantum.git
+    git clone https://atomgit.com/mindspore/mindquantum.git
     cd ~/mindquantum
     python setup.py install --user
     ```
@@ -94,7 +94,7 @@ At this point, you have successfully installed the MindSpore CPU version by Dock
     **Install by pip:**
 
     ```shell
-    pip install https://hiq.huaweicloud.com/download/mindquantum/newest/linux/mindquantum-master-cp37-cp37m-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install mindquantum
     ```
 
 ### MindQuantum Installation Verification

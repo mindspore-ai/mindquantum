@@ -1,14 +1,14 @@
 # MindQuantum
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-39|310|311-blue.svg)](https://pypi.org/project/mindquantum/)
-[![PyPI](https://img.shields.io/badge/pypi_package-0.11.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
+[![PyPI - Version](https://img.shields.io/pypi/v/mindquantum.svg)](https://pypi.org/project/mindquantum/)
 [![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
 [![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
 [![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-limegreend.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/beginner/parameterized_quantum_circuit.html)
-[![Issues](https://img.shields.io/badge/Issues-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/issues)
-[![Release](https://img.shields.io/badge/Release-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/releases)
-[![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](https://gitee.com/mindspore/mindquantum/blob/master/LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](https://gitee.com/mindspore/mindquantum/pulls)
+[![Issues](https://img.shields.io/badge/Issues-MindQuantum-limegreend.svg)](https://atomgit.com/mindspore/mindquantum/issues)
+[![Release](https://img.shields.io/badge/Release-MindQuantum-limegreend.svg)](https://atomgit.com/mindspore/mindquantum/releases)
+[![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](./CONTRIBUTING.md)
 
 [查看中文](./README_CN.md)
 
@@ -42,7 +42,7 @@
 
 ## What is MindQuantum
 
-MindQuantum is a new-generation quantum computing framework based on MindSpore, focusing on the implementation of NISQ algorithms. It combines the HiQ high-performance quantum computing simulator with the parallel automatic differentiation capability of MindSpore. MindQuantum is easy-to-use with ultra-high performance. It can efficiently handle problems like quantum machine learning, quantum chemistry simulation, and quantum optimization. MindQuantum provides an efficient platform for researchers, teachers and students to quickly design and verify quantum algorithms, making quantum computing at your fingertips.
+MindQuantum is a new-generation quantum computing framework based on MindSpore, focusing on the implementation of NISQ algorithms. It combines a high-performance quantum computing simulator with the parallel automatic differentiation capability of MindSpore. MindQuantum is easy-to-use with ultra-high performance. It can efficiently handle problems like quantum machine learning, quantum chemistry simulation, and quantum optimization. MindQuantum provides an efficient platform for researchers, teachers and students to quickly design and verify quantum algorithms, making quantum computing at your fingertips.
 
 <img src="docs/MindQuantum-architecture_EN.png" alt="MindQuantum Architecture" width="600"/>
 
@@ -84,7 +84,7 @@ circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
 circuit.svg()  # circuit.svg('light')
 ```
 
-<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+<img src="docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
 
 ### Train quantum neural network
 
@@ -163,15 +163,15 @@ For more API, please refer to [MindQuantum API](https://www.mindspore.cn/mindqua
 
 - The hardware platform should be CPU with avx2 supported.
 - Refer to [MindQuantum Installation Guide](https://www.mindspore.cn/install/en), install MindSpore, version 1.4.0 or later is required.
-- See [setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py) for the remaining dependencies.
+- See [setup.py](./setup.py) for the remaining dependencies.
 
 ### Install by Source Code
 
-1.Download Source Code from Gitee
+1.Download Source Code from AtomGit
 
 ```bash
 cd ~
-git clone https://gitee.com/mindspore/mindquantum.git
+git clone https://atomgit.com/mindspore/mindquantum.git
 ```
 
 2.Compiling MindQuantum
@@ -201,7 +201,7 @@ pip install mindquantum
 
     ```bash
     cd ~
-    git clone https://gitee.com/mindspore/mindquantum.git
+    git clone https://atomgit.com/mindspore/mindquantum.git
     ```
 
 2. Build MindQuantum
@@ -270,17 +270,17 @@ For more details about how to build a parameterized quantum circuit and a quantu
 
 ## Docs
 
-More details about installation guide, tutorials and APIs, please see the [User Documentation](https://gitee.com/mindspore/docs/blob/master/README.md).
+More details about installation guide, tutorials and APIs, please see the [User Documentation](https://www.mindspore.cn/mindquantum/docs/en/master/index.html).
 
 ## Community
 
 ### Governance
 
-Check out how MindSpore Open Governance [works](<https://gitee.com/mindspore/community/blob/master/governance.md>).
+Check out how MindSpore Open Governance [works](https://atomgit.com/mindspore/community/blob/master/governance.md).
 
 ## Contributing
 
-Welcome contributions. See our [Contributor Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md) for more details.
+Welcome contributions. See our [Contributor Guide](./CONTRIBUTING.md) for more details.
 
 ## How to cite
 

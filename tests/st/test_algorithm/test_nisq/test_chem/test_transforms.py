@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-Test the transforms in the hiqfermion module.
+Test the transforms in the fermion module.
 """
 import pytest
 

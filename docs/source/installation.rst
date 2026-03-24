@@ -521,17 +521,17 @@ MacPorts
 Visit `macports.org <https://www.macports.org/install.php>`_ and install the latest version that corresponds to your
 operating system's version. Afterwards, open a new terminal window.
 
-Then, use macports to install Python 3.8 with pip by entering the following command
+Then, use macports to install Python 3.9 with pip by entering the following command
 
 .. code-block:: bash
 
-   sudo port install python38 py38-pip
+   sudo port install python39 py39-pip
 
 A warning might show up about using Python from the terminal.In this case, you should also install
 
 .. code-block:: bash
 
-   sudo port install py38-gnureadline
+   sudo port install py39-gnureadline
 
 Then install the rest of the required libraries/programs and a C++ compiler using the following command:
 

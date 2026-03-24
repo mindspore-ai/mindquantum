@@ -51,14 +51,14 @@ def test_sparsing_operator(dtype):
 
     ham_of = mol.get_molecular_hamiltonian()
     inter_ops = InteractionOperator(*ham_of.n_body_tensors.values())
-    ham_hiq = FermionOperator(inter_ops)
+    fermion_hamiltonian = FermionOperator(inter_ops)
 
-    ham = Transform(ham_hiq).jordan_wigner()
+    ham = Transform(fermion_hamiltonian).jordan_wigner()
 
     hamiltonian = ham.to_openfermion()
     matrix1 = get_sparse_operator(hamiltonian).toarray().astype(mq.to_np_type(dtype))
     matrix2 = ham.astype(dtype).matrix().toarray()
-    matrix3 = ham_hiq.astype(dtype).matrix().toarray()
+    matrix3 = fermion_hamiltonian.astype(dtype).matrix().toarray()
     eigen_v1 = np.real(np.linalg.eigvals(matrix1))
     eigen_v2 = np.real(np.linalg.eigvals(matrix2))
     eigen_v3 = np.real(np.linalg.eigvals(matrix3))

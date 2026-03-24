@@ -21,15 +21,13 @@ authors = [
      {name = 'The MindSpore Authors', email = 'contact@mindspore.cn'}
 ]
 description = 'A hybrid quantum-classic framework for quantum computing'
-requires-python = '>= 3.7'
+requires-python = '>=3.9,<3.12'
 license = {text= 'Apache License Version 2.0'}
 readme = 'README.md'
 classifiers = [
     'License :: OSI Approved :: Apache Software License',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Programming Language :: Python :: 3 :: Only',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11'
@@ -40,16 +38,13 @@ dependencies = [
     'scipy>=1.5.3',
     'matplotlib>=3.4.3',
     'rich==10.9.0',
-    'importlib-metadata>=0.9;python_version<"3.8"',
-    'typing_extensions;python_version<"3.8"',
-
 ]
 
 [project.urls]
 'Homepage' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
-'Download (Gitee)' = 'https://gitee.com/mindspore/mindquantum/tags'
-'Source (Gitee)' = 'https://gitee.com/mindspore/mindquantum'
-'Issue Tracker' = 'https://gitee.com/mindspore/mindquantum/issues'
+'Download (AtomGit)' = 'https://atomgit.com/mindspore/mindquantum/tags'
+'Source (AtomGit)' = 'https://atomgit.com/mindspore/mindquantum'
+'Issue Tracker' = 'https://atomgit.com/mindspore/mindquantum/issues'
 'Download (GitHub)' = 'https://github.com/mindspore-ai/mindquantum/tags'
 'Source (GitHub)' = 'https://github.com/mindspore-ai/mindquantum'
 'Documentation' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
@@ -96,7 +91,7 @@ include = ['mindquantum*']
 
 [tool.black]
 line-length = 120
-target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
+target-version = ['py39', 'py310', 'py311']
 skip-string-normalization = true
 
 
