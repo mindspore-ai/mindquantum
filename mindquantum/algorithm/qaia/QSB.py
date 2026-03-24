@@ -33,15 +33,23 @@ class TSB(SB):
 
     Reference: `Quantized Simulated Bifurcation for the Ising Model <https://ieeexplore.ieee.org/document/10231308>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        strategy(str): ternary quantization method, include linear, exponential, logarithmic. Default: ``linear``.
+        strategy (str): ternary quantization method, include linear, exponential, logarithmic.
+            Default: ``linear``.
     """
 
     # pylint: disable=too-many-arguments
@@ -131,15 +139,22 @@ class USB(SB):
 
     Reference: `Quantized Simulated Bifurcation for the Ising Model <https://ieeexplore.ieee.org/document/10231308>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        threshold(int): dynamic threshold. Default: 10.
+        threshold (int): dynamic threshold. Default: ``10``.
     """
 
     # pylint: disable=too-many-arguments
@@ -215,15 +230,22 @@ class LSB(SB):
 
     Reference: `Quantized Simulated Bifurcation for the Ising Model <https://ieeexplore.ieee.org/document/10231308>`_.
 
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
     Args:
         J (Union[numpy.array, csr_matrix]): The coupling matrix with shape :math:`(N x N)`.
         h (numpy.array): The external field with shape :math:`(N, )`.
         x (numpy.array): The initialized spin value with shape :math:`(N x batch_size)`. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32'. Default: ``'cpu-float32'``.
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
-        threshold(int): dynamic threshold. Default: 8.
+        threshold (int): dynamic threshold. Default: ``8``.
     """
 
     # pylint: disable=too-many-arguments

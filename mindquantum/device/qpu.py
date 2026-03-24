@@ -595,6 +595,8 @@ class QPU(abc.ABC):
             simulator_left: Not supported. Must be ``None``.
             pr (Union[Dict[str, numbers.Number], ParameterResolver, numpy.ndarray, list, numbers.Number]):
                 Parameter values for ``circ_right``. Default: ``None``.
+
+        Keyword Args:
             shots (int): Shots per Pauli-term measurement circuit. If ``None``,
                 uses :attr:`default_shots`. Default: ``None``.
             seed (int): Optional seed forwarded to :meth:`sampling`.
@@ -763,6 +765,8 @@ class QPU(abc.ABC):
                 not used. Default: ``None``.
             pr_shift (bool): Whether to prefer the parameter-shift rule when
                 applicable. Default: ``False``.
+
+        Keyword Args:
             shots (int): Shots per circuit execution. If ``None``, uses
                 :attr:`default_shots`. Default: ``None``.
             seed (int): Optional base seed for reproducible gradient
