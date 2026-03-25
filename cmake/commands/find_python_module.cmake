@@ -31,6 +31,19 @@ function(find_python_module module)
 
   string(REPLACE "-" "_" module_name ${module})
   string(TOUPPER ${module_name} MODULE)
+  set(_PYMOD_PYTHON_EXECUTABLE_VAR "PYMOD_${MODULE}_PYTHON_EXECUTABLE")
+
+  # Python modules discovered from a PEP 517 isolated environment cannot be safely reused once the frontend tears that
+  # environment down.
+  if((DEFINED ${_PYMOD_PYTHON_EXECUTABLE_VAR} AND NOT "${${_PYMOD_PYTHON_EXECUTABLE_VAR}}" STREQUAL
+                                                  "${Python_EXECUTABLE}") OR (DEFINED PYMOD_${MODULE}_PATH
+                                                                              AND NOT EXISTS "${PYMOD_${MODULE}_PATH}"))
+    unset(PYMOD_${MODULE}_FOUND CACHE)
+    unset(PYMOD_${MODULE}_PATH CACHE)
+    unset(PYMOD_${MODULE}_VERSION CACHE)
+    unset(PYMOD_${module}_VERSION CACHE)
+  endif()
+
   if(NOT PYMOD_${MODULE})
     if(PYMOD_REQUIRED)
       set(PYMOD_${module}_FIND_REQUIRED TRUE)
@@ -58,7 +71,10 @@ function(find_python_module module)
     if(NOT _${MODULE}_status)
       set(PYMOD_${MODULE}_PATH
           ${_${MODULE}_location}
-          CACHE STRING "Location of Python module ${module}")
+          CACHE STRING "Location of Python module ${module}" FORCE)
+      set(${_PYMOD_PYTHON_EXECUTABLE_VAR}
+          "${Python_EXECUTABLE}"
+          CACHE INTERNAL "Python executable used to locate module ${module}" FORCE)
 
       if(PYMOD_VERSION)
         execute_process(
@@ -70,10 +86,10 @@ function(find_python_module module)
         if(NOT _${MODULE}_status)
           set(PYMOD_${MODULE}_VERSION
               ${_${MODULE}_version}
-              CACHE STRING "Version of Python module ${module}")
+              CACHE STRING "Version of Python module ${module}" FORCE)
           set(PYMOD_${module}_VERSION
               ${PYMOD_${MODULE}_VERSION}
-              CACHE STRING "Version of Python module ${module}")
+              CACHE STRING "Version of Python module ${module}" FORCE)
         endif()
       endif()
     endif()
