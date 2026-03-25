@@ -22,6 +22,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sysconfig
 from pathlib import Path
 
 import setuptools.build_meta
@@ -34,6 +35,33 @@ except ImportError:  # wheel-filename >= 2.0
 
     def parse_wheel_filename(filename):
         return WheelFilename.parse(filename)
+
+
+# ==============================================================================
+
+
+def get_python_build_platform():
+    """Return the platform tag used for Python build temp directories."""
+    if platform.system() == 'Darwin':
+        # Intentionally duplicated from mindquantum_config to keep the PEP 517
+        # backend self-contained within backend-path.
+        return (
+            os.getenv('_PYTHON_HOST_PLATFORM')
+            or f"macosx-{os.getenv('MACOSX_DEPLOYMENT_TARGET', '10.15')}-{platform.machine()}"
+        )
+    return sysconfig.get_platform()
+
+
+# ==============================================================================
+
+
+def get_macos_deployment_target():
+    """Return the deployment target matching the active Python build platform."""
+    host_platform = os.getenv('_PYTHON_HOST_PLATFORM', '')
+    match = re.match(r'^macosx-([0-9]+(?:\.[0-9]+)*)-', host_platform)
+    if match:
+        return match.group(1)
+    return os.getenv('MACOSX_DEPLOYMENT_TARGET', '10.15')
 
 
 # ==============================================================================
@@ -295,9 +323,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     elif platform.system() == 'Darwin':
         logging.info('Running on macOS v%s', platform.mac_ver()[0])
         if '-p' not in config_settings['--global-option'] and '--plat-name' not in config_settings['--global-option']:
-            macos_ver = '10.15'
-            os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', macos_ver)
-            os.environ.setdefault('_PYTHON_HOST_PLATFORM', f'macosx-{macos_ver}-{platform.machine()}')
+            python_build_platform = get_python_build_platform()
+            os.environ.setdefault('_PYTHON_HOST_PLATFORM', python_build_platform)
+            os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', get_macos_deployment_target())
         logging.info('MACOSX_DEPLOYMENT_TARGET = %s', os.environ.get("MACOSX_DEPLOYMENT_TARGET"))
         logging.info('_PYTHON_HOST_PLATFORM = %s', os.environ.get("_PYTHON_HOST_PLATFORM"))
 
