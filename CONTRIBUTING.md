@@ -235,9 +235,9 @@ The development process is mainly divided into two categories, developing new fu
 from mindquantum import *
 import numpy as np
 
-encoder = Circuit().h(0).rx({'a0': 2}, 0).ry('a1', 1)
+encoder = Circuit().h(0).rx({"a0": 2}, 0).ry("a1", 1)
 print(encoder)
-print(encoder.get_qs(pr={'a0': np.pi / 2, 'a1': np.pi / 2}, ket=True))
+print(encoder.get_qs(pr={"a0": np.pi / 2, "a1": np.pi / 2}, ket=True))
 ```
 
 Running the above code will output the quantum circuit and the final state.
@@ -283,7 +283,6 @@ q1: ──┨ RY(a1) ┠───────────
 - [`scripts`](https://api.gitee.com/mindspore/mindquantum/tree/master/scripts) Compiling a Dependent Tools Update Script
 - [`tests`](https://api.gitee.com/mindspore/mindquantum/tree/master/tests) MindQuantum unit tests, based on Pytest, written in Python
 - [`third_party`](https://api.gitee.com/mindspore/mindquantum/tree/master/third_party) Third-party open source packages on which MindQuantum compiles
-- [`tutorials`](https://api.gitee.com/mindspore/mindquantum/tree/master/tutorials) Mind Quantum tutorial, which can be run directly with jupyter. Readable in [Official document of MindSpore](https://www.mindspore.cn/mindquantum/docs/en/master/index.html).
 
 ## Unit testing
 
@@ -388,7 +387,7 @@ When reporting issues, refer to this format:
 - **If you find an unclosed issue, which is exactly what you are going to solve,** please put some comments on that issue to tell others you would be in charge of it.
 - **If an issue is opened for a while,** it's recommended for contributors to precheck before working on solving that issue.
 - **If you resolve an issue which is reported by yourself,** it's also required to let others know before closing that issue.
-- **If you want the issue to be responded as quickly as possible,** please try to label it, you can find kinds of labels on [Label List](https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md)
+- **If you want the issue to be responded as quickly as possible,** please try to label it.
 
 ### Propose PRs
 

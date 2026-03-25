@@ -37,7 +37,7 @@ dynamic = ["version"]
 dependencies = [
     'scipy>=1.5.3',
     'matplotlib>=3.4.3',
-    'rich==10.9.0',
+    'rich>=10.9',
 ]
 
 [project.urls]
@@ -143,74 +143,6 @@ known-first-party = ['mindquantum']
             '*_test.py',
             '*_fixtures.py'
         ]
-
-
-[tool.pylint]
-    [tool.pylint.master]
-    ignore-patterns = [
-        '.*_test.py',
-        '.*_fixtures.py',
-    ]
-
-    extension-pkg-whitelist = [
-      'mindquantum.mqbackend',
-      'mindquantum._mq_vector',
-      'mindquantum._mq_vector_gpu',
-      'mindquantum._mq_matrix',
-      'mindquantum._math',
-      'mindquantum._qaia_sb',
-      'mindquantum._mq_stabilizer',
-      'mindquantum._mq_chem',
-      'mindquantum._mq_mps',
-    ]
-    extension-pkg-allow-list = [
-      'mindquantum.mqbackend',
-      'mindquantum._mq_vector',
-      'mindquantum._mq_vector_gpu',
-      'mindquantum._mq_matrix',
-      'mindquantum._math',
-      'mindquantum._qaia_sb',
-      'mindquantum._mq_stabilizer',
-      'mindquantum._mq_chem',
-      'mindquantum._mq_mps',
-    ]
-
-    init-hook = '''from pylint.config import find_default_config_files;\
-    import os, sys; \
-    sys.path.append(os.path.dirname(list(find_default_config_files())[0]))'''
-
-    [tool.pylint.basic]
-    good-names = ['ax', 'fd', 'i', 'j', 'k', 'l', 'n', 'N', 'q0', 'q1', 'q2', 'u', 'u1', 'u2', 'u3', 'v',
-                  'x', 'x1', 'x2', 'y', 'y1', 'y2', 'z', 'z1', 'z2', 'h',
-                  'n_layers', 'n_qubits', 'pr', 'a', 'b', 'g', 'f1', 'g1', 'g2',
-                  'f2', 'c', 'r', 'd', 'm', 'tq', 'p', 'd1', 'd2', 'w', 'p1', 'p2', 'f', 't', 'e', 'ep', 'em', 'rn', 'p0', 'f3',
-                  'px', 'py', 'pz', 't1', 't2', 'e1', 'e2', 'pz', 'ki', 'kz', 'k0', 'k1', 'k2']
-
-    [tool.pylint.typecheck]
-    ignored-modules = [
-        'mindquantum.mqbackend',
-        'mindspore',
-        'openfermion',
-        'openfermionpyscf',
-        'paddle',
-        'paddle_quantum',
-        'rich',
-        'sklearn',
-        'tensorflow',
-        'tensorflow_quantum',
-    ]
-
-    [tool.pylint.format]
-    max-line-length = 120
-
-    [tool.pylint.messages_control]
-    enable = [
-    ]
-    disable = [
-         'no-name-in-module',  # due to dynamic importing of symbols
-         'duplicate-code',
-         'fixme',
-    ]
 
 
 [tool.pytest.ini_options]

@@ -234,9 +234,9 @@ mindquantum主要使用C++和python进行开发，核心计算单元使用C/C++�
 from mindquantum import *
 import numpy as np
 
-encoder = Circuit().h(0).rx({'a0': 2}, 0).ry('a1', 1)
+encoder = Circuit().h(0).rx({"a0": 2}, 0).ry("a1", 1)
 print(encoder)
-print(encoder.get_qs(pr={'a0': np.pi / 2, 'a1': np.pi / 2}, ket=True))
+print(encoder.get_qs(pr={"a0": np.pi / 2, "a1": np.pi / 2}, ket=True))
 ```
 
 运行上述代码，将会输出量子线路和末态
@@ -282,7 +282,6 @@ q1: ──┨ RY(a1) ┠───────────
 - [`scripts`](https://api.gitee.com/mindspore/mindquantum/tree/master/scripts) 编译依赖工具更新脚本
 - [`tests`](https://api.gitee.com/mindspore/mindquantum/tree/master/tests) MindQuantum 单元测试，基于Pytest，使用Python编写
 - [`third_party`](https://api.gitee.com/mindspore/mindquantum/tree/master/third_party) MindQuantum编译依赖的第三方开源包
-- [`tutorials`](https://api.gitee.com/mindspore/mindquantum/tree/master/tutorials) MindQuantum 教程教案，使用jupyter可以直接运行，在[mindspore官方文档](https://mindspore.cn/mindquantum/docs/zh-CN/master/index.html)可阅读。
 
 ## 单元测试
 
@@ -396,7 +395,7 @@ git push origin {新分支名称}
 
 - **如您自行解决了自己报告的issue**，仍需在关闭该issue之前告知他人。
 
-- **如需issue快速响应**，可为issue添加标签。标签详情，参见[标签列表](https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md)。
+- **如需issue快速响应**，可为issue添加标签。
 
 ### 提交PR
 

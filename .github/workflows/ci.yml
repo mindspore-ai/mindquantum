@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         if: env.ACT != 'true'
@@ -46,7 +46,7 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: 'pip'
@@ -60,14 +60,14 @@ jobs:
           fi
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.runs-on }}-python-${{ matrix.python }}-ccache
           max-size: 75M
 
       - name: Cache CMake installer
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
           key: cmake-${{ env.CMAKE_VERSION }}
@@ -82,7 +82,7 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -91,7 +91,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: >-
@@ -139,8 +139,8 @@ jobs:
 
   macos:
     if: ${{ true }}
-    runs-on: macos-11
-    name: "MacOS 11 • ${{ matrix.xcode }} • x64"
+    runs-on: macos-14
+    name: "MacOS 14 • ${{ matrix.xcode }} • x64"
     env:
       DEVELOPER_DIR: "/Applications/${{ matrix.xcode }}.app/Contents/Developer"
       CC: /usr/bin/clang
@@ -149,16 +149,10 @@ jobs:
       fail-fast: false
       matrix:
         xcode:
-          - "Xcode_11.7"    # Not available on macos-12
-          - "Xcode_12.4"    # Not available on macos-12
-          - "Xcode_12.5.1"  # Not available on macos-12
-          # - "Xcode_13.0"    # Not available on macos-12
-          - "Xcode_13.1"
-          - "Xcode_13.2.1"
-          # - "Xcode_13.3.1"  # macos-12 only
-          # - "Xcode_13.4.1"  # macos-12 only
+          - "Xcode_15.4"
+          - "Xcode_16.0"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         if: env.ACT != 'true'
@@ -167,7 +161,7 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*¨
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
           cache: 'pip'
@@ -178,21 +172,21 @@ jobs:
           brew install libomp ccache
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: macos-${{ matrix.xcode }}-ccache
           max-size: 75M
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: macos-python-venv-${{ hashFiles('build_locally.sh', 'scripts/build/**.sh') }}-${{ secrets.cache_ver }}
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: macos-${{ matrix.xcode }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -232,8 +226,6 @@ jobs:
       fail-fast: false
       matrix:
         gcc:
-          - 7  # C++17 earliest version
-          - 8
           - 9
           - 10
           - 11
@@ -241,7 +233,7 @@ jobs:
     name: "GCC ${{ matrix.gcc }} • x64"
     container: "gcc:${{ matrix.gcc }}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -255,14 +247,14 @@ jobs:
           libboost-filesystem-dev gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: gcc-${{ matrix.gcc }}-ccache
           max-size: 75M
 
       - name: Cache CMake installer
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
           key: cmake-${{ env.CMAKE_VERSION }}
@@ -277,7 +269,7 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -286,7 +278,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: gcc-${{ matrix.gcc }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -396,7 +388,7 @@ jobs:
     name: "Clang ${{ matrix.clang }} • x64"
     container: "silkeh/clang:${{ matrix.clang }}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: install git
         run: |
@@ -420,14 +412,14 @@ jobs:
           gdb --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: clang-${{ matrix.clang }}-ccache
           max-size: 75M
 
       - name: Cache CMake installer
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
           key: cmake-${{ env.CMAKE_VERSION }}
@@ -442,7 +434,7 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -451,7 +443,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: clang-${{ matrix.clang }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -550,7 +542,7 @@ jobs:
     runs-on: windows-latest
     name: "MSVC • x64"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -591,14 +583,14 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: msvc-python-venv-${{ hashFiles('build_locally.ps1', 'scripts/build/**.ps1') }}-${{ secrets.cache_ver }}
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: msvc-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -637,7 +629,7 @@ jobs:
     runs-on: windows-latest
     name: "Clang-Cl • x64"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -678,7 +670,7 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >
@@ -686,7 +678,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: clang-cl-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -728,7 +720,7 @@ jobs:
     name: "MINGW64 • x64"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -736,14 +728,14 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       # - name: Setup CCache
-      #   uses: hendrikmuhs/ccache-action@v1.2.5
+      #   uses: hendrikmuhs/ccache-action@v1.2
       #   with:
       #     key: mingw64-ccache
       #     max-size: 75M
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -751,7 +743,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: mingw64-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -858,7 +850,7 @@ jobs:
 
     name: "MSYS2 ${{ matrix.msystem }} • x64"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -900,7 +892,7 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -909,7 +901,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: msys2-${{ matrix.msystem }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -975,7 +967,7 @@ jobs:
           apt-get update && apt-get install -y git
           git config --global --add safe.directory $PWD
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -993,14 +985,14 @@ jobs:
           --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: cuda-${{ matrix.cuda }}-ccache
           max-size: 75M
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -1009,7 +1001,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: cuda-${{ matrix.cuda }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
@@ -1058,7 +1050,7 @@ jobs:
     name: "NVHPC ${{ matrix.nvhpc }} • x64"
     container: "nvcr.io/nvidia/nvhpc:${{ matrix.nvhpc }}-ubuntu20.04"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -1071,14 +1063,14 @@ jobs:
           libboost-filesystem-dev --no-install-recommends
 
       - name: Setup CCache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: nvhpc-${{ matrix.nvhpc }}-ccache
           max-size: 75M
 
       - name: Cache CMake installer
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: cmake-${{ env.CMAKE_VERSION }}-linux-x86_64.sh
           key: cmake-${{ env.CMAKE_VERSION }}
@@ -1093,7 +1085,7 @@ jobs:
 
       - name: Cache Python virtualenv
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: venv
           key: >-
@@ -1102,7 +1094,7 @@ jobs:
 
       - name: Cache compiled third-party libraries
         if: env.ACT != 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/.mqlibs
           key: nvhpc-${{ matrix.nvhpc }}-third-party-libs-${{ hashFiles('third_party/**') }}-${{ secrets.cache_ver }}
