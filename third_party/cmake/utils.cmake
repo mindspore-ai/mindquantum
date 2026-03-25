@@ -201,17 +201,19 @@ endfunction()
 
 # Wrapper around the FetchContent_XXX macros
 macro(__do_fetch_content pkg_name pkg_url)
-  FetchContent_GetProperties(${pkg_name})
-  message(STATUS "Fetching content for ${pkg_name} using ${pkg_url} in ${${pkg_name}_SOURCE_DIR}")
+  string(TOLOWER ${pkg_name} _pkg_name)
+  message(STATUS "Fetching content for ${pkg_name} using ${pkg_url} in ${FETCHCONTENT_BASE_DIR}/${_pkg_name}-src")
 
-  if(NOT ${pkg_name}_POPULATED)
-    FetchContent_Populate(${pkg_name})
+  FetchContent_Populate(
+    ${pkg_name}
+    SUBBUILD_DIR "${FETCHCONTENT_BASE_DIR}/${_pkg_name}-subbuild"
+    SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/${_pkg_name}-src"
+    BINARY_DIR "${FETCHCONTENT_BASE_DIR}/${_pkg_name}-build"
+    ${ARGN})
 
-    string(TOLOWER ${pkg_name} _pkg_name)
-    set(${pkg_name}_SOURCE_DIR
-        ${${_pkg_name}_SOURCE_DIR}
-        PARENT_SCOPE)
-  endif()
+  set(${pkg_name}_SOURCE_DIR
+      ${${_pkg_name}_SOURCE_DIR}
+      PARENT_SCOPE)
 endmacro()
 
 # Fetch some content by downloading an archive
@@ -228,13 +230,12 @@ function(__download_pkg pkg_name pkg_url pkg_md5)
   endif()
 
   set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
-  FetchContent_Declare(
+  __do_fetch_content(
     ${pkg_name}
+    ${pkg_url}
     ${_opts}
     URL ${pkg_url}
     URL_HASH MD5=${pkg_md5})
-
-  __do_fetch_content(${pkg_name} ${pkg_url})
 endfunction()
 
 # Fetch some content by downloading a Git repository (or from an archive on the local server with a specific commit)
@@ -249,19 +250,17 @@ function(__download_pkg_with_git pkg_name pkg_url pkg_git_commit pkg_md5)
   if(_local_server)
     set(pkg_url "${_local_server}/libs/${pkg_name}/${pkg_git_commit}")
     debug_print(STATUS "Using local server URL: ${pkg_url}")
-    FetchContent_Declare(
-      ${pkg_name}
-      ${_opts}
-      URL ${pkg_url}
-      URL_HASH MD5=${pkg_md5})
+    set(_fetch_content_args
+        ${_opts}
+        URL ${pkg_url}
+        URL_HASH MD5=${pkg_md5})
   else()
-    FetchContent_Declare(
-      ${pkg_name}
-      GIT_REPOSITORY ${pkg_url}
-      GIT_TAG ${pkg_git_commit})
+    set(_fetch_content_args
+        GIT_REPOSITORY ${pkg_url}
+        GIT_TAG ${pkg_git_commit})
   endif()
 
-  __do_fetch_content(${pkg_name} ${pkg_url})
+  __do_fetch_content(${pkg_name} ${pkg_url} ${_fetch_content_args})
 endfunction()
 
 # ==============================================================================

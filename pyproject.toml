@@ -1,7 +1,6 @@
 [build-system]
 requires = [
-    'setuptools>=61,<=65.5.1;python_version<"3.12"',
-    'setuptools>=61;python_version>="3.12"',
+    'setuptools>=77',
     'wheel==0.45.1',
     'pybind11>=2.10.0',
     'wheel-filename>1.2',
@@ -22,10 +21,10 @@ authors = [
 ]
 description = 'A hybrid quantum-classic framework for quantum computing'
 requires-python = '>=3.9,<3.13'
-license = {text= 'Apache License Version 2.0'}
+license = 'Apache-2.0'
+license-files = ['LICENSE', 'NOTICE']
 readme = 'README.md'
 classifiers = [
-    'License :: OSI Approved :: Apache Software License',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Programming Language :: Python :: 3 :: Only',
     'Programming Language :: Python :: 3.9',
@@ -78,7 +77,6 @@ mindquantum-config = 'mindquantum_config:main'
 [tool.setuptools]
 
 zip-safe = false
-license-files = []
 
 [tool.setuptools.dynamic]
 
