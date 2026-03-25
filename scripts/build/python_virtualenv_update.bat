@@ -44,7 +44,7 @@ goto :configure_openblas
 
 echo Upgrading pip: !PYTHON! -m pip install -U pip
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install -U pip
-set critical_pkgs="setuptools>=61,<=65.5.1;python_version<'3.12'" "setuptools>=61;python_version>='3.12'" "wheel==0.45.1" "pybind11>=2.9.2" "wheel-filename>1.2" "build==0.9.0"
+set critical_pkgs="setuptools>=61,<=65.5.1;python_version<'3.12'" "setuptools>=61;python_version>='3.12'" "wheel==0.45.1" "pybind11>=2.10.0" "wheel-filename>1.2" "build==0.9.0"
 echo Updating critical Python packages: !PYTHON! -m pip install -U !critical_pkgs!
 call %BASEPATH%\dos\call_cmd.bat !PYTHON! -m pip install -U !critical_pkgs!
 

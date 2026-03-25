@@ -15,7 +15,7 @@
 
 import argparse
 import sys
-from distutils.util import get_platform  # pylint: disable=deprecated-module
+import sysconfig
 from pathlib import Path
 
 try:
@@ -118,7 +118,7 @@ def print_abi():
 def print_temp_dir():
     """Print the default build directory used by setup.py."""
     # Based on setuptools/_distutils/command/build.py
-    print(str(Path('build') / f"temp.{get_platform()}-{sys.implementation.cache_tag}" / _ROOT.name))
+    print(str(Path('build') / f"temp.{sysconfig.get_platform()}-{sys.implementation.cache_tag}" / _ROOT.name))
 
 
 # ==============================================================================

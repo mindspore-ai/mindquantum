@@ -3,7 +3,7 @@ requires = [
     'setuptools>=61,<=65.5.1;python_version<"3.12"',
     'setuptools>=61;python_version>="3.12"',
     'wheel==0.45.1',
-    'pybind11>=2.9.2',
+    'pybind11>=2.10.0',
     'wheel-filename>1.2',
     'delocate==0.10.7;sys_platform=="darwin"'
 
@@ -21,7 +21,7 @@ authors = [
      {name = 'The MindSpore Authors', email = 'contact@mindspore.cn'}
 ]
 description = 'A hybrid quantum-classic framework for quantum computing'
-requires-python = '>=3.9,<3.12'
+requires-python = '>=3.9,<3.13'
 license = {text= 'Apache License Version 2.0'}
 readme = 'README.md'
 classifiers = [
@@ -30,7 +30,8 @@ classifiers = [
     'Programming Language :: Python :: 3 :: Only',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11'
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12'
 ]
 dynamic = ["version"]
 
@@ -91,7 +92,7 @@ include = ['mindquantum*']
 
 [tool.black]
 line-length = 120
-target-version = ['py39', 'py310', 'py311']
+target-version = ['py39', 'py310', 'py311', 'py312']
 skip-string-normalization = true
 
 
