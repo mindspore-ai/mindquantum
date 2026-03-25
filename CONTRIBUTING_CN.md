@@ -303,7 +303,7 @@ mindquantum基于pytest编写单元测试用例，建议开发者在实现一个
 
 - 编码指南
 
-  MindSpore Quantum社区使用[Python PEP 8 编码风格](https://pep8.org/)和[谷歌C++编码风格](http://google.github.io/styleguide/cppguide.html)。建议在IDE中安装以下插件，用于检查代码格式：[CppLint](https://github.com/cpplint/cpplint)、[CppCheck](http://cppcheck.sourceforge.net)、[CMakeLint](https://github.com/cmake-lint/cmake-lint)、[CodeSpell](https://github.com/codespell-project/codespell)、[Lizard](http://www.lizard.ws)、[ShellCheck](https://github.com/koalaman/shellcheck)和[PyLint](https://pylint.org)。
+  MindSpore Quantum社区使用[Python PEP 8 编码风格](https://pep8.org/)和[谷歌C++编码风格](http://google.github.io/styleguide/cppguide.html)。我们使用 [Ruff](https://docs.astral.sh/ruff/) 进行 Python 代码检查和格式化（替代 black、flake8、isort、pyupgrade、pydocstyle），以及 [CppLint](https://github.com/cpplint/cpplint)、[CppCheck](http://cppcheck.sourceforge.net)、[CMakeLint](https://github.com/cmake-lint/cmake-lint)、[CodeSpell](https://github.com/codespell-project/codespell)、[Lizard](http://www.lizard.ws)、[ShellCheck](https://github.com/koalaman/shellcheck) 检查代码格式。所有检查均通过 [pre-commit](https://pre-commit.com/) 集成——运行 `pre-commit install` 设置 git hooks，每次提交时自动执行检查。
 - 单元测试指南
 
   MindSpore社区使用Python单元测试框架[pytest](http://www.pytest.org/en/latest/)。注释名称需反映测试用例的设计意图。
