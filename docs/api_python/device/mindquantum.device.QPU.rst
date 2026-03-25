@@ -24,7 +24,7 @@ mindquantum.device.QPU
         - **TypeError** - 如果 `n_qubits` 或 `default_shots` 不是int。
         - **ValueError** - 如果 `n_qubits` 或 `default_shots` 小于1。
 
-    .. py:method:: get_expectation(hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None, shots=None, seed=None)
+    .. py:method:: get_expectation(hamiltonian, circ_right=None, circ_left=None, simulator_left=None, pr=None, *, shots=None, seed=None)
 
         通过采样来估计哈密顿量的期望值。
 
@@ -58,7 +58,7 @@ mindquantum.device.QPU
             - **NotImplementedError** - 如果 `circ_left` 或 `simulator_left` 不为 ``None``，或者哈密顿量不是由 :class:`~.core.operators.QubitOperator` 构造的。
             - **ValueError** - 如果 `circ_right` 包含测量门，或者线路所需的量子比特数超过QPU提供的量子比特数。
 
-    .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, parallel_worker=None, pr_shift=False, shots=None, seed=None, fd_gap=0.001)
+    .. py:method:: get_expectation_with_grad(hams, circ_right, circ_left=None, simulator_left=None, parallel_worker=None, pr_shift=False, *, shots=None, seed=None, fd_gap=0.001)
 
         获取一个返回期望值和关于线路参数梯度的函数。
 
