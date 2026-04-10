@@ -287,18 +287,11 @@ if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
       COMMAND
         "${Python_EXECUTABLE}" -c [=[
 import sys
+import sysconfig
 from pathlib import Path
 
-try:
-    from distutils import sysconfig
-
-    platlib = Path(sysconfig.get_python_lib(plat_specific=True, standard_lib=False))
-    platbase = Path(sysconfig.EXEC_PREFIX)
-except Exception:
-    import sysconfig
-
-    platlib = Path(sysconfig.get_path("platlib"))
-    platbase = Path(sysconfig.get_config_var("base"))
+platlib = Path(sysconfig.get_path("platlib"))
+platbase = Path(sysconfig.get_config_var("platbase") or sysconfig.get_config_var("base"))
 
 sys.stdout.write(str(platlib.relative_to(platbase)))
 ]=]

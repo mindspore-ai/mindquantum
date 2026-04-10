@@ -445,18 +445,32 @@ if (-Not $build_isolation) {
 # ------------------------------------------------------------------------------
 # Build the wheels
 
-if ($_build_dir_was_set) {
+$build_dir_for_cleaning = $null
+if ($do_clean_build_dir) {
+    $build_dir_for_cleaning = $build_dir
+}
+elseif ($_build_dir_was_set) {
+    $build_dir_for_cleaning = $build_dir
+}
+elseif ($do_clean_cache) {
+    $temp_build_dir = (&"$PYTHON" -m mindquantum_config --tempdir)
+    if (Test-Path -Path "$temp_build_dir" -PathType Container) {
+        $build_dir_for_cleaning = $temp_build_dir
+    }
+}
+
+if ([bool]$build_dir_for_cleaning) {
     if ($do_clean_build_dir) {
-        Write-Output "Deleting build folder: $build_dir"
-        Call-Cmd Remove-Item -Force -Recurse "'$build_dir'" -ErrorAction SilentlyContinue
+        Write-Output "Deleting build folder: $build_dir_for_cleaning"
+        Call-Cmd Remove-Item -Force -Recurse "'$build_dir_for_cleaning'" -ErrorAction SilentlyContinue
     }
     elseif ($do_clean_cache) {
-        Write-Output "Removing CMake cache at: $build_dir/CMakeCache.txt"
-        Call-Cmd Remove-Item -Force "'$build_dir/CMakeCache.txt'" -ErrorAction SilentlyContinue
-        Write-Output "Removing CMake files at: $build_dir/CMakeFiles"
-        Call-Cmd Remove-Item -Force -Recurse "'$build_dir/CMakeFiles'" -ErrorAction SilentlyContinue
-        Write-Output "Removing CMake files at: $build_dir/cmake-ldtest*"
-        Call-Cmd Remove-Item -Force -Recurse "'$build_dir/cmake-ldtest*'" -ErrorAction SilentlyContinue
+        Write-Output "Removing CMake cache at: $build_dir_for_cleaning/CMakeCache.txt"
+        Call-Cmd Remove-Item -Force "'$build_dir_for_cleaning/CMakeCache.txt'" -ErrorAction SilentlyContinue
+        Write-Output "Removing CMake files at: $build_dir_for_cleaning/CMakeFiles"
+        Call-Cmd Remove-Item -Force -Recurse "'$build_dir_for_cleaning/CMakeFiles'" -ErrorAction SilentlyContinue
+        Write-Output "Removing CMake files at: $build_dir_for_cleaning/cmake-ldtest*"
+        Call-Cmd Remove-Item -Force -Recurse "'$build_dir_for_cleaning/cmake-ldtest*'" -ErrorAction SilentlyContinue
     }
 }
 

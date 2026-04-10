@@ -31,45 +31,45 @@
 
 2. 每张图片大小不超过 100KB。请勿上传数据集或其他大文件，在文档中注明数据获取方式即可<sup>1</sup>。
 
-3. 确保所有代码符合 PEP8 规范。推荐使用 IDE（如 PyCharm、VS Code 等）的自动格式化功能，或使用 autopep8、black 等工具进行代码格式化。
+3. 确保所有代码符合 PEP8 规范。推荐使用 IDE（如 PyCharm、VS Code 等）的自动格式化功能，或使用 [Ruff](https://docs.astral.sh/ruff/) 进行代码格式化和检查。
 
 4. 提交 PR 后，在评论区发送 `/retest` 触发门禁，根据代码检查结果修改代码，直到通过所有代码检查。
 
 > [1] 难以从公共渠道获取的大文件可以传到自己的免费[华为云OBS桶](https://support.huaweicloud.com/obs/index.html)里，创建分享链接，在文中标注通过链接获取。
 
-## 使用 Black 自动格式化代码
+## 使用 Ruff 自动格式化代码
 
-建议使用 Black 工具自动格式化 Python 代码和 Jupyter Notebook 文件，以确保代码风格统一，减少或避免代码提交时门禁检查出现的格式错误。
+建议使用 Ruff 工具自动格式化和检查 Python 代码，以确保代码风格统一，减少或避免代码提交时门禁检查出现的格式错误。
 
-### 安装 Black（支持 Jupyter Notebook）
+### 安装 Ruff
 
 ```bash
-pip install "black[jupyter]"
+pip install ruff
 ```
 
 ### 使用方法
 
-- **格式化单个 Jupyter Notebook 文件：**
+- **格式化指定目录下的所有 Python 文件：**
 
 ```bash
-black your_notebook.ipynb
+ruff format <your_code_directory>
 ```
 
-- **格式化指定目录下的所有 Python 和 Jupyter 文件：**
+- **检查代码问题并自动修复：**
 
 ```bash
-black <your_code_directory>
+ruff check --fix <your_code_directory>
 ```
 
-- **检查哪些文件需要格式化（仅检查，不实际修改文件）：**
+- **仅检查，不实际修改文件：**
 
 ```bash
-black --check <your_code_directory>
+ruff check <your_code_directory>
 ```
 
 ## 环境要求
 
-- Python >= 3.7
+- Python >= 3.9
 - MindQuantum >= 0.9.11
 
 ## 参考资源

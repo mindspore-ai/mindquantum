@@ -483,21 +483,42 @@ if !enable_gpu! == 1 (
 rem ============================================================================
 rem Build the wheels
 
-if !has_build_dir! == 1 (
-  if !do_clean_build_dir! == 1 (
-    echo Deleting build folder: !build_dir!
-    if exist !build_dir! call :call_cmd rd /Q /S !build_dir!
+set build_dir_for_cleaning=
+if !do_clean_build_dir! == 1 (
+  set build_dir_for_cleaning=!build_dir!
+) else (
+  if !has_build_dir! == 1 (
+    set build_dir_for_cleaning=!build_dir!
   ) else (
     if !do_clean_cache! == 1 (
-      echo Removing CMake cache at: !build_dir!\CMakeCache.txt
-      if exist !build_dir!\CMakeCache.txt call :call_cmd del /Q "!build_dir!\CMakeCache.txt"
-      echo Removing CMake files at: !build_dir!/CMakeFiles
-      if exist !build_dir!/CMakeFiles call :call_cmd rd /Q /S "!build_dir!\CMakeFiles"
-      echo Removing CMake files at: !build_dir!/cmake-ldtest
-      if exist !build_dir!/CMakeFiles call :call_cmd rd /Q /S "!build_dir!\cmake-ldtest"
+      for /F "delims=" %%i IN ('!PYTHON! -m mindquantum_config --tempdir') DO set temp_build_dir=%%i
+      if exist "!temp_build_dir!" set build_dir_for_cleaning=!temp_build_dir!
     )
   )
 )
+
+if defined build_dir_for_cleaning (
+  if !do_clean_build_dir! == 1 (
+    echo Deleting build folder: !build_dir_for_cleaning!
+    if exist "!build_dir_for_cleaning!" call :call_cmd rd /Q /S "!build_dir_for_cleaning!"
+  ) else (
+    if !do_clean_cache! == 1 (
+      echo Removing CMake cache at: !build_dir_for_cleaning!\CMakeCache.txt
+      if exist "!build_dir_for_cleaning!\CMakeCache.txt" call :call_cmd del /Q "!build_dir_for_cleaning!\CMakeCache.txt"
+      echo Removing CMake files at: !build_dir_for_cleaning!\CMakeFiles
+      if exist "!build_dir_for_cleaning!\CMakeFiles" call :call_cmd rd /Q /S "!build_dir_for_cleaning!\CMakeFiles"
+      if exist "!build_dir_for_cleaning!\cmake-ldtest*" (
+        for /D %%d in ("!build_dir_for_cleaning!\cmake-ldtest*") do (
+          echo Removing CMake files at: %%~fd
+          call :call_cmd rd /Q /S "%%~fd"
+        )
+      )
+    )
+  )
+)
+
+if DEFINED build_dir_for_cleaning set build_dir_for_cleaning=
+if DEFINED temp_build_dir set temp_build_dir=
 
 if !delocate_wheel! == 1 (
   set MQ_DELOCATE_WHEEL=1

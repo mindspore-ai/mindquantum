@@ -235,9 +235,9 @@ The development process is mainly divided into two categories, developing new fu
 from mindquantum import *
 import numpy as np
 
-encoder = Circuit().h(0).rx({'a0': 2}, 0).ry('a1', 1)
+encoder = Circuit().h(0).rx({"a0": 2}, 0).ry("a1", 1)
 print(encoder)
-print(encoder.get_qs(pr={'a0': np.pi / 2, 'a1': np.pi / 2}, ket=True))
+print(encoder.get_qs(pr={"a0": np.pi / 2, "a1": np.pi / 2}, ket=True))
 ```
 
 Running the above code will output the quantum circuit and the final state.
@@ -283,7 +283,6 @@ q1: ──┨ RY(a1) ┠───────────
 - [`scripts`](https://api.gitee.com/mindspore/mindquantum/tree/master/scripts) Compiling a Dependent Tools Update Script
 - [`tests`](https://api.gitee.com/mindspore/mindquantum/tree/master/tests) MindQuantum unit tests, based on Pytest, written in Python
 - [`third_party`](https://api.gitee.com/mindspore/mindquantum/tree/master/third_party) Third-party open source packages on which MindQuantum compiles
-- [`tutorials`](https://api.gitee.com/mindspore/mindquantum/tree/master/tutorials) Mind Quantum tutorial, which can be run directly with jupyter. Readable in [Official document of MindSpore](https://www.mindspore.cn/mindquantum/docs/en/master/index.html).
 
 ## Unit testing
 
@@ -304,7 +303,7 @@ Please follow this style to make MindSpore easy to review, maintain and develop.
 
 - Coding guidelines
 
-  The *Python* coding style suggested by [Python PEP 8 Coding Style](https://gitee.com/link?target=https%3A%2F%2Fpep8.org%2F) and *C++* coding style suggested by [Google C++ Coding Guidelines](https://gitee.com/link?target=http%3A%2F%2Fgoogle.github.io%2Fstyleguide%2Fcppguide.html) are used in MindSpore community. The [CppLint](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fcpplint%2Fcpplint), [CppCheck](https://gitee.com/link?target=http%3A%2F%2Fcppcheck.sourceforge.net), [CMakeLint](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fcmake-lint%2Fcmake-lint), [CodeSpell](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fcodespell-project%2Fcodespell), [Lizard](https://gitee.com/link?target=http%3A%2F%2Fwww.lizard.ws), [ShellCheck](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fkoalaman%2Fshellcheck) and [PyLint](https://gitee.com/link?target=https%3A%2F%2Fpylint.org) are used to check the format of codes, installing these plugins in your IDE is recommended.
+  The *Python* coding style suggested by [Python PEP 8 Coding Style](https://pep8.org/) and *C++* coding style suggested by [Google C++ Coding Guidelines](http://google.github.io/styleguide/cppguide.html) are used in MindSpore community. We use [Ruff](https://docs.astral.sh/ruff/) for Python linting and formatting (replacing black, flake8, isort, pyupgrade, pydocstyle), [CppLint](https://github.com/cpplint/cpplint), [CppCheck](http://cppcheck.sourceforge.net), [CMakeLint](https://github.com/cmake-lint/cmake-lint), [CodeSpell](https://github.com/codespell-project/codespell), [Lizard](http://www.lizard.ws) and [ShellCheck](https://github.com/koalaman/shellcheck) to check the format of codes. All checks are integrated via [pre-commit](https://pre-commit.com/) — run `pre-commit install` to set up git hooks so that checks run automatically on each commit.
 
 - Unittest guidelines
 
@@ -388,7 +387,7 @@ When reporting issues, refer to this format:
 - **If you find an unclosed issue, which is exactly what you are going to solve,** please put some comments on that issue to tell others you would be in charge of it.
 - **If an issue is opened for a while,** it's recommended for contributors to precheck before working on solving that issue.
 - **If you resolve an issue which is reported by yourself,** it's also required to let others know before closing that issue.
-- **If you want the issue to be responded as quickly as possible,** please try to label it, you can find kinds of labels on [Label List](https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md)
+- **If you want the issue to be responded as quickly as possible,** please try to label it.
 
 ### Propose PRs
 

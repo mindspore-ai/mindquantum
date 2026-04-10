@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # shellcheck disable=SC2154,SC2034
-set -x
+
 BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd )
 ROOTDIR="$BASEPATH"
 PROGRAM=$(basename "${BASH_SOURCE[0]:-$0}")
@@ -356,11 +356,16 @@ fi
 # ------------------------------------------------------------------------------
 # Clean build directory if requested and possible
 
-temp_build_dir=$("$PYTHON" -m mindquantum_config --tempdir)
-if [ "${_build_dir_was_set:-0}" -eq 1 ]; then
+build_dir_for_cleaning=
+if [ "$do_clean_build_dir" -eq 1 ]; then
     build_dir_for_cleaning="$build_dir"
-elif [ -d "$temp_build_dir" ]; then
-    build_dir_for_cleaning="$temp_build_dir"
+else
+    temp_build_dir=$("$PYTHON" -m mindquantum_config --tempdir)
+    if [ "${_build_dir_was_set:-0}" -eq 1 ]; then
+        build_dir_for_cleaning="$build_dir"
+    elif [ -d "$temp_build_dir" ]; then
+        build_dir_for_cleaning="$temp_build_dir"
+    fi
 fi
 
 if [ -n "$build_dir_for_cleaning" ]; then

@@ -1,9 +1,8 @@
 [build-system]
 requires = [
-    'setuptools>=61,<=65.5.1;python_version<"3.12"',
-    'setuptools>=61;python_version>="3.12"',
+    'setuptools>=77',
     'wheel==0.45.1',
-    'pybind11>=2.9.2',
+    'pybind11>=2.10.0',
     'wheel-filename>1.2',
     'delocate==0.10.7;sys_platform=="darwin"'
 
@@ -21,35 +20,31 @@ authors = [
      {name = 'The MindSpore Authors', email = 'contact@mindspore.cn'}
 ]
 description = 'A hybrid quantum-classic framework for quantum computing'
-requires-python = '>= 3.7'
-license = {text= 'Apache License Version 2.0'}
+requires-python = '>=3.9,<3.13'
+license = 'Apache-2.0'
+license-files = ['LICENSE', 'NOTICE']
 readme = 'README.md'
 classifiers = [
-    'License :: OSI Approved :: Apache Software License',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Programming Language :: Python :: 3 :: Only',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11'
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12'
 ]
 dynamic = ["version"]
 
 dependencies = [
     'scipy>=1.5.3',
     'matplotlib>=3.4.3',
-    'rich==10.9.0',
-    'importlib-metadata>=0.9;python_version<"3.8"',
-    'typing_extensions;python_version<"3.8"',
-
+    'rich>=10.9',
 ]
 
 [project.urls]
 'Homepage' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
-'Download (Gitee)' = 'https://gitee.com/mindspore/mindquantum/tags'
-'Source (Gitee)' = 'https://gitee.com/mindspore/mindquantum'
-'Issue Tracker' = 'https://gitee.com/mindspore/mindquantum/issues'
+'Download (AtomGit)' = 'https://atomgit.com/mindspore/mindquantum/tags'
+'Source (AtomGit)' = 'https://atomgit.com/mindspore/mindquantum'
+'Issue Tracker' = 'https://atomgit.com/mindspore/mindquantum/issues'
 'Download (GitHub)' = 'https://github.com/mindspore-ai/mindquantum/tags'
 'Source (GitHub)' = 'https://github.com/mindspore-ai/mindquantum'
 'Documentation' = 'https://www.mindspore.cn/mindquantum/docs/en/master/index.html'
@@ -82,7 +77,6 @@ mindquantum-config = 'mindquantum_config:main'
 [tool.setuptools]
 
 zip-safe = false
-license-files = []
 
 [tool.setuptools.dynamic]
 
@@ -94,10 +88,53 @@ include = ['mindquantum*']
 
 # ==============================================================================
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
-skip-string-normalization = true
+target-version = 'py39'
+
+[tool.ruff.format]
+quote-style = 'preserve'
+
+[tool.ruff.lint]
+select = [
+    'E', 'W',      # pycodestyle
+    'F',            # pyflakes
+    'I',            # isort
+    'UP',           # pyupgrade
+    'D',            # pydocstyle
+    'N',            # pep8-naming
+    'B',            # flake8-bugbear (mutable default args, broad exceptions, etc.)
+    'C4',           # flake8-comprehensions
+    'A',            # flake8-builtins
+    'T10',          # flake8-debugger (replaces flake8-breakpoint)
+    'ERA',          # eradicate
+    'RET',          # flake8-return
+]
+ignore = [
+    'D102',         # missing docstring in public method
+    'D212',         # multi-line docstring summary should start at the first line
+    'N802',         # function name should be lowercase
+    'F821',         # undefined name (C++ extension modules use dynamic imports)
+]
+
+[tool.ruff.lint.per-file-ignores]
+'__init__.py' = ['F401', 'F403']
+'test_*.py' = ['D']
+'conf.py' = ['A001']
+'CAC.py' = ['N803']
+'LQA.py' = ['N803']
+'QAIA.py' = ['N803']
+'SFC.py' = ['N803']
+'CFC.py' = ['N803']
+'SimCIM.py' = ['N803']
+'NMFA.py' = ['N803']
+'SB.py' = ['N803']
+
+[tool.ruff.lint.pydocstyle]
+convention = 'google'
+
+[tool.ruff.lint.isort]
+known-first-party = ['mindquantum']
 
 
 [tool.coverage]
@@ -106,74 +143,6 @@ skip-string-normalization = true
             '*_test.py',
             '*_fixtures.py'
         ]
-
-
-[tool.pylint]
-    [tool.pylint.master]
-    ignore-patterns = [
-        '.*_test.py',
-        '.*_fixtures.py',
-    ]
-
-    extension-pkg-whitelist = [
-      'mindquantum.mqbackend',
-      'mindquantum._mq_vector',
-      'mindquantum._mq_vector_gpu',
-      'mindquantum._mq_matrix',
-      'mindquantum._math',
-      'mindquantum._qaia_sb',
-      'mindquantum._mq_stabilizer',
-      'mindquantum._mq_chem',
-      'mindquantum._mq_mps',
-    ]
-    extension-pkg-allow-list = [
-      'mindquantum.mqbackend',
-      'mindquantum._mq_vector',
-      'mindquantum._mq_vector_gpu',
-      'mindquantum._mq_matrix',
-      'mindquantum._math',
-      'mindquantum._qaia_sb',
-      'mindquantum._mq_stabilizer',
-      'mindquantum._mq_chem',
-      'mindquantum._mq_mps',
-    ]
-
-    init-hook = '''from pylint.config import find_default_config_files;\
-    import os, sys; \
-    sys.path.append(os.path.dirname(list(find_default_config_files())[0]))'''
-
-    [tool.pylint.basic]
-    good-names = ['ax', 'fd', 'i', 'j', 'k', 'l', 'n', 'N', 'q0', 'q1', 'q2', 'u', 'u1', 'u2', 'u3', 'v',
-                  'x', 'x1', 'x2', 'y', 'y1', 'y2', 'z', 'z1', 'z2', 'h',
-                  'n_layers', 'n_qubits', 'pr', 'a', 'b', 'g', 'f1', 'g1', 'g2',
-                  'f2', 'c', 'r', 'd', 'm', 'tq', 'p', 'd1', 'd2', 'w', 'p1', 'p2', 'f', 't', 'e', 'ep', 'em', 'rn', 'p0', 'f3',
-                  'px', 'py', 'pz', 't1', 't2', 'e1', 'e2', 'pz', 'ki', 'kz', 'k0', 'k1', 'k2']
-
-    [tool.pylint.typecheck]
-    ignored-modules = [
-        'mindquantum.mqbackend',
-        'mindspore',
-        'openfermion',
-        'openfermionpyscf',
-        'paddle',
-        'paddle_quantum',
-        'rich',
-        'sklearn',
-        'tensorflow',
-        'tensorflow_quantum',
-    ]
-
-    [tool.pylint.format]
-    max-line-length = 120
-
-    [tool.pylint.messages_control]
-    enable = [
-    ]
-    disable = [
-         'no-name-in-module',  # due to dynamic importing of symbols
-         'duplicate-code',
-         'fixme',
-    ]
 
 
 [tool.pytest.ini_options]
@@ -217,10 +186,6 @@ ignore-path-errors = [
     "docs/api_python/mindquantum.algorithm.nisq.uccsd0_singlet_generator.rst;D001"
 ]
 
-[tool.isort]
-
-profile = "black"
-
 
 # [tool.setuptools_scm]
 # write_to = 'VERSION.txt'
@@ -228,10 +193,6 @@ profile = "black"
 # parentdir_prefix_version = 'mindquantum-'
 # local_scheme = 'no-local-version'
 # fallback_version = 'v1.0.0'
-
-
-[tool.yapf]
-column_limit = 120
 
 
 [tool.cibuildwheel]
@@ -252,10 +213,6 @@ test-command = 'python {package}/tests/quick_test.py'
 
 # Normal options, etc.
 manylinux-x86_64-image = 'manylinux2014'
-
-[[tool.cibuildwheel.overrides]]
-select = 'cp3{6,7,8,9}-*'
-manylinux-x86_64-image = 'manylinux2010'
 
 [tool.cibuildwheel.linux]
 

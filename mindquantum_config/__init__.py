@@ -14,8 +14,10 @@
 """Console entry point to access MindQuantum installation variables."""
 
 import argparse
+import os
+import platform
 import sys
-from distutils.util import get_platform  # pylint: disable=deprecated-module
+import sysconfig
 from pathlib import Path
 
 try:
@@ -117,8 +119,24 @@ def print_abi():
 
 def print_temp_dir():
     """Print the default build directory used by setup.py."""
-    # Based on setuptools/_distutils/command/build.py
-    print(str(Path('build') / f"temp.{get_platform()}-{sys.implementation.cache_tag}" / _ROOT.name))
+    print(get_temp_dir())
+
+
+def get_python_build_platform():
+    """Return the platform tag used for Python build temp directories."""
+    if sys.platform == 'darwin':
+        # Intentionally duplicated from _build/backend.py so the backend can
+        # remain self-contained within backend-path.
+        return (
+            os.getenv('_PYTHON_HOST_PLATFORM')
+            or f"macosx-{os.getenv('MACOSX_DEPLOYMENT_TARGET', '10.15')}-{platform.machine()}"
+        )
+    return sysconfig.get_platform()
+
+
+def get_temp_dir():
+    """Return the default build directory used by setup.py."""
+    return str(Path('build') / f"temp.{get_python_build_platform()}-{sys.implementation.cache_tag}" / _ROOT.name)
 
 
 # ==============================================================================

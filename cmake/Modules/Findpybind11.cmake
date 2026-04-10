@@ -30,7 +30,7 @@
 #
 # ==============================================================================
 
-# lint_cmake: -convention/filename,-package/stdargs
+# lint_cmake: -convention/filename,-package/stdargs,-whitespace/indent
 
 # ~~~
 # Make sure that pybind11 finds the correct python version
@@ -51,6 +51,46 @@ macro(_pybind11_message)
     message(${ARGN})
   endif()
 endmacro()
+
+function(_mq_reset_pybind11_cache)
+  foreach(
+    _var
+    _pybind11_already_found
+    _pybind11_cached_python_executable
+    FIND_PACKAGE_MESSAGE_DETAILS_PYMOD_pybind11
+    FIND_PACKAGE_MESSAGE_DETAILS_pybind11
+    PYMOD_PYBIND11_FOUND
+    PYMOD_PYBIND11_PATH
+    PYMOD_PYBIND11_VERSION
+    PYMOD_pybind11_VERSION
+    pybind11_DIR
+    pybind11_INCLUDE_DIR
+    pybind11_INCLUDE_DIRS)
+    unset(${_var} CACHE)
+    unset(${_var})
+  endforeach()
+endfunction()
+
+set(_pybind11_cache_is_stale FALSE)
+if(DEFINED _pybind11_cached_python_executable AND NOT "${_pybind11_cached_python_executable}" STREQUAL
+                                                  "${Python_EXECUTABLE}")
+  set(_pybind11_cache_is_stale TRUE)
+endif()
+if(DEFINED PYMOD_PYBIND11_PATH AND NOT EXISTS "${PYMOD_PYBIND11_PATH}")
+  set(_pybind11_cache_is_stale TRUE)
+endif()
+if(DEFINED pybind11_DIR
+   AND NOT "${pybind11_DIR}" MATCHES "-NOTFOUND$"
+   AND NOT EXISTS "${pybind11_DIR}")
+  set(_pybind11_cache_is_stale TRUE)
+endif()
+if(_pybind11_cache_is_stale)
+  _pybind11_message(STATUS "Invalidating stale pybind11 cache entries")
+  _mq_reset_pybind11_cache()
+endif()
+set(_pybind11_cached_python_executable
+    "${Python_EXECUTABLE}"
+    CACHE INTERNAL "Python executable used to locate pybind11" FORCE)
 
 _pybind11_message(CHECK_START "Looking for pybind11")
 list(APPEND CMAKE_MESSAGE_INDENT "  ")
@@ -290,10 +330,10 @@ endif()
 
 set(_pybind11_already_found
     ON
-    CACHE INTERNAL "Findpybind11 was already run once")
+    CACHE INTERNAL "Findpybind11 was already run once" FORCE)
 set(pybind11_DIR
     "${pybind11_DIR}"
-    CACHE INTERNAL "")
+    CACHE INTERNAL "" FORCE)
 mark_as_advanced(pybind11_DIR _pybind11_already_found)
 
 # ==============================================================================

@@ -1,14 +1,14 @@
 # MindQuantum
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-39|310|311-blue.svg)](https://pypi.org/project/mindquantum/)
-[![PyPI](https://img.shields.io/badge/pypi_package-0.11.0-limegreend.svg)](https://gitee.com/mindspore/mindquantum/tree/r0.9/)
+[![PyPI - Version](https://img.shields.io/pypi/v/mindquantum.svg)](https://pypi.org/project/mindquantum/)
 [![Downloads](https://static.pepy.tech/badge/mindquantum)](https://pepy.tech/project/mindquantum)
 [![API](https://img.shields.io/badge/API-MindQuantum-red.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/overview.html)
 [![Tutorial](https://img.shields.io/badge/Tutorial-MindQuantum-limegreend.svg)](https://mindspore.cn/mindquantum/docs/zh-CN/master/beginner/parameterized_quantum_circuit.html)
-[![Issues](https://img.shields.io/badge/Issues-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/issues)
-[![Release](https://img.shields.io/badge/Release-MindQuantum-limegreend.svg)](https://gitee.com/mindspore/mindquantum/releases)
-[![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](https://gitee.com/mindspore/mindquantum/blob/master/LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](https://gitee.com/mindspore/mindquantum/pulls)
+[![Issues](https://img.shields.io/badge/Issues-MindQuantum-limegreend.svg)](https://atomgit.com/mindspore/mindquantum/issues)
+[![Release](https://img.shields.io/badge/Release-MindQuantum-limegreend.svg)](https://atomgit.com/mindspore/mindquantum/releases)
+[![LICENSE](https://img.shields.io/badge/license-Apache_2.0-green.svg)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-yellow.svg)](./CONTRIBUTING_CN.md)
 
 [View English](./README.md)
 
@@ -43,7 +43,7 @@
 
 ## MindQuantum介绍
 
-MindQuantum是基于昇思MindSpore开源深度学习平台开发的新一代通用量子计算框架，聚焦于NISQ阶段的算法实现与落地。结合HiQ高性能量子计算模拟器和昇思MindSpore并行自动微分能力，MindQuantum有着极简的开发模式和极致的性能体验，能够高效处理量子机器学习、量子化学模拟和量子组合优化等问题，为广大科研人员、老师和学生提供快速设计和验证量子算法的高效平台，让量子计算触手可及。
+MindQuantum是基于昇思MindSpore开源深度学习平台开发的新一代通用量子计算框架，聚焦于NISQ阶段的算法实现与落地。结合高性能量子计算模拟器和昇思MindSpore并行自动微分能力，MindQuantum有着极简的开发模式和极致的性能体验，能够高效处理量子机器学习、量子化学模拟和量子组合优化等问题，为广大科研人员、老师和学生提供快速设计和验证量子算法的高效平台，让量子计算触手可及。
 
 <img src="docs/MindQuantum-architecture.png" alt="MindQuantum Architecture" width="600"/>
 
@@ -85,7 +85,7 @@ circuit = (qft(range(3)) + BarrierGate(True)).measure_all()
 circuit.svg()  # circuit.svg('light')
 ```
 
-<img src="https://gitee.com/mindspore/mindquantum/raw/master/docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
+<img src="docs/circuit_svg.png" alt="Circuit SVG" width="600"/>
 
 ### 训练量子神经网络
 
@@ -167,7 +167,7 @@ print(dict(zip(ansatz.params_name, net.trainable_params()[0].asnumpy())))
 
 - 硬件平台支持avx2指令集。
 - 参考[MindSpore安装指南](https://www.mindspore.cn/install)，完成MindSpore的安装，要求至少1.4.0版本。
-- 其余依赖请参见[setup.py](https://gitee.com/mindspore/mindquantum/blob/master/setup.py)
+- 其余依赖请参见[setup.py](./setup.py)
 
 ### pip安装
 
@@ -187,7 +187,7 @@ pip install mindquantum
 
     ```bash
     cd ~
-    git clone https://gitee.com/mindspore/mindquantum.git
+    git clone https://atomgit.com/mindspore/mindquantum.git
     ```
 
 2. 编译MindQuantum
@@ -246,7 +246,7 @@ export OMP_NUM_THREADS=4
 
 对于大型服务器，请根据模型规模合理设置并行内核数以达到最优效果。
 
-更多注意事项请查看[FAQ页面](https://gitee.com/mindspore/mindquantum/blob/r0.8/tutorials/0.frequently_asked_questions.ipynb)。
+更多注意事项请参阅[用户文档](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/index.html)中的安装与使用说明。
 
 ## 构建二进制whl包
 
@@ -258,17 +258,17 @@ export OMP_NUM_THREADS=4
 
 ## 文档
 
-有关安装指南、教程和API的更多详细信息，请参阅[用户文档](https://gitee.com/mindspore/docs)。
+有关安装指南、教程和API的更多详细信息，请参阅[用户文档](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/index.html)。
 
 ## 社区
 
 ### 治理
 
-查看MindSpore如何进行[开放治理](https://gitee.com/mindspore/community/blob/master/governance.md)。
+查看MindSpore如何进行[开放治理](https://atomgit.com/mindspore/community/blob/master/governance.md)。
 
 ## 贡献
 
-欢迎参与贡献。更多详情，请参阅我们的[贡献者Wiki](https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md)。
+欢迎参与贡献。更多详情，请参阅我们的[贡献指南](./CONTRIBUTING_CN.md)。
 
 ## 引用MindQuantum
 

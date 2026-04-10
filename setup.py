@@ -27,10 +27,10 @@ import subprocess
 import sys
 import sysconfig
 import warnings
-from distutils.command.clean import clean  # pylint: disable=deprecated-module
 from pathlib import Path
 
 import setuptools
+from setuptools import Command as _SetuptoolsCommand
 from setuptools.command.build_ext import build_ext
 from wheel.bdist_wheel import bdist_wheel
 
@@ -428,14 +428,29 @@ class BdistWheel(bdist_wheel):
 # ==============================================================================
 
 
-class Clean(clean):
+class Clean(_SetuptoolsCommand):
     """Custom clean command."""
+
+    description = 'clean up build artifacts'
+    user_options = [
+        ('all', 'a', 'remove all build output, not just temporary by-products'),
+    ]
+    boolean_options = ['all']
+
+    def initialize_options(self):
+        """Initialize options."""
+        self.all = None
+
+    def finalize_options(self):
+        """Finalize options."""
 
     def run(self):
         """Run the clean command."""
-        # Execute the classic clean command
-        clean.run(self)
-        import glob  # pylint: disable=import-outside-toplevel
+        import glob
+
+        for directory in ['build', 'dist']:
+            if Path(directory).exists():
+                remove_tree(directory)
 
         pkg_name = self.distribution.get_name().replace('-', '_')
         info = glob.glob(f'{pkg_name}.egg-info')
