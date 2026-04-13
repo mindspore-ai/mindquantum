@@ -129,6 +129,9 @@ ignore = [
 'SimCIM.py' = ['N803']
 'NMFA.py' = ['N803']
 'SB.py' = ['N803']
+'QSB.py' = ['N803', 'N999']
+'test_qaia.py' = ['N803']
+'test_qaia_gpu.py' = ['N803']
 
 [tool.ruff.lint.pydocstyle]
 convention = 'google'
