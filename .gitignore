@@ -22,3 +22,5 @@ analyze_fail.dat
 venv
 build.conf
 cmake-build-debug
+.DS_Store
+__MACOSX/
