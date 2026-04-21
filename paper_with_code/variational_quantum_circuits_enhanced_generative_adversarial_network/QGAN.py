@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from pathlib import Path
+
 import mindspore as ms
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix
@@ -25,7 +27,12 @@ epoch = 1
 lr_g = 0.7
 lr_d = 0.01
 ite = 400
-DATA_DIR_MNIST = "./mnist/"
+DATA_DIR_MNIST = Path(__file__).resolve().parent / "mnist"
+MNIST_URL_BASE = "https://storage.googleapis.com/cvdf-datasets/mnist"
+MNIST_TRAIN_FILES = (
+    "train-images-idx3-ubyte",
+    "train-labels-idx1-ubyte",
+)
 fixed_noise = ms.Tensor(np.random.uniform(0, 1, (1, qubits)) * math.pi / 2, dtype=ms.float32)
 
 def show_img(img_list):
@@ -46,7 +53,14 @@ def generage_base_i_hamiltonian(i, n_qubit):
     return Hamiltonian(coo.tocsr())
 
 def load_data(img_size, dir, batch_size):
-    dataset_mnist = ds.MnistDataset(dir, usage="train", shuffle=True)
+    missing = [name for name in MNIST_TRAIN_FILES if not (dir / name).exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Missing standard MNIST files in "
+            f"{dir}. Download the IDX files from {MNIST_URL_BASE}/ "
+            "and extract them into the local mnist/ directory."
+        )
+    dataset_mnist = ds.MnistDataset(str(dir), usage="train", shuffle=True)
     dataset_mnist = dataset_mnist.filter(predicate=lambda label: label == 0, input_columns=["label"])
     transforms_list = [vision.Resize(size=img_size), vision.CenterCrop(img_size), vision.ToTensor()]
     dataset_pre = dataset_mnist.map(operations=Compose(transforms_list))
