@@ -16,7 +16,9 @@
 | :---------: | :---------------: | :---------------: | :---------------: | :--------: | :--------: | :--------: |
 |      2      |       0.996       |       0.990       |       0.982       |   0.677    |   0.844    |   0.868    |
 
-*由于提交文件大小限制，Dataset文件夹中包只括FashionMnist数据，Mnist数据可以从原文获取，[link](https://github.com/LWKJJONAK/Quantum_Neural_Network_Classifiers/tree/main/dataset)。
+* `Dataset/FashionMNIST_1_2_wk.mat` 已从仓库中移除以减小分支体积。请从原论文配套仓库下载该文件并放回 `Dataset/` 目录：[link](https://github.com/LWKJJONAK/Quantum_Neural_Network_Classifiers/tree/main/dataset)。
+* 直接下载链接：<https://raw.githubusercontent.com/LWKJJONAK/Quantum_Neural_Network_Classifiers/main/dataset/FashionMNIST_1_2_wk.mat>
+* `MNIST` 数据同样可以从上述仓库获取。
 
 ## 创新点
 

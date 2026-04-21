@@ -9,9 +9,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import scipy.io
+from pathlib import Path
 
 ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
 ms.set_seed(1)
+
+DATASET_DIR = Path(__file__).resolve().parent.parent / 'Dataset'
+FASHION_MNIST_URL = (
+    'https://raw.githubusercontent.com/LWKJJONAK/'
+    'Quantum_Neural_Network_Classifiers/main/dataset/'
+    'FashionMNIST_1_2_wk.mat'
+)
 
 
 def Classifying_circuit(qubit_num, block_num, Ent_circ):
@@ -152,7 +160,7 @@ class EpochAcc(ms.nn.Metric):
 class Main():
     def __init__(self, setname, Ent_name):
         super().__init__()
-        self.dataset_file = './Dataset/'
+        self.dataset_dir = DATASET_DIR
         self.setname = setname
         self.Ent = Ent_name
         self.train_loader, self.test_loader = self.data_preporcess(
@@ -165,8 +173,14 @@ class Main():
         原论文给的数据集.mat文件保存格式不同, 需要分别用h5py和scipy打开
         '''
         if self.setname == 'FashionMNIST':
-            self.dataset = h5py.File(self.dataset_file +
-                                     '/FashionMNIST_1_2_wk.mat')
+            dataset_path = self.dataset_dir / 'FashionMNIST_1_2_wk.mat'
+            if not dataset_path.exists():
+                raise FileNotFoundError(
+                    'Missing dataset file: '
+                    f'{dataset_path}. Download it from {FASHION_MNIST_URL} '
+                    'and place it under Dataset/.'
+                )
+            self.dataset = h5py.File(dataset_path)
             train_data = np.transpose(self.dataset['x_train'])
             train_label = np.transpose(self.dataset['y_train'])
             test_data = np.transpose(self.dataset['x_test'])
@@ -180,8 +194,8 @@ class Main():
             test_index = test_label[:test_num, 0].astype(int)
 
         elif self.setname == 'MNIST':
-            self.dataset = scipy.io.loadmat(self.dataset_file +
-                                            '/MNIST_1_9_wk.mat')
+            self.dataset = scipy.io.loadmat(self.dataset_dir /
+                                            'MNIST_1_9_wk.mat')
             train_data = self.dataset['x_train']
             train_label = self.dataset['y_train']
             test_data = self.dataset['x_test']
