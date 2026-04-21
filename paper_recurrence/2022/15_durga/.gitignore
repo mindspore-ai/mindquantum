@@ -1,0 +1,6 @@
+tfi_chain/spin_systems/
+doc/build/
+src/__pycache__/
+*.py[cod]
+acc_*.png
+loss_*.png

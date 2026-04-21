@@ -4,6 +4,7 @@ import os
 
 project_path = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.abspath(os.path.join(project_path, '../'))
+local_tfi_chain_path = os.path.join(data_path, 'tfi_chain')
 
 import numpy as np
 import mindspore as ms
@@ -66,6 +67,18 @@ class QCNN(object):
     def load_data(self):
         '''Load data from local folder: ``tfi_chain/spin_systems/TFI_chain/closed``
         '''
+        sample_file = os.path.join(local_tfi_chain_path, 'spin_systems',
+                                   'TFI_chain', 'closed', str(self.qubits),
+                                   '0.20', 'params.npy')
+        if not os.path.exists(sample_file):
+            raise FileNotFoundError(
+                "Missing local TFI chain data under "
+                f"{local_tfi_chain_path}. Download it with "
+                "tensorflow_quantum, for example:\n"
+                "import tensorflow_quantum as tfq\n"
+                f"tfq.datasets.tfi_chain({self.qubits}, "
+                "boundary_condition='closed', "
+                f"data_dir=r'{local_tfi_chain_path}')")
         gamma_list = [i / 100.0 for i in range(20, 182, 2)]
         xlist = []
         ylist = []

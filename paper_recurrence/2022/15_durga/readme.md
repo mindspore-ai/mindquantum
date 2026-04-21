@@ -13,15 +13,19 @@
 ## 数据集
 数据可以通过tersorflow quantum获得，有比特数N=4,8,12几组数据，每组数据有81个数据点，对应序参数g在[0.2, 1.8]之间，以0.02的间隔采样。量子卷积神经网络需要对加载在量子比特上的信息实现卷积和池化操作，最终根据量子态实现顺磁性和铁磁性的分类预测。量子卷积和池化电路参见main.ipynb中的示例。
 
-数据可以通过以下代码获取，或者采用本仓库的tfi_chain文件夹。
+仓库已移除预下载的 `tfi_chain/spin_systems` 数据目录，以减小分支体积。请先在本地下载数据到 `tfi_chain/` 目录，例如：
 ```python
+import os
 import tensorflow_quantum as tfq
-tfq.datasets.tfi_chain(qubits, boundary_condition='closed', data_dir=None)
+data_dir = os.path.join(os.getcwd(), "tfi_chain")
+tfq.datasets.tfi_chain(qubits, boundary_condition='closed', data_dir=data_dir)
 ```
+`QCNN` 默认会从 `tfi_chain/spin_systems/TFI_chain/closed/<qubits>/<gamma>/params.npy`
+读取数据。如果缺少本地数据，`src/qcnn.py` 会给出明确报错和下载提示。
 
 ## QCNN的主要结构及训练结果
 
-`QCNN`的初始化会先完成 据加载和预处理 以及量子电路生成。初始化参数包括：`qubits`：系统比特数，`learning_rate`：学习率，`epoch`：训练次数，`batch`：训练数据块大小，`opt`：是否优化电路。详细参见`QCNN`的[API文档](./doc/build/html/qcnn.html)
+`QCNN`的初始化会先完成 据加载和预处理 以及量子电路生成。初始化参数包括：`qubits`：系统比特数，`learning_rate`：学习率，`epoch`：训练次数，`batch`：训练数据块大小，`opt`：是否优化电路。具体接口定义参见[`src/qcnn.py`](./src/qcnn.py)。
 ```python
 qcnn = QCNN(qubits=4, learning_rate=0.001, epoch=8, batch=8, opt = False)
 ```
@@ -113,9 +117,9 @@ print(pool)
 ├── readme.md        <--说明文档
 ├── src              <--源代码目录
 │   ├── qcnn.py      <--实现QCNN类和量子神经网络训练的py文件
-├── tfi_chain        <--训练所需要的数据目录，也可以从tensorflow quantum上下载
+├── tfi_chain        <--训练所需要的本地数据目录，请用tensorflow quantum下载，不再随仓库分发
 ├── res              <--训练结果保存所在目录
-├── doc              <--API文档目录
+├── doc              <--Sphinx文档源码目录，可本地构建HTML文档
 ```
 ### 测试版本
 ```
@@ -130,6 +134,7 @@ scikit_learn==1.1.2
 - levitan levitan@msn.cn
 
 ### API 文档
-QCNN类的[API](./doc/build/html/qcnn.html)
+仓库已移除生成后的 `doc/build` 目录，以减小分支体积。需要 HTML 文档时，可在
+`doc/` 目录下运行 `make html` 本地生成；接口源码见 [`src/qcnn.py`](./src/qcnn.py)。
 
 ### 自验报告参见本文件夹内的 [main.ipynb](main.ipynb)
