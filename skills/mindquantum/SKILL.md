@@ -5,7 +5,7 @@ description: "Build, simulate, and analyze quantum circuits with MindQuantum. Pr
 
 # MindQuantum — Core API Skill
 
-MindQuantum is a quantum computing framework built on MindSpore. It combines high-performance C++ simulators with MindSpore's automatic differentiation for hybrid quantum-classical computing.
+MindQuantum is a quantum computing framework in the MindSpore ecosystem. Its core circuit, operator, and simulator APIs can be used without MindSpore; the `mindquantum.framework` module provides MindSpore integration for hybrid quantum-classical models.
 
 ## Environment Setup
 
@@ -20,7 +20,7 @@ python -c "import mindquantum; print(mindquantum.__version__)"
 ### Install MindQuantum
 
 ```bash
-# Recommended: pip install (Python 3.9-3.12 required)
+# Python 3.9-3.12 is required by this package.
 pip install mindquantum
 ```
 
@@ -32,7 +32,8 @@ MindQuantum's core (circuits, gates, operators, simulators) works **standalone**
 |---------|------------|---------|
 | MindSpore | `MQLayer` hybrid quantum-classical training | `pip install mindspore` |
 | OpenFermion + PySCF | Quantum chemistry (`generate_uccsd`, molecular data) | `pip install openfermion openfermionpyscf` |
-| PyTorch + CUDA | QAIA GPU acceleration | `pip install torch` (with CUDA) |
+| PyTorch + CUDA | QAIA `gpu-float32` backend | `pip install torch` (with CUDA) |
+| torch-npu | QAIA `npu-float32` backend | Follow the torch-npu installation matching the Ascend environment |
 
 ### Verify Installation
 
@@ -50,13 +51,11 @@ print(sim.get_qs(ket=True))
 # Expected: √2/2¦00⟩ + √2/2¦11⟩
 ```
 
-### Platform Notes
+### Backend Availability
 
-- **Linux x86_64**: Full support including GPU backends (`mqvector_gpu`, `mqvector_cq` with CUDA 11+)
-- **Linux aarch64**: CPU backends only
-- **macOS (x86_64 / Apple Silicon)**: CPU backends only
-- **Windows x86_64**: CPU backends only
-- **Source build**: For unsupported platforms — `git clone https://atomgit.com/mindspore/mindquantum.git && cd mindquantum && python setup.py install`
+Use `get_supported_simulator()` to check the backends available in the current installation. GPU state-vector backends only appear when the package is built with the required NVIDIA CUDA support; `mqvector_cq` additionally requires NVIDIA cuQuantum SDK support.
+
+For source builds, follow the repository build scripts and options rather than assuming a platform-specific backend is present.
 
 ## Quick Start Pattern
 
@@ -88,36 +87,33 @@ result = sim.sampling(circ, pr={"theta": 0.5}, shots=1000)
 
 | Module | Purpose | Key Classes |
 |--------|---------|-------------|
-| `core.circuit` | Circuit construction | `Circuit`, `UN`, `apply`, `dagger`, `qft` |
+| `core.circuit` | Circuit construction | `Circuit`, `UN`, `apply`, `dagger` |
 | `core.gates` | 50+ quantum gates | `H`, `X`, `RX`, `RY`, `RZ`, `CNOT`, `SWAP`, `U3`, `FSim`, `Measure` |
 | `core.operators` | Operator algebra | `QubitOperator`, `FermionOperator`, `Hamiltonian`, `TimeEvolution` |
 | `core.parameterresolver` | Symbolic parameters | `ParameterResolver` |
 | `simulator` | Simulation backends | `Simulator`, `get_supported_simulator()` |
 | `algorithm.nisq` | NISQ ansatz catalog | `HardwareEfficientAnsatz`, `UCCAnsatz`, `QAOAAnsatz`, `StronglyEntangling` |
 | `algorithm.compiler` | Circuit decomposition / DAG tools | `DAGCircuit`, `decompose` submodule, compiler rules |
-| `algorithm.mapping` | Qubit mapping | `SABRE` |
+| `algorithm.mapping` | Qubit mapping | `SABRE`, `MQSABRE` |
+| `algorithm.library` | Circuit/state helpers | `qft`, `general_ghz_state`, `general_w_state` |
 | `algorithm.qaia` | Quantum-inspired optimization | `SimCIM`, `ASB`, `BSB`, `DSB`, `LQA` |
 | `framework` | MindSpore integration | `MQLayer`, `MQAnsatzOnlyLayer`, `MQN2Ops` |
 | `io` | Import/export | `OpenQASM`, `HiQASM`, `QCIS` |
 
-## Simulator Selection Guide
+## Simulator Backends
 
-Choose the backend based on your task:
+| Backend | State representation | Memory scaling | Source-documented notes |
+|---------|----------------------|----------------|-------------------------|
+| `mqvector` | Pure state vector | O(2^n) | Supports gates, gradients, and noise-channel workflows through sampling / parameter-shift paths |
+| `mqvector_gpu` | Pure state vector | O(2^n) | Same backend family as `mqvector`; requires CUDA support in the installation |
+| `mqvector_cq` | Pure state vector | O(2^n) | cuQuantum-backed state-vector backend when CUDA and cuQuantum support are available |
+| `mqmatrix` | Density matrix | O(4^n) | Native mixed-state operations such as entropy, purity, partial trace; no `circ_left` / `simulator_left` in `get_expectation_with_grad` |
+| `mqmps` | Matrix product state | O(n chi^2) | Tensor-network backend; approximation depends on bond-dimension settings |
+| `stabilizer` | Clifford tableau | O(n^2) | Clifford-gate backend; no parameterized gates or gradient computation |
 
-| Backend | When to Use | Memory | Notes |
-|---------|------------|--------|-------|
-| `mqvector` | Default. Pure-state simulation | O(2ⁿ) | All features, gradients, noise (Monte Carlo) |
-| `mqvector_gpu` | >8 qubits on NVIDIA GPU | O(2ⁿ) | Requires CUDA 11+ |
-| `mqmatrix` | Density matrix / mixed states | O(4ⁿ) | Native noise channels, entropy, purity |
-| `mqmps` | Low-entanglement circuits | O(nχ²) | Approximate for high entanglement |
-| `stabilizer` | Clifford-only circuits | O(n²) | No parameterized gates |
+`Simulator(..., dtype=...)` accepts MindQuantum dtypes such as `mindquantum.complex64` and `mindquantum.complex128`; if `dtype` is `None`, the simulator uses `complex128`.
 
-**Precision rule of thumb:**
-
-- Quantum chemistry → `complex128` (chemical accuracy needs double precision)
-- Quantum ML → `complex64` (saves memory, QML is less precision-sensitive)
-
-**Performance tip:** Reuse simulators via `sim.reset()` instead of creating new instances.
+Use `sim.reset()` when you need to return an existing simulator to the zero state.
 
 ## Critical Patterns
 
@@ -189,7 +185,7 @@ Read these on demand when you need deeper API detail:
 
 2. **`get_expectation_with_grad` requires encoder+ansatz split**: If your circuit has no `as_encoder()` call, all params are treated as ansatz params. Encoder data must be a 2D array `[batch_size, n_encoder_params]`.
 
-3. **MindSpore context**: Always set `ms.set_context(mode=ms.PYNATIVE_MODE)` and `ms.set_device("CPU")` before using `MQLayer`. Graph mode is not supported.
+3. **MindSpore context**: `mindquantum.framework` operations are documented as `PYNATIVE_MODE` only. Use `ms.set_device("CPU")` with `ms.set_context(mode=ms.PYNATIVE_MODE)` for CPU examples.
 
 4. **Simulator state persistence**: `apply_circuit` and `apply_gate` **modify** the simulator state. Use `sim.reset()` to return to |0⟩. `sampling` does not change state, but it samples by applying the provided circuit to the simulator's current state.
 

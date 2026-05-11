@@ -5,7 +5,7 @@ description: "Compile and optimize quantum circuits for hardware execution using
 
 # Circuit Compilation and Hardware Mapping
 
-MindQuantum provides a full compilation pipeline: gate decomposition → DAG optimization → qubit mapping, transforming abstract quantum circuits into hardware-executable form.
+MindQuantum provides compiler and mapping APIs for gate decomposition, DAG-based circuit processing, and topology-aware qubit mapping.
 
 ## Compilation Pipeline Overview
 
@@ -84,7 +84,7 @@ topo = GridQubits(2, 2)
 # 3. Run SABRE
 solver = SABRE(circ, topo)
 new_circ, init_mapping, final_mapping = solver.solve(
-    iter_num=5,  # SABRE iterations (more = potentially better)
+    iter_num=5,  # SABRE iterations
     w=0.5,  # Weight for lookahead heuristic
     delta1=0.3,  # Decay parameter for single-qubit gates
     delta2=0.2,  # Decay parameter for two-qubit gates
@@ -104,7 +104,7 @@ new_circ.svg()
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `iter_num` | int | Number of SABRE iterations. Higher → better mapping, slower. Default 5. |
+| `iter_num` | int | Number of SABRE iterations. Increasing it runs more search iterations. Default 5. |
 | `w` | float | Weight for front-layer vs lookahead cost. Range [0, 1]. |
 | `delta1` | float | Decay parameter for single-qubit gates. |
 | `delta2` | float | Decay parameter for two-qubit gates. |
@@ -119,7 +119,7 @@ from mindquantum.algorithm.compiler import decompose
 
 ### Decomposition Rules
 
-MindQuantum can decompose gates into standard universal gate sets. The compiler provides built-in rules for:
+The compiler package provides decomposition and rewrite rules, including:
 
 - Multi-controlled gates → cascaded Toffoli → CX + single-qubit
 - Arbitrary unitary → U3 + CX decomposition
@@ -135,10 +135,7 @@ from mindquantum.algorithm.compiler import DAGCircuit
 # Convert circuit to DAG
 dag = DAGCircuit(circ)
 
-# DAG enables:
-# - Gate cancellation (adjacent inverse gates)
-# - Gate commutation (reorder independent gates)
-# - Template matching (replace subcircuits)
+# DAGCircuit exposes circuit dependency structure for compiler rules and inspection.
 ```
 
 ## Circuit Equivalence Checking
@@ -218,9 +215,9 @@ draw_topology(topo, compiled)
 compiled.svg()
 ```
 
-## Tips
+## Notes
 
-1. **Iterate SABRE:** Run `solver.solve()` with higher `iter_num` (10-50) for better results on large circuits.
-2. **Topology matters:** Choose a topology matching your target hardware. IBM devices use heavy-hex; Google uses grid.
-3. **Minimize long-range gates:** SWAP insertion cost grows with qubit distance. Design circuits with local interactions when possible.
-4. **Verify after compilation:** Always check equivalence between original and compiled circuits, especially for parameterized circuits.
+1. **SABRE iterations:** `solver.solve()` exposes `iter_num`; increasing it runs more SABRE search iterations and increases compile time.
+2. **Topology input:** `SABRE` requires a connected `QubitsTopology`; disconnected topologies raise `ValueError`.
+3. **Inserted SWAPs:** The returned circuit may contain SWAP gates inserted by the mapper to satisfy topology constraints.
+4. **Equivalence checks:** For small circuits, compare matrices at fixed parameter values to validate a compilation workflow.

@@ -7,8 +7,8 @@ description: "Simulate noisy quantum circuits with MindQuantum. Covers noise cha
 
 MindQuantum provides two approaches to noise simulation:
 
-1. **Monte Carlo trajectories** — add noise channels to circuits, sample via `mqvector`. Each shot randomly applies or skips the noise gate. Fast, scales to many qubits, but results are statistical.
-2. **Density matrix** — use `mqmatrix` backend for exact mixed-state evolution. Deterministic but O(4ⁿ) memory — practical for roughly ≤12 qubits on ordinary machines.
+1. **Monte Carlo trajectories** — add noise channels to circuits, sample via `mqvector`. Results are statistical and controlled by `shots`.
+2. **Density matrix** — use `mqmatrix` backend for exact mixed-state evolution. Deterministic, with O(4^n) memory scaling.
 
 ## Approach 1: Manual Noise Channels
 
@@ -107,9 +107,9 @@ from mindquantum.core.circuit.channel_adder import (
 | `DepolarizingChannelAdder(p, n_qubits)` | Add DepolarizingChannel |
 | `MeasureAccepter` | Select only measurement gates |
 | `NoiseExcluder` | Exclude existing noise gates from re-noising |
-| `QubitIDConstrain(qubit_ids)` | Only add noise on specific qubits |
+| `QubitIDConstrain(qubit_ids)` | Select gates whose participating qubits are all in `qubit_ids` |
 | `QubitNumberConstrain(n)` | Only add noise to n-qubit gates |
-| `GateSelector(gate_types)` | Only add noise after specific gate types |
+| `GateSelector(gate)` | Select a supported gate by name, such as `"H"` or `"CX"` |
 | `SequentialAdder([adder1, adder2])` | Apply multiple adders in sequence |
 | `MixerAdder([adder1, adder2])` | Add noise only if ALL sub-adders agree |
 | `ReverseAdder(adder)` | Flip accept/reject logic |
@@ -187,7 +187,7 @@ noisy_circ.svg()  # See where noise channels were added
 
 ## Approach 4: Density Matrix (mqmatrix)
 
-For exact noise simulation on small systems:
+For density-matrix noise simulation:
 
 ```python
 sim = Simulator("mqmatrix", 4)
@@ -200,18 +200,14 @@ purity = sim.purity()  # Tr(ρ²)
 rho_sub = sim.get_partial_trace([0, 1])  # Trace out qubits 0,1
 ```
 
-### When to Use mqmatrix vs mqvector
+### mqmatrix vs mqvector Characteristics
 
 | Factor | `mqvector` + Monte Carlo | `mqmatrix` |
 |--------|-------------------------|------------|
-| Memory | O(2ⁿ) | O(4ⁿ) |
-| Max qubits (16 GB) | ~30 | ~14-15 raw memory, ~12 practical |
-| Accuracy | Statistical (more shots = better) | Exact |
-| Speed per shot | Fast | N/A (single evolution) |
-| Mixed-state queries | No | Yes (entropy, purity, partial trace) |
-| Gradient support | Yes | Yes (but no `circ_left` / `simulator_left`) |
-
-**Rule of thumb:** Use `mqmatrix` for ≤12 qubits when you need exact mixed-state properties. Use `mqvector` with Monte Carlo for larger systems.
+| State size | O(2^n) | O(4^n) |
+| Sampling | Statistical, controlled by `shots` | Not shot-based for a single density-matrix evolution |
+| Mixed-state queries | Not represented as a density matrix | Entropy, purity, partial trace |
+| Gradient support | Supported by simulator gradient APIs | Supported, but `circ_left` and `simulator_left` are rejected |
 
 ## Noisy VQE Example
 
@@ -243,21 +239,20 @@ def cost(params):
     return np.real(f)[0, 0]
 
 
-# Use Nelder-Mead for noisy landscapes (gradient-free)
+# Example gradient-free SciPy optimizer
 result = minimize(cost, np.zeros(2), method="Nelder-Mead")
 print(f"Noisy VQE energy: {result.fun:.6f}")
 ```
 
-## Performance and Feasibility Guide
+## Raw Memory Guide
 
-| Qubits | mqvector (Monte Carlo) | mqmatrix (Density Matrix) |
-|--------|----------------------|--------------------------|
-| 4 | ✅ instant | ✅ instant |
-| 10 | ✅ instant | ✅ ~16 MB |
-| 13 | ✅ fast | ⚠️ ~1 GB |
-| 15 | ✅ fast | ⚠️ ~16 GB raw state |
-| 20 | ✅ fast | ❌ ~16 TB |
-| 25 | ✅ moderate | ❌ impossible |
-| 30 | ⚠️ ~16 GB RAM | ❌ impossible |
+| Qubits | State vector raw size | Density matrix raw size |
+|--------|-----------------------|-------------------------|
+| 10 | ~16 KB | ~16 MB |
+| 13 | ~128 KB | ~1 GB |
+| 15 | ~512 KB | ~16 GB |
+| 20 | ~16 MB | ~16 TB |
+| 25 | ~512 MB | ~16 PB |
+| 30 | ~16 GB | ~16 EB |
 
-**For large noisy simulations (>12 qubits):** Use `mqvector` with noise channels and Monte Carlo sampling. Increase `shots` for better statistics.
+The table assumes `complex128` storage only and does not include simulator overhead. When the dense density matrix is too large for the target machine, use state-vector sampling with noise channels and increase `shots` according to the statistical precision needed.

@@ -1,6 +1,6 @@
 ---
 name: mq-quantum-chemistry
-description: "Run quantum chemistry simulations with MindQuantum. Covers the molecule-to-VQE pipeline: molecular definition, Hartree-Fock reference states, FermionOperator construction, fermion-to-qubit transforms (Jordan-Wigner, Parity, Bravyi-Kitaev), UCCSD and HEA ansätze, VQE optimization, and the mqchem module for large-scale chemistry. Use when the user wants to simulate molecules, compute ground state energies, do quantum chemistry, use UCCSD, run VQE for chemistry, map fermion operators to qubits, or use mqchem for large-qubit chemistry simulations."
+description: "Run quantum chemistry simulations with MindQuantum. Covers the molecule-to-VQE pipeline: molecular definition, Hartree-Fock reference states, FermionOperator construction, fermion-to-qubit transforms (Jordan-Wigner, Parity, Bravyi-Kitaev, ternary tree, Bravyi-Kitaev Superfast), UCCSD and HEA ansätze, VQE optimization, and the mqchem CI-subspace module. Use when the user wants to simulate molecules, compute ground state energies, do quantum chemistry, use UCCSD, run VQE for chemistry, map fermion operators to qubits, or use mqchem."
 ---
 
 # Quantum Chemistry with MindQuantum
@@ -76,7 +76,7 @@ mol = MolecularData(geometry=geometry, basis="sto-3g", multiplicity=1, charge=0)
 # Run classical methods for reference energies
 mol = run_pyscf(
     mol,
-    run_scf=True,  # Hartree-Fock (always needed)
+    run_scf=True,  # Hartree-Fock
     run_ccsd=True,  # CCSD (provides initial amplitudes)
     run_fci=True,  # FCI (exact reference energy)
 )
@@ -124,35 +124,25 @@ from mindquantum.algorithm.nisq import Transform
 
 fop = fermion_hamiltonian  # FermionOperator
 
-# Jordan-Wigner: preserves locality, simple but deep circuits
+# Jordan-Wigner transform
 qop_jw = Transform(fop).jordan_wigner()
 
-# Parity: stores occupation parity non-locally; tapering is a separate step
+# Parity transform
 qop_p = Transform(fop).parity()
 
-# Bravyi-Kitaev: logarithmic depth, balanced
+# Bravyi-Kitaev transform
 qop_bk = Transform(fop).bravyi_kitaev()
 
-# Ternary tree: tree-structured transform
+# Ternary-tree transform
 qop_tt = Transform(fop).ternary_tree()
 
-# Bravyi-Kitaev Superfast: for lattice Hamiltonians
+# Bravyi-Kitaev Superfast transform
 qop_bks = Transform(fop).bravyi_kitaev_superfast()
 ```
 
-#### Transform Selection Guide
-
-| Transform | Circuit Depth | Qubit Count | Best For |
-|-----------|--------------|-------------|----------|
-| Jordan-Wigner | Deep (O(n)) | Same | Debugging, small molecules |
-| Parity | Moderate | Same before any separate tapering | General use with symmetry |
-| Bravyi-Kitaev | Shallow (O(log n)) | Same | Larger molecules |
-| Ternary tree | Moderate | Same | Alternative tree encoding |
-| Bravyi-Kitaev Superfast | Problem-dependent | Problem-dependent | Lattice-style Hamiltonians |
-
 ### Step 4: Ansatz Construction
 
-#### UCCSD (Chemically Motivated)
+#### UCCSD
 
 ```python
 from mindquantum.algorithm.nisq import generate_uccsd
@@ -179,7 +169,7 @@ init_amplitudes = uccsd_singlet_get_packed_amplitudes(
 )
 ```
 
-#### Hardware-Efficient (Shallower Alternative)
+#### Hardware-Efficient Ansatz
 
 ```python
 from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
@@ -200,16 +190,16 @@ def energy_and_grad(params):
     return np.real(f)[0, 0], np.real(g)[0, 0]
 
 
-# L-BFGS-B often works best for chemistry
+# Use any SciPy optimizer compatible with this value-and-gradient function.
 result = minimize(energy_and_grad, init_amplitudes, method="L-BFGS-B", jac=True, options={"maxiter": 500})
 
 print(f"VQE energy: {result.fun:.8f} Ha")
-print(f"Chemical accuracy achieved: {abs(result.fun - mol.fci_energy) < 1.6e-3}")
+print(f"Difference from FCI: {abs(result.fun - mol.fci_energy):.8f} Ha")
 ```
 
-## mqchem: Large-Scale Chemistry
+## mqchem: CI-Subspace Chemistry
 
-For molecules requiring 20+ qubits, MindQuantum's `mqchem` module operates in a Configuration Interaction subspace instead of the full Hilbert space.
+MindQuantum's `mqchem` module operates in a Configuration Interaction subspace instead of the full Hilbert space.
 
 ```python
 from mindquantum.simulator import mqchem
@@ -273,11 +263,10 @@ for d in distances:
     print(f"d={d:.1f} Å, E={res.fun:.6f} Ha")
 ```
 
-## Tips
+## Source-Backed Notes
 
-1. **Always use `complex128`:** Chemistry calculations need double precision for chemical accuracy (~1.6 mHa).
-2. **Start with CCSD amplitudes:** `init_amplitudes` from CCSD converges much faster than random initialization.
-3. **Use `generate_uccsd`:** The all-in-one helper handles qubit Hamiltonian generation, UCCSD construction, and initial amplitude extraction.
-4. **Check against FCI:** For small molecules, FCI provides the exact energy — your VQE should be within 1.6 mHa (chemical accuracy).
-5. **mqchem for scale:** When the molecule needs >16 qubits, switch to `mqchem.MQChemSimulator` which operates in the CI subspace.
-6. **Dependencies:** Quantum chemistry requires `openfermion` and `openfermionpyscf`. Install via `pip install openfermion openfermionpyscf`.
+1. **Default simulator precision:** `Simulator(..., dtype=None)` uses `mindquantum.complex128`; pass `dtype` explicitly if a different precision is required.
+2. **`generate_uccsd`:** This helper returns the UCCSD circuit, initial amplitudes, parameter names, qubit Hamiltonian, qubit count, and electron count.
+3. **Reference states:** `UCCAnsatz` does not include the Hartree-Fock reference state; prepare it separately before appending the ansatz circuit.
+4. **Reference energies:** If `run_pyscf(..., run_fci=True)` was used and `mol.fci_energy` is available, compare VQE output to that reference explicitly.
+5. **Dependencies:** Quantum chemistry workflows using `MolecularData` and `run_pyscf` require `openfermion` and `openfermionpyscf`.

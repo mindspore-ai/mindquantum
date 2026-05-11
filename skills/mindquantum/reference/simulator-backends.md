@@ -17,14 +17,14 @@ sim = Simulator("mqvector", 4, dtype=mq.complex64)
 
 ## Backend Comparison
 
-| Backend | State | Memory | GPU | Gradients | Noise | Best For |
-|---------|-------|--------|-----|-----------|-------|----------|
-| `mqvector` | Pure state vector | O(2ⁿ) | No | Yes | Monte Carlo | General purpose, <30 qubits |
-| `mqvector_gpu` | Pure state vector | O(2ⁿ) | Yes | Yes | Monte Carlo | >8 qubits with NVIDIA GPU |
-| `mqvector_cq` | Pure state vector | O(2ⁿ) | Yes | Yes | Monte Carlo | cuQuantum acceleration |
-| `mqmatrix` | Density matrix | O(4ⁿ) | No | Yes | Native | Noise simulation, roughly ≤12 practical qubits |
-| `mqmps` | MPS tensor train | O(nχ²) | No | Limited | No | Low-entanglement, many qubits |
-| `stabilizer` | Clifford tableau | O(n²) | No | No | No | Clifford circuits, QEC |
+| Backend | State | Memory | Availability / feature notes |
+|---------|-------|--------|------------------------------|
+| `mqvector` | Pure state vector | O(2^n) | CPU state-vector backend; supports expectation and gradient APIs |
+| `mqvector_gpu` | Pure state vector | O(2^n) | Available only when CUDA GPU support is built and detected |
+| `mqvector_cq` | Pure state vector | O(2^n) | Available only when CUDA and cuQuantum support are built and detected |
+| `mqmatrix` | Density matrix | O(4^n) | Native mixed-state operations; `get_expectation_with_grad` rejects `circ_left` and `simulator_left` |
+| `mqmps` | MPS tensor train | O(n chi^2) | Bond-dimension settings control exact/approximate behavior |
+| `stabilizer` | Clifford tableau | O(n^2) | Clifford tableau backend; does not support parameterized gates or gradient computation |
 
 ### Memory Requirements (mqvector, complex128)
 
@@ -164,18 +164,14 @@ sim.purity()  # Purity of the state
 # psi = sim.get_pure_state_vector()  # Only valid if the density matrix is pure
 ```
 
-## Performance Tips
+## Usage Notes
 
-1. **Backend selection by qubit count:**
-   - <8 qubits: `mqvector` (CPU overhead dominates)
-   - 8-25 qubits: `mqvector_gpu` if GPU available
-   - Low-entanglement: `mqmps` can handle more qubits
-   - Clifford-only: `stabilizer` scales to thousands of qubits
+1. **Check installed backends:** `get_supported_simulator()` returns the backends available in the current environment; do not assume GPU backends are present.
 
-2. **Reuse simulators:** `sim.reset()` is much cheaper than creating a new `Simulator`.
+2. **Reuse simulators:** `sim.reset()` returns the simulator to the zero state without constructing a new `Simulator`.
 
-3. **Use `parallel_worker`:** When computing multiple Hamiltonian expectations, set `parallel_worker` to use multi-threading.
+3. **Use `parallel_worker`:** When computing multiple Hamiltonian expectations, set `parallel_worker` to use parallel workers where supported.
 
-4. **Precision trade-off:** `complex64` uses half the memory of `complex128`. Use it for QML tasks.
+4. **Precision:** `Simulator(..., dtype=...)` supports MindQuantum dtypes such as `mindquantum.complex64` and `mindquantum.complex128`; the default is `complex128`.
 
-5. **Batch encoder data:** Pass multiple data points as rows in a 2D array to `grad_ops()` for efficient batch processing.
+5. **Batch encoder data:** Pass multiple data points as rows in a 2D array to `grad_ops()`.
