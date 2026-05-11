@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Mindspore quantum simulator operator."""
+
 import mindspore as ms
 import numpy as np
 from mindspore import context, nn
@@ -97,7 +98,8 @@ class MQOps(nn.Cell):
         >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
         >>> from mindquantum.framework import MQOps
         >>> from mindquantum.simulator import Simulator
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -183,7 +185,8 @@ class MQN2Ops(nn.Cell):
         >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
         >>> from mindquantum.framework import MQN2Ops
         >>> from mindquantum.simulator import Simulator
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> enc = Circuit().ry('a', 0).as_encoder()
         >>> ans = Circuit().h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
@@ -264,7 +267,8 @@ class MQAnsatzOnlyOps(nn.Cell):
         >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
         >>> from mindquantum.framework import MQAnsatzOnlyOps
         >>> from mindquantum.simulator import Simulator
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('mqvector', 1)
@@ -336,7 +340,8 @@ class MQN2AnsatzOnlyOps(nn.Cell):
         >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
         >>> from mindquantum.framework import MQN2AnsatzOnlyOps
         >>> from mindquantum.simulator import Simulator
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0)
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('mqvector', 1)
@@ -412,7 +417,8 @@ class MQEncoderOnlyOps(nn.Cell):
         >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
         >>> from mindquantum.framework import MQEncoderOnlyOps
         >>> from mindquantum.simulator import Simulator
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_encoder()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('mqvector', 1)
@@ -487,7 +493,8 @@ class MQN2EncoderOnlyOps(nn.Cell):
         >>> from mindquantum.core.operators import Hamiltonian, QubitOperator
         >>> from mindquantum.framework import MQN2EncoderOnlyOps
         >>> from mindquantum.simulator import Simulator
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_encoder()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('mqvector', 1)
@@ -580,7 +587,8 @@ class QRamVecOps(nn.Cell):
         >>> from mindquantum.framework import QRamVecOps
         >>> from mindquantum.simulator import Simulator
         >>> from mindquantum.utils import random_state
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> circ = Circuit().ry('a', 0).h(0).rx('b', 0).as_ansatz()
         >>> ham = Hamiltonian(QubitOperator('Z0'))
         >>> sim = Simulator('mqvector', 1)
@@ -669,7 +677,8 @@ def _mode_check(self):
         raise RuntimeError(
             f'{self.__class__} is `PYNATIVE_MODE` supported only. Run command below to set context\n'
             'import mindspore as ms\n'
-            'ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")'
+            'ms.set_device("CPU")\n'
+            'ms.set_context(mode=ms.PYNATIVE_MODE)'
         )
 
 

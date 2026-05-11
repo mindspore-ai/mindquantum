@@ -15,6 +15,7 @@
 
 # pylint: disable=invalid-name
 """Test simulator."""
+
 import platform
 import subprocess
 
@@ -48,7 +49,8 @@ try:
         MQAnsatzOnlyLayer,
     )
 
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+    ms.set_device("CPU")
+    ms.set_context(mode=ms.PYNATIVE_MODE)
 except ImportError:
     _HAS_MINDSPORE = False
 
@@ -344,7 +346,8 @@ def test_optimization_with_custom_gate(config):  # pylint: disable=too-many-loca
     ham = Hamiltonian(QubitOperator('Z0'), dtype=dtype)
     grad_ops1 = sim.get_expectation_with_grad(ham, circuit1)
     grad_ops2 = sim.get_expectation_with_grad(ham, circuit2)
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+    ms.set_device("CPU")
+    ms.set_context(mode=ms.PYNATIVE_MODE)
     init_data = ms.Tensor(np.array([1.2]).astype(np.float32))
     net1 = MQAnsatzOnlyLayer(grad_ops1, weight=init_data)
     net2 = MQAnsatzOnlyLayer(grad_ops2, weight=init_data)

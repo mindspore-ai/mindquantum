@@ -57,9 +57,9 @@ MindQuantum是基于昇思MindSpore开源深度学习平台开发的新一代通
 from mindquantum import *
 import numpy as np
 
-encoder = Circuit().h(0).rx({'a0': 2}, 0).ry('a1', 1)
+encoder = Circuit().h(0).rx({"a0": 2}, 0).ry("a1", 1)
 print(encoder)
-print(encoder.get_qs(pr={'a0': np.pi / 2, 'a1': np.pi / 2}, ket=True))
+print(encoder.get_qs(pr={"a0": np.pi / 2, "a1": np.pi / 2}, ket=True))
 ```
 
 你将得到
@@ -90,9 +90,9 @@ circuit.svg()  # circuit.svg('light')
 ### 训练量子神经网络
 
 ```python
-ansatz = CPN(encoder.hermitian(), {'a0': 'b0', 'a1': 'b1'})
-sim = Simulator('mqvector', 2)
-ham = Hamiltonian(-QubitOperator('Z0 Z1'))
+ansatz = CPN(encoder.hermitian(), {"a0": "b0", "a1": "b1"})
+sim = Simulator("mqvector", 2)
+ham = Hamiltonian(-QubitOperator("Z0 Z1"))
 grad_ops = sim.get_expectation_with_grad(
     ham,
     encoder.as_encoder() + ansatz.as_ansatz(),
@@ -100,7 +100,8 @@ grad_ops = sim.get_expectation_with_grad(
 
 import mindspore as ms
 
-ms.set_context(mode=ms.PYNATIVE_MODE, device_target='CPU')
+ms.set_device("CPU")
+ms.set_context(mode=ms.PYNATIVE_MODE)
 net = MQLayer(grad_ops)
 encoder_data = ms.Tensor(np.array([[np.pi / 2, np.pi / 2]]))
 opti = ms.nn.Adam(net.trainable_params(), learning_rate=0.1)

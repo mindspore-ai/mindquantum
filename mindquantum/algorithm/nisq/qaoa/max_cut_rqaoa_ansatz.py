@@ -168,7 +168,8 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         >>> import mindspore.nn as nn
         >>> import mindspore as ms
         >>> import numpy as np
-        >>> ms.set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+        >>> ms.set_device("CPU")
+        >>> ms.set_context(mode=ms.PYNATIVE_MODE)
         >>> circ = mcra.circuit                  # QAOA circuit for the Hamiltonian
         >>> ham = mcra.hamiltonian               # the Hamiltonian
         >>> sim = Simulator('mqvector', circ.n_qubits)                 # create simulator with 'mqvector' backend
@@ -263,7 +264,7 @@ class MaxCutRQAOAAnsatz(RQAOAAnsatz, MaxCut):
         """
         _, graph, mapping = self.get_subproblem()
         cut_value, partition = self.enum(graph)
-        var_set = dict()
+        var_set = {}
         for i in mapping:
             var_set[mapping[i]] = -1 if i in partition else 1
         var_set = self.translate(var_set)
