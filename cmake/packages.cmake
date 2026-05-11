@@ -187,6 +187,9 @@ if(ENABLE_CUDA)
     set(ENABLE_CUDA
         OFF
         CACHE INTERNAL "Enable building of CUDA/NVHPC libraries")
+    set(ENABLE_CUQUANTUM
+        OFF
+        CACHE INTERNAL "Enable the cuQuantum-backed CUDA simulator backend")
   endif()
 endif()
 

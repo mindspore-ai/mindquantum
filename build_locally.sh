@@ -167,6 +167,7 @@ cmake_args=(-DIN_PLACE_BUILD:BOOL=ON
             -DCMAKE_BUILD_TYPE:STRING="$build_type"
             -DENABLE_ANALYZER:BOOL="${CMAKE_BOOL[$enable_analyzer]}"
             -DENABLE_CMAKE_DEBUG:BOOL="${CMAKE_BOOL[$cmake_debug_mode]}"
+            -DENABLE_CUQUANTUM:BOOL="${CMAKE_BOOL[$enable_cuquantum]}"
             -DENABLE_CUDA:BOOL="${CMAKE_BOOL[$enable_gpu]}"
             -DENABLE_DOCUMENTATION:BOOL="${CMAKE_BOOL[$do_docs]}"
             -DENABLE_GITEE:BOOL="${CMAKE_BOOL[$enable_gitee]}"

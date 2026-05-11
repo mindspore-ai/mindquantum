@@ -20,7 +20,7 @@
 #
 # cmake-lint: disable=C0103
 
-if(NOT ENABLE_CUDA)
+if(NOT ENABLE_CUDA OR NOT ENABLE_CUQUANTUM)
   return()
 endif()
 
@@ -35,15 +35,15 @@ endif()
 string(REGEX MATCH "^[0-9]+" _CQ_CUDA_MAJOR "${MQ_CUDA_VERSION}")
 
 set(VER 25.06.0.10)
-set(REQ_URL "https://developer.download.nvidia.com/compute/cuquantum/redist/cuquantum/${_CQ_ARCH}/cuquantum-${_CQ_ARCH}-${VER}_cuda${_CQ_CUDA_MAJOR}-archive.tar.xz")
+set(REQ_URL
+    "https://developer.download.nvidia.com/compute/cuquantum/redist/cuquantum/${_CQ_ARCH}/cuquantum-${_CQ_ARCH}-${VER}_cuda${_CQ_CUDA_MAJOR}-archive.tar.xz"
+)
 if(_CQ_CUDA_MAJOR STREQUAL "11")
   set(MD5 "6d329713ddb3ced0d08adbc4010a637a")
 elseif(_CQ_CUDA_MAJOR STREQUAL "12")
   set(MD5 "9eaf4561800c44c4a29890ea59e2d5a0")
 else()
-  message(FATAL_ERROR
-    "Unsupported cuQuantum CUDA major version: ${_CQ_CUDA_MAJOR}"
-  )
+  message(FATAL_ERROR "Unsupported cuQuantum CUDA major version: ${_CQ_CUDA_MAJOR}")
 endif()
 
 mindquantum_add_pkg(
@@ -57,8 +57,6 @@ mindquantum_add_pkg(
 
 # Expose cuQuantum headers (from <prefix>/include) on the imported interface.
 if(TARGET mindquantum::cuquantum)
-  target_include_directories(cuquantum::cuquantum INTERFACE
-    $<BUILD_INTERFACE:${cuquantum_BASE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-  )
+  target_include_directories(cuquantum::cuquantum INTERFACE $<BUILD_INTERFACE:${cuquantum_BASE_DIR}/include>
+                                                            $<INSTALL_INTERFACE:include>)
 endif()

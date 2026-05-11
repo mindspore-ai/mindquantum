@@ -23,7 +23,8 @@ mindquantum.simulator.Simulator
     - **mqvector_gpu** -- GPU 加速的态矢量模拟器。与 ``mqvector`` 具有相同的功能，
       但在 NVIDIA GPU 上运行。需要 CUDA 11 或更高版本。
     - **mqvector_cq** -- 基于 NVIDIA cuQuantum SDK 的态矢量模拟器。与 ``mqvector_gpu``
-      具有相同的功能，但利用 cuQuantum 进行优化。需要 CUDA 11+ 和 cuQuantum SDK。
+      具有相同的功能，但利用 cuQuantum 进行优化。需要使用 ``ENABLE_CUQUANTUM=ON`` 构建，
+      并正确安装 cuQuantum SDK。
 
     使用 :func:`mindquantum.simulator.get_supported_simulator` 查看当前环境中可用的后端。
 

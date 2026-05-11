@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Simulator."""
+
 import numpy as np
 from scipy.linalg import det
 
@@ -71,8 +72,8 @@ class Simulator:
       CUDA 11 or higher.
     - **mqvector_cq** -- State vector simulator powered by NVIDIA cuQuantum
       SDK. Same capabilities as ``mqvector_gpu`` but leverages cuQuantum
-      for optimized performance. Requires both CUDA 11+ and the
-      cuQuantum SDK.
+      for optimized performance. Requires a CUDA build with
+      ``ENABLE_CUQUANTUM=ON`` and the cuQuantum SDK.
 
     Use :func:`mindquantum.simulator.get_supported_simulator` to list backends
     available in your current environment.

@@ -17,8 +17,10 @@
 
 #include "config/openmp.h"
 #include "simulator/utils.h"
+#if defined(MQ_HAS_CUQUANTUM) && MQ_HAS_CUQUANTUM
 #include "simulator/vector/detail/cuquantum_vector_double_policy.cuh"
 #include "simulator/vector/detail/cuquantum_vector_float_policy.cuh"
+#endif
 #include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
@@ -590,8 +592,10 @@ void GPUVectorPolicyBase<derived_, calc_type_>::ApplyGivens(qs_data_p_t* qs_p, c
     }
 }
 
+#if defined(MQ_HAS_CUQUANTUM) && MQ_HAS_CUQUANTUM
 template struct GPUVectorPolicyBase<CuQuantumVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<CuQuantumVectorPolicyDouble, double>;
+#endif
 template struct GPUVectorPolicyBase<GPUVectorPolicyFloat, float>;
 template struct GPUVectorPolicyBase<GPUVectorPolicyDouble, double>;
 

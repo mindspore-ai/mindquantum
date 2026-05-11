@@ -16,9 +16,11 @@
 
 #include <pybind11/pybind11.h>
 
+#if defined(MQ_HAS_CUQUANTUM) && MQ_HAS_CUQUANTUM
 #include "simulator/vector/detail/cuquantum_loader.cuh"
 #include "simulator/vector/detail/cuquantum_vector_double_policy.cuh"
 #include "simulator/vector/detail/cuquantum_vector_float_policy.cuh"
+#endif
 #include "simulator/vector/detail/gpu_vector_double_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_float_policy.cuh"
 #include "simulator/vector/detail/gpu_vector_policy.cuh"
@@ -54,6 +56,7 @@ PYBIND11_MODULE(_mq_vector_gpu, module) {
     BindBlas<double_vec_sim>(double_blas);
     module.def("ground_state_of_zs", &double_policy_t::GroundStateOfZZs, "masks_value"_a, "n_qubits"_a);
 
+#if defined(MQ_HAS_CUQUANTUM) && MQ_HAS_CUQUANTUM
     if (mindquantum::sim::vector::detail::CuQuantumLoader::GetInstance().IsAvailable()) {
         using float_policy_t_cq = mindquantum::sim::vector::detail::CuQuantumVectorPolicyFloat;
         using double_policy_t_cq = mindquantum::sim::vector::detail::CuQuantumVectorPolicyDouble;
@@ -83,4 +86,5 @@ PYBIND11_MODULE(_mq_vector_gpu, module) {
         BindBlas<float_vec_sim_cq>(float_blas_cq);
         BindBlas<double_vec_sim_cq>(double_blas_cq);
     }
+#endif
 }
