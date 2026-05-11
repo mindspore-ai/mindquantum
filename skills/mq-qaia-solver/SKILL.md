@@ -1,19 +1,19 @@
 ---
 name: mq-qaia-solver
-description: "Solve combinatorial optimization problems using MindQuantum's Quantum Annealing-Inspired Algorithms (QAIA). Supports SimCIM, Simulated Bifurcation (ASB/BSB/DSB), LQA, CFC, CAC, SFC, NMFA with CPU/GPU/NPU backends. Use for Ising model optimization, Max-Cut, SAT, QUBO problems, and large-scale combinatorial optimization. This is NOT circuit-based QAOA — these are classical algorithms inspired by quantum annealing that run on CPU/GPU without a quantum circuit. Use when the user mentions QAIA, SimCIM, simulated bifurcation, Ising solver, combinatorial optimization without circuits, Max-Cut solver, or wants to solve optimization on GPU/NPU."
+description: "Solve Ising/QUBO-style combinatorial optimization problems using MindQuantum's Quantum Annealing-Inspired Algorithms (QAIA). Covers SimCIM, ASB/BSB/DSB, TSB/USB/LSB, LQA, CFC, CAC, SFC, and NMFA, with solver-specific CPU/GPU/NPU backend support. This is not circuit-based QAOA: QAIA solvers operate directly on an Ising coupling matrix J and optional field h. Use when the user mentions QAIA, SimCIM, simulated bifurcation, Ising solver, Max-Cut solver, QUBO, or a combinatorial problem already encoded as Ising/QUBO."
 ---
 
 # QAIA: Quantum Annealing-Inspired Algorithms
 
-MindQuantum's QAIA module provides classical algorithms that simulate quantum mechanical principles to solve combinatorial optimization problems. These run entirely on CPU/GPU/NPU — no quantum circuit required.
+MindQuantum's QAIA module provides quantum annealing-inspired solvers for combinatorial optimization problems encoded as Ising models. These solvers do not build quantum circuits; they evolve solver-specific state variables from a coupling matrix.
 
 **Key distinction:** QAIA solvers are NOT circuit-based QAOA. They solve Ising/QUBO problems directly using physics-inspired dynamics. For circuit-based QAOA, use the `mq-variational-training` skill.
 
 ## The Ising Model
 
-All QAIA solvers minimize the Ising Hamiltonian:
+QAIA's `calc_energy()` uses this Ising energy convention for a symmetric coupling matrix:
 
-$$H(\mathbf{s}) = -\sum_{i,j} J_{ij} s_i s_j - \sum_i h_i s_i$$
+$$H(\mathbf{s}) = -\frac{1}{2}\sum_{i,j} J_{ij} s_i s_j - \sum_i h_i s_i$$
 
 where $s_i \in \{-1, +1\}$ are spin variables, $J$ is the coupling matrix, and $h$ is the external field.
 
@@ -44,24 +44,24 @@ spins = np.sign(solver.x)  # Final spin configuration
 
 ## Available Solvers
 
-| Solver | Import | Physical Inspiration | Strengths |
-|--------|--------|---------------------|-----------|
-| `SimCIM` | `from mindquantum.algorithm.qaia import SimCIM` | Coherent Ising Machine | Good for dense graphs |
-| `ASB` | `from mindquantum.algorithm.qaia import ASB` | Adiabatic Simulated Bifurcation | Smooth convergence |
-| `BSB` | `from mindquantum.algorithm.qaia import BSB` | Ballistic Simulated Bifurcation | Fast, good default |
-| `DSB` | `from mindquantum.algorithm.qaia import DSB` | Discrete Simulated Bifurcation | Fast, discrete spins |
-| `LQA` | `from mindquantum.algorithm.qaia import LQA` | Local Quantum Annealing | Exploits quantum tunneling |
-| `CAC` | `from mindquantum.algorithm.qaia import CAC` | Chaotic Amplitude Control | Escapes local minima |
-| `CFC` | `from mindquantum.algorithm.qaia import CFC` | Chaotic Amplitude Feedback | Enhanced exploration |
-| `SFC` | `from mindquantum.algorithm.qaia import SFC` | Discrete Amplitude Feedback | Good for structured problems |
-| `NMFA` | `from mindquantum.algorithm.qaia import NMFA` | Noisy Mean-Field Annealing | Simple, robust |
-| `TSB` | `from mindquantum.algorithm.qaia import TSB` | Tensor-network SB | Large-scale |
-| `USB` | `from mindquantum.algorithm.qaia import USB` | Unified SB | Balanced approach |
-| `LSB` | `from mindquantum.algorithm.qaia import LSB` | Layered SB | Structured problems |
+| Solver | Import | Name in source docstring | Documented / implemented backends |
+|--------|--------|--------------------------|----------------------------------|
+| `SimCIM` | `from mindquantum.algorithm.qaia import SimCIM` | Simulated Coherent Ising Machine | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `ASB` | `from mindquantum.algorithm.qaia import ASB` | Adiabatic SB algorithm | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `BSB` | `from mindquantum.algorithm.qaia import BSB` | Ballistic SB algorithm | `cpu-float32`, `gpu-float32`, `gpu-float16`, `gpu-int8`, `npu-float32` |
+| `DSB` | `from mindquantum.algorithm.qaia import DSB` | Discrete SB algorithm | `cpu-float32`, `gpu-float32`, `gpu-float16`, `gpu-int8`, `npu-float32` |
+| `LQA` | `from mindquantum.algorithm.qaia import LQA` | Local quantum annealing algorithm | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `CAC` | `from mindquantum.algorithm.qaia import CAC` | Coherent Ising Machine with chaotic amplitude control | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `CFC` | `from mindquantum.algorithm.qaia import CFC` | Coherent Ising Machine with chaotic feedback control | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `SFC` | `from mindquantum.algorithm.qaia import SFC` | Coherent Ising Machine with separated feedback control | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `NMFA` | `from mindquantum.algorithm.qaia import NMFA` | Noisy Mean-field Annealing algorithm | `cpu-float32`, `gpu-float32`, `npu-float32` |
+| `TSB` | `from mindquantum.algorithm.qaia import TSB` | Ternary Simulated Bifurcation algorithm | `cpu-float32`, `gpu-float32` |
+| `USB` | `from mindquantum.algorithm.qaia import USB` | Uniformly Quantized Simulated Bifurcation | `cpu-float32`, `gpu-float32` |
+| `LSB` | `from mindquantum.algorithm.qaia import LSB` | Logarithmic Quantized Simulated Bifurcation | `cpu-float32`, `gpu-float32` |
 
-## Uniform API
+## Core API
 
-All solvers share the same interface:
+QAIA solvers share this core constructor and method pattern; individual classes may expose additional parameters such as `dt`, `xi`, `threshold`, or `strategy`:
 
 ```python
 solver = SolverClass(
@@ -70,7 +70,7 @@ solver = SolverClass(
     x=None,  # Initial spins: numpy.array [N, batch_size] (optional)
     n_iter=1000,  # Number of iterations
     batch_size=1,  # Parallel samples
-    backend="cpu-float32",  # Compute backend
+    backend="cpu-float32",  # Compute backend; supported values are solver-specific
 )
 
 solver.update()  # Run the optimization dynamics
@@ -79,33 +79,19 @@ solver.calc_energy()  # Ising energy for each batch
 spins = np.sign(solver.x)  # Extract discrete spin assignments
 ```
 
-## GPU/NPU Acceleration
+## Backend Notes
+
+Backends are not uniform across all QAIA classes.
+
+- `gpu-float32` uses PyTorch CUDA in the Python implementations.
+- `npu-float32` uses `torch_npu` and is only implemented by the non-quantized solvers listed above.
+- `gpu-float16` and `gpu-int8` are only implemented in `BSB` and `DSB`; their source note warns that `gpu-int8` may not perform well on dense graphs or graphs with continuous coefficients.
+- `TSB`, `USB`, and `LSB` explicitly validate only `cpu-float32` and `gpu-float32`.
 
 ```python
-# Available backends
-backends = {
-    "cpu-float32",  # CPU, 32-bit (default)
-    "gpu-float32",  # NVIDIA GPU, 32-bit
-    "gpu-float16",  # NVIDIA GPU, 16-bit (fastest)
-    "gpu-int8",  # NVIDIA GPU, 8-bit quantized
-    "npu-float32",  # Ascend NPU, 32-bit
-}
-
-# GPU requires PyTorch with CUDA
 solver = BSB(J, batch_size=1000, n_iter=2000, backend="gpu-float32")
 solver.update()
 ```
-
-### Performance Comparison
-
-For a 2000-node graph (GSet G22):
-
-| Backend | Typical Runtime | Notes |
-|---------|----------------|-------|
-| `cpu-float32` | ~30s | Baseline |
-| `gpu-float32` | ~3s | 10x speedup |
-| `gpu-float16` | ~1.5s | 20x speedup, slight precision loss |
-| `gpu-int8` | ~1s | Fastest, may lose solution quality |
 
 ## Max-Cut Workflow (Complete)
 
@@ -139,9 +125,9 @@ for name, Solver in [("BSB", BSB), ("DSB", DSB), ("SimCIM", SimCIM)]:
     results[name] = best_cut
     print(f"{name}: MaxCut = {best_cut}")
 
-# 3. Best result
-best = max(results, key=results.get)
-print(f"Best solver: {best} with cut = {results[best]}")
+# 3. Top result in this run
+top = max(results, key=results.get)
+print(f"Top solver in this run: {top} with cut = {results[top]}")
 ```
 
 ## Problem Formulation Guide
@@ -185,27 +171,21 @@ def qubo_to_ising(Q):
 
 Encode constraints as penalty terms in the Ising Hamiltonian. The coupling matrix $J$ and field $h$ encode both the objective and constraints.
 
-## Parameter Tuning Guide
+## Parameter Notes
 
 | Parameter | Effect | Guidance |
 |-----------|--------|----------|
-| `batch_size` | Number of parallel random starts | Higher = better chance of global optimum. Start with 100. |
-| `n_iter` | Evolution steps | More = better convergence. Start with 1000, increase to 5000 for hard problems. |
-| `backend` | Compute device | Use `gpu-float32` for >500-node problems. |
+| `batch_size` | Number of parallel samples | Increases the number of independent candidates returned by one solver run. |
+| `n_iter` | Evolution steps | Controls how many update steps `update()` performs. |
+| `backend` | Compute device / precision | Must be chosen from the backends supported by that solver class. |
 
-### Solver Selection
+### Comparing Solvers
 
-| Problem Size | Graph Density | Recommended |
-|-------------|---------------|-------------|
-| Small (<100 nodes) | Any | `BSB` or `DSB` |
-| Medium (100-2000) | Sparse | `DSB` (fast) or `BSB` (quality) |
-| Medium (100-2000) | Dense | `SimCIM` or `BSB` |
-| Large (>2000) | Sparse | `DSB` on GPU |
-| Hard instances | Any | Try `LQA`, `CAC`, or `CFC` for escaping local minima |
+The source tree documents multiple algorithms but does not provide a universal ranking by graph size, density, or hardness. When solution quality matters, run the candidate solvers with the same `J`, `h`, `batch_size`, `n_iter`, and random seed policy, then compare `calc_energy()` or the problem-specific objective.
 
 ## Important Notes
 
 1. **In-place modification:** `solver.x` is modified during `update()`. Pass `x.copy()` if you need the original.
 2. **Sparse matrices:** Use `scipy.sparse` for large graphs — solvers accept both dense and sparse formats.
 3. **Symmetry:** $J$ must be symmetric. If your adjacency matrix is asymmetric, symmetrize: `J = (J + J.T) / 2`.
-4. **Sign convention:** QAIA minimizes $H = -\sum J_{ij} s_i s_j$. For Max-Cut, negate the adjacency weights so minimizing $H$ maximizes the cut.
+4. **Sign convention:** QAIA energy uses $H = -\frac{1}{2}\sum_{i,j} J_{ij}s_is_j - \sum_i h_i s_i$. For Max-Cut examples in this repository, edge weights are negated before constructing `J`.

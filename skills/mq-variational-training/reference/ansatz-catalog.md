@@ -19,7 +19,7 @@ ansatz = HardwareEfficientAnsatz(
 circ = ansatz.circuit
 ```
 
-**When to use:** Default choice when you have no prior knowledge about the problem structure. Good for QML and generic variational tasks.
+Constructs alternating layers of single-qubit rotation gates and entangling gates according to `entangle_mapping`.
 
 ## Strongly Entangling Ansatz
 
@@ -33,11 +33,11 @@ ansatz = StronglyEntangling(n_qubits=4, depth=1, entangle_gate=X)
 circ = ansatz.circuit
 ```
 
-**When to use:** QML classification tasks. Produces more expressible circuits than simple HEA.
+Constructs layers of `U3` rotations followed by entangling gates at layer-dependent offsets.
 
 ## QAOA Ansatz
 
-For combinatorial optimization (Max-Cut, SAT):
+Builds a QAOA circuit from a `QubitOperator` cost Hamiltonian:
 
 ```python
 from mindquantum.algorithm.nisq import QAOAAnsatz
@@ -50,7 +50,7 @@ ansatz = QAOAAnsatz(ham, depth=4)
 circ = ansatz.circuit  # includes initial H layer + p layers of cost/mixer
 ```
 
-**When to use:** Max-Cut, graph coloring, and constraint satisfaction problems.
+Use `QAOAAnsatz` after the target problem has already been encoded as a `QubitOperator` Hamiltonian.
 
 ## Max-Cut Ansatz
 
@@ -76,14 +76,14 @@ ansatz = UCCAnsatz(
 circ = ansatz.circuit
 ```
 
-**When to use:** Quantum chemistry VQE. Physically motivated but deep circuits.
+The source note states that `UCCAnsatz` uses the Jordan-Wigner transform and does not include the Hartree-Fock reference state.
 
 For molecule-driven UCCSD with CCSD amplitudes and Hamiltonian generation, use `generate_uccsd(mol)` from the
 `mq-quantum-chemistry` skill.
 
 ## Hardware Efficient for Chemistry
 
-Shallower alternative to UCCSD:
+Hardware-efficient circuit with a separately prepared Hartree-Fock-style initial state:
 
 ```python
 from mindquantum.algorithm.nisq import HardwareEfficientAnsatz
@@ -111,18 +111,19 @@ encoding = IQPEncoding(n_feature=4, num_repeats=2)
 circ = encoding.circuit
 ```
 
-**When to use:** Feature encoding in QML when you want higher-order correlations.
+`IQPEncoding.data_preparation(data)` returns the parameter values expected by the generated encoding circuit.
 
-## Ansatz Selection Guide
+## Ansatz Map
 
-| Problem | Recommended Ansatz | Rationale |
-|---------|-------------------|-----------|
-| Generic optimization | `HardwareEfficientAnsatz` | Low depth, flexible |
-| QML classification | `StronglyEntangling` | Expressive, trainable |
-| Max-Cut / QAOA | `QAOAAnsatz` or `MaxCutAnsatz` | Problem-specific structure |
-| Molecular ground state | `UCCAnsatz` or `generate_uccsd` | Chemical accuracy |
-| Large molecule (approximate) | HEA + HF initial state | Shallower, GPU-friendly |
-| Data encoding | `IQPEncoding` | Higher-order feature map |
+| Class / helper | Input it expects | Output / behavior |
+|----------------|------------------|-------------------|
+| `HardwareEfficientAnsatz` | `n_qubits`, rotation gates, entangling gate, mapping, depth | Alternating rotation and entangling layers |
+| `StronglyEntangling` | `n_qubits`, depth, non-parameterized entangling gate | `U3` rotation layers plus entangling layers |
+| `QAOAAnsatz` | `QubitOperator` Hamiltonian and depth | Initial Hadamards plus QAOA cost/mixer layers |
+| `MaxCutAnsatz` | Max-Cut edge list and depth | Max-Cut-specific QAOA ansatz |
+| `UCCAnsatz` | Qubit/electron counts and optional occupied/virtual orbital lists | UCC circuit using Jordan-Wigner transform; no reference state included |
+| `generate_uccsd` | OpenFermion `MolecularData` or molecule filename | UCCSD circuit, initial amplitudes, parameter names, qubit Hamiltonian, qubit/electron counts |
+| `IQPEncoding` | Feature count, rotation gates, repeat count | Encoding circuit plus `data_preparation()` helper |
 
 ## Key Properties
 
@@ -131,5 +132,5 @@ All ansätze expose:
 ```python
 ansatz.circuit  # The parameterized Circuit
 ansatz.n_qubits  # Number of qubits
-ansatz.params_name  # List of parameter names
+ansatz.circuit.params_name  # List of circuit parameter names
 ```

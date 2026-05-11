@@ -92,9 +92,9 @@ from mindquantum.algorithm.nisq import Transform
 fop = FermionOperator("0^ 1") + FermionOperator("1^ 0")
 
 # Available transforms
-Transform(fop).jordan_wigner()  # Preserves locality
-Transform(fop).parity()  # Reduces circuit depth
-Transform(fop).bravyi_kitaev()  # Balance of both
+Transform(fop).jordan_wigner()
+Transform(fop).parity()
+Transform(fop).bravyi_kitaev()
 Transform(fop).ternary_tree()  # Ternary-tree transform
 Transform(fop).bravyi_kitaev_superfast()  # Superfast variant
 

@@ -5,11 +5,11 @@ description: "Build and train variational quantum algorithms (VQE, QAOA, QML, QN
 
 # Variational Training with MindQuantum
 
-This skill covers end-to-end workflows for training parameterized quantum circuits, from circuit design through optimization to result extraction.
+This skill covers common workflows for training parameterized quantum circuits, from circuit design through optimization to result extraction.
 
 ## The MindQuantum Variational Pipeline
 
-Every variational algorithm in MindQuantum follows this pipeline:
+Common MindQuantum variational workflows use this pipeline:
 
 ```text
 Circuit Design → Hamiltonian → Simulator.get_expectation_with_grad → Optimization Loop → Results
@@ -21,7 +21,7 @@ Circuit Design → Hamiltonian → Simulator.get_expectation_with_grad → Optim
 
 ## Pattern 1: SciPy Optimization (No MindSpore Required)
 
-Best for research, VQE, and quick prototyping. No MindSpore dependency.
+Use this pattern when the objective is a scalar expectation value and you want a plain NumPy/SciPy optimization loop.
 
 ```python
 import numpy as np
@@ -68,7 +68,7 @@ print(f"Ground state energy: {result.fun:.6f}")
 
 ## Pattern 2: MindSpore MQLayer Training
 
-Best for QML, classification, and integration with classical neural networks. Requires MindSpore.
+Use this pattern when a parameterized quantum circuit is part of a MindSpore model. Requires MindSpore.
 
 ```python
 import numpy as np
@@ -80,8 +80,8 @@ from mindquantum.core.operators import QubitOperator, Hamiltonian
 from mindquantum.framework import MQLayer
 from mindquantum.simulator import Simulator
 
-ms.set_context(mode=ms.PYNATIVE_MODE)
 ms.set_device("CPU")
+ms.set_context(mode=ms.PYNATIVE_MODE)
 
 # 1. Encoder: data → quantum state
 encoder = Circuit()
@@ -107,16 +107,17 @@ grad_ops = sim.get_expectation_with_grad(ham, circuit)
 # 4. Create MQLayer (acts as a MindSpore nn.Cell)
 qnet = MQLayer(grad_ops)
 
-# 5. Standard MindSpore training
+# 5. Standard MindSpore training.
+# MQLayer returns the circuit expectation; wrap it with a loss cell for supervised tasks.
 opti = nn.Adam(qnet.trainable_params(), learning_rate=0.1)
 train_net = nn.TrainOneStepCell(qnet, opti)
 
 # Training loop
 for epoch in range(100):
-    encoder_data = ms.Tensor(np.random.uniform(0, np.pi, (32, 4)).astype(np.float32))
+    encoder_data = ms.Tensor(np.random.uniform(0, np.pi, (1, 4)).astype(np.float32))
     loss = train_net(encoder_data)
     if epoch % 20 == 0:
-        print(f"Epoch {epoch}: loss = {loss.asnumpy():.4f}")
+        print(f"Epoch {epoch}: loss = {float(loss.asnumpy().mean()):.4f}")
 
 # 6. Extract trained parameters
 print(dict(zip(ansatz.params_name, qnet.weight.asnumpy())))
@@ -236,7 +237,7 @@ sim.apply_circuit(circuit, pr)
 state = sim.get_qs()
 probs = np.abs(state) ** 2
 best = np.argmax(probs)
-print(f"Best cut: {bin(best)[2:].zfill(n)}, Cost: {result.fun:.4f}")
+print(f"Most probable bitstring: {bin(best)[2:].zfill(n)}, Cost: {result.fun:.4f}")
 ```
 
 ## QML Classification Workflow
@@ -251,8 +252,8 @@ import mindspore as ms
 from mindspore import nn
 import numpy as np
 
-ms.set_context(mode=ms.PYNATIVE_MODE)
 ms.set_device("CPU")
+ms.set_context(mode=ms.PYNATIVE_MODE)
 
 n_features = 4
 n_qubits = 4
@@ -301,19 +302,17 @@ train_net = nn.TrainOneStepCell(nn.WithLossCell(model, loss_fn), opti)
 #     train_net(train_features, train_labels)
 ```
 
-## Optimizer Selection Guide
+## Optimizer Notes
 
-| Scenario | Recommended | Why |
-|----------|------------|-----|
-| VQE / QAOA (SciPy) | `BFGS` or `L-BFGS-B` | Gradient-based, fast convergence for smooth landscapes |
-| VQE with bounds | `L-BFGS-B` | Supports parameter bounds |
-| Noisy landscapes | `Nelder-Mead` or `COBYLA` | Gradient-free, robust to noise |
-| MindSpore QML | `nn.Adam` | Standard DL optimizer, works well with MQLayer |
-| Large parameter space | `nn.Adam` or `nn.SGD` | Stochastic, scales to many parameters |
+| Scenario | API-compatible options |
+|----------|------------------------|
+| SciPy with gradients from `get_expectation_with_grad` | `BFGS`, `L-BFGS-B`, or another SciPy method accepting `jac=True` |
+| SciPy without using gradients | Gradient-free SciPy methods such as `Nelder-Mead` or `COBYLA` |
+| MindSpore training | MindSpore optimizers such as `nn.Adam` or `nn.SGD` over `MQLayer` / `MQAnsatzOnlyLayer` trainable parameters |
 
 ## Barren Plateau Awareness
 
-For deep variational circuits, the gradient variance can vanish exponentially (barren plateaus).
+MindQuantum exposes `ansatz_variance` for checking gradient variance of a selected parameter.
 
 ```python
 from mindquantum.algorithm.nisq import ansatz_variance
@@ -326,15 +325,8 @@ var = ansatz_variance(
     init_batch=100,
     sim=sim,
 )
-# If var < 1e-6 for representative parameters → likely barren plateau
+print(var)
 ```
-
-**Mitigation strategies:**
-
-- Use shallow circuits (fewer layers)
-- Use local cost functions (few-qubit Hamiltonians)
-- Use correlated parameter initialization
-- Use hardware-efficient ansätze with limited entanglement
 
 ## Reference Files
 
