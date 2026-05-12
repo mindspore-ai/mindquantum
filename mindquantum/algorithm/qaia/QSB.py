@@ -13,9 +13,12 @@
 # limitations under the License.
 # ============================================================================
 """Simulated bifurcation (SB) algorithms and its variants."""
+
 # pylint: disable=invalid-name
 import math
+
 import numpy as np
+
 from .SB import SB
 
 try:
@@ -181,6 +184,16 @@ class USB(SB):
 
         super().initialize()
 
+        # Widen x initialization for USB when no user-provided x is given.
+        # USB's uniform quantization maps small x values (from the base class
+        # default range [-0.01, 0.01]) to zero, eliminating the driving force
+        # in the Hamiltonian dynamics and preventing convergence.
+        if x is None:
+            if self.backend == "cpu-float32":
+                self.x = 0.2 * (np.random.rand(self.N, self.batch_size) - 0.5)
+            elif self.backend == "gpu-float32":
+                self.x = 0.2 * (torch.rand(self.N, self.batch_size, device="cuda") - 0.5)
+
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
         if self.backend == "cpu-float32":
@@ -276,10 +289,13 @@ class LSB(SB):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
         if self.backend == "cpu-float32":
             for i in range(self.n_iter):
-                l_x = np.ceil(np.log2(np.abs(self.x))).astype(int)
+                abs_x = np.abs(self.x)
+                nonzero = abs_x > 0
+                l_x = np.zeros_like(self.x, dtype=int)
+                l_x[nonzero] = np.ceil(np.log2(abs_x[nonzero])).astype(int)
 
-                active = l_x > -int(self.threshold)
-                scale = np.where(active, np.ldexp(np.ones_like(self.x), -l_x), np.zeros_like(self.x))
+                active = nonzero & (l_x > -int(self.threshold))
+                scale = np.where(active, np.ldexp(np.ones_like(self.x), l_x), np.zeros_like(self.x))
                 v = np.sign(self.x) * scale
                 sparse_term = self.J.dot(v)
 
@@ -295,11 +311,15 @@ class LSB(SB):
 
         elif self.backend == "gpu-float32":
             for i in range(self.n_iter):
-                l_x = torch.ceil(torch.log2(torch.abs(self.x)))
-                active = l_x > -int(self.threshold)
+                abs_x = torch.abs(self.x)
+                nonzero = abs_x > 0
+                l_x = torch.zeros_like(self.x)
+                l_x[nonzero] = torch.ceil(torch.log2(abs_x[nonzero]))
+
+                active = nonzero & (l_x > -int(self.threshold))
                 scale = torch.where(
                     active,
-                    torch.ldexp(torch.ones_like(self.x), -l_x),
+                    torch.ldexp(torch.ones_like(self.x), l_x.to(torch.int32)),
                     torch.zeros_like(self.x),
                 )
                 v = torch.sign(self.x) * scale

@@ -13,17 +13,16 @@
 # limitations under the License.
 # ============================================================================
 """Test QAIA algorithm."""
+
 # pylint: disable=invalid-name
 from pathlib import Path
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix
 
-import pytest
-
-from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM, TSB, USB, LSB
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, LSB, NMFA, SFC, TSB, USB, SimCIM
 from mindquantum.utils.fdopen import fdopen
-
 
 OPTIMAL_CUT_G43 = 6660.0
 TOLERANCE = 0.05  # 5% relative tolerance for cut value
@@ -240,16 +239,16 @@ def test_lSB():
     run_and_check(
         LSB,
         G,
-        None,
+        h_test,
         x_init_test,
-        N_ITER * 10,
+        N_ITER,
         BATCH_SIZE,
         OPTIMAL_CUT_G43,
-        TOLERANCE * 3,
+        TOLERANCE,
         BENCHMARK_ENERGY_H,
-        ENERGY_TOLERANCE * 3,
+        ENERGY_TOLERANCE,
         SEED,
-        threshold=5,
+        threshold=8,
     )
 
 
