@@ -33,7 +33,8 @@ try:
 
     AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+    ms.set_device("CPU")
+    ms.set_context(mode=ms.PYNATIVE_MODE)
 except ImportError:
     _HAS_MINDSPORE = False
 

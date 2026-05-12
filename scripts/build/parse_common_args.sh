@@ -134,6 +134,8 @@ help_message() {
     echo 'CUDA related options:'
     echo '  --cuda-arch=[arch]     Comma-separated list of architectures to generate device code for.'
     echo '                         Only useful if --gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.'
+    echo '  --cuquantum            Enable the cuQuantum-backed CUDA simulator backend.'
+    echo '                         Only useful if --gpu is passed.'
     echo ''
     echo 'Python related options:'
     echo '  --update-venv          Update the python virtual environment'
@@ -223,6 +225,9 @@ while getopts "${getopts_args}" OPT; do
                             ;;
         cuda-arch )         needs_arg;
                             set_var cuda_arch "$(echo "$OPTARG" | tr ',' ';')"
+                            ;;
+        cuquantum )         no_arg;
+                            set_var enable_cuquantum $flag_value
                             ;;
         debug )             no_arg;
                             set_var build_type 'Debug'

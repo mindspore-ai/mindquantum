@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """Test VQE."""
+
 import os
 from pathlib import Path
 
@@ -33,7 +34,8 @@ try:
 
     AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
 
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+    ms.set_device("CPU")
+    ms.set_context(mode=ms.PYNATIVE_MODE)
 except ImportError:
     _HAS_MINDSPORE = False
 
@@ -67,7 +69,8 @@ def test_vqe_net(config):  # pylint: disable=too-many-locals
     backend, dtype = config
     if backend == 'mqmatrix':
         return
-    ms.context.set_context(mode=ms.context.PYNATIVE_MODE, device_target="CPU")
+    ms.set_device("CPU")
+    ms.set_context(mode=ms.PYNATIVE_MODE)
     (
         ansatz_circuit,
         _,  # init_amplitudes

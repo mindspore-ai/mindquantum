@@ -44,9 +44,10 @@ docker run -it {mindspore_image}:{tag} /bin/bash
 ```python
 import numpy as np
 import mindspore as ms
-from mindspore import set_context, ops, Tensor
+from mindspore import ops, Tensor
 
-set_context(mode=ms.PYNATIVE_MODE, device_target="CPU")
+ms.set_device("CPU")
+ms.set_context(mode=ms.PYNATIVE_MODE)
 
 x = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))
 y = Tensor(np.ones([1, 3, 3, 4]).astype(np.float32))

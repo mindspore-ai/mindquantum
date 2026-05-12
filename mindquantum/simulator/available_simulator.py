@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """List available simulators."""
+
 import os
 import typing
 import warnings
@@ -44,7 +45,7 @@ if MQVECTOR_GPU_SUPPORTED:
     else:
         CUQUANTUM_DISABLED_REASON = (
             "The 'mqvector_cq' backend is not available. "
-            "Please ensure that NVIDIA's cuQuantum SDK is installed correctly."
+            "Please build with ENABLE_CUQUANTUM=ON and ensure that NVIDIA's cuQuantum SDK is installed correctly."
         )
 else:
     CUQUANTUM_DISABLED_REASON = GPU_DISABLED_REASON

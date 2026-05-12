@@ -38,7 +38,7 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/fmt/fmt.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/pybind11/pybind11.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/nlohmann_json/nlohmann_json.cmake)
-if(ENABLE_CUDA)
+if(ENABLE_CUQUANTUM)
   include(${CMAKE_CURRENT_LIST_DIR}/cuquantum/cuquantum.cmake)
 endif()
 
