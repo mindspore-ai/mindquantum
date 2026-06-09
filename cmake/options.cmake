@@ -50,6 +50,12 @@ option(PYTHON_VIRTUALENV_OVER_ROOT_DIR
 
 option(IS_PYTHON_BUILD "Is CMake called from setup.py? (e.g. python3 setup.py install?)" OFF)
 option(IN_PLACE_BUILD "Are we building in-place for testing/development?" ON)
+option(MQ_ISOLATE_PYBIND11_INTERNALS
+       "Use a MindQuantum-private pybind11 ABI tag for Python extension modules." ON)
+set(MQ_PYBIND11_BUILD_ABI
+    "_mindquantum"
+    CACHE STRING "Private pybind11 build ABI suffix used when MQ_ISOLATE_PYBIND11_INTERNALS is enabled.")
+mark_as_advanced(MQ_PYBIND11_BUILD_ABI)
 
 # ==============================================================================
 # CUDA related options

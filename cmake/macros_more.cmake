@@ -56,6 +56,10 @@ function(pybind11_add_module target)
 
   _pybind11_add_module(${target} ${PAM_UNPARSED_ARGUMENTS})
 
+  if(MQ_ISOLATE_PYBIND11_INTERNALS)
+    target_compile_definitions(${target} PRIVATE PYBIND11_BUILD_ABI=\"${MQ_PYBIND11_BUILD_ABI}\")
+  endif()
+
   # Do we need to apply a workaround to compile using the correct pybind11? (see mindspore_ci.cmake for more
   # information)
   if(_mq_pybind11_prepend_to_link_libraries)
