@@ -1,0 +1,9 @@
+# Hamiltonian-Aware ADAPT Variational Quantum Eigensolver for Molecular Ground-State Simulation
+
+**Paper:** [https://arxiv.org/abs/2606.13118](https://arxiv.org/abs/2606.13118)
+
+**Authors:** Runhong He, Chao Liu, Xin Hong, Qiaozhen Chai, Junyuan Zhou, Ji Guan, Guolong Cui,  and Shenggang Ying*
+
+**Corresponding Author Email:** yingsg@ios.ac.cn
+
+**Abstract:** Designing compact ansätze in Variational Quantum Eigensolver (VQE) is crucial for solving energetic problems of practical molecules on near-term quantum devices. However, existing Adaptive Derivative-Assembled Pseudo-Trotter (ADAPT) ansätze face two challenges: improper operator selection and accumulation of degraded operators. In this paper, we propose the Hamiltonian-Aware (HA) ADAPT-VQE algorithm to address these issues. First, we establish a novel excitation operator selection criterion. It breaks the local constraint of existing criteria by incorporating Hamiltonian information, prioritizes physically meaningful excitation operators, and incurs no extra classical or quantum computational overhead. Furthermore, we develop a problem-adaptive method for discriminating and pruning redundant excitation operators stemming from improper selection and inevitable degradation. This method balances redundant operator pruning and convergence guarantee, and is applicable to ansätze with arbitrary scales. Systematic numerical experiments on typical strongly correlated molecular systems demonstrate that our HA-ADAPT-VQE avoids energy plateaus and outperforms baseline algorithms in terms of energy error, ansatz size, and measurement cost. This work offers an efficient, robust ansatz construction paradigm, facilitating the development and practical deployment of large-scale VQE in quantum chemistry.
