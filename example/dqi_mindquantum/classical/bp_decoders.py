@@ -283,12 +283,12 @@ def _y_in_decodable_worker(args):
     the specified BP decoder. Must be at module level for pickling.
 
     Args:
-        args: tuple of (bit_patterns, pc_data, pc_shape, bp_func_name, threshold_mode)
+        args: tuple of (bit_patterns, pc_data, pc_shape, bp_func_name, threshold_mode, max_iter)
 
     Returns:
         list of tuples (bit positions) that decoded successfully.
     """
-    bit_patterns, pc_data, pc_shape, bp_func_name, threshold_mode = args
+    bit_patterns, pc_data, pc_shape, bp_func_name, threshold_mode, max_iter = args
     parity_check = np.array(pc_data).reshape(pc_shape)
 
     successful = []
@@ -298,18 +298,18 @@ def _y_in_decodable_worker(args):
             y[pos] = 1
 
         if bp_func_name == "bp1_decode":
-            # 使用 bp1_decode_to_zero：从错误模式开始，尝试清零
-            # 与参考实现 dqi/pipelines/belief_propagations.py 行为一致
-            _, success = bp1_decode_to_zero(parity_check, y)
+            _, success = bp1_decode_to_zero(parity_check, y, max_iter=max_iter)
         elif bp_func_name == "bp2_decode":
             syndrome = parity_check.dot(y) % 2
-            _, success = bp2_decode(parity_check, syndrome)
+            _, success = bp2_decode(parity_check, syndrome, max_iter=max_iter)
         elif bp_func_name == "gauss_jordan_solve":
             syndrome = parity_check.dot(y) % 2
             _, success = gauss_jordan_solve(parity_check, syndrome)
         else:
             syndrome = parity_check.dot(y) % 2
-            _, success = bp1_decode(parity_check, syndrome, threshold_mode=threshold_mode)
+            _, success = bp1_decode(
+                parity_check, syndrome, max_iter=max_iter, threshold_mode=threshold_mode
+            )
 
         if success:
             successful.append(bits)
@@ -355,11 +355,13 @@ def _process_patterns_parallel(patterns_to_check, m, parity_check, bp_func_name,
     from multiprocessing import Pool
     n_jobs = config.get("n_jobs", 1)
     threshold_mode = config.get("threshold_mode", "unanimous")
+    max_iter = config.get("max_iter", 50)
     chunks = np.array_split(patterns_to_check, n_jobs)
     pc_data = parity_check.tolist()
     pc_shape = parity_check.shape
     args_list = [
-        (chunk.tolist() if hasattr(chunk, "tolist") else chunk, pc_data, pc_shape, bp_func_name, threshold_mode)
+        (chunk.tolist() if hasattr(chunk, "tolist") else chunk,
+         pc_data, pc_shape, bp_func_name, threshold_mode, max_iter)
         for chunk in chunks
     ]
     with Pool(n_jobs) as pool:
@@ -425,15 +427,19 @@ def compute_y_in_decodable_set(
 
     for k in range(1, ell + 1):
         total = int(comb(m, k, exact=True))
-        all_patterns = list(combinations(range(m), k))
 
-        # Subsample if total exceeds max_patterns
+        # Subsample if total exceeds max_patterns — use lazy sampling to avoid OOM
         if max_patterns is not None and total > max_patterns:
-            idx = rng.choice(total, size=max_patterns, replace=False)
-            patterns_to_check = [all_patterns[i] for i in idx]
+            idx = set(rng.choice(total, size=max_patterns, replace=False))
+            patterns_to_check = []
+            for i, combo in enumerate(combinations(range(m), k)):
+                if i in idx:
+                    patterns_to_check.append(combo)
+                if len(patterns_to_check) == max_patterns:
+                    break
             total_checked = max_patterns
         else:
-            patterns_to_check = all_patterns
+            patterns_to_check = list(combinations(range(m), k))
             total_checked = total
 
         valid_count = 0
@@ -441,7 +447,7 @@ def compute_y_in_decodable_set(
         if n_jobs > 1 and len(patterns_to_check) > 1000:
             valid_patterns = _process_patterns_parallel(
                 patterns_to_check, m, parity_check, bp_func_name,
-                {"n_jobs": n_jobs, "threshold_mode": threshold_mode}
+                {"n_jobs": n_jobs, "max_iter": max_iter, "threshold_mode": threshold_mode}
             )
         else:
             valid_patterns = _process_patterns_sequential(

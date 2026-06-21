@@ -44,13 +44,14 @@ def compute_optimal_w(m, ell, p=2, r=1):
 
     Args:
         m: number of constraints.
-        ell: polynomial degree (max error weight).
+        ell: polynomial degree (max error weight). Clamped to m if ell > m.
         p: field size (default 2 for GF(2)).
         r: constraint size parameter (default 1 for XORSAT).
 
     Returns:
         w: ndarray, optimal weights padded to next power of 2.
     """
+    ell = min(ell, m)
     d = (p - 2 * r) / np.sqrt(r * (p - r))
     diag = np.arange(ell + 1) * d
     off = np.sqrt(np.arange(1, ell + 1) * (m - np.arange(1, ell + 1) + 1))
