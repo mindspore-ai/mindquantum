@@ -132,13 +132,13 @@ def generate_reference_matrix():
     for i in range(m_ref):
         k = rng.integers(3, 7)
         cols = rng.choice(n_ref, size=k, replace=False)
-        ret[i, cols] = 1
+        constraint_mat[i, cols] = 1
     col_sums = constraint_mat.sum(axis=0)
     zero_cols = np.where(col_sums == 0)[0]
     for c in zero_cols:
         rows = rng.choice(m_ref, size=3, replace=False)
-        ret[rows, c] = 1
-    return ret
+        constraint_mat[rows, c] = 1
+    return constraint_mat
 
 
 def run_single_trial(args):

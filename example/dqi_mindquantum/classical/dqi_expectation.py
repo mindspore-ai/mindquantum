@@ -167,10 +167,10 @@ def compute_expected_values(_weight_mat, w, m, epsilon_k):
         return -m, 0.0
 
     # Pad w back to match A dimensions for matrix multiplication
-    if len(w) != weight_mat.shape[0]:
-        w = np.pad(w, (0, weight_mat.shape[0] - len(w)), mode="constant", constant_values=0)
+    if len(w) != _weight_mat.shape[0]:
+        w = np.pad(w, (0, _weight_mat.shape[0] - len(w)), mode="constant", constant_values=0)
 
-    f_expected = w.dot(weight_mat.dot(w)) / norm2
+    f_expected = w.dot(_weight_mat.dot(w)) / norm2
     s_expected = (f_expected + m) / 2.0
     return f_expected, s_expected
 

@@ -158,13 +158,12 @@ def analyze_actual_circuit(m, n, ell):
     # Generate a random B matrix
     rng = np.random.default_rng(42)
     constraint_mat = rng.integers(0, 2, size=(m, n))
-    # Ensure no zero rows/columns
     for i in range(m):
-        if rand_mat[i].sum() == 0:
-            rand_mat[i, rng.integers(0, n)] = 1
+        if constraint_mat[i].sum() == 0:
+            constraint_mat[i, rng.integers(0, n)] = 1
     for j in range(n):
-        if rand_mat[:, j].sum() == 0:
-            rand_mat[rng.integers(0, m), j] = 1
+        if constraint_mat[:, j].sum() == 0:
+            constraint_mat[rng.integers(0, m), j] = 1
 
     v = rng.integers(0, 2, size=m)
 
@@ -219,9 +218,9 @@ def _plot_gate_breakdown(fig_dir):
     ax.set_yscale("log")
     ax.set_ylabel("Gate Count (log scale)", fontsize=12)
     ax.set_title(f"Gate Count Breakdown (BP1, $m={m_test}$, $n={n_test}$, $\\ell={ell_test}$)", fontsize=13)
-    for bar, count in zip(bars, counts):
+    for bar_item, count in zip(bars, counts):
         if count > 0:
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
+            ax.text(bar_item.get_x() + bar_item.get_width() / 2, bar_item.get_height(),
                     f"{count}", ha="center", va="bottom", fontsize=9)
     ax.grid(alpha=0.3, axis="y")
     plt.tight_layout()

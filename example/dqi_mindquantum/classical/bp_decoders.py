@@ -41,7 +41,7 @@ def bp1_decode(parity_check, syndrome, max_iter=50, threshold_mode="unanimous"):
         e_hat: ndarray of shape (m,), decoded error vector.
         success: bool, whether the syndrome is satisfied.
     """
-    _, m_vars = H.shape
+    _, m_vars = parity_check.shape
     e_hat = np.zeros(m_vars, dtype=int)
     connected = [np.where(parity_check[:, j] == 1)[0] for j in range(m_vars)]
 
@@ -130,7 +130,7 @@ def bp2_decode(parity_check, syndrome, max_iter=50, p=0.001):
     # Initialize LLRs from channel observation: log((1-p)/p)
     channel_llr = np.log((1 - p) / p)
     # Initial messages from variable nodes to check nodes
-    log_q = np.full((n_checks, m_vars), channel_llr) * H
+    log_q = np.full((n_checks, m_vars), channel_llr) * parity_check
 
     for _ in range(max_iter):
         # Check node update (tanh sum-product)

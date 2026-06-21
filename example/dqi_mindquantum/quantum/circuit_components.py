@@ -53,10 +53,10 @@ def build_syndrome_compute(_constraint_mat, error_register, syndrome_register):
         circ: Syndrome computation circuit.
     """
     circ = Circuit()
-    m, n = constraint_mat.shape
+    m, n = _constraint_mat.shape
     for row_idx in range(n):
         for col_idx in range(m):
-            if B[col_idx, row_idx] == 1:
+            if _constraint_mat[col_idx, row_idx] == 1:
                 circ += X.on(syndrome_register[row_idx], error_register[col_idx])
     return circ
 
@@ -69,7 +69,7 @@ def build_syndrome_uncompute(_constraint_mat, error_register, syndrome_register)
     Used after the decoder to clear the syndrome register before Hadamard.
 
     Args:
-        B: ndarray of shape (m, n), constraint matrix.
+        constraint_mat: ndarray of shape (m, n), constraint matrix.
         error_register: list of error qubit indices (length m).
         syndrome_register: list of syndrome qubit indices (length n).
 
@@ -77,10 +77,10 @@ def build_syndrome_uncompute(_constraint_mat, error_register, syndrome_register)
         circ: Syndrome uncomputation circuit.
     """
     circ = Circuit()
-    m, n = constraint_mat.shape
+    m, n = _constraint_mat.shape
     for row_idx in range(n):
         for col_idx in range(m):
-            if B[col_idx, row_idx] == 1:
+            if _constraint_mat[col_idx, row_idx] == 1:
                 circ += X.on(syndrome_register[row_idx], error_register[col_idx])
     return circ
 

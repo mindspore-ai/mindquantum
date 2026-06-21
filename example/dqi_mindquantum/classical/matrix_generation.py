@@ -96,30 +96,31 @@ def _generate_initial_matrix(row_sums, col_sums, rng, max_attempts=10000):
             # Choose randomly among candidates
             chosen = rng.choice(candidates, size=int(needed), replace=False)
             for i in chosen:
-                B[i, j] = 1
+                constraint_mat[i, j] = 1
                 current_row[i] -= 1
             current_col[j] -= needed
 
         if success and np.all(current_row == 0) and np.all(current_col == 0):
-            return B
+            return constraint_mat
 
     return None
 
 
 def _is_valid_swap(constraint_mat_arg, i1, i2, j1, j2):
     """Check if a 2x2 submatrix allows a swap (preserving marginals)."""
-    return B[i1, j1] == 1 and B[i1, j2] == 0 and B[i2, j1] == 0 and B[i2, j2] == 1
+    return (constraint_mat_arg[i1, j1] == 1 and constraint_mat_arg[i1, j2] == 0
+            and constraint_mat_arg[i2, j1] == 0 and constraint_mat_arg[i2, j2] == 1)
 
 
 def _perform_swap(constraint_mat_arg, i1, i2, j1, j2):
     """Perform a 2x2 edge swap."""
-    B[i1, j1] = 0
-    B[i1, j2] = 1
-    B[i2, j1] = 1
-    B[i2, j2] = 0
+    constraint_mat_arg[i1, j1] = 0
+    constraint_mat_arg[i1, j2] = 1
+    constraint_mat_arg[i2, j1] = 1
+    constraint_mat_arg[i2, j2] = 0
 
 
-def mcmc_sample(constraint_mat_arg, iterations=10000, seed=None):
+def mcmc_sample(constraint_mat, iterations=10000, seed=None):
     """
     Randomize a binary matrix while preserving row and column sums
     using MCMC (random 2x2 edge swaps).
