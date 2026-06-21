@@ -60,7 +60,7 @@ class DQICircuit:
     def __init__(self, constraint_mat, v, ell=2):
         self.constraint_mat = np.array(constraint_mat)
         self.v = np.array(v)
-        self.m, self.n = self.B.shape
+        self.m, self.n = self.constraint_mat.shape
         self.ell = ell
 
         # Register layout: error + syndrome + bp1_aux
@@ -179,7 +179,7 @@ def run_dqi_histogram(constraint_mat, v, ell, shots=10000, seed=None):
             's_normalized': float, <S>/m 归一化值。
             'post_fraction': float, 后选择通过的比例。
     """
-    m, n = B.shape
+    m, n = constraint_mat.shape
 
     dqi = DQICircuit(constraint_mat, v, ell=ell)
     circ = dqi.build_circuit()
@@ -197,7 +197,7 @@ def run_dqi_histogram(constraint_mat, v, ell, shots=10000, seed=None):
 
         if all(b == 0 for b in error_bits):
             syndrome_bits = np.array(bits[m : m + n])
-            s_val = int(np.sum((B.dot(syndrome_bits) % 2) == v))
+            s_val = int(np.sum((constraint_mat.dot(syndrome_bits) % 2) == v))
             s_hist[s_val] += count
             total_post += count
 

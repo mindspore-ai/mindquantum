@@ -35,7 +35,7 @@ def extract_degree_distribution(constraint_mat):
         delta: dict, column degree distribution (fraction of columns with degree d).
         kappa: dict, row degree distribution (fraction of rows with degree d).
     """
-    m, n = B.shape
+    m, n = constraint_mat.shape
     col_degrees = np.sum(constraint_mat, axis=0)
     row_degrees = np.sum(constraint_mat, axis=1)
 
@@ -132,7 +132,7 @@ def mcmc_sample(constraint_mat_arg, iterations=10000, seed=None):
     Returns:
         rand_mat: ndarray, randomized binary matrix.
     """
-    output_mat = B.copy()
+    output_mat = constraint_mat.copy()
     m, n = output_mat.shape
     rng = np.random.default_rng(seed)
 

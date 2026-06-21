@@ -59,7 +59,7 @@ def compute_optimal_w(m, ell, p=2, r=1):
     weight_mat = diags([off, diag, off], offsets=(-1, 0, 1), format="csr")
 
     # Get principal eigenvector
-    _, vecs = eigsh(A, k=1, which="LA")
+    _, vecs = eigsh(weight_mat, k=1, which="LA")
     w = vecs.flatten()
     w /= np.linalg.norm(w)
 
@@ -130,7 +130,7 @@ def compute_weight_matrix(ell, constraint_mat, v, y_in_decodable):
             denom = np.sqrt(norm[k] * norm[kp])
             weight_mat[k, kp] = acc / denom if denom > 0 else 0.0
 
-    return A
+    return weight_mat
 
 
 def compute_expected_values(_weight_mat, w, m, epsilon_k):
@@ -167,10 +167,10 @@ def compute_expected_values(_weight_mat, w, m, epsilon_k):
         return -m, 0.0
 
     # Pad w back to match A dimensions for matrix multiplication
-    if len(w) != A.shape[0]:
-        w = np.pad(w, (0, A.shape[0] - len(w)), mode="constant", constant_values=0)
+    if len(w) != weight_mat.shape[0]:
+        w = np.pad(w, (0, weight_mat.shape[0] - len(w)), mode="constant", constant_values=0)
 
-    f_expected = w.dot(A.dot(w)) / norm2
+    f_expected = w.dot(weight_mat.dot(w)) / norm2
     s_expected = (f_expected + m) / 2.0
     return f_expected, s_expected
 

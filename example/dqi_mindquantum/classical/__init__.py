@@ -10,10 +10,10 @@ Classical algorithms for DQI.
   - 随机采样 (random_sampling): 均匀随机基线
 """
 
-from .bp_decoders import bp1_decode, bp2_decode, gauss_jordan_solve, compute_y_in_Dk
+from .bp_decoders import bp1_decode, bp2_decode, gauss_jordan_solve, compute_y_in_decodable_set
 from .dqi_expectation import (
     compute_optimal_w,
-    compute_A_matrix,
+    compute_weight_matrix,
     compute_expected_values,
     expected_constraints_dqi,
 )
@@ -28,9 +28,9 @@ __all__ = [
     "bp1_decode",
     "bp2_decode",
     "gauss_jordan_solve",
-    "compute_y_in_Dk",
+    "compute_y_in_decodable_set",
     "compute_optimal_w",
-    "compute_A_matrix",
+    "compute_weight_matrix",
     "compute_expected_values",
     "expected_constraints_dqi",
     "extract_degree_distribution",

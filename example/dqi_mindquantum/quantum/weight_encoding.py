@@ -54,7 +54,7 @@ def compute_optimal_w(m, ell, p=2, r=1):
     weight_mat = diags([off, diag, off], offsets=(-1, 0, 1), format="csr")
 
     # Get principal eigenvector
-    _, vecs = eigsh(A, k=1, which="LA")
+    _, vecs = eigsh(weight_mat, k=1, which="LA")
     w = vecs.flatten()
     w /= np.linalg.norm(w)
 

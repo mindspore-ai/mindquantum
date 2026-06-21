@@ -160,11 +160,11 @@ def analyze_actual_circuit(m, n, ell):
     constraint_mat = rng.integers(0, 2, size=(m, n))
     # Ensure no zero rows/columns
     for i in range(m):
-        if B[i].sum() == 0:
-            B[i, rng.integers(0, n)] = 1
+        if rand_mat[i].sum() == 0:
+            rand_mat[i, rng.integers(0, n)] = 1
     for j in range(n):
-        if B[:, j].sum() == 0:
-            B[rng.integers(0, m), j] = 1
+        if rand_mat[:, j].sum() == 0:
+            rand_mat[rng.integers(0, m), j] = 1
 
     v = rng.integers(0, 2, size=m)
 

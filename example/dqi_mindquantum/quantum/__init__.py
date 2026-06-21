@@ -18,7 +18,7 @@ from .weight_encoding import (
     build_uncompute_weight,
 )
 from .circuit_components import build_phase_z, build_syndrome_compute, build_hadamard
-from .decoding import syndrome_LUT, build_lut_decode, build_quantum_bp1_circuit
+from .decoding import syndrome_lookup_table, build_lut_decode, build_quantum_bp1_circuit
 from .full_circuit import DQICircuit, run_dqi_histogram
 
 __all__ = [
@@ -30,7 +30,7 @@ __all__ = [
     "build_phase_z",
     "build_syndrome_compute",
     "build_hadamard",
-    "syndrome_LUT",
+    "syndrome_lookup_table",
     "build_lut_decode",
     "build_quantum_bp1_circuit",
     "DQICircuit",

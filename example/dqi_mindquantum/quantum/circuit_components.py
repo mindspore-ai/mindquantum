@@ -53,7 +53,7 @@ def build_syndrome_compute(_constraint_mat, error_register, syndrome_register):
         circ: Syndrome computation circuit.
     """
     circ = Circuit()
-    m, n = B.shape
+    m, n = constraint_mat.shape
     for row_idx in range(n):
         for col_idx in range(m):
             if B[col_idx, row_idx] == 1:
@@ -77,7 +77,7 @@ def build_syndrome_uncompute(_constraint_mat, error_register, syndrome_register)
         circ: Syndrome uncomputation circuit.
     """
     circ = Circuit()
-    m, n = B.shape
+    m, n = constraint_mat.shape
     for row_idx in range(n):
         for col_idx in range(m):
             if B[col_idx, row_idx] == 1:

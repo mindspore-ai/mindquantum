@@ -90,7 +90,7 @@ def solve_max_xorsat_gurobi(constraint_mat, v, time_limit=60):
     if not HAS_GUROBI:
         return None
 
-    m, n = B.shape
+    m, n = constraint_mat.shape
     model = gp.Model("MaxXORSAT")
     model.setParam("OutputFlag", 0)
     model.setParam("TimeLimit", time_limit)
@@ -100,7 +100,7 @@ def solve_max_xorsat_gurobi(constraint_mat, v, time_limit=60):
     k_vars = model.addVars(m, vtype=GRB.INTEGER, lb=-float("inf"), name="k")
 
     for i in range(m):
-        vars_in_sum = [x_vars[j] for j in range(n) if B[i, j] == 1]
+        vars_in_sum = [x_vars[j] for j in range(n) if constraint_mat[i, j] == 1]
         if not vars_in_sum:
             if v[i] == 0:
                 model.addConstr(z_vars[i] == 1)
@@ -132,13 +132,13 @@ def generate_reference_matrix():
     for i in range(m_ref):
         k = rng.integers(3, 7)
         cols = rng.choice(n_ref, size=k, replace=False)
-        B[i, cols] = 1
-    col_sums = B.sum(axis=0)
+        ret[i, cols] = 1
+    col_sums = constraint_mat.sum(axis=0)
     zero_cols = np.where(col_sums == 0)[0]
     for c in zero_cols:
         rows = rng.choice(m_ref, size=3, replace=False)
-        B[rows, c] = 1
-    return B
+        ret[rows, c] = 1
+    return ret
 
 
 def run_single_trial(args):

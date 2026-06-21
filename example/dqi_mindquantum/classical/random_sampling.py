@@ -34,7 +34,7 @@ def objective_function_f(x, constraint_mat, v):
     Returns:
         f: integer, objective value in [-m, m].
     """
-    return np.sum((-1) ** ((B.dot(x) + v) % 2))
+    return np.sum((-1) ** ((constraint_mat_arg.dot(x) + v) % 2))
 
 
 def satisfied_constraints(x, constraint_mat, v):
@@ -49,7 +49,7 @@ def satisfied_constraints(x, constraint_mat, v):
     Returns:
         s: integer, number of satisfied constraints in [0, m].
     """
-    return np.sum((B.dot(x) % 2) == v)
+    return np.sum((constraint_mat_arg.dot(x) % 2) == v)
 
 
 def random_sampling_performance(_constraint_mat, v, shots=10000, seed=None):
@@ -70,7 +70,7 @@ def random_sampling_performance(_constraint_mat, v, shots=10000, seed=None):
             's_hist': array of length m+1, histogram of satisfied constraints.
             's_normalized': avg_s / m.
     """
-    m, n = B.shape
+    m, n = constraint_mat_arg.shape
     rng = np.random.default_rng(seed)
     samples = rng.integers(0, 2, size=(shots, n))
 
