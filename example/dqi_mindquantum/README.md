@@ -61,10 +61,10 @@ jupyter notebook main.ipynb
 ## 数据说明
 
 本案例不包含预计算数据。
-所有矩阵均通过 `classical.matrix_generation` 模块在运行时生成：
+所有矩阵均在运行时生成：
 
-- `generate_reference_B()`：生成参考 LDPC-like 矩阵
-- `generate_downsized_matrices()`：基于度分布生成降采样矩阵
+- `experiments.reproduce_fig11.generate_reference_matrix()`：生成参考 LDPC-like 矩阵
+- `classical.matrix_generation.generate_downsized_matrices()`：基于度分布生成降采样矩阵
 
 ## 参考资源
 

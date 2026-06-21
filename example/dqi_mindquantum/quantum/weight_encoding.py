@@ -99,15 +99,13 @@ def build_embed_weights(w_k, weight_register):
         circ += RY(theta0).on(weight_register[0])
 
         # Qubit 1, branch q0=|0>: mix |00> and |01>
-        # After RY(theta1): cos(theta1/2)|0> + sin(theta1/2)|1>
-        # We need cos^2(theta1/2) = w0/alpha, sin^2(theta1/2) = w1/alpha
-        theta1 = 2.0 * np.arccos(np.clip(w[0] / alpha, -1.0, 1.0))
-        circ += X.on(weight_register[0])
-        circ += RY(theta1).on(weight_register[1], weight_register[0])
-        circ += X.on(weight_register[0])
+        if alpha > 1e-10:
+            theta1 = 2.0 * np.arccos(np.clip(w[0] / alpha, -1.0, 1.0))
+            circ += X.on(weight_register[0])
+            circ += RY(theta1).on(weight_register[1], weight_register[0])
+            circ += X.on(weight_register[0])
 
         # Qubit 1, branch q0=|1>: mix |10> and |11>
-        # We need cos^2(theta2/2) = w2/beta, sin^2(theta2/2) = w3/beta
         beta = np.sqrt(w[2] ** 2 + w[3] ** 2)
         if beta > 1e-10:
             theta2 = 2.0 * np.arccos(np.clip(w[2] / beta, -1.0, 1.0))

@@ -229,6 +229,16 @@ def _apply_bp1_iteration(circ, constraint_mat, syndrome_register, error_register
 
     for j in range(m):
         connected = [i for i in range(n) if constraint_mat[j, i] == 1]
+        if not connected:
+            continue
+        ctrl_qubits = [syndrome_register[i] for i in connected]
+        if len(ctrl_qubits) > 1:
+            circ += X.on(aux_register[j], ctrl_qubits)
+        elif len(ctrl_qubits) == 1:
+            circ += X.on(aux_register[j], ctrl_qubits[0])
+
+    for j in range(m):
+        connected = [i for i in range(n) if constraint_mat[j, i] == 1]
         for i in connected:
             circ += X.on(syndrome_register[i], aux_register[j])
 

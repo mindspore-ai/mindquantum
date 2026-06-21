@@ -200,7 +200,8 @@ def generate_downsized_matrices(
             if init_mat is None:
                 continue
 
-            rand_mat = mcmc_sample(init_mat, iterations=mcmc_steps, seed=rng)
+            rand_mat = mcmc_sample(init_mat, iterations=mcmc_steps,
+                                   seed=int(rng.integers(0, 2**31)))
             # Generate random RHS vector with 50% sparsity
             v = rng.integers(0, 2, size=m)
             samples.append((rand_mat, v))
