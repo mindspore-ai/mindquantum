@@ -6,8 +6,8 @@
 求解 max-XORSAT 组合优化问题。
 
 **论文引用:**
-Jordan, Farhi et al.
-"Decoded Quantum Interferometry."
+Sabater, El Harzli, Besjes et al.
+"Towards solving industrial integer linear programs with Decoded Quantum Interferometry."
 arXiv:2509.08328 (2025).
 
 ## 算法简介
