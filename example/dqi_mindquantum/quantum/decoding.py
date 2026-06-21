@@ -211,9 +211,9 @@ def build_quantum_bp1_circuit(
     return circ, aux_register
 
 
-def _apply_bp1_iteration(circ, constraint_mat, syndrome_register, error_register, aux_info):
-    """Apply one iteration of BP1 decoding."""
-    aux_register, m, n = aux_info
+def _apply_and_gates(circ, constraint_mat, syndrome_register, aux_register):
+    """Compute or uncompute AND gates for BP1 iteration."""
+    m, n = constraint_mat.shape
     for j in range(m):
         connected = [i for i in range(n) if constraint_mat[j, i] == 1]
         if not connected:
@@ -223,19 +223,18 @@ def _apply_bp1_iteration(circ, constraint_mat, syndrome_register, error_register
             circ += X.on(aux_register[j], ctrl_qubits)
         elif len(ctrl_qubits) == 1:
             circ += X.on(aux_register[j], ctrl_qubits[0])
+    return circ
+
+
+def _apply_bp1_iteration(circ, constraint_mat, syndrome_register, error_register, aux_info):
+    """Apply one iteration of BP1 decoding."""
+    aux_register, m, n = aux_info
+    circ = _apply_and_gates(circ, constraint_mat, syndrome_register, aux_register)
 
     for j in range(m):
         circ += X.on(error_register[j], aux_register[j])
 
-    for j in range(m):
-        connected = [i for i in range(n) if constraint_mat[j, i] == 1]
-        if not connected:
-            continue
-        ctrl_qubits = [syndrome_register[i] for i in connected]
-        if len(ctrl_qubits) > 1:
-            circ += X.on(aux_register[j], ctrl_qubits)
-        elif len(ctrl_qubits) == 1:
-            circ += X.on(aux_register[j], ctrl_qubits[0])
+    circ = _apply_and_gates(circ, constraint_mat, syndrome_register, aux_register)
 
     for j in range(m):
         connected = [i for i in range(n) if constraint_mat[j, i] == 1]
