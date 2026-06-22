@@ -1,0 +1,85 @@
+\subsubsection{MindQuantum 中的参数}
+参数化量子门或量子线路是量子计算的重要组成部分，尤其对于量子-经典混合算法而言更是如此。
+在 \MindQuantum\ 中，我们提供了 Python 类 \code{mindquantum.core.ParameterResolver}，用于高效管理这些经典参数。
+假设我们希望初始化一个参数化量子门，而该参数的值可能会在优化过程中发生变化。
+\ParameterResolver\ 通过将每个参数表示为唯一符号来解决这一问题，例如 $\theta=0.1$，其中 $\theta$ 是参数符号，$0.1$ 是对应数值。
+这样，在 \MindQuantum\ 中编写代码时，我们就可以使用符号而非实际数值来表示参数。
+声明 \ParameterResolver\ 实例时，只需以 Python dict 的形式给出符号与数值，其中符号作为 dict 的键，数值作为 dict 的值：
+
+\begin{lstlisting}
+import numpy as np
+from mindquantum.core.parameterresolver import ParameterResolver
+
+# 使用 dict 构造 ParameterResolver
+pr1 = ParameterResolver({'theta': np.pi})
+
+# 使用符号 'a' 构造 ParameterResolver
+pr2 = ParameterResolver('a')
+
+# 这等价于
+pr3 = ParameterResolver({'a': 1.0})
+
+# 声明一个常数
+pr4 = ParameterResolver(3)
+
+# 也支持算术运算符
+pr5 = pr1 + pr2 * np.sqrt(2)
+print(pr5.expression())
+\end{lstlisting}
+
+\code{pr5} 的表达式将显示为 $\sqrt{2}*a + \pi*\text{theta}$。
+
+当 \MindQuantum\ 模拟参数化线路时，\ParameterResolver\ 会将线路中的符号替换为 \ParameterResolver\ 中声明的对应实际数值。
+
+在量子-经典混合算法中，参数通常由 SGD、ADAM 和 BFGS 等梯度下降方法进行优化。声明 \ParameterResolver\ 实例时，默认情况下所有参数都需要参与求导。
+不过，我们也可以按照如下方式显式声明某个参数是否需要求导：
+
+\begin{lstlisting}
+params.no_grad_part('theta')
+\end{lstlisting}
+
+这里，\code{params} 是一个 \ParameterResolver\ 实例。调用 \code{no_grad_part('theta')} 方法用于指定名为 \code{theta} 的参数不可求导。这意味着在后续任何优化步骤或梯度计算中，\code{theta} 参数都将被排除在外。
+
+在混合算法中，参数化量子门或量子线路通常分为两部分：编码器（encoder）和 ansatz。编码器将经典数据编码到量子态中；ansatz 则是对未知函数形式所作的假设，我们可以通过优化 ansatz 来近似问题的解。默认情况下，\ParameterResolver\ 中的所有参数都会初始化为 ansatz 参数。我们可以通过以下方式在编码器参数和 ansatz 参数之间转换：
+
+\begin{lstlisting}
+# 将所有参数声明为编码器参数
+params.as_encoder()
+
+# 将所有参数声明为 ansatz 参数
+params.as_ansatz()
+
+# 将给定符号声明为编码器参数
+params.encoder_part('theta')
+
+# 将给定符号声明为 ansatz 参数
+params.ansatz_part('theta')
+\end{lstlisting}
+
+更具体的示例请参见第 \ref{sec:rotate_three_states} 节。
+
+也可以按照如下方式修改 \ParameterResolver\ 实例中参数的数据类型：
+\begin{lstlisting}
+# 将 params 的数据类型重置为 mq.complex128
+params.astype(mq.complex128)
+\end{lstlisting}
+
+\subsubsection{参数生成器}
+
+此外，\MindQuantum\ 还提供了一个用于快速生成参数的强大工具：\PRGenerator。
+\begin{lstlisting}
+from mindquantum.core.parameterresolver import PRGenerator
+
+prg = PRGenerator(suffix='a')
+a = prg.new()
+b = prg.new()
+print(a)
+print(b)
+print(len(prg.all_pr))
+\end{lstlisting}
+输出为：
+\begin{lstlisting}
+p0_a
+p1_a
+2
+\end{lstlisting}

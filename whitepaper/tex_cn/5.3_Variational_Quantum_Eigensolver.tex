@@ -1,0 +1,137 @@
+%Pauli encoding
+%Ansatz and initial trial function
+%Measurement
+%variational method and optimization
+%classical optimization methods
+% an example for simulating the ground energy of a Molecule
+
+查看本节演示代码：\democode{05}{5.3_Variational_Quantum_Eigensolver} \ \democodegithub{05}{5.3_Variational_Quantum_Eigensolver}
+
+\subsubsection{背景}
+
+在量子计算中，变分量子本征求解器（Variational Quantum Eigensolver, VQE）是在近期量子计算机上求解本征问题的代表性算法。该算法最初由 Peruzzo 等人提出，其理论框架由 McClean 等人扩展并形式化 \cite{Peruzzo2014Peruzzo2014}。
+VQE 被广泛用于计算分子和材料的能量性质，例如电子结构研究，这是量子化学和凝聚态物理中的关键应用。
+传统计算化学为小规模系统提供了高效近似此类性质的方法，但随着系统规模增大，极高精度计算会变得难以处理且代价高昂。此外，电子之间的相互作用在形式上要求计算量随系统规模指数增长，使得精确量子化学方法通常无法通过传统计算有效处理。
+这一瓶颈正是研究 VQE 等方法的动机，人们期待这些方法有朝一日能够在此类问题上超越传统计算范式。
+
+从最一般的描述来看，VQE 旨在通过 Ritz 变分原理近似给定哈密顿量 $\hat{H}$ 的基态能量 $E_0$（指定 Hilbert 空间中的最小本征值）及其对应基态 $|E_0\rangle$。
+给定复厄米矩阵 $M$ 和非零向量 $x$，Rayleigh 商定义为：
+\begin{equation}
+    R(M,x)=\frac{x^*Mx}{x^*x}.
+\end{equation}
+且 $R(M,x)$ 总满足 $E_0\leq R(M,x)\leq E_N$（分别为最小和最大本征值）。
+
+也就是说，给定一个感兴趣的哈密顿量 $\hat{H}$ 和预设波函数 $|\psi\rangle$，$\hat{H}$ 的基态能量 $E_{0}$ 总满足
+\begin{equation}
+    E_0 \leq \frac{\langle \psi |\hat{H}| \psi \rangle}{\langle \psi |\psi\rangle}.
+\end{equation}
+因此，VQE 的主要目标是找到一个合适的 $|\psi^*\rangle$，使 $\hat{H}$ 的期望值最小。若基态能量非简并，则有 $|E_0\rangle = |\psi^*\rangle$ 且 $E_0 = \langle \psi^* |\hat{H}| \psi^* \rangle$。（如果基态能量简并，则 $|\psi^*\rangle$ 通常位于所有基态张成的空间中。）
+
+然而，由于直接寻找 $|\psi^*\rangle$ 是一个难以处理的问题，VQE 首先定义所谓 ansatz 波函数 $|\psi(\vec{\theta})\rangle$。该波函数可以在量子设备上实现为一系列量子门，其行为由参数 $\vec{\theta}$ 描述。
+
+VQE 的另一个特征是它是一种同时使用经典计算机和量子计算机的混合算法。
+量子本征求解器旨在寻找给定哈密顿量 $\hat{H}$ 的本征值和本征态。
+Ritz 变分原理告诉我们，对于给定 $\hat{H}$ 和任意态 $|\vec{\theta}\rangle$，
+\begin{equation}
+    \lambda_{\min}\leq \frac{\langle \vec{\theta} |\hat{H}| \vec{\theta}\rangle}{\langle \vec{\theta}|\vec{\theta}\rangle} \leq \lambda_{\max},
+\end{equation}
+其中 $\lambda_{\min, \max}$ 是 $\hat{H}$ 的最小（最大）本征值，并且在量子计算中有 $\langle \vec{\theta}|\vec{\theta}\rangle = 1, \forall \vec{\theta}$。
+借助 Ritz 变分原理，VQE 将本征问题转换为迭代优化问题，其代价函数为 $\min_{\vec{\theta}}\hat{E}= \langle \vec{\theta} |\hat{H}| \vec{\theta}\rangle$。
+如果 $\hat{H}$ 的基态非简并，通过经典优化器优化 $\vec{\theta}$ 的取值以最小化 $\hat{E}$，即可得到 $\hat{E}(\vec{\theta}^*)\approx E_{gs}$ 且 $|\langle \vec{\theta}^*|E_0\rangle| \approx 1$。
+
+VQE 从一个初始化量子比特态开始。随后，对该态施加参数化量子线路，以建模电子波函数的物理性质和纠缠结构。
+
+VQE 流程包括：
+\begin{itemize}
+    \item 哈密顿量构造与表示：从费米子空间到量子比特空间的变换、算符编码
+    \item Ansatz 选择与态制备：硬件高效 ansatz、QubitUCCAnsatz、UCCAnsatz、Hartree-Fock 态
+    \item 测量：期望值
+    \item 参数优化：优化器、参数平移规则、有限差分、自动微分
+          %\item Error mitigation
+\end{itemize}
+
+\subsubsection{实现}
+
+在使用 VQE 研究任何物理模型或分子之前，考虑到当前主流量子平台以量子比特为基础，必须先将其转换为量子比特哈密顿量。
+这里，我们展示 \MindQuantum\ 如何逐步模拟量子化学示例 LiH。
+首先需要导入所需软件包。
+\begin{lstlisting}
+from openfermion.chem import MolecularData
+from openfermionpyscf import run_pyscf
+\end{lstlisting}
+\code{openfermion} 和 \code{openfermionpyscf} 是开源软件包，可用于为给定化学分子构型构造对应哈密顿量。例如，可以按如下方式定义 LiH 分子几何结构：
+\begin{lstlisting}
+    dist=1.5
+    geometry=[
+    ["Li",[0.0,0.0,0.0*dist]],
+    ["H",[0.0,0.0,1.0*dist]]
+    ]
+    basis="sto3g"
+    spin = 0
+    molecule = MolecularData(geometry,basis,multiplicity=2*spin+1)
+    molecule = run_pyscf(molecule,run_scf=1,run_ccsd=1,run_fci=1)
+\end{lstlisting}
+基于 \code{molecule}，可以使用 \MindQuantum\ 中的函数获得对应量子比特哈密顿量表达式：
+\begin{lstlisting}
+    from mindquantum.algorithm.nisq import get_qubit_hamiltonian
+    hamiltonian_QubitOP = get_qubit_hamiltonian(molecule)
+\end{lstlisting}
+至此，我们已经方便地完成了 LiH 哈密顿量表达式的构建。
+VQE 的下一步是选择良好的波函数 ansatz。酉耦合簇单双激发（Unitary Coupled-Cluster Singles and Doubles, UCCSD）方法受量子化学中经典 CCSD 的启发。在 \MindQuantum\ 中，可以通过如下方式构建 LiH 的 UCCSD ansatz：
+\begin{lstlisting}
+    from mindquantum.algorithm.nisq import uccsd_singlet_generator, uccsd_singlet_get_packed_amplitudes
+    ucc_fermion_ops = uccsd_singlet_generator(
+    molecule.n_qubits, molecule.n_electrons, anti_hermitian=True)
+    ucc_qubit_ops = Transform(ucc_fermion_ops).jordan_wigner()
+    ansatz_circuit = TimeEvolution(ucc_qubit_ops.imag, 1.0).circuit
+ansatz_parameter_names = ansatz_circuit.params_name
+\end{lstlisting}
+通常，对于该化学问题，VQE 的初态为 Hartree-Fock 态。我们施加 Pauli $X$ 门，以确保初态中 $|1\rangle$ 的数量等于分子中的电子数。
+\begin{lstlisting}
+    hartreefock_wfn_circuit = Circuit([X.on(i) for i in range(molecule.n_electrons)])
+\end{lstlisting}
+因此，用于求解 LiH 基态能量的 VQE 总量子线路为：
+\begin{lstlisting}
+    total_circuit = hartreefock_wfn_circuit + ansatz_circuit
+\end{lstlisting}
+
+在 VQE 中，通常选择梯度下降方法作为优化器，以获得能够输出最小期望值的最优参数。
+在 \MindQuantum\ 中，可以方便地利用 MindSpore Quantum 获得梯度算符。
+梯度算符是一个特殊函数：输入初始参数后，它可以输出对应梯度值。
+在 \MindQuantum\ 中，VQE 的梯度算符可以通过如下方式获得：
+\begin{lstlisting}
+    grad_ops = Simulator('mqvector', total_circuit.n_qubits).get_expectation_with_grad(
+    Hamiltonian(hamiltonian_QubitOp.real),
+    total_circuit)
+\end{lstlisting}
+通常，需要为线路提供合适的初始参数，以便更快收敛到最小值。对于 UCCSD ansatz，CCSD 值是一个很好的选择，可以通过如下方式获得：
+\begin{lstlisting}
+    init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(
+    molecule_of.ccsd_single_amps, molecule_of.ccsd_double_amps, molecule_of.n_qubits, molecule_of.n_electrons)
+init_amplitudes_ccsd = [init_amplitudes_ccsd[param_i] for param_i in ansatz_parameter_names]
+\end{lstlisting}
+至此，我们已经准备好了 VQE 所需的全部内容。
+VQE 的最后一步是最小化代价函数以得到能量期望值，这可以使用 \textit{SciPy} 包完成。
+\begin{lstlisting}
+    from scipy.optimize import minimize
+
+    def fun(theta, grad_ops, energy_list):
+        energy, grad = grad_ops(theta)
+        energy_list.append(energy)
+        return np.squeeze(energy.real), np.squeeze(grad.real)
+
+    energy_list = []
+    res = minimize(fun, p0, args=(grad_ops, energy_list), method='bfgs', jac=True)
+\end{lstlisting}
+如果一切正常，将得到类似如下结果：
+\begin{lstlisting}
+    Step: 5,        energy: -7.878223282730547
+    Step: 10,       energy: -7.880288481438961
+    Step: 15,       energy: -7.882035668304055
+    Step: 20,       energy: -7.882302370885741
+    Step: 25,       energy: -7.882349803534313
+    Step: 30,       energy: -7.882352702053751
+    Step: 35,       energy: -7.8823527077335065
+    Step: 40,       energy: -7.882352708347106
+\end{lstlisting}
+至此，我们已经使用 \MindQuantum\ 找到了基态能量的近似值。此外，我们还注意到一种新的量子本征求解器算法，即全量子本征求解器（Full Quantum Eigensolver, FQE）算法 \cite{wei2020full}。该算法不需要经典优化器，而是利用量子梯度下降直接在量子计算机上完成所有计算。

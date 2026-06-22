@@ -1,0 +1,171 @@
+查看本节演示代码：\democode{05}{5.9_Quantum_Singular_Value_Decomposition} \ \democodegithub{05}{5.9_Quantum_Singular_Value_Decomposition}
+
+\subsubsection{背景}
+奇异值分解（Singular Value Decomposition, SVD）是线性代数中一种重要的矩阵分解。作为任意维矩阵上特征分解的推广，SVD 被广泛用于机器学习领域，包括矩阵压缩、推荐系统和自然语言处理等。其定义如下：
+给定复矩阵 $M \in \mathbb{C}^{m \times n}$，矩阵 $M$ 的 SVD 定义为 $M = UDV^\dagger$。其中，$U$ 是 $m \times m$ 酉矩阵，$V$ 是 $n \times n$ 酉矩阵，即满足 $UU^\dagger = I$、$VV^\dagger = I$。$D$ 是一个 $m \times n$ 对角矩阵，其主对角线元素通常按从大到小排列，每个元素称为矩阵 $M$ 的一个奇异值。
+
+
+已有工作提出了用于 SVD 的量子算法 \cite{kerenidis2016quantum, rebentrost2018quantum}，并进一步带来了求解线性方程组 \cite{wossnig2018quantum} 和开发量子推荐系统 \cite{kerenidis2016quantum} 等应用。然而，这些算法的资源开销过高，难以在近期量子设备上得到有说服力的验证。当前使用含噪中等规模量子（NISQ）设备求解各类问题的主流策略称为变分量子算法。
+
+针对奇异值分解，文献 \cite{wang2021variational} 提出了一种变分量子算法（VQSVD），其思想是把 SVD 任务表述为一个优化问题。VQSVD 算法的详细流程如下：
+\begin{enumerate}
+    \item 准备 VQSVD 算法的输入：
+        \begin{itemize}
+            \item 将矩阵 $M$ 分解为 $K$ 个酉矩阵的线性组合，形式为 $M = \sum_{k=1}^K c_k A_k$，其中 $c_k$ 为实数。
+            \item 正权重 $q_1 > \cdots > q_r > 0$。
+            \item 计算基 {$\ket{\psi_1}, \cdots, \ket{\psi_T}$}，其中 $T$ 是期望秩。
+            \item 参数化线路 $U(\theta)$、$V(\phi)$ 及其初始参数 $\theta, \phi$。
+        \end{itemize}
+    \item 进入混合量子-经典优化循环，训练参数化量子线路 $U(\theta)$ 和 $V(\phi)$ 中的参数 $\theta$ 与 $\phi$，并计算 $M$ 的奇异值：$m_j = \text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$。优化目标是最大化设计好的损失函数 $L(\theta, \phi)$：
+    \begin{equation}
+        L(\theta, \phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j},
+    \end{equation}
+    其中引入权重是为了使计算得到的奇异值按降序排列。
+    \item 获得最优参数 $\alpha^ \star$ 和 $\beta^\star$，并计算 $U(\alpha^\star)$ 与 $V(\beta^\star)$。
+    \item 获得近似奇异值 ${m_1, \cdots, m_r}$，以及奇异向量 $U(\alpha^\star)$ 和 $V(\beta^\star)$。
+\end{enumerate}
+
+\subsubsection{实现} -- 本节展示如何使用 \MindQuantum\ 分解一个随机生成的 $8 \times 8$ 复矩阵。
+
+首先需要引入所需软件包，定义必要常数并设置权重，然后使用 \code{numpy.random.randint} 函数随机生成一个 $8 \times 8$ 复矩阵 $M$：
+\begin{lstlisting}
+from mindquantum import Simulator, MQAnsatzOnlyLayer, add_prefix
+from mindquantum import Hamiltonian, Circuit, RY, RZ, X
+import mindspore as ms
+import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.linalg import norm
+from matplotlib import pyplot
+import tqdm
+
+n_qubits = 3  # 量子比特数
+cir_depth = 20  # 线路深度
+N = 2**n_qubits
+rank = 8  # 学习秩
+step = 3
+ITR = 200  # 迭代次数
+LR = 0.02  # 学习率
+
+# 设置等间隔学习权重
+if step == 0:
+    weight = ms.Tensor(np.ones(rank))
+else:
+    weight = ms.Tensor(np.arange(rank * step, 0, -step))
+
+# 定义随机种子
+np.random.seed(42)
+
+def mat_generator():
+    '''
+    生成随机复矩阵
+    '''
+    matrix = np.random.randint(
+        10, size=(N, N)) + 1j * np.random.randint(10, size=(N, N))
+    return matrix
+
+# 生成待分解矩阵 M
+M = mat_generator()
+# 生成 m_copy 用于误差分析
+m_copy = np.copy(M)
+print('Random matrix M is: ')
+print(M)
+# 获得 SVD 结果
+U, D, v_dagger = np.linalg.svd(M, full_matrices=True)
+\end{lstlisting}
+
+接下来，定义仿真中用于 $U(\theta)$ 和 $V(\phi)$ 的硬件高效 ansatz，即论文 \cite{wang2021variational} 中使用的变分 ansatz。由于这里只涉及实矩阵，旋转门与 CNOT 的组合已经足够。在该 ansatz 中，每个相同模块（虚线框所示）由一列绕 $y$ 轴和 $z$ 轴的单量子比特旋转门，以及随后一层只连接相邻量子比特的 CNOT 门组成。
+\begin{lstlisting}
+class Ansatz:
+    def __init__(self, n, depth):
+        self.circ = Circuit()
+        num = 0
+        for _ in range(depth):
+            for i in range(n):
+                self.circ += RY('theta' + str(num)).on(i)
+                num += 1
+            for i in range(n):
+                self.circ += RZ('theta' + str(num)).on(i)
+                num += 1
+            for i in range(n - 1):
+                self.circ += X.on(i + 1, i)
+            self.circ += X.on(0, n - 1)
+\end{lstlisting}
+
+然后使用给定的哈密顿量定义一个量子网络。仿真器的 \setqs 函数用于将仿真器状态设置为给定计算基，从而获得该基下的测量结果，即对应的奇异值。\getexpectationwithgrad 函数用于计算线路中参数的梯度，以及下列表达式的值：$E(\theta) = \langle\phi| U_l^{\dagger}(\theta) H U_r(\theta)\ket{\psi}$。随后可以使用 \MQAnsatzOnlyLayer 基于给定基构建量子网络层，其输出为：$\text{Re}\langle\psi_j|U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$。
+\begin{lstlisting}
+def quantnet(qubits_num, hams, circ_right, circ_left=None, base=None):
+    sim = Simulator('mqvector', qubits_num)
+    if base is None:
+        pass
+    else:
+        sim.set_qs(base)
+    grad_ops = sim.get_expectation_with_grad(hams, circ_right, circ_left)
+
+    quantumnet = MQAnsatzOnlyLayer(grad_ops, 'ones')
+    return quantumnet
+\end{lstlisting}
+
+在将待分解的 $8 \times 8$ 矩阵 $M$ 稀疏化并生成对应哈密顿量 $H$ 后，可以实例化 ansatz $U_\text{ansatz}$ 和 $V_\text{ansatz}$，并构建所需的量子网络层。该网络层可用于计算 $M$ 的奇异值 $\{m_j\}_{j=1}^T$。
+\begin{lstlisting}
+u_ansatz = add_prefix(Ansatz(n_qubits, cir_depth).circ, 'u')
+v_ansatz = add_prefix(Ansatz(n_qubits, cir_depth).circ, 'v')
+ham = Hamiltonian(csr_matrix(M))
+i_matrix = np.identity(N)
+quantum_models = dict()
+quantum_models['net_0'] = quantnet(n_qubits, ham, v_ansatz, u_ansatz, i_matrix[0])
+for s in range(1, rank):
+    quantum_models["net_" + str(s)] = quantnet(n_qubits, ham, v_ansatz, u_ansatz, i_matrix[s])
+    quantum_models["net_" + str(s)].weight = quantum_models['net_0'].weight
+\end{lstlisting}
+
+此外，我们还可以使用 MindSpore 构建一个混合量子-经典网络，实现量子网络层的加权求和，并计算 $L(\theta,\phi) = \sum_{j=1}^T q_j \times \text{Re} \langle\psi_j| U(\theta)^{\dagger} M V(\phi)\ket{\psi_j}$。
+\begin{lstlisting}
+class MyNet(ms.nn.Cell):
+    '''
+    定义量子-经典网络
+    '''
+    def __init__(self):
+        super(MyNet, self).__init__()
+
+        self.build_block = ms.nn.CellList()
+        for j in range(rank):
+            self.build_block.append(quantum_models["net_" + str(j)])
+
+    def construct(self):
+        x = self.build_block[0]() * weight[0]
+        k = 1
+        for layer in self.build_block[1:]:
+            x += layer() * weight[k]
+            k += 1
+        return -x
+\end{lstlisting}
+现在可以实例化混合量子-经典网络，并使用 MindSpore 开始训练：
+\begin{lstlisting}
+net = MyNet()
+# 定义优化器
+opt = ms.nn.Adam(net.trainable_params(), learning_rate=LR)
+# 简单梯度下降
+train_net = ms.nn.TrainOneStepCell(net, opt)
+# 开始训练
+loss_list = list()
+for itr in tqdm.tqdm(range(ITR)):
+    res = train_net()
+    loss_list.append(res.asnumpy().tolist())
+\end{lstlisting}
+
+最后，读取训练结果（奇异值），并将其与经典奇异值分解的结果进行比较：
+\begin{lstlisting}
+singular_value = list()
+for _, qnet in quantum_models.items():
+    singular_value.append(qnet().asnumpy()[0])
+
+print('Predicted singular values from large to small:', singular_value)
+print("True singular values from large to small:", D)
+\end{lstlisting}
+输出：
+\begin{lstlisting}
+Predicted singular values from large to small: [54.83174, 19.169168, 14.88653, 11.093878, 10.533753, 7.648352, 5.5560594, -0.3320913]
+True singular values from large to small: [54.83484985 19.18141073 14.98866247 11.61419557 10.15927045  7.60223249 5.81040539  3.30116001]
+\end{lstlisting}
+
+直观来看，使用混合量子-经典网络学习得到的奇异值与真实奇异值较为接近。
