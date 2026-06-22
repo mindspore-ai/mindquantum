@@ -228,7 +228,7 @@
 
 
 \begin{abstract}
-    We introduce MindSpore Quantum, a pioneering hybrid quantum-classical framework with a primary focus on the design and implementation of noisy intermediate-scale quantum (NISQ) algorithms. Leveraging the robust support of MindSpore, an advanced open-source deep learning training/inference framework, MindSpore Quantum exhibits exceptional efficiency in the design and training of variational quantum algorithms on both CPU and GPU platforms, delivering remarkable performance. Furthermore, this framework places a strong emphasis on enhancing the operational efficiency of quantum algorithms when executed on real quantum hardware. This encompasses the development of algorithms for quantum circuit compilation and qubit mapping, crucial components for achieving optimal performance on quantum processors. In addition to the core framework, we introduce QuPack---a meticulously crafted quantum computing acceleration engine. QuPack significantly accelerates the simulation speed of MindSpore Quantum, particularly in variational quantum eigensolver (VQE), quantum approximate optimization algorithm (QAOA), and tensor network simulations, providing astonishing speed. This combination of cutting-edge technologies empowers researchers and practitioners to explore the frontiers of quantum computing with unprecedented efficiency and performance.
+    We introduce MindSpore Quantum, a pioneering hybrid quantum-classical framework with a primary focus on the design and implementation of noisy intermediate-scale quantum (NISQ) algorithms. Leveraging the robust support of MindSpore, an advanced open-source deep learning training/inference framework, MindSpore Quantum exhibits exceptional efficiency in the design and training of variational quantum algorithms on both CPU and GPU platforms, delivering remarkable performance. Furthermore, this framework places a strong emphasis on enhancing the operational efficiency of quantum algorithms when executed on real quantum hardware. This encompasses the development of algorithms for quantum circuit compilation and qubit mapping, crucial components for achieving optimal performance on quantum processors. In addition to general state-vector, density-matrix, and noisy simulation backends, MindSpore Quantum provides \texttt{mqchem}, a specialized configuration-interaction simulator for quantum chemistry VQE workflows. By evolving wavefunctions directly in a fixed-electron-number fermionic occupation basis and by exploiting the structure of UCC excitation operators, \texttt{mqchem} offers a compact and efficient route for numerical chemistry simulations while keeping the hardware-executable qubit-circuit workflow available for real-device studies.
 \end{abstract}
 \maketitle
 \tableofcontents
@@ -265,6 +265,10 @@ View demo code of this chapter: \demonotebook{02}{chapt02} \ \demonotebookgithub
 \label{sec:backend}
 
 \input{3.1_State_Vector_and_Density_Matrix_Simulator}
+
+\subsection{Quantum Chemistry CI Simulator}
+\label{sec:mqchem}
+\input{3.2_Quantum_Chemistry_CI_Simulator}
 
 \subsection{Channel Based Noise Simulator}
 \input{3.3_Channel_Based_Noise_Simulator}
@@ -307,23 +311,6 @@ View demo code of this chapter: \demonotebook{04}{chapt04} \ \demonotebookgithub
 \input{5.4_Advanced_Quantum_Aplications}
 
 
-\section{QuPack: Acceleration Engine}
-\label{sec:qupack}
-\input{6_QuPack_Acceleration_Engine}
-
-\subsection{Variational Quantum Eigensolver}
-\input{6.1_Variational_Quantum_Eigensolver}
-
-\subsection{Quantum Approximate Optimization Algorithm}
-\input{6.2_Quantum_Approximate_Optimization_Algorithm}
-
-\subsection{Tensor Network Simulator}
-\input{6.3_Tensor_Network_Simulator}
-
-\subsection{Pulse Engineering}
-\input{6.4_Pulse_Engineering}
-
-
 \section{Benchmarking}
 \label{sec:benchmark}
 
@@ -348,7 +335,7 @@ View benchmarking code: \href{https://gitee.com/mindspore/mindquantum/blob/resea
 
 \section{Summary}
 \label{sec:summary}
-We introduced \MindQuantum, a hybrid quantum-classical framework which focus on the design and implement of NISQ algorithm, especially Variational Quantum Algorithm. First, we showed the eDSL (embedded domain specific language) of how to manipulate quantum gate, quantum circuit and observable. \MindQuantum\ support arbitrary control qubits on any quantum gate, and based on JIT, high performance arbitrary costumed parameterized or non-parameterized gate is also supported. Then we showed how we implement state vector, density matrix and noisy quantum simulator and how we optimized the simulation with gate based optimization with SIMD, OpenMP, Kunpeng and GPU acceleration. Furthermore, we provide numerous application examples to help you quickly grasp the usage of \MindQuantum. These applications include VQE, QAOA and QNN. An acceleration engine call \QuPack\ was introduced, including how we speed up the simulation of VQE and QAOA algorithm. A benchmark on the performance compared with other quantum frameworks was demonstrated in Chapter ~\ref{sec:benchmark}, which showed advantages of \MindQuantum\ in several scenarios. Finally, we also showed the work that we have done about how to quickly compile and execute a quantum circuit on a real quantum chip.
+We introduced \MindQuantum, a hybrid quantum-classical framework focused on the design and implementation of NISQ algorithms, especially variational quantum algorithms. First, we showed the eDSL (embedded domain-specific language) used to manipulate quantum gates, quantum circuits, and observables. \MindQuantum\ supports arbitrary control qubits on quantum gates, and its JIT mechanism enables high-performance customized parameterized and non-parameterized gates. We then described the implementation of state-vector, density-matrix, noisy, and quantum chemistry CI subspace simulators, together with gate-level optimizations based on SIMD, OpenMP, Kunpeng, and GPU acceleration. Furthermore, we provided application examples, including VQE, QAOA, and QNN, to help readers understand practical usage of \MindQuantum. A benchmark against other quantum frameworks was demonstrated in Chapter~\ref{sec:benchmark}, showing advantages of \MindQuantum\ in several scenarios. Finally, we described the work done to compile and execute quantum circuits efficiently on real quantum chips.
 
 \section{Acknowledgement}
 \label{sec:acknowledgement}
@@ -363,17 +350,17 @@ We sincerely thank the authors of this paper and their respective contributions,
         Qiang Zheng   & 2.3                                            \\
         Jiale Liu     & 2.4                                            \\
         Yanling Lin   & 2.5, 5.9                                       \\
-        Xusheng Xu    & 1, 2.6, 3.1, 3.2, 3.3, 4.1, 6.1, 7, 8.1, 9, 10 \\
-        Zuoheng Zou   & 6.2, 6.3, 7                                    \\
-        Junyuan Zhou  & 3.3, 4.2, 4.3, 7                               \\
+        Xusheng Xu    & 1, 2.6, 3.1, 3.2, 3.3, 4.1, 6, 7.1, 8, 9       \\
+        Zuoheng Zou   & 6                                               \\
+        Junyuan Zhou  & 3.3, 4.2, 4.3, 6                                \\
         Xu Zhou       & 5.1                                            \\
         Jialiang Tang & 5.2                                            \\
         Ruoqian Xu    & 5.4                                            \\
         Chufan Lyu    & 5.5                                            \\
         Runhong He    & 5.6                                            \\
         Runqiu Shu    & 5.7                                            \\
-        Zidong Cui    & 5.8, 6.4                                       \\
-        Yikang Zhu    & 8.2                                            \\
+        Zidong Cui    & 5.8                                            \\
+        Yikang Zhu    & 7.2                                            \\
         \bottomrule
     \end{tabular}
     \caption{Contributions of authors}

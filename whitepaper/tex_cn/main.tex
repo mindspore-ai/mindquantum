@@ -226,7 +226,7 @@
 
 
 \begin{abstract}
-    本文介绍 MindSpore Quantum，这是一个开创性的量子-经典混合框架，主要面向含噪中等规模量子（NISQ）算法的设计与实现。依托先进开源深度学习训练/推理框架 MindSpore 的强大支撑，MindSpore Quantum 在 CPU 与 GPU 平台上的变分量子算法设计和训练中表现出卓越效率，并展现出优异性能。此外，该框架高度重视提升量子算法在真实量子硬件上执行时的运行效率，相关工作涵盖量子线路编译与量子比特映射算法的研发；这些算法是量子处理器实现最优性能的关键组成部分。除核心框架外，我们还介绍了 QuPack---一个精心打造的量子计算加速引擎。QuPack 显著提升 MindSpore Quantum 的模拟速度，尤其在变分量子本征求解器（VQE）、量子近似优化算法（QAOA）和张量网络模拟中能够提供惊人的加速效果。这些前沿技术的结合，使研究人员和工程实践者能够以前所未有的效率和性能探索量子计算前沿。
+    本文介绍 MindSpore Quantum，这是一个开创性的量子-经典混合框架，主要面向含噪中等规模量子（NISQ）算法的设计与实现。依托先进开源深度学习训练/推理框架 MindSpore 的强大支撑，MindSpore Quantum 在 CPU 与 GPU 平台上的变分量子算法设计和训练中表现出卓越效率，并展现出优异性能。在模拟后端方面，框架除状态矢量、密度矩阵和含噪模拟器外，还提供面向量子化学的 \texttt{mqchem} CI 子空间模拟能力，可在固定电子数空间中高效执行 UCC 激发、CI 哈密顿量期望值和 VQE 梯度计算。此外，该框架高度重视提升量子算法在真实量子硬件上执行时的运行效率，相关工作涵盖量子线路编译与量子比特映射算法的研发；这些算法是量子处理器实现最优性能的关键组成部分。这些技术的结合，使研究人员和工程实践者能够以更高效率探索量子计算前沿。
 \end{abstract}
 \maketitle
 \tableofcontents
@@ -263,6 +263,10 @@
 \label{sec:backend}
 
 \input{3.1_State_Vector_and_Density_Matrix_Simulator}
+
+\subsection{量子化学 CI 子空间模拟器}
+\label{sec:mqchem}
+\input{3.2_Quantum_Chemistry_CI_Simulator}
 
 \subsection{基于信道的噪声模拟器}
 \input{3.3_Channel_Based_Noise_Simulator}
@@ -305,23 +309,6 @@
 \input{5.4_Advanced_Quantum_Aplications}
 
 
-\section{QuPack：加速引擎}
-\label{sec:qupack}
-\input{6_QuPack_Acceleration_Engine}
-
-\subsection{变分量子本征求解器}
-\input{6.1_Variational_Quantum_Eigensolver}
-
-\subsection{量子近似优化算法}
-\input{6.2_Quantum_Approximate_Optimization_Algorithm}
-
-\subsection{张量网络模拟器}
-\input{6.3_Tensor_Network_Simulator}
-
-\subsection{脉冲工程}
-\input{6.4_Pulse_Engineering}
-
-
 \section{基准测试}
 \label{sec:benchmark}
 
@@ -346,7 +333,7 @@
 
 \section{总结}
 \label{sec:summary}
-\MindQuantum\ 是一个量子-经典混合框架，聚焦于 NISQ 算法，尤其是变分量子算法的设计与实现。本文首先展示了用于操作量子门、量子线路和可观测量的 eDSL（嵌入式领域专用语言）。\MindQuantum\ 支持在任意量子门上设置任意控制量子比特，并基于 JIT 支持高性能的自定义参数化或非参数化量子门。随后，本文说明了状态矢量、密度矩阵和含噪量子模拟器的实现方式，以及如何通过基于量子门的优化结合 SIMD、OpenMP、鲲鹏和 GPU 加速来优化模拟性能。此外，本文提供了大量应用示例，帮助读者快速掌握 \MindQuantum\ 的用法；这些应用包括 VQE、QAOA 和 QNN。本文还介绍了名为 \QuPack\ 的加速引擎，说明其如何加速 VQE 和 QAOA 算法的模拟。在第~\ref{sec:benchmark} 章中，我们展示了与其他量子框架的性能基准对比，结果表明 \MindQuantum\ 在多个场景下具有优势。最后，本文还展示了我们在真实量子芯片上快速编译并执行量子线路方面所完成的工作。
+\MindQuantum\ 是一个量子-经典混合框架，聚焦于 NISQ 算法，尤其是变分量子算法的设计与实现。本文首先展示了用于操作量子门、量子线路和可观测量的 eDSL（嵌入式领域专用语言）。\MindQuantum\ 支持在任意量子门上设置任意控制量子比特，并基于 JIT 支持高性能的自定义参数化或非参数化量子门。随后，本文说明了状态矢量、密度矩阵、含噪量子模拟器以及面向量子化学 VQE 的 \texttt{mqchem} CI 子空间模拟器的实现方式，并说明如何通过基于量子门的优化结合 SIMD、OpenMP、鲲鹏和 GPU 加速来优化模拟性能。此外，本文提供了大量应用示例，帮助读者快速掌握 \MindQuantum\ 的用法；这些应用包括 VQE、QAOA 和 QNN。在第~\ref{sec:benchmark} 章中，我们展示了与其他量子框架的性能基准对比，结果表明 \MindQuantum\ 在多个场景下具有优势。最后，本文还展示了我们在真实量子芯片上快速编译并执行量子线路方面所完成的工作。
 
 \section{致谢}
 \label{sec:acknowledgement}

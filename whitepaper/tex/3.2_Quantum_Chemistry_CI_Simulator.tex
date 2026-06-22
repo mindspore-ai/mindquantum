@@ -1,0 +1,50 @@
+\texttt{mqchem} is a specialized simulation module in \MindQuantum\ for quantum chemistry problems. Unlike a general state-vector simulator, it does not store the wavefunction over the full $2^{n_q}$ computational basis. Instead, it evolves the state in a fixed-electron-number configuration interaction (CI) subspace. Here $n_q$ denotes the number of spin orbitals, which is also the number of qubits in the mapped problem. If the system contains $n_e$ electrons, the CI-space dimension is
+\begin{equation}
+    \dim \mathcal{H}_{\mathrm{CI}}(n_q,n_e)=\binom{n_q}{n_e}.
+\end{equation}
+For molecular systems in which the electron number is fixed, this representation is usually much more compact than the full Fock-space amplitude vector. When the ansatz is further built from spin-adapted singlet UCCSD excitations, the evolution also remains in the physical sector selected by those excitation operators. This spin constraint comes from the excitation structure and the ansatz design, while the core index space of \texttt{mqchem} is the fixed-electron-number CI basis.
+
+The internal state of \texttt{mqchem} can be viewed as a CI vector whose entries are amplitudes of Slater determinants. In the implementation, each determinant is represented by an integer bitmask: a set bit indicates that the corresponding spin orbital is occupied. The backend maps between bitmasks and compact CI-vector indices through combinatorial indexing, and caches the indexer for each pair of $(n_q,n_e)$. The simulator is initialized by default in the Hartree-Fock reference state, where the lowest $n_e$ spin orbitals are occupied. Users may also set a state from a sparse representation in which every entry specifies an occupation bitmask and an amplitude; basis states that do not satisfy the fixed-electron-number condition are rejected.
+
+The module is organized around three main objects. First, \texttt{MQChemSimulator} stores the CI vector, applies UCC excitation circuits, evaluates expectation values, and constructs gradient functions. Second, \texttt{CIHamiltonian} wraps a real-coefficient fermionic Hamiltonian as an operator acting on the CI space. It preprocesses annihilation masks, creation masks, flip masks, and fermionic parity information for the Hamiltonian terms. Third, \texttt{UCCExcitationGate} wraps an excitation operator $\hat{T}$ represented by a single-term \texttt{FermionOperator} into
+\begin{equation}
+    \hat{U}(\theta)=\exp\left[\theta\left(\hat{T}-\hat{T}^{\dagger}\right)\right],
+\end{equation}
+which is then used to build UCC-type variational circuits. This gate is designed for \texttt{MQChemSimulator}; it is not a drop-in replacement for an ordinary quantum gate in the general state-vector simulator.
+
+For the single and double excitations commonly used in UCC ansatze, \texttt{mqchem} does not need to materialize a full matrix. Given the determinant pairs $\{\ket{i},\ket{j}\}$ connected by an excitation, the gate only performs a rotation in each corresponding two-dimensional subspace. If $s_{ij}=\pm1$ denotes the fermionic parity sign from anticommutation, the amplitude update can be written as
+\begin{equation}
+    \begin{pmatrix}
+        c_i' \\
+        c_j'
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        \cos\theta       & -s_{ij}\sin\theta \\
+        s_{ij}\sin\theta & \cos\theta
+    \end{pmatrix}
+    \begin{pmatrix}
+        c_i \\
+        c_j
+    \end{pmatrix}.
+\end{equation}
+The implementation precomputes the active-orbital masks, pair-identification masks, flip masks, and parity masks associated with each fermionic term. During evolution, the backend scans the CI basis and updates only the amplitude pairs connected by the current excitation. Hamiltonian application follows the same occupation-logic pattern: for each fermionic term, the backend checks the occupation constraints required by annihilation operators and the vacancy constraints required by creation operators, computes the fermionic phase, and maps the input determinant to its output determinant. The expectation value $\langle\psi|\hat{H}|\psi\rangle$ is then evaluated directly on the CI vector.
+
+For VQE training, \texttt{MQChemSimulator} provides a gradient interface that returns a callable object. A single forward call gives both the energy expectation and its gradient with respect to UCC parameters. The backend uses an adjoint backpropagation strategy: it first applies the parameterized excitation circuit in the forward direction, and then combines the reversed circuit with Hamiltonian action to accumulate each parameter contribution. The derivative of an individual UCC excitation gate is computed from the same two-dimensional coupling structure, avoiding finite differences and large dense matrices.
+
+The following snippet shows a typical UCCSD-VQE workflow with \texttt{mqchem}.
+\begin{lstlisting}
+from mindquantum.simulator import mqchem as mq
+
+mol = molecule
+ham, circ, amp = mq.prepare_uccsd_vqe(mol, 1e-6)
+nq, ne = mol.n_qubits, mol.n_electrons
+sim = mq.MQChemSimulator(nq, ne, dtype="double")
+ops = sim.get_expectation_with_grad(ham, circ)
+energy, grad = ops(amp)
+\end{lstlisting}
+Compared with the \texttt{Simulator("mqvector", ...)} workflow used in the application section, the UCC excitations are not first expanded into Pauli-string time-evolution circuits. The ansatz, Hamiltonian, and initial amplitudes are constructed directly in the fermionic occupation basis.
+
+\texttt{prepare\_uccsd\_vqe} is the high-level helper provided by this module. It reads the second-quantized Hamiltonian from a molecular object and constructs a \texttt{CIHamiltonian}; generates singlet UCCSD excitations through \texttt{uccsd\_singlet\_generator}; extracts the available CCSD single- and double-excitation amplitudes as the initial guess; and filters very small excitation amplitudes according to the given threshold. For users who need layered or Trotterized UCC ansatze, \texttt{SequentialUCCAnsatz} allows excitation operators to be appended in insertion order, preserving repeated occurrences of the same excitation with different parameters.
+
+\texttt{mqchem} is therefore best viewed as a dedicated backend for quantum chemistry algorithm research and VQE numerical experiments. It preserves the electron-number structure and the fermionic excitation pattern of UCC circuits, reducing the overhead introduced by intermediate Pauli expansions. When the target is execution on a real quantum processor, however, the hardware-oriented workflow based on fermion-to-qubit mappings, ordinary quantum circuits, and circuit compilation remains the appropriate route.

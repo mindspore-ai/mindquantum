@@ -1,0 +1,56 @@
+\texttt{mqchem} 是 \MindQuantum\ 中面向量子化学问题的专用模拟模块。与通用状态矢量模拟器不同，它不在完整的 $2^{n_q}$ 维计算基上保存量子态，而是在固定电子数的配置相互作用（Configuration Interaction, CI）子空间中演化波函数。这里 $n_q$ 表示自旋轨道数，也对应量子比特数；若体系含有 $n_e$ 个电子，则 CI 空间维度为
+\begin{equation}
+    \dim \mathcal{H}_{\mathrm{CI}}(n_q,n_e)=\binom{n_q}{n_e}.
+\end{equation}
+对于电子数远小于完整 Fock 空间的分子体系，这一表示通常比全振幅状态矢量更加紧凑。若 ansatz 进一步采用保持自旋的 singlet UCCSD 激发，演化还会停留在由这些激发确定的物理扇区内；这一约束来自激发算符和 ansatz 的选择，而 \texttt{mqchem} 后端本身以固定电子数 CI 基为核心索引。
+
+\texttt{mqchem} 的底层状态可理解为 Slater 行列式振幅组成的 CI 向量。实现中，每个行列式由一个整数 bitmask 表示，置位的自旋轨道表示被电子占据；后端通过组合数索引在 bitmask 与紧凑数组下标之间转换，并按 $(n_q,n_e)$ 缓存索引器。模拟器默认从 Hartree-Fock 参考态开始，即最低的 $n_e$ 个自旋轨道被占据。用户也可以用稀疏表示设置态矢量，其中每一项给出一个占据 bitmask 及其振幅；不满足固定电子数条件的基态会被拒绝。
+
+该模块围绕三类对象组织。首先，\texttt{MQChemSimulator} 负责保存 CI 向量、施加 UCC 激发线路、计算期望值和生成梯度函数。其次，\texttt{CIHamiltonian} 将实系数费米子哈密顿量封装成适用于 CI 空间的哈密顿量对象，并在内部预处理产生湮灭掩码、产生掩码、翻转掩码和费米子奇偶相位信息。最后，\texttt{UCCExcitationGate} 将单项 \texttt{FermionOperator} 表示的激发算符 $\hat{T}$ 封装为
+\begin{equation}
+    \hat{U}(\theta)=\exp\left[\theta\left(\hat{T}-\hat{T}^{\dagger}\right)\right],
+\end{equation}
+用于构造 UCC 类型的变分线路。该门专门配合 \texttt{MQChemSimulator} 使用，并不等价于通用状态矢量模拟器中的普通量子门。
+
+对于常见的单激发和双激发，\texttt{mqchem} 不需要显式构造完整矩阵。给定一组满足激发条件的行列式对 $\{\ket{i},\ket{j}\}$，激发门只在这二维子空间中做旋转。若 $s_{ij}=\pm1$ 表示费米子反对易关系带来的奇偶相位，则振幅更新可写为
+\begin{equation}
+    \begin{pmatrix}
+        c_i' \\
+        c_j'
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        \cos\theta       & -s_{ij}\sin\theta \\
+        s_{ij}\sin\theta & \cos\theta
+    \end{pmatrix}
+    \begin{pmatrix}
+        c_i \\
+        c_j
+    \end{pmatrix}.
+\end{equation}
+实现会为激发门预先计算活跃轨道掩码、态对识别掩码、翻转掩码和每个费米子算符对应的奇偶掩码。实际演化时，只需扫描 CI 向量中的基态并更新被同一激发连接的振幅对。哈密顿量作用也采用类似思路：逐项检查湮灭算符要求的占据条件和产生算符要求的空占条件，计算费米子相位，再把输入行列式映射到输出行列式。由此，期望值 $\langle\psi|\hat{H}|\psi\rangle$ 可直接在 CI 向量上求得。
+
+面向 VQE 训练时，\texttt{MQChemSimulator} 的梯度接口会返回一个可调用对象，一次前向计算即可给出能量期望值及其关于 UCC 参数的梯度。底层采用伴随反传思路：先正向施加参数化激发线路，再通过反向线路和哈密顿量作用计算各个参数的贡献；对单个 UCC 激发门的导数，后端仍利用上述二维耦合结构直接求值，避免构造大矩阵或进行有限差分。
+
+下面的代码展示了 \texttt{mqchem} 在 UCCSD-VQE 中的典型使用方式。与前文使用 \texttt{Simulator("mqvector", ...)} 的流程相比，这里不需要先把 UCC 激发全部展开成 Pauli 字符串演化线路，而是直接在费米子占据基中构造 ansatz、哈密顿量和初始参数。
+\begin{lstlisting}
+from mindquantum.simulator import mqchem
+
+ham, circ, init_amp = mqchem.prepare_uccsd_vqe(
+    molecule,
+    threshold=1e-6,
+)
+
+sim = mqchem.MQChemSimulator(
+    molecule.n_qubits,
+    molecule.n_electrons,
+    dtype="double",
+)
+grad_ops = sim.get_expectation_with_grad(ham, circ)
+
+energy, gradient = grad_ops(init_amp)
+\end{lstlisting}
+
+\texttt{prepare\_uccsd\_vqe} 是该模块提供的高层辅助接口。它会从分子对象中读取二次量子化哈密顿量并生成 \texttt{CIHamiltonian}，调用 \texttt{uccsd\_singlet\_generator} 产生 singlet UCCSD 激发，读取已计算的 CCSD 单、双激发振幅作为初始猜测，并根据给定阈值过滤幅度很小的激发项。若用户需要构造分层或 Trotter 化的 UCC ansatz，\texttt{SequentialUCCAnsatz} 还允许按照插入顺序逐项追加激发算符，即使同一激发在不同层中以不同参数重复出现也会被保留。
+
+\texttt{mqchem} 因而更适合作为量子化学算法研究和 VQE 数值实验的专用后端：它保留了费米子占据数和 UCC 激发结构中的物理信息，减少了中间 Pauli 展开带来的模拟开销；而当目标是在真实量子芯片上执行线路时，仍应使用前文介绍的费米子到量子比特映射、量子线路 ansatz 和编译流程。
