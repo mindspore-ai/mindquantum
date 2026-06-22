@@ -1,0 +1,69 @@
+
+\subsubsection{简介}
+量子近似优化算法（Quantum Approximate Optimization Algorithm, QAOA）是近年来备受关注、最有前景的变分量子算法（VQA）之一。QAOA 专门用于借助量子计算机寻找困难组合优化问题的近似解。它通过将问题相关的哈密顿量编码到量子线路中来实现这一目标。随后，QAOA 利用绝热时间演化和分层技术来优化线路中的变分参数。该优化旨在构造问题的近似解，而这一近似解可以通过使用最优参数集测量 QAOA 线路获得。
+
+\subsubsection{基本用法}
+QAOA 类需要三个输入参数：
+\begin{itemize}
+    \item n\_qubits：对应 QAOA 线路所需的量子比特数。
+    \item depth：ansatz 线路的层数。
+    \item h：待求解问题对应的哈密顿量。
+\end{itemize}
+
+提供这三个参数后，模拟器将生成对应的参数化线路。
+
+接下来，我们通过一个具体的最大割问题示例说明如何使用 QAOA 模拟器。首先确定线路规模，并生成待求解图。在本示例中，我们选择计算一个包含 5 个节点的图（需要 5 个量子比特），并将 ansatz 线路深度设为 10 层。
+
+\begin{lstlisting}
+from qupack.qaoa import QAOA
+import networkx as nx
+
+depth = 10
+n_qubits = 5
+graph = nx.complete_graph(n_qubits)
+graph = list(graph.edges)
+\end{lstlisting}
+
+接下来，构造与问题对应的哈密顿量。需要注意的是，在 QAOA 问题中，哈密顿量是对角化的，这意味着输入 \code{QubitOperator} 中的 Pauli 算符只能包含 Z。如果 \code{QubitOperator} 包含 X 或 Y，QAOA 模拟器将报错。
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator
+
+ham = QubitOperator()
+for node in graph:
+    ham += QubitOperator('Z{} Z{}'.format(*node), 1)
+\end{lstlisting}
+
+现在，可以实例化一个 QAOA 模拟器。
+\begin{lstlisting}
+sim = QAOA(n_qubits, depth, ham)
+\end{lstlisting}
+
+可调用以下接口实现不同功能：
+
+\begin{itemize}
+    \item \code{get_expectation_with_grad()}：基于给定量子门参数，获得线路末态相对于哈密顿量的期望值，以及每个参数的梯度。
+    \item \code{get_expectation()}：基于给定量子门参数，获得演化后量子态相对于哈密顿量的期望值。
+    \item \code{evolution()}：基于给定量子门参数运行线路并演化量子态。
+    \item \code{get_qs()}：获取模拟器当前量子态。
+    \item \code{set_qs()}：设置模拟器当前量子态。
+\end{itemize}
+
+量子门参数由两部分组成：\textit{gamma} 和 \textit{beta}。\textit{Gamma} 表示 Rzz 门参数，\textit{beta} 表示 RX 门参数。这些参数应以一维列表或 \code{numpy.ndarray} 的形式提供。数组中的每个元素对应 ansatz 线路某一层中所有 Rzz（或 RX）门的参数。因此，\textit{gamma} 和 \textit{beta} 的长度应与线路深度一致。
+
+下面，为了演示这些接口，我们将所有 Rzz 门参数设为 1，所有 RX 门参数设为 2。
+
+\begin{lstlisting}
+gamma = [1] * depth
+beta = [2] * depth
+expectation, gamma_grad, beta_grad = sim.get_expectation_with_grad(gamma, beta)
+print("expectation: ", expectation)
+print("gradient with respect to gamma: ", gamma_grad)
+print("gradient with respect to beta: ", beta_grad)
+\end{lstlisting}
+输出：
+\begin{lstlisting}
+expectation:  2.4222583315861312
+gradient with respect to gamma:  [21.06869750223758, -46.18915014748717, 9.446358158199573, 11.021141208662032, -28.573493584250016, 35.674550037397935, -37.62868932163818, -13.136244193793484, 29.942571461897476, -21.026027385573684]
+gradient with respect to beta:  [-3.264446786318293, 9.713011195857428, -11.622454620714056, 10.958548703603533, -2.4125637780460947, -4.314674707938554, 10.2451658203689, -9.335013624102858, 7.359235130728157, -1.431435776010227]
+\end{lstlisting}

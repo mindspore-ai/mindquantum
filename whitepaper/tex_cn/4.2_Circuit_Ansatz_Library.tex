@@ -1,0 +1,72 @@
+Ansatz 是 VQA 中的一个重要术语，本质上是对适合当前问题的量子态形式所作的猜测或假设。例如，在变分量子本征求解器（VQE）中，ansatz 被选择用于表示量子系统的基态或低能态。根据线路结构是预先确定还是在优化过程中动态更新，ansatz 可以是固定的，也可以是自适应的。ansatz 的选择会影响 VQA 的性能和鲁棒性，也会影响量子计算和经典计算所需的资源。因此，选择或设计合适的 ansatz 是 VQA 成功的重要环节。
+
+\MindQuantum\ 的 \nisq\ 模块包含许多常用 ansatz，如下所示。
+
+\begin{itemize}
+    \item \IQPEncoding：IQP Encoding 是一种将经典数据编码为量子态的方法 \cite{Havlíček2019}。它使用旋转门和受控门构造量子线路，使输入数据能够由旋转门参数调节，并使输出量子态反映输入数据的特征。IQP Encoding 的一个优势是能够生成高维量子特征空间，从而提升机器学习性能。
+
+    \item \HardwareEfficientAnsatz：这是一类容易在量子芯片上实现的 ansatz \cite{Kandala2017,doi:10.1021/acs.jctc.3c00966}。硬件高效 ansatz 由一层单量子比特旋转门和一层双量子比特纠缠门构造而成。单量子比特旋转门层由作用于每个量子比特的一个或多个旋转门构成；双量子比特纠缠门层则由作用在纠缠映射上的 CNOT、CZ、Rxx、Ryy、Rzz 等量子门构成。
+
+    \item \StronglyEntangling：它通常用于量子机器学习。其优势在于可以到达“希尔伯特空间的广阔区域”\cite{Schuld_2020}，因此被认为非常适合作为分类器的 ansatz。
+
+    \item \MaxCutAnsatz：\MaxCutAnsatz\ 是 QAOA 的一种 ansatz 线路 \cite{farhi2014quantum}，用于求解正则图上的最大割问题。最大割问题是图论中的 NP 完全问题，要求将图的顶点划分为两部分，并最大化被切割边的数量。\MaxCutAnsatz\ 的数学表示如下：
+          $$U(\beta, \gamma) = e^{-i\beta_pH_b}e^{-i\frac{\gamma_p}{2}H_c}
+              \cdots e^{-i\beta_0H_b}e^{-i\frac{\gamma_0}{2}H_c}H^{\otimes n}$$,
+          其中 $H_b = \sum_{i\in n}X_{i}, H_c = \sum_{(i,j)\in C}Z_iZ_j$。
+
+    \item \MaxToSATAnsatz：\MaxToSATAnsatz\ 是 QAOA 的一种 ansatz 线路 \cite{Akshay_2020}，用于求解 Max-2-SAT 问题。Max-2-SAT 是一个组合优化问题，目标是为给定布尔公式寻找一个真值赋值，使满足的子句数量最大化。Max-2-SAT 是布尔可满足性问题（SAT）的特殊情形，其中只考虑包含两个文字的子句。Max-2-SAT 是 NP-hard 问题，这意味着目前没有已知的多项式时间算法能够求解它。它有许多应用，例如数据聚类、几何问题和可视化问题。\MaxToSATAnsatz\ 的数学表示如下：
+          $$U(\beta, \gamma) = e^{-i\beta_pH_b}e^{-i\frac{\gamma_p}{2}H_c}
+              \cdots e^{-i\beta_0H_b}e^{-i\frac{\gamma_0}{2}H_c}H^{\otimes n}$$,
+          其中 $H_b = \sum_{i\in n}X_{i}, H_c = \sum_{l\in m}P(l)$。
+
+    \item \QubitUCCAnsatz：量子比特酉耦合簇（Qubit Unitary Coupled-Cluster, qUCC）ansatz 是酉耦合簇 ansatz 的一种变体，它使用量子比特激发算符而不是费米子激发算符 \cite{PhysRevA.102.062612}。由量子比特激发算符张成的 Fock 空间与费米子算符等价，因此可以使用量子比特激发算符近似精确波函数，代价是需要更高阶的 Trotter 分解。
+
+          qUCC 的最大优势在于，即使使用三阶或四阶 Trotter 分解，其 CNOT 门数量也远少于原始 UCC 版本。此外，尽管变分参数数量有所增加，精度也会显著提升。
+
+    \item \UCCAnsatz：用于分子模拟的酉耦合簇 ansatz，其数学表示如下：
+          $$U(\vec{\theta}) = \prod_{j=1}^{N(N\ge1)}{\prod_{i=0}^{N_{j}}{\exp{(\theta_{i}\hat{\tau}_{i})}}}$$,
+          其中 $\hat{\tau}$ 为反厄米算符。
+\end{itemize}
+
+\MindQuantum\ 还实现了 19 种用于量子-经典混合算法的 ansatz，它们均基于文献 \cite{Sim_2019} 中对各类参数化线路表达能力和纠缠能力的分析。
+
+\subsubsection{量子化学 Ansatz}
+
+此外，\MindQuantum\ 中还包含一些与量子化学相关的生成器，可以生成对应的 VQE ansatz。
+
+\begin{itemize}
+    \item \generateuccsd：基于 \textit{Openfermion} \cite{mcclean2020openfermion} 生成的分子数据生成 UCCSD 量子线路。UCCSD ansatz 的基本思想是使用酉耦合簇（UCC）理论，将量子态表示为参考态与耦合簇算符指数形式的乘积，即：
+          $$
+              |\Psi(\vec{\theta})\rangle = \exp(\hat{T} - \hat{T}^\dagger)|\Psi_0\rangle.
+          $$
+          其中，$\hat{T}$ 是耦合簇算符，包含单激发和双激发，即：
+          $$
+              \hat{T} = \sum_{pq}\theta_{pq}a_p^\dagger a_q + \sum_{pqrs}\theta_{pqrs}a_p^\dagger a_q^\dagger a_r a_s.
+          $$
+          其中，$a_p^\dagger$ 和 $a_q$ 是费米子的产生算符和湮灭算符，$\theta_{pq}$ 和 $\theta_{pqrs}$ 是变分参数，可通过优化目标函数确定。
+
+    \item \quccsdgenerator：使用量子比特激发算符生成 qubit-UCCSD（qUCCSD）ansatz。
+    \item \uccsdzerosingletgenerator：为分子系统使用 CCD0 ansatz 生成 UCCSD 算符。
+    \item \uccsdsingletgenerator：为具有 n 个电子的系统创建单重态 UCCSD 生成器。
+\end{itemize}
+
+用户也可以通过继承 Ansatz 基类并实现 \code{implement()} 方法来设计自己的 ansatz。
+
+\begin{lstlisting}
+from mindquantum.core.gates import RX, RY
+from mindquantum.algorithm.nisq import Ansatz
+
+class MyAnsatz(Ansatz):
+    def __init__(self, n_qubits, depth):
+        """初始化自定义 ansatz。"""
+        Ansatz.__init__(self, 'MyAnsatz', n_qubits, depth)
+
+    def _implement(self, depth):
+        """实现自定义 ansatz。"""
+        for i in range(depth):
+            for j in range(self.n_qubits):
+                self._circuit += RX(f'a_{i}').on(j)
+                self._circuit += RY(f'b_{i}').on(j)
+
+ansatz_circuit = MyAnsatz(3, 2).circuit
+\end{lstlisting}

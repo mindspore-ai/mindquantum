@@ -1,0 +1,299 @@
+\textit{简介} -- 本节讨论开放量子系统模拟，包括量子系统动力学和量子最优控制。后续部分将分别展示这些场景中的实现方法。
+
+\textit{基本操作} -- 在开始实现具体算法之前，我们先介绍一些基本操作。在每个问题中，都需要构造哈密顿量来描述量子系统。一般而言，量子系统的哈密顿量通常包含两部分：一部分是与时间无关的漂移哈密顿量，另一部分是随时间变化的控制哈密顿量。因此，我们采用如下方式构造漂移哈密顿量和控制哈密顿量。首先构造漂移哈密顿量：
+\begin{equation}
+    H_{d}=\sum_{i\in\{x,y,z\}}\prod_{j=1}^{n}\sigma_{j}^{i}.
+\end{equation}
+\begin{lstlisting}
+from mindquantum import QubitOperator as Q
+for i in range(qubit_num-1):
+    H_d=H_d*(Q('X{}'.format(i+1))\
+        +Q('Y{}'.format(i+1))\
+        +Q('Z{}'.format(i+1)))
+H_d=H_d.matrix()
+\end{lstlisting}
+\textit{酉演化} -- 基于该量子系统，可以从多个角度研究量子系统的性质。首先，可以研究该量子系统在封闭环境中的动力学。对于封闭系统，其演化由 Schr\"{o}dinger 方程支配。
+\begin{equation}
+    i\hbar\frac{\partial}{\partial t}\Psi=\hat{H}\Psi,
+\end{equation}
+其中 $\Psi$ 是波函数，$\hat{H}$ 是量子系统的哈密顿量。如果将系统截断为有限个能级 $l$，该方程可重写为：
+\begin{equation}
+    i\hbar\frac{d}{dt}\ket{\psi}=H\ket{\psi},
+    \label{shro}
+\end{equation}
+其中 $\ket{\psi}$ 是 $l$ 能级系统的状态向量，$H$ 是哈密顿量的矩阵表示。在 \MindQuantum\ 中，可以使用列表将量子态 $\ket{\psi}$ 定义为整个演化过程的初始态。
+\begin{lstlisting}
+import numpy as np
+psi0=np.zeros((1,2**qubit_num),dtype=complex)
+psi0[0][0]=1+0j
+\end{lstlisting}
+给定哈密顿量后，可以使用 \MindQuantum\ 函数 MQsesolve 计算任意初始状态向量 $\ket{\psi_{0}}$ 的酉（非耗散）时间演化，并获得每个时间片上的结果态。
+\begin{lstlisting}
+t_list=np.linspace(0.0,10.0,100)
+H=[[H_d]]
+result=MQsesolve(H,psi0,t_list)
+\end{lstlisting}
+函数 MQsesolve 会在 Schr\"{o}dinger 酉演化过程中计算每个时间片上的状态。如果希望在封闭系统中加入控制，只需将控制哈密顿量和对应的时间函数追加到哈密顿量列表中即可。MQmesolve 会根据输入参数自动识别具体场景。对于一个双量子比特系统，我们以下列形式加入控制哈密顿量：
+\begin{equation}
+    H_{c}=\sin(0.2\pi t)\sigma_{0}^{y}\sigma_{1}^{z},
+\end{equation}
+这可以在 \MindQuantum\ 中方便地实现。
+\begin{lstlisting}
+qubit_num=2
+H_c=Q('Y0 Z1',qubit_num).matrix()
+H=[[H_d],[H_c,np.sin(2*np.pi*0.1*t_list)]]
+result=MQmesolve(H,psi0,t_list,col_ops=[])
+\end{lstlisting}
+\textit{非酉演化} -- 在更多情况下，必须考虑环境对开放量子系统的影响。来自热浴的影响会导致能量泄漏到更高能级，或使系统中不同状态之间的相位差产生不确定性。因此，必须用密度矩阵描述这类量子系统中的状态。密度矩阵用于描述量子态 $\ket{\psi}$ 的概率分布，即 $\rho=\sum_{k}p_{k}\ket{\psi_{k}}\bra{\psi_{k}}$。其中，$p_k$ 是状态 $\psi_k$ 的概率。
+
+描述开放量子系统的典型方法通常是 Lindblad 主方程 \cite{lindblad1976generators}。它由 von Neumann 方程推导而来，后者将系统范围扩展到包含环境。
+\begin{equation}
+    \dot{\rho}_{tot}(t)=-\frac{i}{\hbar}\left[H_{tot},\rho_{tot}(t)\right],
+    \label{sysAndBath}
+\end{equation}
+其中总哈密顿量由量子系统哈密顿量 $H_{sys}$、环境哈密顿量 $H_{env}$，以及描述环境与量子系统相互作用的哈密顿量 $H_{int}$ 组成：
+\begin{equation}
+    H_{tot}=H_{sys}+H_{env}+H_{int}.
+\end{equation}
+由于在量子计算中大多数情况下只关注量子系统本身，可以对式（\ref{sysAndBath}）中的环境自由度取偏迹，从而得到原系统密度矩阵 $\rho=\rm{Tr}_{env}(\rho_{tot})$ 的 Lindblad 主方程：
+\begin{equation}
+    \begin{split}
+        \dot{\rho}&=-\frac{i}{\hbar}\left[H(t),\rho(t)\right]\\
+        &+\sum_{n}\frac{1}{2}\left[2C_{n}\rho(t)C^{\dagger}_{n}-\rho(t)C_{n}^{\dagger}C_{n}-C_{n}^{\dagger}C_{n}\rho(t)\right],
+    \end{split}
+\end{equation}
+其中 $C_{n}=\sqrt{\gamma_{n}}A_{n}$，$A_n$ 是坍缩算符；环境通过 $H_{int}$ 中的这些算符以相应速率 $\gamma_{n}$ 与系统耦合。在 \MindQuantum\ 中，暂无自动推导坍缩算符的函数。因此，需要按如下方式设计 $C_{n}$：
+\begin{lstlisting}
+G=0.5
+g=0.04
+dephase1=csr_matrix([[1,0],[0,0]], dtype=complex)
+dephase2=csr_matrix([[0,0],[0,1]], dtype=complex)
+decay=csr_matrix([[0,1],[0,0]], dtype=complex)
+cl_ops=[[decay,np.sqrt(g)],[dephase1,\
+    np.sqrt(G-g/2)],[dephase2,np.sqrt(G-g/2)]]
+\end{lstlisting}
+对于量子系统的非酉演化，即包含弛豫和退相干等非相干过程的演化，通常使用主方程处理。在 \MindQuantum\ 中，两类演化都使用 MQmesolve。尽管二者不同，MQmesolve 可以根据输入参数自动判断应采用哪一种形式。
+\begin{lstlisting}
+result=MQmesolve(H,psi0,t_list,col_ops=cl_ops)
+\end{lstlisting}
+
+\textit{量子最优控制} -- 除量子演化外，\MindQuantum\ 还可以处理量子最优控制任务。\MindQuantum\ 中可选的算法有三种：（1）GRAPE \cite{GRAPE_0, GRAPE_2}，（2）CRAB \cite{CRAB_0, CRAB_1}，以及（3）GOAT。最优控制任务通常是最小化或最大化某些函数，这些函数刻画控制脉冲在封闭或开放系统中将量子系统驱动到目标状态的效果。
+
+\textit{封闭量子系统} -- 记 $U_{targ}$ 为目标酉算符，$U_{T}$ 为实际酉演化算符。我们希望最大化二者的重叠：
+\begin{equation}
+    \tau_{n}=\bra{n}\hat{U}_{targ}^{\dagger}\hat{U}(T)\ket{n}.
+\end{equation}
+考虑如下两个泛函：
+\begin{equation}
+    \begin{split}
+        &J_{T,sm}=1-\frac{1}{N^{2}}\left|\sum_{n=1}^{N}\tau_{n}\right|^{2}=1-\frac{1}{N^{2}}\sum_{n=1}^{N}\sum_{m=1}^{N}\tau_{n}\tau_{m}^{\dagger}\\
+        &J_{T,re}=1-\frac{1}{N}Re\left[\sum_{n=1}^{N}\tau_{n}\right].
+    \end{split}
+    \label{close}
+\end{equation}
+如果 ${\ket{n}}$ 是一组本征态，则 $J_{T,sm}$ 可简单定义为 $\left|\text{Tr}(\hat{U}_{targ}^{\dagger}\hat{U}(T))\right|^{2}$，$J_{T,re}$ 可定义为 $\text{Re}[\text{Tr}(\hat{U}^{\dagger}_{targ}\hat{U}(T))]$。因此，当对任意向量 $\ket{n}$ 都有 $\hat{U}(T)\ket{n}=e^{i\phi}\hat{U}_{targ}\ket{n}$，且 $\phi$ 为任意相位时，$J_{T,sm}$ 取得最小值。然而，$J_{T,re}$ 仅在 $\phi=0$ 时取得最小值。这些泛函可用于多种场景，包括量子门优化 \cite{He_2024}、态制备 \cite{He_2021, refId0}，以及批量态演化的最优控制。
+
+\textit{开放量子系统} -- 在开放量子系统中，由于热浴环境引入的不确定性，必须使用混合态。此时需要调整式（\ref{close}），使其也能刻画演化到混合态的过程。在这种情况下，可基于 Hilbert-Schmidt 距离平方定义如下函数：
+\begin{equation}
+    \begin{split}
+        &J_{T,hs}=\frac{1}{2N}\sum_{n=1}^{N}\text{Tr}\left[(\hat{\rho}_{n,targ}-\hat{\rho}_{n}(T))^{2}\right]\\
+        &\!=\!\frac{1}{2N}\sum_{n=1}^{N}\left(\text{Tr}(\hat{\rho}^{2}_{n,targ})\!+\!\text{Tr}(\hat{\rho}^{2}_{n}(T))\!-\!2\mathrm{Re}[\text{Tr}(\hat{\rho}_{n,targ}\hat{\rho}_{n}(T))]\right)\\
+        &\!\!=\!\!\frac{1}{2N}\!\!\sum_{n=1}^{N}\!\!\braket{\hat{\rho}_{n,targ}|\hat{\rho}_{n,targ}}\!\!+\!\!\braket{\hat{\rho}_{n}(T)|\hat{\rho}_{n}(T)}\!\!-\!\!2\mathrm{Re}\!\braket{{\hat{\rho}_{n,targ}|\hat{\rho}_{n}(T)}}
+    \end{split}
+\end{equation}
+其中 Hilbert-Schmidt 距离平方对应的距离为：
+\begin{equation}
+    D_{hs}=\sqrt{\mathrm{Tr}(\hat{\sigma}-\hat{\rho})^{2}}.
+\end{equation}
+此外，状态可重写为：
+\begin{equation}
+    \begin{split}
+        &\ket{\hat{\rho}_{n,targ}}=\hat{\hat{P}}_{targ}\ket{\hat{\rho}(0)}\\
+        &\ket{\hat{\rho}_{n}(T)}=\hat{\hat{P}}(T)\ket{\hat{\rho}_{n}(0)},
+    \end{split}
+\end{equation}
+其中 $\hat{\hat{P}}_{targ}$ 是目标变换算符，$\hat{\hat{P}}(T)$ 是开放系统演化算符。
+
+\textit{泛函梯度} -- GRAPE 和 GOAT 两类方法都需要参数导数才能得到结果。因此，需要推导封闭量子系统和开放量子系统中的梯度。
+
+对于式（\ref{close}）所示的封闭系统量子门优化，其梯度如下：
+\begin{equation}
+    \begin{split}
+        &\frac{\partial}{\partial \alpha}J_{T,sm}=-\frac{2}{N^{2}}\mathrm{Re}\left[\sum_{n=1}^{N}\sum_{m=1}^{N}\frac{\partial \tau_{n}}{\partial \alpha}\tau^{*}_{m}\right]\\
+        &\frac{\partial}{\partial \alpha}J_{T,re}=-\frac{1}{N}\mathrm{Re}\left[\sum_{n=1}^{N}\frac{\partial \tau_{n}}{\partial \alpha}\right],
+    \end{split}
+\end{equation}
+其中 $\alpha$ 表示一类抽象参数。目标门与最优结果之间的重叠为：
+\begin{equation}
+    \begin{split}
+        \frac{\partial \tau_{n}}{\partial \alpha}&=\left<n\left|\hat{U}^{\dagger}_{targ}\frac{\partial\hat{U}(T)}{\partial \alpha}\right|n\right>\\
+        &=\left<n_{targ}\left|\frac{\partial \hat{U}(T)}{\partial \alpha}\right|n\right>,
+    \end{split}
+\end{equation}
+密度矩阵迹的导数可写为：
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial \alpha}\braket{\hat{\rho}_{n}(T)|\hat{\rho}_{n}(T)}=2\mathrm{Re}\left<\hat{\rho}_{n}(T)|\frac{\partial \hat{\rho}(T)}{\partial \alpha}\right>.
+    \end{split}
+    \label{overlap}
+\end{equation}
+同时，开放系统的梯度可写为：
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial \alpha}J_{T,hs}&=\frac{1}{N}\mathrm{Re}\sum_{n=1}^{N}\left<\hat{\rho}_{n}\left|\left(\hat{\hat{P}}^{\dagger}(T)+\hat{\hat{P}}^{\dagger}_{targ}\right)\frac{\partial \hat{\hat{P}}(T)}{\partial \alpha}\right|\hat{\rho}_{n}\right>\\
+        &=\frac{1}{N}\mathrm{Re}\sum_{n=1}^{N}\left<\hat{\rho}_{n,targ}+\hat{\rho}_{n}(T)\left|\frac{\partial\hat{\hat{P}}(T)}{\partial \alpha}\right|\hat{\rho}_{n}\right>.
+    \end{split}
+\end{equation}
+这里，该梯度仍然可用于向量 $\bra{\hat{\rho}_{n,targ}+\hat{\rho}_{n}(T)}$。
+
+\textit{梯度上升脉冲工程} -- 梯度上升脉冲工程（Gradient Ascent Pulse Engineering, GRAPE）算法用于脉冲最优控制。它将演化时间划分为多个时间片。在每个时间片中，脉冲由一个与时间无关的哈密顿量控制。因此，整个演化可以视为一个分段函数。采用这种做法的原因是，求解不含时 Schr\"{o}dinger 方程的时间复杂度更低。记控制哈密顿量为 $H_{k}$，第 $m$ 个时间片中的酉算符 $\hat{U}_{m}$ 可写为：
+\begin{equation}
+    \hat{U}_{m}=\mathrm{exp}\left[-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)\right],
+\end{equation}
+其中 $c_{k}=c_{k}(t)$ 是第 $m$ 个时间片中第 $k$ 个控制哈密顿量的常数系数。我们希望调节参数 $c_{k}$ 来寻找控制脉冲的最优结果，并可将式（\ref{overlap}）重写如下：
+\begin{equation}
+    \begin{aligned}
+         & \frac{\partial}{\partial c_{k}^{m}}\braket{\psi_{T}|\psi(t_M)}                                                                             \\
+         & \approx\bra{\psi_{T}}\hat{U}_{M}...\hat{U}_{m}(-i\Delta t\hat{H}_{k})\hat{U}_{m-1}...\hat{U}_{1}\ket{\psi(0)}                              \\
+         & =(\hat{U}_{m}^{\dagger}...\hat{U}_{M}^{\dagger}\ket{\psi_{T}})^{\dagger}(-i\Delta t\hat{H}_{k})(\hat{U}_{m-1}...\hat{U}_{1}\ket{\psi(0)}),
+    \end{aligned}
+\end{equation}
+并使用变换导数的近似公式计算梯度：
+\begin{equation}
+    \begin{aligned}
+        \frac{\partial}{\partial c_{k}^{m}} & =\frac{\partial}{\partial c_{k}^{m}}e^{-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)} \\
+                                            & \approx e^{-\frac{i}{\hbar}\Delta t\left(\hat{H}_{d}+\sum_{k=1}^{K}c_{k}^{(m)}\hat{H}_{k}\right)}(-i\Delta t\hat{H}_{k})      \\
+                                            & =\hat{U}_{m}(-i\Delta t\hat{H}_{k}).
+    \end{aligned}
+\end{equation}
+已有结果表明，更高阶的梯度近似是二阶微分优化（如软件包中的 L-BFGS-B）的重要方法，可以使 GRAPE 更快、更精确地收敛。梯度的一般公式为：
+\begin{equation}
+    \begin{split}
+        \frac{\partial}{\partial c_{k}^{(m)}}\braket{\psi_{T}|\psi(t_{M})}&=(\hat{U}_{m}^{\dagger}...\hat{U}_{M}^{\dagger}\ket{\psi_{T}})^{\dagger}\times\\
+        &\left(\sum_{s=0}^{S}\frac{(i\Delta t)^{s+1}}{(s+1)!}[\hat{H}(t_m),\hat{H}_{k}]_s\right)\times\\
+        &(\hat{U}_{m-1}...\hat{U}_{1}\ket{\psi(0)}),
+    \end{split}
+\end{equation}
+其中
+\begin{equation}
+    \begin{split}
+        &\left[\hat{H}(t_m),\hat{H}_{k}\right]_{0}=\hat{H}_{k}\\
+        &\left[\hat{H}(t_m),\hat{H}_{k}\right]_{s}=\left[\hat{H}(t_m),\left[\hat{H}(t_m),\hat{H}_{k}\right]_{s-1}\right].
+    \end{split}
+\end{equation}
+在 \MindQuantum\ 中，梯度函数的阶数可以是一阶（$s=0$）或二阶（$s=1$），这已能满足大多数场景。更高阶计算难度更大，且不会带来显著改进。
+
+如果希望在开放系统中使用 GRAPE，可按如下方式调整公式：
+\begin{equation}
+    \begin{split}
+        \ket{\psi(t)}&\to \ket{\hat{\rho}(t)}\\
+        \hat{H}(t)&\to \hat{\hat{L}}(t)\\
+        \hat{U}_{n}&\to \hat{\hat{P}}_{n}.\\
+    \end{split}
+\end{equation}
+
+在 \MindQuantum\ 中，我们为开放系统和封闭系统都提供了态制备与最优量子门控制函数。下面以实现 Hadamard 门为例进行说明。首先，需要定义目标。
+\begin{lstlisting}
+target=gen_target(qubit_num,eigen_states,hadmamard)
+\end{lstlisting}
+接下来，需要给出演化所需参数，包括量子比特数、保真度误差、演化时间、优化最大迭代次数以及时间片数量。
+\begin{lstlisting}
+evo_time=4
+num_tslots=200
+fid_err=1e-3
+\end{lstlisting}
+随后，可分别使用 $MQ\_opt\_unitary\_grape$ 处理酉演化，使用 $MQ\_opt\_pulse\_grape$ 处理开放系统：
+\begin{lstlisting}
+result_unitary = MQ_opt_unitary_grape(
+    drift=drift,
+    ctrls=ctrls,
+    target=target,
+    num_tslots=num_tslots,
+    evo_time=evo_time,
+    max_iter=1000,
+    fid_err=fid_err,
+)
+
+result_open = MQ_opt_pulse_grape(
+    drift=drift,
+    ctrls=ctrls,
+    cl_op=cl_ops,
+    target=target,
+    num_tslots=num_tslots,
+    evo_time=evo_time,
+    max_iter=1000,
+    fid_err=fid_err,
+)
+\end{lstlisting}
+除上述参数外，我们还为用户提供了更多参数，以满足不同优化问题中的需求。不过受篇幅限制，这里不再展开细节。
+
+\textit{截断随机基} -- 由于 GRAPE 得到的结果无法直接用于实验，截断随机基（Chopped Random-Basis, CRAB）方法被提出。该方法考虑了真实硬件限制，其结果可用于实际实验。
+
+由于 CRAB 是一种无梯度算法，本软件包中使用 Nelder-Mead 优化方法。此外，我们选择带有 Gaussian 边界可能性的 Fourier 基来实现 CRAB。在 Fourier 基中，第 $k$ 个控制函数可定义为：
+\begin{equation}
+    c_{k}(t)=\sum_{s=1}^{S}g_{k}(t)(A_{s,k}\mathrm{cos}(\omega_{s,k}t)+B_{s,k}\mathrm{sin}(\omega_{s,k}t)),
+\end{equation}
+其中 $g_{k}(t)=\exp\left[(t-t_{0})^{2}/\sigma^{2}\right]$ 或 $g_{k}(t)=1$，取决于脉冲形状限制。根据具体情况，$\omega_{s}$ 也有两种不同选择。第一种情况是我们不知道系统共振频率，此时频率随机选取：$\omega_{s}=(1+r_s)(2\pi s/T)$。这里 $2\pi s/T$ 是第 $s$ 个主频，$r_s$ 是范围 $[-0.5,0.5]$ 内的均匀随机数。第二种情况是根据系统共振和控制限制选择频率 ${\omega_{s,k}}$。
+
+CRAB 的函数调用形式与 GRAPE 类似：
+\begin{lstlisting}
+result_unitary = MQ_opt_unitary_grape(
+    drift=drift,
+    ctrls=ctrls,
+    target=target,
+    num_tslots=num_tslots,
+    evo_time=evo_time,
+    max_iter=1000,
+    fid_err=fid_err,
+)
+
+result_open = MQ_opt_pulse_grape(
+    drift=drift,
+    ctrls=ctrls,
+    cl_op=cl_ops,
+    target=target,
+    num_tslots=num_tslots,
+    evo_time=evo_time,
+    max_iter=1000,
+    fid_err=fid_err,
+)
+\end{lstlisting}
+
+\textit{解析控制的梯度优化} -- 解析控制的梯度优化（Gradient Optimization of Analytic Controls, GOAT）是 \MindQuantum\ 中用于最优控制的最后一种方法。可控系统的哈密顿量为：
+\begin{equation}
+    \vec{H}(\vec{a},t)=\hat{H}_{0}+\sum_{k=1}c_{k}(\vec{a},t)\hat{H}_{k}.
+\end{equation}
+其中 $\vec{a}$ 是参数向量。通过计算式（\ref{shro}）的梯度并交换导数顺序，可得到如下方程：
+\begin{equation}
+    i\hbar\partial_{t}
+    \begin{pmatrix}
+        \ket{\psi} \\
+        \ket{\partial_{a}\psi}
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        \hat{H}(t)             & 0          \\
+        \partial_{a}\hat{H}(t) & \hat{H}(t)
+    \end{pmatrix}
+    \begin{pmatrix}
+        \ket{\psi} \\
+        \ket{\partial_{a}\psi}
+    \end{pmatrix}
+    \label{Goat_diff}
+\end{equation}
+其初值为 $\partial_{a}\psi(0)=0$。在本软件包中，我们使用了一个修改版 GOAT。式（\ref{Goat_diff}）被拆分为两部分。第一部分是普通 Schr\"{o}dinger 方程，第二部分是非齐次方程：
+\begin{equation}
+    i\hbar\frac{d}{dt}\ket{\partial_{\vec{a}}\psi(t)}=\hat{H}(t)\ket{\partial_{\vec{a}}\psi(t)}+\partial_{\vec{a}}\hat{H}(t)\ket{\psi(t)}.
+\end{equation}
+这两部分可以在 Schr\"{o}dinger 方程本身的规模上计算，而不是在两倍大的规模上计算。该形式避免了伴随传播，但需要对参数向量 $\ket{a}$ 中的每个元素进行前向传播。目前，我们只在封闭系统中实现了 GOAT 方法，其调用方式如下：
+\begin{lstlisting}
+result_unitary = MQ_opt_unitary_goat(
+    drift=drift,
+    ctrls=ctrls,
+    target=target,
+    num_tslots=num_tslots,
+    evo_time=evo_time,
+    max_iter=1000,
+    fid_err=fid_err,
+)
+\end{lstlisting}

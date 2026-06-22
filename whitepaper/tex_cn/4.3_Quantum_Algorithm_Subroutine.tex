@@ -1,0 +1,36 @@
+在 \MindQuantum\ 的 \library\ 模块中，我们实现了一些量子算法常用组件。
+
+\begin{itemize}
+
+    \item \amplitudeencoder：用于振幅编码的量子线路。
+
+    \item \bitphaseflipoperator：生成一个能够翻转任意计算基符号的线路。
+
+    \item \generalghzstate：基于零态制备一般 GHZ 态的线路。GHZ 态定义为三个零态和三个一态的等权叠加：
+
+          \begin{equation}
+              \left|\text{GHZ}\right> = (\left|000\right> + \left|111\right>)/\sqrt{2}.
+          \end{equation}
+
+          在该 API 中，可以在任意总量子比特数的任意子量子比特上创建一般 GHZ 态。
+
+    \item \generalwstate：一般 W 态。W 态定义为仅有一个量子比特处于 $|1\rangle$、其余量子比特处于 $|0\rangle$ 的各基态的等权叠加。例如，三量子比特 W 态定义为：
+
+          \begin{equation}
+              \left|\rm W\right> = (\left|001\right> + \left|010\right> + \left|100\right>)/\sqrt{3}.
+          \end{equation}
+
+          在该 API 中，可以在任意总量子比特数的任意子 Hilbert 空间上定义 W 态。
+
+    \item \qft：量子傅里叶变换（QFT）。量子傅里叶变换的功能类似于经典傅里叶变换。
+\end{itemize}
+
+以 \amplitudeencoder\ 为例，在构建量子算法时可以这样使用它：
+\begin{lstlisting}
+from mindquantum.algorithm.library import amplitude_encoder
+from mindquantum.simulator import Simulator
+sim = Simulator('mqvector', 8)
+encoder, parameterResolver = amplitude_encoder([0.5, -0.5, 0.5, 0.5], 8)
+sim.apply_circuit(encoder, parameterResolver)
+\end{lstlisting}
+其返回值就是一个线路，因此可以在算法中按需添加它。

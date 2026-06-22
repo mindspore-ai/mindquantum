@@ -1,0 +1,385 @@
+\documentclass[pra,twocolumn,superscriptaddress,floatfix,nofootinbib,amsmath,amssymb]{revtex4-1}
+
+% Chinese version: compile with XeLaTeX.
+\usepackage[UTF8,scheme=plain]{ctex}
+\usepackage{upquote}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{braket}
+\usepackage{xcolor}
+\usepackage{amsfonts}
+\usepackage{comment}
+\usepackage{dirtytalk}
+\usepackage{url}
+\usepackage{bbold}
+\usepackage{realboxes}
+\usepackage{my_macro}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{algpseudocode}
+\usepackage{subcaption}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{xcolor}
+\hypersetup{
+    bookmarksopen=true,
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=green,
+    urlcolor=blue
+}
+\newcommand{\fancylink}[2]{\[\footnotesize\Colorbox{bkgd}{\color{orange-red}\href{#1}{\linkcode{#2}}}\]}
+
+\newcommand{\spliteq}[1]{\begin{equation}
+\begin{split}
+#1
+\end{split}
+\end{equation}
+}
+
+\newcommand{\tr}{\text{tr}}
+
+\usepackage{listings}
+\lstset{stepnumber=0}
+
+\UseRawInputEncoding
+\usepackage{titlesec} %自定义多级标题格式的宏包
+\titleformat{\paragraph}[block]{\small\bfseries}{}{}{}[]
+% \titleformat{\paragraph}[block]{\small\bfseries}{}{1em}{}[]
+
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+
+\renewcommand{\contentsname}{目录}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\tocname}{目录}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\makeatletter
+\renewcommand{\fnum@figure}{图~\thefigure}
+\renewcommand{\fnum@table}{表~\thetable}
+\makeatother
+
+\definecolor{bkgd}{RGB}{240,242,246}
+\definecolor{ceruleanblue}{rgb}{0.16, 0.32, 0.75}
+\definecolor{orange-red}{rgb}{1.0, 0.27, 0.0}
+\definecolor{anotherblue}{RGB}{37,92,243}
+\definecolor{blackblue}{RGB}{46,60,85}
+\definecolor{goldyellow}{RGB}{199,146,12}
+
+
+\lstdefinestyle{altstyle2}{
+    backgroundcolor=\color{bkgd},
+    basicstyle=\ttfamily\footnotesize\color{blackblue},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{goldyellow},
+    keepspaces=true,
+    keywordstyle=\color{orange-red},
+    language=Python,
+    numbersep=5pt,
+    numberstyle=\tiny\color{ceruleanblue},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    stringstyle=\color{anotherblue},
+    tabsize=2,
+    numbers=left
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    language=Python,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=altstyle2}
+
+\bibliographystyle{apsrev4-1}
+
+\begin{document}
+
+\title{MindSpore Quantum：易用、高性能且兼容 AI 的量子计算框架
+}
+
+\author{Xusheng Xu}
+\email{thuxuxs@163.com}
+\affiliation{MindSpore Quantum SIG}
+\author{Jiangyu Cui}
+\affiliation{MindSpore Quantum SIG}
+\author{Zidong Cui}
+\affiliation{基础与前沿研究院，电子科技大学，成都 611731}
+\author{Runhong He}
+\affiliation{计算机科学国家重点实验室，中国科学院软件研究所，北京 100190}
+\author{Qingyu Li}
+\affiliation{基础与前沿研究院，电子科技大学，成都 611731}
+\author{Xiaowei Li}
+\affiliation{量子科学与工程研究院，南方科技大学，深圳 518055}
+\author{Yanling Lin}
+\affiliation{计算机科学与技术学院，中国科学技术大学，合肥 230027}
+\author{Jiale Liu}
+\affiliation{计算机科学与技术学院，中国科学技术大学，合肥 230027}
+\author{Wuxin Liu}
+\affiliation{MindSpore Quantum SIG}
+\author{Jiale Lu}
+\affiliation{MindSpore Quantum SIG}
+\author{Maolin Luo}
+\affiliation{MindSpore Quantum SIG}
+\author{Chufan Lyu}
+\affiliation{基础与前沿研究院，电子科技大学，成都 611731}
+\author{Shijie Pan}
+\affiliation{MindSpore Quantum SIG}
+\author{Mosharev Pavel}
+\affiliation{MindSpore Quantum SIG}
+\author{Runqiu Shu}
+\affiliation{自动化科学与工程学院，华南理工大学，广州 510641}
+\author{Jialiang Tang}
+\affiliation{巴斯克大学 UPV/EHU 物理化学系，Apartado 644，48080 毕尔巴鄂，西班牙}
+\author{Ruoqian Xu}
+\affiliation{巴斯克大学 UPV/EHU 物理化学系，Apartado 644，48080 毕尔巴鄂，西班牙}
+\author{Shu Xu}
+\affiliation{MindSpore Quantum SIG}
+\author{Kang Yang}
+\affiliation{MindSpore Quantum SIG}
+\author{Fan Yu}
+\affiliation{MindSpore Quantum SIG}
+\author{Qingguo Zeng}
+\affiliation{量子科学与工程研究院，南方科技大学，深圳 518055}
+\author{Haiying Zhao}
+\affiliation{MindSpore Quantum SIG}
+\author{Qiang Zheng}
+\affiliation{计算机科学与技术学院，中国科学技术大学，合肥 230027}
+\author{Junyuan Zhou}
+\email{jedzhou99@163.com}
+\affiliation{MindSpore Quantum SIG}
+\author{Xu Zhou}
+\affiliation{物理与天文学院，中山大学，珠海 519082}
+\author{Yikang Zhu}
+\affiliation{计算机科学与技术学院，中国科学技术大学，合肥 230027}
+\author{Zuoheng Zou}
+\email{zouzuoheng@pku.edu.cn}
+\affiliation{MindSpore Quantum SIG}
+
+
+\author{Abolfazl Bayat}
+\affiliation{基础与前沿研究院，电子科技大学，成都 611731}
+\affiliation{量子物理与光量子信息教育部重点实验室，电子科技大学，成都 611731}
+\author{Xi Cao}
+\affiliation{自动化系，清华大学，北京 100084}
+\affiliation{量子物理与光量子信息教育部重点实验室，电子科技大学，成都 611731}
+\author{Wei Cui}
+\affiliation{自动化科学与工程学院，华南理工大学，广州 510641}
+\author{Zhendong Li}
+\affiliation{理论及计算光化学教育部重点实验室，北京师范大学化学学院，北京 100875}
+\author{Guilu Long}
+\affiliation{北京量子信息科学研究院，北京 100193}
+\affiliation{低维量子物理国家重点实验室，清华大学物理系，北京 100084}
+\author{Zhaofeng Su}
+\affiliation{计算机科学与技术学院，中国科学技术大学，合肥 230027}
+\author{Xiaoting Wang}
+\affiliation{基础与前沿研究院，电子科技大学，成都 611731}
+\affiliation{量子物理与光量子信息教育部重点实验室，电子科技大学，成都 611731}
+\author{Zizhu Wang}
+\affiliation{基础与前沿研究院，电子科技大学，成都 611731}
+\affiliation{量子物理与光量子信息教育部重点实验室，电子科技大学，成都 611731}
+\author{Shijie Wei}
+\affiliation{北京量子信息科学研究院，北京 100193}
+\author{Re-Bing Wu}
+\affiliation{自动化系，清华大学，北京 100084}
+\author{Pan Zhang}
+\affiliation{中国科学院理论物理前沿重点实验室，中国科学院理论物理研究所，北京 100190}
+
+\author{Man-Hong Yung}
+\email{yung@sustech.edu.cn}
+\affiliation{MindSpore Quantum SIG}
+\affiliation{量子科学与工程研究院，南方科技大学，深圳 518055}
+\affiliation{深圳国际量子研究院，深圳 518048}
+\affiliation{广东省量子科学与工程重点实验室，南方科技大学，深圳 518055}
+\affiliation{深圳市量子科学与工程重点实验室，南方科技大学，深圳 518055}
+
+\date{\today}
+
+\keywords{量子机器学习，神经网络，量子神经网络，变分量子算法，机器学习，量子算法}
+
+
+\begin{abstract}
+    本文介绍 MindSpore Quantum，这是一个开创性的量子-经典混合框架，主要面向含噪中等规模量子（NISQ）算法的设计与实现。依托先进开源深度学习训练/推理框架 MindSpore 的强大支撑，MindSpore Quantum 在 CPU 与 GPU 平台上的变分量子算法设计和训练中表现出卓越效率，并展现出优异性能。此外，该框架高度重视提升量子算法在真实量子硬件上执行时的运行效率，相关工作涵盖量子线路编译与量子比特映射算法的研发；这些算法是量子处理器实现最优性能的关键组成部分。除核心框架外，我们还介绍了 QuPack---一个精心打造的量子计算加速引擎。QuPack 显著提升 MindSpore Quantum 的模拟速度，尤其在变分量子本征求解器（VQE）、量子近似优化算法（QAOA）和张量网络模拟中能够提供惊人的加速效果。这些前沿技术的结合，使研究人员和工程实践者能够以前所未有的效率和性能探索量子计算前沿。
+\end{abstract}
+\maketitle
+\tableofcontents
+\section{引言}
+
+\input{1_Introduction}
+
+\section{MindSpore Quantum 的基本元素}
+\label{sec:elements}
+
+查看本章演示代码：\demonotebook{02}{chapt02} \ \demonotebookgithub{02}{chapt02}
+
+\subsection{数据类型}
+\input{2.1_Data_Type}
+
+\subsection{参数解析器}
+\input{2.2_Parameter_Resolver}
+
+\subsection{量子门}
+\input{2.3_Quantum_Gate}
+
+\subsection{量子线路}
+\input{2.4_Quantum_Circuit}
+
+\subsection{可观测量与哈密顿量}
+\input{2.5_Quantum_Operator}
+
+\subsection{模拟器的基本用法}
+\label{sec:sim_basic_usage}
+\input{2.6_Basic_Usage_of_Simulator}
+
+
+\section{量子线路模拟后端}
+\label{sec:backend}
+
+\input{3.1_State_Vector_and_Density_Matrix_Simulator}
+
+\subsection{基于信道的噪声模拟器}
+\input{3.3_Channel_Based_Noise_Simulator}
+
+\section{MindSpore Quantum 工具箱}
+\label{sec:toolbox}
+
+查看本章演示代码：\demonotebook{04}{chapt04} \ \demonotebookgithub{04}{chapt04}
+
+\subsection{变分量子算法的梯度}
+\input{4.1_Gradient_of_Variational_Quantum_Algorithm}
+
+\subsection{量子线路 Ansatz 库}
+\input{4.2_Circuit_Ansatz_Library}
+
+\subsection{量子算法子程序}
+\input{4.3_Quantum_Algorithm_Subroutine}
+
+
+\section{应用}
+\label{sec:applications}
+\subsection{量子神经网络}
+
+% [1] School of Physics and Astronomy, Sun Yat-sen University, Zhuhai 519082, China\\
+
+% [2] QUDOOR Co, Ltd., Beijing 100089, China\\
+
+% Email: \url{zhouxu@qudoor.cn}
+
+
+
+\input{5.1_Quantum_Neural_Network}
+
+\subsection{量子近似优化算法}
+\input{5.2_Quantum_Approximate_Optimization_Algorithm}
+
+\subsection{变分量子本征求解器}
+\input{5.3_Variational_Quantum_Eigensolver}
+
+\input{5.4_Advanced_Quantum_Aplications}
+
+
+\section{QuPack：加速引擎}
+\label{sec:qupack}
+\input{6_QuPack_Acceleration_Engine}
+
+\subsection{变分量子本征求解器}
+\input{6.1_Variational_Quantum_Eigensolver}
+
+\subsection{量子近似优化算法}
+\input{6.2_Quantum_Approximate_Optimization_Algorithm}
+
+\subsection{张量网络模拟器}
+\input{6.3_Tensor_Network_Simulator}
+
+\subsection{脉冲工程}
+\input{6.4_Pulse_Engineering}
+
+
+\section{基准测试}
+\label{sec:benchmark}
+
+查看基准测试代码：\href{https://gitee.com/mindspore/mindquantum/blob/research/whitepaper/code/benchmark}{\color{ceruleanblue}{CPU}} \href{https://gitee.com/mindspore/mindquantum/blob/research/whitepaper/code/benchmark_gpu}{\color{ceruleanblue}{GPU}}
+
+\input{7_Benchmarking}
+
+
+\section{在量子芯片上执行}
+\label{sec:chip}
+\subsection{量子线路编译与优化}
+\input{8.1_Circuit_Compilation_and_Optimization}
+
+\subsection{量子比特映射}
+\input{8.2_Qubit_Mapping}
+
+% \subsection{Quantum Virtual Machine}
+% \input{8.3_Quantum_Virtual_Machine}
+
+% \subsection{Third-party Quantum Chip}
+% \input{8.4_Third-party_Quantum_Chip}
+
+\section{总结}
+\label{sec:summary}
+\MindQuantum\ 是一个量子-经典混合框架，聚焦于 NISQ 算法，尤其是变分量子算法的设计与实现。本文首先展示了用于操作量子门、量子线路和可观测量的 eDSL（嵌入式领域专用语言）。\MindQuantum\ 支持在任意量子门上设置任意控制量子比特，并基于 JIT 支持高性能的自定义参数化或非参数化量子门。随后，本文说明了状态矢量、密度矩阵和含噪量子模拟器的实现方式，以及如何通过基于量子门的优化结合 SIMD、OpenMP、鲲鹏和 GPU 加速来优化模拟性能。此外，本文提供了大量应用示例，帮助读者快速掌握 \MindQuantum\ 的用法；这些应用包括 VQE、QAOA 和 QNN。本文还介绍了名为 \QuPack\ 的加速引擎，说明其如何加速 VQE 和 QAOA 算法的模拟。在第~\ref{sec:benchmark} 章中，我们展示了与其他量子框架的性能基准对比，结果表明 \MindQuantum\ 在多个场景下具有优势。最后，本文还展示了我们在真实量子芯片上快速编译并执行量子线路方面所完成的工作。
+
+\section{致谢}
+\label{sec:acknowledgement}
+我们诚挚感谢本文作者及其各自贡献，具体如表 \ref{tab:contributions} 所示。
+
+\begin{table}[ht]
+    \begin{tabular}{|p{3cm}|p{3cm}|}
+        \toprule
+        作者          & 章节                                           \\
+        \midrule
+        Qingyu Li     & 2.1, 2.2, 5.3                                  \\
+        Qiang Zheng   & 2.3                                            \\
+        Jiale Liu     & 2.4                                            \\
+        Yanling Lin   & 2.5, 5.9                                       \\
+        Xusheng Xu    & 1, 2.6, 3.1, 3.2, 3.3, 4.1, 6.1, 7, 8.1, 9, 10 \\
+        Zuoheng Zou   & 6.2, 6.3, 7                                    \\
+        Junyuan Zhou  & 3.3, 4.2, 4.3, 7                               \\
+        Xu Zhou       & 5.1                                            \\
+        Jialiang Tang & 5.2                                            \\
+        Ruoqian Xu    & 5.4                                            \\
+        Chufan Lyu    & 5.5                                            \\
+        Runhong He    & 5.6                                            \\
+        Runqiu Shu    & 5.7                                            \\
+        Zidong Cui    & 5.8, 6.4                                       \\
+        Yikang Zhu    & 8.2                                            \\
+        \bottomrule
+    \end{tabular}
+    \caption{作者贡献}
+    \label{tab:contributions}
+\end{table}
+
+感谢 Shu Xu、Maolin Luo、Shijie Pan 和 Mosharev Pavel 对本文进行审阅。我们也感谢 Damien Ngyuen、Kai Zhang、Qin Li、Jinlin Zeng、Qi Yan、FangFang Yi、Youkun Ren、Hui Yang、Jiwei Xie、Ting Wang、Haoran Yang、YiXing Feng、Ting Wang、Han Yu、Xiaoling Huan、Jianing Luo 以及许多其他成员在持续集成与文档方面作出的贡献，并感谢 Shenyu Huang、Xiaopeng Cui、Bowen Liu、Yao Wang 在推广方面作出的贡献。我们向 \MindQuantum\ 的所有贡献者和用户致以感谢。正是大家共同的努力与关注，推动着这个项目持续前进。
+本工作受到国家自然科学基金项目（批准号：62273154）、中国博士后科学基金项目（批准号：2023M740874）以及国家留学基金委（CSC）项目（批准号：202206890003 和 202306890004）的支持。
+\bibliography{lib.bib}
+
+\end{document}

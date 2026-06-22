@@ -1,0 +1,194 @@
+Richard Feynman 曾提出，多体物理系统模拟是量子计算的主要应用之一。在众多多体物理模型中，我们重点关注 Heisenberg 模型和 Fermi-Hubbard 模型。这些模型的哈密顿量可以表示如下：
+
+\begin{align*}
+    H_\text{Heisenberg}    & = -J\sum_{<i,j>}\sigma_i\otimes \sigma_j-h\sum_i\sigma_i,                                            \\
+    H_\text{Fermi-Hubbard} & = -\sum_{<i,j>,\sigma}\left(a_{i\sigma}^\dagger a_{j\sigma} + a_{j\sigma}^\dagger a_{i\sigma}\right) \\
+                           & + U\sum_i n_{i\uparrow}n_{i\downarrow}.
+\end{align*}
+
+在 \MindQuantum\ 中，借助 \QubitOperator\ 和 \FermionOperator\ 可以方便地构造这些哈密顿量。
+
+\subsubsection{量子比特算符}
+
+在 Heisenberg 模型中，$\sigma_i$ 表示 Pauli 算符。Pauli 算符的矩阵形式为：
+
+\begin{align*}
+    \sigma_X & = \begin{pmatrix}
+        0 & 1 \\
+        1 & 0
+    \end{pmatrix}, \sigma_Y = \begin{pmatrix}
+        0 & -i \\
+        i & 0
+    \end{pmatrix}, \\
+    \sigma_I & =\begin{pmatrix}
+        1 & 0 \\
+        0 & 1
+    \end{pmatrix}, \sigma_Z = \begin{pmatrix}
+        1 & 0  \\
+        0 & -1
+    \end{pmatrix}.
+\end{align*}
+在 \MindQuantum\ 中，\QubitOperator\ 用于构造这类算符。给定 Pauli 字符串 $\sigma_{X,3}\otimes \sigma_{Y,1}\otimes \sigma_{Z,0}=X_3 Y_1 Z_0$，即在第 3、1、0 号量子比特上分别作用 Pauli $X$、Pauli $Y$ 和 Pauli $Z$，可以通过如下方式方便地构造：
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator
+
+ops = QubitOperator('Z0 Y1 X3')
+\end{lstlisting}
+请注意，由于 $[Z_0, Y_1]= [Z_0,X_3] = [Y_1, X_3]=0$，Pauli 字符串中各 Pauli 项的顺序并不影响结果。
+
+\QubitOperator\ 也支持算术运算，以便构造更复杂的算符：
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator
+from mindquantum.core.parameterresolver import ParameterResolver as PR
+
+op1 = QubitOperator('X0')
+op2 = QubitOperator('Z1', 'a')
+op3 = QubitOperator('Y1')
+op4 = 2 * op1 * op2 + op3 * PR('b')
+print(op4)
+print(op4.subs({'a':1, 'b':2}).matrix().toarray())
+\end{lstlisting}
+输出为：
+\begin{lstlisting}
+2*a [X0 Z1] +
+  b [Y1]
+
+[[ 0.+0.j  2.+0.j  0.-2.j  0.+0.j]
+ [ 2.+0.j  0.+0.j  0.+0.j  0.-2.j]
+ [ 0.+2.j  0.+0.j  0.+0.j -2.+0.j]
+ [ 0.+0.j  0.+2.j -2.+0.j  0.+0.j]]
+\end{lstlisting}
+在最后一行中，我们使用 \code{.subs} 设置参数值，并使用 \code{.matrix} 得到 CSR 格式的稀疏矩阵。
+
+\subsubsection{费米子算符}
+
+在 Fermi-Hubbard 模型中，$a_i^\dagger$ 和 $a_i$ 是费米子粒子的产生算符和湮灭算符。不同于 Pauli 算符，费米子算符满足反对易关系：
+\begin{align*}
+    \{a_i, a_j^\dagger\} & = a_ia_j^\dagger + a_j^\dagger a_i = \delta_{ij}, \\
+    \{a_i, a_j\}         & = \{a_i^\dagger, a_j^\dagger\}=0.
+\end{align*}
+在量子比特系统中，作用在态 $\ket{0}$ 和 $\ket{1}$ 上的产生算符与湮灭算符满足如下规则：
+\begin{align*}
+    a\ket{0}          & =0,        & a\ket{1}          & =\ket{0}, \\
+    a^\dagger \ket{0} & = \ket{1}, & a^\dagger \ket{1} & =0.
+\end{align*}
+
+产生算符与湮灭算符的矩阵形式为：
+
+\begin{align*}
+    a=\begin{pmatrix}
+        0 & 1 \\
+        0 & 0
+    \end{pmatrix},
+    a^\dagger=\begin{pmatrix}
+        0 & 0 \\
+        1 & 0
+    \end{pmatrix}.
+\end{align*}
+在 \MindQuantum\ 中，可以使用 \FermionOperator\ 构造费米子算符。假设我们先在第 1 号量子比特上产生一个态，再在第 0 号量子比特上湮灭一个态，即 $a_1^\dagger\otimes a_0$，则可以通过如下方式构造：
+\begin{lstlisting}
+from mindquantum.core.operators import FermionOperator
+op1 = FermionOperator('1^ 0')
+\end{lstlisting}
+在费米子字符串中，我们使用 \verb|^| 表示 $\dagger$，并使用数字标记对应量子比特。\FermionOperator\ 的算术运算与 \QubitOperator\ 非常相似。
+
+
+\subsubsection{算符函数}
+
+\MindQuantum\ 还为算符提供了许多高级函数。以下是一些示例：
+
+- \methodcommutator{op1}{op2}：输出两个算符的对易子。
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator, FermionOperator, commutator
+qub_op1 = QubitOperator("X1 Y2")
+qub_op2 = QubitOperator("X1 Z2")
+commutator(qub_op1, qub_op1)  # 0
+commutator(qub_op1, qub_op2)  # (2j) [X2]
+\end{lstlisting}
+
+- \methodcountqubits{op1}：在删除未使用量子比特前统计量子比特数量。
+
+\begin{lstlisting}
+from mindquantum.core.operators import QubitOperator,FermionOperator, count_qubits
+qubit_op = QubitOperator("X1 Y2")
+count_qubits(qubit_op)  # 3
+fer_op = FermionOperator("1^")
+count_qubits(fer_op)  # 2
+\end{lstlisting}
+
+
+- \methodhermitianconj{op1}：获取给定算符的厄米共轭。
+
+\begin{lstlisting}
+from mindquantum.core.operators import FermionOperator, hermitian_conjugated
+fer_op = FermionOperator("1^ 3")
+hermitian_conjugated(fer_op)
+\end{lstlisting}
+
+\subsubsection{变换}
+费米子系统的量子模拟具有挑战性。为了有效降低在量子硬件上模拟费米子哈密顿量所需的资源，可以使用量子比特模拟费米子，这涉及费米子哈密顿量与量子比特哈密顿量之间的转换。\MindQuantum\ 提供了 \code{mindquantum.algorithm.nisq.Transform} 模块，用于在费米子算符（\FermionOperator）和量子比特算符（\QubitOperator）之间进行变换。该模块提供如下函数：
+\begin{itemize}
+    \item \methodjordanwigner：应用 Jordan-Wigner 变换，该变换通过如下方式将费米子湮灭算符（费米子）映射到量子比特算符：
+          \begin{equation}
+              \begin{split}
+                  a_j^{\dagger} \to {\sigma}_j^{-} X \prod_{i=0}^{j-1} {\sigma}^Z_i \\
+                  a_j \to {\sigma}_j^{+} X \prod_{i=0}^{j-1} {\sigma}^Z_i,
+              \end{split}
+          \end{equation}
+          其中 ${\sigma}_j^{+} = {\sigma}_j^X+i{\sigma}_j^Y$、${\sigma}_j^{-} = {\sigma}_j^X-i{\sigma}_j^Y$ 分别为升自旋算符和降自旋算符。算符 $\prod_{i=0}^{p-1} {{\sigma}^Z_i}$ 称为“奇偶算符”，其本征值为 $\pm 1$，因为它用于测量从索引 0 到 $p-1$ 的量子比特中处于向下态（或“$-1$”态）的数量是偶数还是奇数。如果该数量为偶数，算符给出 $+1$；如果为奇数，则给出 $-1$。该变换保持了初始占据数的局域性。该方法的问题在于，由于奇偶算符具有非局域性，模拟单个费米子算符所需的额外量子比特操作数量会按 $O(n)$ 缩放。
+    \item \methodparity：应用奇偶变换，该变换使用量子比特 $j$ 存储截至轨道 $j$ 的所有占据轨道的奇偶性。也就是说，可以令量子比特 $j$ 存储 $p_j = (\sum_{i=0}^j f_i) mod 2$。其中，$f_i$ 表示第 $i$ 个轨道的占据数，可以为 0（未占据）或 1（已占据）。这种在量子比特态中编码费米子态的方式称为 $parity$ 基。占据数基态可以表示为向量（例如 $(j_7,...,j_1,j_0)^T$），并可以按如下方式映射到奇偶基：
+          \begin{equation}
+              p_i = \sum_j {[\pi_n]_{ij} f_j},
+          \end{equation}
+          其中 $n$ 是轨道数量，$\pi_n$ 是如下定义的 ($n \times n$) 矩阵：
+          \begin{equation}
+              [\pi_n]_{ij} =
+              \begin{cases}
+                  1 & i<j     \\
+                  0 & i\geq j \\
+              \end{cases}.
+          \end{equation}
+          因而，产生算符和湮灭算符在奇偶基中的表示为：
+          \begin{equation}
+              \begin{split}
+                  a_j^{\dagger} \to \frac{1}{2} (\prod_{i=j+1}^n ({\sigma}^X_i X))({\sigma}^X_j - i{\sigma}^Y_j) X {\sigma}^Z_{j-1} \\
+                  a_j \to \frac{1}{2} (\prod_{i=j+1}^n ({\sigma}^X_i X))({\sigma}^X_j + i{\sigma}^Y_j) X {\sigma}^Z_{j-1}.
+              \end{split}
+          \end{equation}
+    \item \methodbravyikitaev \cite{bravyi2002fermionic, fenwick1994new}：前两种方法在用量子比特编码表示费米子算符所需信息的意义上是对偶的。对于占据数基及其对应的 Jordan-Wigner 变换，占据信息是局域存储的，但奇偶信息是非局域的；而在奇偶基方法及其相应算符变换中，奇偶信息是局域存储的，但占据信息是非局域的。
+          Bravyi-Kitaev 变换是一种折中方案，它平衡了占据信息和奇偶信息的局域性，从而提高模拟效率。在该方案中，量子比特存储一组 $2^x$ 个轨道的奇偶性，其中 $x \geq 0$。索引为 $j$ 的量子比特始终存储轨道 $j$。当 $j$ 为偶数时，这是它唯一存储的轨道；当 $j$ 为奇数时，它还会存储索引小于 $j$ 的某组相邻轨道。从占据数基到 Bravyi-Kitaev 基的映射为：
+          \begin{equation}
+              b_i = \sum_j {[\beta_n]_{ij} f_j},
+          \end{equation}
+          其中 $n$ 是轨道数量，$\beta_n$ 是一个 ($n \times n$) 方阵。详细解释见 \cite{seeley2012bravyi}。
+    \item \methodbravyikitaevsuperfast：$bravyi\_kitaev()$ 的快速版本，能够以更快速度执行 Bravyi-Kitaev 变换 \cite{setia2018bravyi}。需要注意的是，只有如下形式的厄米算符可以被变换：
+          \begin{equation}
+              C + \sum_{p,q} h_{p,q} a_p^{\dagger} a_q + \sum_{p,q,r,s} h_{p,q,r,s} a_p^{\dagger} a_q^{\dagger} a_r a_s,
+          \end{equation}
+          其中 $C$ 为常数。
+    \item \methodreversedjordanwigner：应用 Jordan-Wigner 逆变换，将 $QubitOperator$ 转换为 $FermionOperator$。
+    \item \methodternarytree：应用三叉树变换。该函数基于 \cite{jiang2020optimal}。
+\end{itemize}
+在下面的代码中，我们使用 $Transform()$ 函数将 $FermionOperator$ 转换为 $QubitOperator$。
+\begin{lstlisting}
+from mindquantum.core.operators import FermionOperator
+from mindquantum.algorithm.nisq import Transform
+op1 = FermionOperator('1^')
+op_transform = Transform(op1)
+op_transform.jordan_wigner()
+# 0.5 [Z0 X1] +
+# -0.5j [Z0 Y1]
+op_transform.parity()
+# 0.5 [Z0 X1] +
+# -0.5j [Y1]
+op_transform.bravyi_kitaev()
+# 0.5 [Z0 X1] +
+# -0.5j [Y1]
+op2 = FermionOperator('1^', 'a')
+Transform(op2).jordan_wigner()
+# 0.5*a [Z0 X1] +
+# -0.5*I*a [Z0 Y1]
+\end{lstlisting}
