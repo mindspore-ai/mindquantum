@@ -103,8 +103,8 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     set_var enable_gpu true
     mkdir -p ~/.config/pip
     echo "[global]" > ~/.config/pip/pip.conf
-    echo "index-url = https://mirrors.aliyun.com/pypi/simple/" >> ~/.config/pip/pip.conf
-    echo "trusted-host = mirrors.aliyun.com" >> ~/.config/pip/pip.conf
+    echo "index-url = https://repo.huaweicloud.com/repository/pypi/simple/" >> ~/.config/pip/pip.conf
+    echo "trusted-host = repo.huaweicloud.com" >> ~/.config/pip/pip.conf
 fi
 
 # ==============================================================================
