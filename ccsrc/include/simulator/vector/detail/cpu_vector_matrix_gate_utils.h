@@ -28,9 +28,10 @@
 
 #include "core/utils.h"
 #include "core/mq_base_types.h"
-#include "simulator/vector/gate_fusion.h"
+#include "simulator/vector/detail/state_index.h"
 
 namespace mindquantum::sim::vector::detail::matrix_gate {
+inline constexpr size_t kMaxStaticMatrixGateQubits = 4;
 inline auto GetStateQubitCount(index_t dim) -> qbit_t {
     if (dim == 0 || (dim & (dim - 1)) != 0) {
         throw std::invalid_argument("State dimension must be a non-zero power of two.");
@@ -110,26 +111,6 @@ inline auto MakeOccupiedQubits(const qbits_t& objs, const qbits_t& ctrls) -> qbi
     return occupied;
 }
 
-class BitExpander {
- public:
-    explicit BitExpander(const qbits_t& occupied_qubits) {
-        low_masks_.reserve(occupied_qubits.size());
-        for (auto qubit : occupied_qubits) {
-            low_masks_.push_back((static_cast<index_t>(1) << qubit) - 1);
-        }
-    }
-
-    auto Expand(index_t compressed) const -> index_t {
-        for (auto low_mask : low_masks_) {
-            compressed = ((compressed & ~low_mask) << 1) | (compressed & low_mask);
-        }
-        return compressed;
-    }
-
- private:
-    std::vector<index_t> low_masks_;
-};
-
 template <typename scalar_t, size_t static_size>
 using StaticOrDynamicBuffer = std::conditional_t<static_size == 0, std::vector<scalar_t>,
                                                  std::array<scalar_t, static_size>>;
@@ -200,7 +181,7 @@ struct PreparedMatrixGate {
     size_t gate_dim;
     mask_buffer_t obj_masks;
     qbits_t occupied_qubits;
-    BitExpander bit_expander;
+    state_index::BitExpander bit_expander;
     index_t ctrl_mask;
     index_t block_count;
     gate_buffer_t gate_flat;
@@ -300,7 +281,7 @@ auto DispatchStaticNQubitsImpl(size_t n_qubits, kernel_t& kernel)
 template <typename kernel_t>
 auto DispatchStaticNQubits(size_t n_qubits, kernel_t&& kernel)
     -> decltype(kernel(std::integral_constant<size_t, 0>{})) {
-    return DispatchStaticNQubitsImpl<3, kDefaultMaxFusedQubits>(n_qubits, kernel);
+    return DispatchStaticNQubitsImpl<3, kMaxStaticMatrixGateQubits>(n_qubits, kernel);
 }
 }  // namespace mindquantum::sim::vector::detail::matrix_gate
 
