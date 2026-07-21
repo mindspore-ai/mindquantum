@@ -44,6 +44,7 @@
 #include "ops/hamiltonian.h"
 #include "simulator/timer.h"
 #include "simulator/utils.h"
+#include "simulator/vector/circuit_tiling.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename qs_policy_t_>
@@ -233,6 +234,7 @@ struct VectorStateAdjoint {
     using ham_t = Hamiltonian<calc_type>;
     using py_qs_data_t = typename sim_t::py_qs_data_t;
     using qs_policy_t = typename sim_t::qs_policy_t;
+    using qs_data_p_t = typename sim_t::qs_data_p_t;
     // -----------------------------------------------------------------------------
 
     static std::shared_ptr<sim_t> CopySimToSharedPtr(const sim_t* sim) {
@@ -272,6 +274,20 @@ struct VectorStateAdjoint {
         }
         return psi_l->ExpectDiffGate(psi_l->qs, psi_r->qs, g, pr, psi_l->dim);
     }
+
+    template <typename policy_t = qs_policy_t>
+    static auto SelectGradientBatchThreads(const sim_t* sim, size_t requested_threads)
+        -> decltype(policy_t::SelectGradientBatchThreads(sim->dim, requested_threads));
+
+    template <typename policy_t = qs_policy_t>
+    static auto PrepareAdjointCircuit(const sim_t* sim, const circuit_t& circuit)
+        -> decltype(&policy_t::ApplyAdjointTileProgram, circuit_tiling::Schedule{});
+
+    template <typename policy_t = qs_policy_t>
+    static auto RunAdjointSweep(sim_t* shared_state, const VT<sim_t*>& batch_states,
+                                const circuit_tiling::Schedule& plan, const parameter::ParameterResolver& pr,
+                                const MST<size_t>& parameter_map, bool conjugate_output, VVT<py_qs_data_t>* output)
+        -> decltype(&policy_t::ApplyAdjointTileProgram, void());
 };
 }  // namespace mindquantum::sim::vector::detail
 

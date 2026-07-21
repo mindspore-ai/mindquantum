@@ -24,6 +24,7 @@ target_sources(
           ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_condition.cpp
           ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_dot_like.cpp
           ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_gate_expect.cpp
+          ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_circuit_tiling.cpp
           ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_matrix_gate.cpp
           ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_other_gate.cpp
           ${CMAKE_CURRENT_LIST_DIR}/cpu_vector_core_rot_pauli.cpp
