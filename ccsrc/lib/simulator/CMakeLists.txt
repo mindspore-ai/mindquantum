@@ -16,7 +16,8 @@
 #
 # ==============================================================================
 
-add_library(mqsim_common STATIC ${CMAKE_CURRENT_LIST_DIR}/utils.cpp ${CMAKE_CURRENT_LIST_DIR}/timer.cpp)
+add_library(mqsim_common STATIC ${CMAKE_CURRENT_LIST_DIR}/cpu_features.cpp ${CMAKE_CURRENT_LIST_DIR}/utils.cpp
+                                ${CMAKE_CURRENT_LIST_DIR}/timer.cpp)
 target_link_libraries(mqsim_common PUBLIC mq_base)
 force_at_least_cxx17_workaround(mqsim_common)
 append_to_property(mq_install_targets GLOBAL mqsim_common)

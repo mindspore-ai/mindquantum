@@ -19,6 +19,7 @@
 
 #include <vector>
 
+#include "simulator/cpu_features.h"
 #include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
 #include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
 
