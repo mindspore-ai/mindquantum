@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <string>
+
 #include <pybind11/pybind11.h>
 
 #include "simulator/utils.h"
@@ -47,6 +49,12 @@ PYBIND11_MODULE(_mq_vector, module) {
     using double_vec_sim = mindquantum::sim::vector::detail::VectorState<double_policy_t>;
 
     module.doc() = "MindQuantum c++ vector state simulator (CPU backend).";
+#if defined(__x86_64__)
+    module.attr("_cpu_backends") = pybind11::dict("complex64"_a = "x86-avx2", "complex128"_a = "x86-avx2");
+#elif defined(__amd64)
+    module.attr("_cpu_backends") = pybind11::dict("complex64"_a = std::string(float_policy_t::GetBackendName()),
+                                                  "complex128"_a = std::string(double_policy_t::GetBackendName()));
+#endif
     pybind11::module float_sim = module.def_submodule("float", "float simulator");
     pybind11::module double_sim = module.def_submodule("double", "double simulator");
 

@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INCLUDE_VECTOR_DETAIL_CPU_VECTOR_ARM_DOUBLE_POLICY_HPP
-#define INCLUDE_VECTOR_DETAIL_CPU_VECTOR_ARM_DOUBLE_POLICY_HPP
-#include <vector>
-
-#include "simulator/vector/detail/cpu_vector_policy.h"
+#ifndef INCLUDE_SIMULATOR_VECTOR_DETAIL_CPU_VECTOR_ARM_DOUBLE_POLICY_H_
+#define INCLUDE_SIMULATOR_VECTOR_DETAIL_CPU_VECTOR_ARM_DOUBLE_POLICY_H_
+#include "simulator/vector/detail/cpu_vector_arm_policy.h"
 namespace mindquantum::sim::vector::detail {
-struct CPUVectorPolicyArmDouble : public CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double> {};
+struct CPUVectorPolicyArmDouble final : public CPUVectorPolicyArm<CPUVectorPolicyArmDouble, double> {};
 }  // namespace mindquantum::sim::vector::detail
-#endif
+#endif  // INCLUDE_SIMULATOR_VECTOR_DETAIL_CPU_VECTOR_ARM_DOUBLE_POLICY_H_

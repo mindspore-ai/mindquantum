@@ -14,10 +14,14 @@
 # ==============================================================================
 """Correctness tests for mqvector circuit-tiling planning and execution."""
 
+import platform
+import sys
+
 import numpy as np
 import pytest
 
 import mindquantum as mq
+from mindquantum import _mq_vector
 from mindquantum.core import gates as G  # noqa: N812
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
@@ -25,6 +29,20 @@ from mindquantum.simulator import Simulator
 
 _OPENMP_QUBIT_THRESHOLD = 13
 _SEQUENTIAL_QUBITS = _OPENMP_QUBIT_THRESHOLD - 1
+
+
+@pytest.mark.level0
+def test_cpu_backend_selection_is_safe_for_the_host_platform():
+    """The loaded extension reports a safe backend for each state precision."""
+    machine = platform.machine().lower()
+    backends = dict(_mq_vector._cpu_backends)
+    assert set(backends) == {'complex64', 'complex128'}
+    if machine in ('aarch64', 'arm64'):
+        assert set(backends.values()) <= {'baseline', 'arm-sve'}
+        if sys.platform == 'darwin':
+            assert set(backends.values()) == {'baseline'}
+    else:
+        assert set(backends.values()) == {'x86-avx2'}
 
 
 def _normalized_state(n_qubits, seed):
