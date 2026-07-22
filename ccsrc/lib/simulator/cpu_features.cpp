@@ -18,6 +18,8 @@
 #    include <sys/auxv.h>
 #endif
 
+#include <cstdint>
+
 #include "simulator/cpu_features.h"
 
 namespace mindquantum::sim::cpu {
@@ -26,8 +28,8 @@ namespace {
 // Stable Linux AArch64 UAPI values from asm/hwcap.h.  Keeping the ABI values
 // here lets a wheel built against an older manylinux sysroot discover features
 // supplied by the user's newer kernel.
-inline constexpr unsigned long kLinuxHwcapFcma = static_cast<unsigned long>(1) << 14;
-inline constexpr unsigned long kLinuxHwcapSve = static_cast<unsigned long>(1) << 22;
+inline constexpr std::uint64_t kLinuxHwcapFcma = std::uint64_t{1} << 14;
+inline constexpr std::uint64_t kLinuxHwcapSve = std::uint64_t{1} << 22;
 #endif
 
 [[nodiscard]] auto DetectHostCpuFeatures() noexcept -> CpuFeatureSet {

@@ -77,10 +77,10 @@ TEST_CASE("Circuit tiles use the minimum passes for independent repeated gates")
 
     REQUIRE(plan.size() == 2);
     for (const auto& operation : plan) {
-        const auto* tile = std::get_if<mqt::CircuitTile>(&operation);
-        REQUIRE(tile != nullptr);
-        CHECK(tile->qubits.size() <= 2);
-        CHECK((tile->gates.size() == 2 || tile->gates.size() == 4));
+        REQUIRE(std::holds_alternative<mqt::CircuitTile>(operation));
+        const auto& tile = std::get<mqt::CircuitTile>(operation);
+        CHECK(tile.qubits.size() <= 2);
+        CHECK((tile.gates.size() == 2 || tile.gates.size() == 4));
     }
 }
 
@@ -91,10 +91,10 @@ TEST_CASE("Diagonal gates share a pass without consuming mixing capacity") {
     const auto plan = mqt::Planner(12, 1).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
-    const auto* tile = std::get_if<mqt::CircuitTile>(&plan.front());
-    REQUIRE(tile != nullptr);
-    CHECK(tile->qubits.size() == 1);
-    CHECK(tile->gates.size() == circuit.size());
+    REQUIRE(std::holds_alternative<mqt::CircuitTile>(plan.front()));
+    const auto& tile = std::get<mqt::CircuitTile>(plan.front());
+    CHECK(tile.qubits.size() == 1);
+    CHECK(tile.gates.size() == circuit.size());
 }
 
 TEST_CASE("A diagonal frontier can expand through the full block width") {
@@ -109,10 +109,10 @@ TEST_CASE("A diagonal frontier can expand through the full block width") {
     const auto plan = mqt::Planner(12, 4).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
-    const auto* tile = std::get_if<mqt::CircuitTile>(&plan.front());
-    REQUIRE(tile != nullptr);
-    CHECK(tile->qubits.size() == 4);
-    CHECK(tile->gates.size() == circuit.size());
+    REQUIRE(std::holds_alternative<mqt::CircuitTile>(plan.front()));
+    const auto& tile = std::get<mqt::CircuitTile>(plan.front());
+    CHECK(tile.qubits.size() == 4);
+    CHECK(tile.gates.size() == circuit.size());
 }
 
 TEST_CASE("The default circuit tile holds eight mixing qubits") {
@@ -124,10 +124,10 @@ TEST_CASE("The default circuit tile holds eight mixing qubits") {
     const auto plan = mqt::Planner(13).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
-    const auto* tile = std::get_if<mqt::CircuitTile>(&plan.front());
-    REQUIRE(tile != nullptr);
-    CHECK(tile->qubits.size() == 8);
-    CHECK(tile->gates.size() == circuit.size());
+    REQUIRE(std::holds_alternative<mqt::CircuitTile>(plan.front()));
+    const auto& tile = std::get<mqt::CircuitTile>(plan.front());
+    CHECK(tile.qubits.size() == 8);
+    CHECK(tile.gates.size() == circuit.size());
 }
 
 TEST_CASE("Bounded closure search is efficient and deterministic") {
@@ -292,9 +292,10 @@ TEST_CASE("Circuit tile builder folds local diagonal runs") {
                                                                     static_cast<mq::index_t>(1) << 12);
 
     REQUIRE(prepared.operations.size() == 1);
-    const auto* diagonal = std::get_if<mqt::DiagonalKernel<std::complex<double>>>(&prepared.operations.front().kernel);
-    REQUIRE(diagonal != nullptr);
-    CHECK_FALSE(diagonal->scales.empty());
+    using diagonal_t = mqt::DiagonalKernel<std::complex<double>>;
+    REQUIRE(std::holds_alternative<diagonal_t>(prepared.operations.front().kernel));
+    const auto& diagonal = std::get<diagonal_t>(prepared.operations.front().kernel);
+    CHECK_FALSE(diagonal.scales.empty());
 }
 
 TEST_CASE("Circuit tile builder prepares local Pauli rotation coefficients") {
@@ -306,10 +307,10 @@ TEST_CASE("Circuit tile builder prepares local Pauli rotation coefficients") {
                                                                     static_cast<mq::index_t>(1) << 12);
 
     REQUIRE(prepared.operations.size() == 1);
-    const auto* rotation = std::get_if<mqt::PauliRotationKernel<std::complex<double>>>(
-        &prepared.operations.front().kernel);
-    REQUIRE(rotation != nullptr);
-    CHECK(rotation->coefficients_prepared);
+    using rotation_t = mqt::PauliRotationKernel<std::complex<double>>;
+    REQUIRE(std::holds_alternative<rotation_t>(prepared.operations.front().kernel));
+    const auto& rotation = std::get<rotation_t>(prepared.operations.front().kernel);
+    CHECK(rotation.coefficients_prepared);
 }
 
 TEST_CASE("Identity Pauli strings lower to an empty circuit tile") {
