@@ -207,7 +207,7 @@ fi
 if [[ "$delocate_wheel" -eq 1 && "$(uname -s)" == "Linux" ]]; then
     if ! command -v patchelf > /dev/null 2>&1; then
         echo "Installing patchelf inside the Python virtual environment"
-        call_cmd "$PYTHON" -m pip install patchelf
+        call_cmd "$PYTHON" -m pip install patchelf==0.17.2.4
     fi
 fi
 
