@@ -68,12 +68,20 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
         fi
     done
 
+    if [[ "$(uname -s)" == "Linux" && "$(uname -m)" =~ ^(aarch64|arm64)$ ]]; then
+        CC=$(command -v clang) || die "Clang is required for Linux AArch64 CI builds"
+        CXX=$(command -v clang++) || die "Clang++ is required for Linux AArch64 CI builds"
+        export CC CXX
+    fi
+
     PY_EXEC="$(which python)"
 
     echo '----------------------------------------'
     echo 'Environment info'
     echo "PATH = $PATH"
     echo "${LD_PATH_VAR} = ${!LD_PATH_VAR}"
+    echo "CC = ${CC:-<default>}"
+    echo "CXX = ${CXX:-<default>}"
     echo '----------------------------------------'
     echo "PY_EXEC = $PY_EXEC"
     echo '----------------------------------------'

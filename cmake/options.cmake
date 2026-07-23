@@ -77,20 +77,9 @@ option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (
 # Compilation options
 
 option(USE_OPENMP "Enable the use of OpenMP throughout the code" ON)
-
-set(MQ_VECTOR_ARM_SVE
-    "AUTO"
-    CACHE STRING "Build the Arm SVE/FCMA mqvector float/double backends: AUTO, ON, or OFF")
-set_property(CACHE MQ_VECTOR_ARM_SVE PROPERTY STRINGS AUTO ON OFF)
-string(TOUPPER "${MQ_VECTOR_ARM_SVE}" MQ_VECTOR_ARM_SVE)
-set(MQ_VECTOR_ARM_SVE
-    "${MQ_VECTOR_ARM_SVE}"
-    CACHE STRING "Build the Arm SVE/FCMA mqvector float/double backends: AUTO, ON, or OFF" FORCE)
-if(NOT MQ_VECTOR_ARM_SVE MATCHES "^(AUTO|ON|OFF)$")
-  message(FATAL_ERROR "MQ_VECTOR_ARM_SVE must be AUTO, ON, or OFF (got '${MQ_VECTOR_ARM_SVE}').")
-endif()
-if(MQ_VECTOR_ARM_SVE STREQUAL "ON" AND (NOT AARCH64 OR NOT CMAKE_SYSTEM_NAME STREQUAL "Linux"))
-  message(FATAL_ERROR "MQ_VECTOR_ARM_SVE=ON requires a Linux AArch64 target.")
+option(MQ_VECTOR_ARM_SVE "Require the Arm SVE/FCMA mqvector backends on Linux AArch64 targets" ON)
+if(NOT MQ_VECTOR_ARM_SVE MATCHES "^(ON|OFF)$")
+  message(FATAL_ERROR "MQ_VECTOR_ARM_SVE must be ON or OFF (got '${MQ_VECTOR_ARM_SVE}').")
 endif()
 
 # cmake-lint: disable=C0103
