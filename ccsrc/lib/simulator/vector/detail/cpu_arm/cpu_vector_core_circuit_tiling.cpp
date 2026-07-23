@@ -25,7 +25,7 @@
 #include "core/utils.h"
 #include "simulator/vector/detail/circuit_tiling_executor.h"
 
-#if !defined(__ARM_FEATURE_SVE) || !defined(__ARM_FEATURE_COMPLEX)
+#if !defined(__ARM_FEATURE_SVE)
 #    error "The Arm SVE circuit-tiling backend requires SVE FCMLA support."
 #endif
 

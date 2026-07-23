@@ -22,7 +22,7 @@
 #include "cpu_vector_sve_utils.h"
 #include "simulator/vector/detail/cpu_vector_matrix_gate_utils.h"
 
-#if !defined(__ARM_FEATURE_SVE) || !defined(__ARM_FEATURE_COMPLEX)
+#if !defined(__ARM_FEATURE_SVE)
 #    error "The Arm SVE matrix-gate backend requires SVE FCMLA support."
 #endif
 
