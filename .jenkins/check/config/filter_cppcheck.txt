@@ -32,6 +32,8 @@
 
 
 "mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp"                       "syntaxError"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_arm/cpu_vector_sve_utils.h"                              "syntaxError"
+"mindquantum/ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_circuit_tiling.cpp"              "syntaxError"
 "mindquantum/ccsrc/include/core/parameter_resolver_external_ops.h:90"                                     "syntaxError"
 "mindquantum/ccsrc/include/core/sparse/algo.h:73"                                                         "syntaxError"
 "mindquantum/ccsrc/include/ops/gates/terms_operator_base_external_ops.h:92"                               "syntaxError"

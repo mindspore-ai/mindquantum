@@ -18,6 +18,7 @@
 #include "config/type_promotion.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
+
 #ifdef __x86_64__
 #    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
 #    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
@@ -25,14 +26,46 @@
 #    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
 #    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
 #endif
+#include "simulator/vector/detail/cpu_vector_matrix_gate_utils.h"
 #include "simulator/vector/detail/cpu_vector_policy.h"
 namespace mindquantum::sim::vector::detail {
+namespace {
+template <size_t static_gate_dim, typename qs_data_t, typename calc_type, typename py_qs_data_t>
+auto ExpectDiffNQubitsMatrixKernel(const qs_data_t* bra, const qs_data_t* ket, const qbits_t& objs,
+                                   const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& gate,
+                                   index_t dim, index_t dim_threshold) -> qs_data_t {
+    const auto prepared = matrix_gate::PrepareMatrixGate<static_gate_dim, qs_data_t>(objs, ctrls, gate, dim);
+
+    const auto apply_block = [&](index_t block, qs_data_t* input) {
+        const auto base = prepared.bit_expander.Expand(block) | prepared.ctrl_mask;
+        for (size_t col = 0; col < prepared.gate_dim; ++col) {
+            input[col] = ket[base | prepared.obj_masks[col]];
+        }
+
+        qs_data_t block_sum = 0;
+        for (size_t row = 0; row < prepared.gate_dim; ++row) {
+            qs_data_t value = 0;
+            const auto* gate_row = prepared.gate_flat.data() + row * prepared.gate_dim;
+            for (size_t col = 0; col < prepared.gate_dim; ++col) {
+                value += gate_row[col] * input[col];
+            }
+            block_sum += std::conj(bra[base | prepared.obj_masks[row]]) * value;
+        }
+        return block_sum;
+    };
+    return matrix_gate::ReduceMatrixGateBlocks<static_gate_dim, qs_data_t, calc_type>(
+        dim, dim_threshold, prepared.block_count, prepared.gate_dim, apply_block);
+}
+}  // namespace
+
 template <typename derived_, typename calc_type_>
 auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs_data_p_t& bra_out,
                                                                         const qs_data_p_t& ket_out, const qbits_t& objs,
                                                                         const qbits_t& ctrls,
                                                                         const VVT<py_qs_data_t>& gate, index_t dim)
     -> qs_data_t {
+    const auto n_qubit = objs.size();
+    matrix_gate::ValidateNQubitsMatrixInputs(objs, ctrls, gate, dim);
     auto bra = bra_out;
     auto ket = ket_out;
     bool will_free_bra = false, will_free_ket = false;
@@ -44,48 +77,19 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs
         ket = derived::InitState(dim);
         will_free_ket = true;
     }
-    size_t n_qubit = objs.size();
-    size_t m_dim = (static_cast<uint64_t>(1) << n_qubit);
-    size_t ctrl_mask = 0;
-    for (auto& i : ctrls) {
-        ctrl_mask |= static_cast<uint64_t>(1) << i;
-    }
-    std::vector<size_t> obj_masks{};
-    for (size_t i = 0; i < m_dim; i++) {
-        size_t n = 0;
-        size_t mask_j = 0;
-        for (size_t j = i; j != 0; j >>= 1) {
-            if (j & 1) {
-                mask_j += static_cast<uint64_t>(1) << objs[n];
-            }
-            n += 1;
-        }
-        obj_masks.push_back(mask_j);
-    }
-    auto obj_mask = obj_masks.back();
-    calc_type res_real = 0, res_imag = 0;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim); l++) {
-                                                    if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
-                                                        for (size_t i = 0; i < m_dim; i++) {
-                                                            qs_data_t tmp = 0;
-                                                            for (size_t j = 0; j < m_dim; j++) {
-                                                                tmp += gate[i][j] * ket[obj_masks[j] | l];
-                                                            }
-                                                            tmp = std::conj(bra[obj_masks[i] | l]) * tmp;
-                                                            res_real += tmp.real();
-                                                            res_imag += tmp.imag();
-                                                        }
-                                                    }
-                                                })
+
+    auto expect_kernel = [&](auto static_gate_dim) {
+        return ExpectDiffNQubitsMatrixKernel<decltype(static_gate_dim)::value, qs_data_t, calc_type>(
+            bra, ket, objs, ctrls, gate, dim, DimTh);
+    };
+    const auto res = matrix_gate::DispatchStaticNQubits(n_qubit, expect_kernel);
     if (will_free_bra) {
         derived::FreeState(&bra);
     }
     if (will_free_ket) {
         derived::FreeState(&ket);
     }
-    return {res_real, res_imag};
+    return res;
 }
 
 template <typename derived_, typename calc_type_>

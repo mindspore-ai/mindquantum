@@ -16,6 +16,7 @@
 #include "config/openmp.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
+
 #ifdef __x86_64__
 #    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
 #    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
@@ -23,13 +24,42 @@
 #    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
 #    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
 #endif
+#include "simulator/vector/detail/cpu_vector_matrix_gate_utils.h"
 #include "simulator/vector/detail/cpu_vector_policy.h"
 namespace mindquantum::sim::vector::detail {
+namespace {
+template <size_t static_gate_dim, typename qs_data_t, typename py_qs_data_t>
+void ApplyNQubitsMatrixKernel(const qs_data_t* src, qs_data_t* des, const qbits_t& objs, const qbits_t& ctrls,
+                              const std::vector<std::vector<py_qs_data_t>>& gate, index_t dim,
+                              index_t dim_threshold) {
+    const auto prepared = matrix_gate::PrepareMatrixGate<static_gate_dim, qs_data_t>(objs, ctrls, gate, dim);
+
+    const auto apply_block = [&](index_t block, qs_data_t* input) {
+        const auto base = prepared.bit_expander.Expand(block) | prepared.ctrl_mask;
+        for (size_t col = 0; col < prepared.gate_dim; ++col) {
+            input[col] = src[base | prepared.obj_masks[col]];
+        }
+        for (size_t row = 0; row < prepared.gate_dim; ++row) {
+            qs_data_t value = 0;
+            const auto* gate_row = prepared.gate_flat.data() + row * prepared.gate_dim;
+            for (size_t col = 0; col < prepared.gate_dim; ++col) {
+                value += gate_row[col] * input[col];
+            }
+            des[base | prepared.obj_masks[row]] = value;
+        }
+    };
+    matrix_gate::ForEachMatrixGateBlock<static_gate_dim, qs_data_t>(dim, dim_threshold, prepared.block_count,
+                                                                    prepared.gate_dim, apply_block);
+}
+}  // namespace
+
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data_p_t& src_out, qs_data_p_t* des_p,
                                                                    const qbits_t& objs, const qbits_t& ctrls,
                                                                    const std::vector<std::vector<py_qs_data_t>>& gate,
                                                                    index_t dim) {
+    size_t n_qubit = objs.size();
+    matrix_gate::ValidateNQubitsMatrixInputs(objs, ctrls, gate, dim);
     auto& des = *des_p;
     if (des == nullptr) {
         des = derived::InitState(dim);
@@ -42,41 +72,10 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
     } else {
         src = src_out;
     }
-    size_t n_qubit = objs.size();
-    size_t m_dim = (static_cast<uint64_t>(1) << n_qubit);
-    size_t ctrl_mask = 0;
-    for (auto& i : ctrls) {
-        ctrl_mask |= static_cast<uint64_t>(1) << i;
-    }
-    std::vector<size_t> obj_masks{};
-    for (size_t i = 0; i < m_dim; i++) {
-        size_t n = 0;
-        size_t mask_j = 0;
-        for (size_t j = i; j != 0; j >>= 1) {
-            if (j & 1) {
-                mask_j += static_cast<uint64_t>(1) << objs[n];
-            }
-            n += 1;
-        }
-        obj_masks.push_back(mask_j);
-    }
-    auto obj_mask = obj_masks.back();
-    THRESHOLD_OMP_FOR(
-        dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim); l++) {
-            if (((l & ctrl_mask) == ctrl_mask) && ((l & obj_mask) == 0)) {
-                std::vector<qs_data_t> res_tmp;
-                for (size_t i = 0; i < m_dim; i++) {
-                    qs_data_t tmp = 0;
-                    for (size_t j = 0; j < m_dim; j++) {
-                        tmp += gate[i][j] * src[obj_masks[j] | l];
-                    }
-                    res_tmp.push_back(tmp);
-                }
-                for (size_t i = 0; i < m_dim; i++) {
-                    des[obj_masks[i] | l] = res_tmp[i];
-                }
-            }
-        })
+    auto apply_kernel = [&](auto static_gate_dim) {
+        ApplyNQubitsMatrixKernel<decltype(static_gate_dim)::value>(src, des, objs, ctrls, gate, dim, DimTh);
+    };
+    matrix_gate::DispatchStaticNQubits(n_qubit, apply_kernel);
     if (will_free) {
         derived::FreeState(&src);
     }

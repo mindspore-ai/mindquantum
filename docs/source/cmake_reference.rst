@@ -221,6 +221,14 @@ CMake variables
 In addition to the above CMake options, you may pass certain special CMake variables in order to customize your
 build. These are described below in more details.
 
+``MQ_VECTOR_ARM_SVE``
+    Selects which Arm double-precision mqvector backends are built. Accepted values are ``AUTO`` (the default),
+    ``ON``, and ``OFF``. ``AUTO`` adds the SVE/FCMA backend on Linux AArch64 when the compiler supports the required
+    intrinsics; ``ON`` requires that backend and stops configuration if the target or compiler is unsuitable; and
+    ``OFF`` builds only the baseline backend. Common code always uses the compiler's AArch64 baseline, and Linux
+    chooses an optional backend at runtime from the CPU capabilities reported by the kernel. Release jobs intended
+    to produce optimized Linux AArch64 wheels should use ``ON`` so a missing optimized backend fails the build.
+
 
 ``MQ_FORCE_LOCAL_PKGS``
     This variable value is case-insensitive. It may be either of:

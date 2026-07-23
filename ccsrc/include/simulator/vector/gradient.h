@@ -15,11 +15,13 @@
  */
 #ifndef SIMULATOR_VECTOR_GRADIENT_H_
 #define SIMULATOR_VECTOR_GRADIENT_H_
+#include <algorithm>
 #include <complex>
 #include <functional>
 #include <memory>
 #include <stdexcept>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -68,13 +70,15 @@ class GradientHelper {
         auto n_params = ans_name.size();
         auto output = InitFAndG(n_prs, hams.size(), n_params + 1);
         auto p_map = GeneratePMap({}, ans_name);
-        ParallelTask(batch_threads, n_prs, [&](int idx) {
+        const auto prepared_adjoint = PrepareAdjointCircuit(sim_, herm_circ);
+        const auto selected_batch_threads = SelectGradientBatchThreads(sim_, batch_threads);
+        ParallelTask(selected_batch_threads, n_prs, [&](int idx) {
             parameter::ParameterResolver pr = parameter::ParameterResolver();
             pr.SetItems(ans_name, ans_data);
             std::shared_ptr<sim_t> sim = policy::SimilarSim(sim_, init_states[idx]);
             policy::ApplyCircuit(sim.get(), circ, pr);
             auto psi_r = *sim.get();
-            output[idx] = LeftSizeGrad(sim.get(), &psi_r, herm_circ, hams, pr, p_map);
+            output[idx] = LeftSizeGrad(sim.get(), &psi_r, prepared_adjoint, hams, pr, p_map);
         });
         GradRealDouble(&output, n_params);
         return output;
@@ -89,10 +93,13 @@ class GradientHelper {
         auto n_params = enc_name.size() + ans_name.size();
         auto output = InitFAndG(n_prs, hams.size(), n_params + 1);
         auto p_map = GeneratePMap(enc_name, ans_name);
-        ParallelTask(batch_threads, n_prs, [&](int idx) {
-            output[idx] = NonHermitianAdjointSingleBatch(psi_l_, psi_r_, hams, herm_hams, left_circ, herm_left_circ,
-                                                         right_circ, herm_right_circ, enc_data, ans_data, enc_name,
-                                                         ans_name, p_map, idx);
+        const auto prepared_left_adjoint = PrepareAdjointCircuit(psi_l_, herm_left_circ);
+        const auto prepared_right_adjoint = PrepareAdjointCircuit(psi_r_, herm_right_circ);
+        const auto selected_batch_threads = SelectGradientBatchThreads(psi_r_, batch_threads);
+        ParallelTask(selected_batch_threads, n_prs, [&](int idx) {
+            output[idx] = NonHermitianAdjointSingleBatch(psi_l_, psi_r_, hams, herm_hams, left_circ, right_circ,
+                                                         prepared_left_adjoint, prepared_right_adjoint, enc_data,
+                                                         ans_data, enc_name, ans_name, p_map, idx);
         });
         return output;
     }
@@ -107,20 +114,64 @@ class GradientHelper {
         auto n_params = enc_name.size() + ans_name.size();
         auto output = InitFAndG(n_prs, hams.size(), n_params + 1);
         auto p_map = GeneratePMap(enc_name, ans_name);
-        ParallelTask(batch_threads, n_prs, [&](int idx) {
+        const auto prepared_adjoint = PrepareAdjointCircuit(sim_, herm_circ);
+        const auto selected_batch_threads = SelectGradientBatchThreads(sim_, batch_threads);
+        ParallelTask(selected_batch_threads, n_prs, [&](int idx) {
             parameter::ParameterResolver pr = parameter::ParameterResolver();
             pr.SetItems(enc_name, enc_data[idx]);
             pr.SetItems(ans_name, ans_data);
             std::shared_ptr<sim_t> sim = policy::CopySimToSharedPtr(sim_);
             policy::ApplyCircuit(sim.get(), circ, pr);
             auto psi_r = *sim.get();
-            output[idx] = LeftSizeGrad(sim.get(), &psi_r, herm_circ, hams, pr, p_map);
+            output[idx] = LeftSizeGrad(sim.get(), &psi_r, prepared_adjoint, hams, pr, p_map);
         });
         GradRealDouble(&output, n_params);
         return output;
     }
 
  private:
+    template <typename candidate, typename = void>
+    struct HasPreparedAdjointCircuit : std::false_type {};
+
+    template <typename candidate>
+    struct HasPreparedAdjointCircuit<candidate, std::void_t<decltype(candidate::PrepareAdjointCircuit(
+                                                    std::declval<const sim_t*>(), std::declval<const circuit_t&>()))>>
+        : std::true_type {};
+
+    template <typename candidate, typename prepared_t, typename = void>
+    struct HasAdjointSweep : std::false_type {};
+
+    template <typename candidate, typename prepared_t>
+    struct HasAdjointSweep<candidate, prepared_t,
+                           std::void_t<decltype(candidate::RunAdjointSweep(
+                               std::declval<sim_t*>(), std::declval<const VT<sim_t*>&>(),
+                               std::declval<const prepared_t&>(), std::declval<const parameter::ParameterResolver&>(),
+                               std::declval<const MST<size_t>&>(), false, std::declval<VVT<py_qs_data_t>*>()))>>
+        : std::true_type {};
+
+    template <typename candidate, typename = void>
+    struct HasGradientBatchThreadSelector : std::false_type {};
+
+    template <typename candidate>
+    struct HasGradientBatchThreadSelector<candidate, std::void_t<decltype(candidate::SelectGradientBatchThreads(
+                                                         std::declval<const sim_t*>(), std::declval<size_t>()))>>
+        : std::true_type {};
+
+    static auto PrepareAdjointCircuit(const sim_t* sim, const circuit_t& circuit) {
+        if constexpr (HasPreparedAdjointCircuit<policy>::value) {
+            return policy::PrepareAdjointCircuit(sim, circuit);
+        } else {
+            return &circuit;
+        }
+    }
+
+    static auto SelectGradientBatchThreads(const sim_t* sim, size_t requested_threads) -> size_t {
+        if constexpr (HasGradientBatchThreadSelector<policy>::value) {
+            return policy::SelectGradientBatchThreads(sim, requested_threads);
+        }
+        return requested_threads;
+    }
+
     static void GradRealDouble(VT<VVT<py_qs_data_t>>* f_g, size_t n_grad) {
         auto& output = *f_g;
         for (auto& i : output) {
@@ -157,7 +208,8 @@ class GradientHelper {
         return p_map;
     }
 
-    static VVT<py_qs_data_t> LeftSizeGrad(sim_t* psi_l, sim_t* psi_r, const circuit_t& circ_l_herm,
+    template <typename prepared_t>
+    static VVT<py_qs_data_t> LeftSizeGrad(sim_t* psi_l, sim_t* psi_r, const prepared_t& prepared_adjoint,
                                           const VT<std::shared_ptr<ham_t>>& hams,
                                           const parameter::ParameterResolver& pr, const MST<size_t>& p_map) {
         int n_hams = hams.size();
@@ -173,30 +225,44 @@ class GradientHelper {
         }
         for (int i = 0; i < n_hams; i++) {
             policy::ApplyHamiltonian(psi_rs[i].get(), hams[i]);
-            f_and_g[i][0] = policy::Vdot(psi_l, psi_rs[i].get());
         }
-        for (const auto& g : circ_l_herm) {
-            policy::ApplyGate(psi_l, g, pr);
-            if (policy::GateRequiresGrad(g)) {
-                std::pair<MST<size_t>, tensor::Matrix> jacobi = policy::GetJacobi(g);
-                if (const auto& [title, jac] = jacobi; title.size() != 0) {
-                    for (int j = 0; j < n_hams; j++) {
-                        auto intrin_grad = policy::ExpectDiffGate(psi_l, psi_rs[j].get(), g, pr);
-                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += p_grad[0][idx];
+        if constexpr (HasAdjointSweep<policy, prepared_t>::value) {
+            VT<sim_t*> batch_states;
+            batch_states.reserve(psi_rs.size());
+            for (const auto& state : psi_rs) {
+                batch_states.push_back(state.get());
+            }
+            policy::RunAdjointSweep(psi_l, batch_states, prepared_adjoint, pr, p_map, false, &f_and_g);
+        } else {
+            for (int i = 0; i < n_hams; i++) {
+                f_and_g[i][0] = policy::Vdot(psi_l, psi_rs[i].get());
+            }
+            const auto& circ_l_herm = *prepared_adjoint;
+            for (const auto& g : circ_l_herm) {
+                policy::ApplyGate(psi_l, g, pr);
+                if (policy::GateRequiresGrad(g)) {
+                    std::pair<MST<size_t>, tensor::Matrix> jacobi = policy::GetJacobi(g);
+                    if (const auto& [title, jac] = jacobi; title.size() != 0) {
+                        for (int j = 0; j < n_hams; j++) {
+                            auto intrin_grad = policy::ExpectDiffGate(psi_l, psi_rs[j].get(), g, pr);
+                            auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(
+                                tensor::ops::MatMul(intrin_grad, jac));
+                            for (const auto& [name, idx] : title) {
+                                f_and_g[j][1 + p_map.at(name)] += p_grad[0][idx];
+                            }
                         }
                     }
                 }
-            }
-            for (int j = 0; j < n_hams; j++) {
-                policy::ApplyGate(psi_rs[j].get(), g, pr);
+                for (int j = 0; j < n_hams; j++) {
+                    policy::ApplyGate(psi_rs[j].get(), g, pr);
+                }
             }
         }
         return f_and_g;
     }
 
-    static VVT<py_qs_data_t> RightSizeGrad(sim_t* psi_l, sim_t* psi_r, const circuit_t& circ_r_herm,
+    template <typename prepared_t>
+    static VVT<py_qs_data_t> RightSizeGrad(sim_t* psi_l, sim_t* psi_r, const prepared_t& prepared_adjoint,
                                            const VT<std::shared_ptr<ham_t>>& herm_hams,
                                            const parameter::ParameterResolver& pr, const MST<size_t>& p_map) {
         int n_hams = herm_hams.size();
@@ -212,35 +278,49 @@ class GradientHelper {
         }
         for (int i = 0; i < n_hams; i++) {
             policy::ApplyHamiltonian(psi_ls[i].get(), herm_hams[i]);
-            f_and_g[i][0] = policy::Vdot(psi_ls[i].get(), psi_r);
         }
-        for (const auto& g : circ_r_herm) {
-            policy::ApplyGate(psi_r, g, pr);
-            if (policy::GateRequiresGrad(g)) {
-                std::pair<MST<size_t>, tensor::Matrix> jacobi = policy::GetJacobi(g);
-                if (const auto& [title, jac] = jacobi; title.size() != 0) {
-                    for (int j = 0; j < n_hams; j++) {
-                        auto intrin_grad = policy::ExpectDiffGate(psi_r, psi_ls[j].get(), g, pr);
-                        auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(tensor::ops::MatMul(intrin_grad, jac));
-                        for (const auto& [name, idx] : title) {
-                            f_and_g[j][1 + p_map.at(name)] += std::conj(p_grad[0][idx]);
+        if constexpr (HasAdjointSweep<policy, prepared_t>::value) {
+            VT<sim_t*> batch_states;
+            batch_states.reserve(psi_ls.size());
+            for (const auto& state : psi_ls) {
+                batch_states.push_back(state.get());
+            }
+            policy::RunAdjointSweep(psi_r, batch_states, prepared_adjoint, pr, p_map, true, &f_and_g);
+        } else {
+            for (int i = 0; i < n_hams; i++) {
+                f_and_g[i][0] = policy::Vdot(psi_ls[i].get(), psi_r);
+            }
+            const auto& circ_r_herm = *prepared_adjoint;
+            for (const auto& g : circ_r_herm) {
+                policy::ApplyGate(psi_r, g, pr);
+                if (policy::GateRequiresGrad(g)) {
+                    std::pair<MST<size_t>, tensor::Matrix> jacobi = policy::GetJacobi(g);
+                    if (const auto& [title, jac] = jacobi; title.size() != 0) {
+                        for (int j = 0; j < n_hams; j++) {
+                            auto intrin_grad = policy::ExpectDiffGate(psi_r, psi_ls[j].get(), g, pr);
+                            auto p_grad = tensor::ops::cpu::to_vector<py_qs_data_t>(
+                                tensor::ops::MatMul(intrin_grad, jac));
+                            for (const auto& [name, idx] : title) {
+                                f_and_g[j][1 + p_map.at(name)] += std::conj(p_grad[0][idx]);
+                            }
                         }
                     }
                 }
-            }
-            for (int j = 0; j < n_hams; j++) {
-                policy::ApplyGate(psi_ls[j].get(), g, pr);
+                for (int j = 0; j < n_hams; j++) {
+                    policy::ApplyGate(psi_ls[j].get(), g, pr);
+                }
             }
         }
         return f_and_g;
     }
 
+    template <typename prepared_left_t, typename prepared_right_t>
     static VVT<py_qs_data_t> NonHermitianAdjointSingleBatch(
         const sim_t* psi_l_, const sim_t* psi_r_, const VT<std::shared_ptr<ham_t>>& hams,
-        const VT<std::shared_ptr<ham_t>>& herm_hams, const circuit_t& left_circ, const circuit_t& herm_left_circ,
-        const circuit_t& right_circ, const circuit_t& herm_right_circ, const VVT<calc_type>& enc_data,
-        const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name, const MST<size_t>& p_map,
-        int batch_idx = 0) {
+        const VT<std::shared_ptr<ham_t>>& herm_hams, const circuit_t& left_circ, const circuit_t& right_circ,
+        const prepared_left_t& prepared_left_adjoint, const prepared_right_t& prepared_right_adjoint,
+        const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
+        const MST<size_t>& p_map, int batch_idx = 0) {
         parameter::ParameterResolver pr = parameter::ParameterResolver();
         pr.SetItems(enc_name, enc_data[batch_idx]);
         pr.SetItems(ans_name, ans_data);
@@ -252,12 +332,12 @@ class GradientHelper {
         {
             std::shared_ptr<sim_t> psi_l1 = policy::CopySimToSharedPtr(psi_l.get());
             std::shared_ptr<sim_t> psi_r1 = policy::CopySimToSharedPtr(psi_r.get());
-            f_g1 = LeftSizeGrad(psi_l1.get(), psi_r1.get(), herm_left_circ, hams, pr, p_map);
+            f_g1 = LeftSizeGrad(psi_l1.get(), psi_r1.get(), prepared_left_adjoint, hams, pr, p_map);
         }
         {
             std::shared_ptr<sim_t> psi_l2 = policy::CopySimToSharedPtr(psi_l.get());
             std::shared_ptr<sim_t> psi_r2 = policy::CopySimToSharedPtr(psi_r.get());
-            f_g2 = RightSizeGrad(psi_l2.get(), psi_r2.get(), herm_right_circ, herm_hams, pr, p_map);
+            f_g2 = RightSizeGrad(psi_l2.get(), psi_r2.get(), prepared_right_adjoint, herm_hams, pr, p_map);
         }
         for (int i = 0; i < hams.size(); i++) {
             for (int j = 1; j < p_map.size() + 1; j++) {
@@ -268,12 +348,18 @@ class GradientHelper {
     }
 
     static void ParallelTask(size_t batch_threads, size_t n_prs, std::function<void(int)> run) {
-        if (n_prs == 1) {
-            run(0);
-            return;
+        if (n_prs == 0) {
+            throw std::invalid_argument("Gradient parameter batch cannot be empty.");
         }
         if (batch_threads == 0) {
-            throw std::runtime_error("batch_threads cannot be zero.");
+            throw std::invalid_argument("Gradient batch thread count cannot be zero.");
+        }
+        batch_threads = std::min(batch_threads, n_prs);
+        if (batch_threads == 1) {
+            for (size_t n = 0; n < n_prs; ++n) {
+                run(n);
+            }
+            return;
         }
         std::vector<std::thread> tasks;
         tasks.reserve(batch_threads);

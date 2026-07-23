@@ -35,6 +35,7 @@
 #include <string_view>
 #include <thread>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "core/mq_base_types.h"
@@ -48,10 +49,154 @@
 #include "ops/gate_id.h"
 #include "ops/gates.h"
 #include "ops/hamiltonian.h"
+#include "simulator/vector/circuit_tiling_builder.h"
+#include "simulator/vector/circuit_tiling_planner.h"
 #include "simulator/vector/gradient.h"
 #include "simulator/vector/vector_state.h"
 
 namespace mindquantum::sim::vector::detail {
+template <typename policy_t, typename value_t, typename = void>
+struct HasCircuitTileExecutor : std::false_type {};
+
+template <typename policy_t, typename value_t>
+struct HasCircuitTileExecutor<
+    policy_t, value_t,
+    std::void_t<decltype(policy_t::ApplyCircuitTile(std::declval<typename policy_t::qs_data_p_t*>(),
+                                                    std::declval<const circuit_tiling::PreparedTile<value_t>&>(),
+                                                    std::declval<index_t>()))>> : std::true_type {};
+
+template <typename sim_t_>
+template <typename policy_t>
+auto VectorStateAdjoint<sim_t_>::SelectGradientBatchThreads(const sim_t* sim, size_t requested_threads)
+    -> decltype(policy_t::SelectGradientBatchThreads(sim->dim, requested_threads)) {
+    if (sim == nullptr) {
+        throw std::invalid_argument("Cannot select gradient threads without a simulator.");
+    }
+    return policy_t::SelectGradientBatchThreads(sim->dim, requested_threads);
+}
+
+template <typename sim_t_>
+template <typename policy_t>
+auto VectorStateAdjoint<sim_t_>::PrepareAdjointCircuit(const sim_t* sim, const circuit_t& circuit)
+    -> decltype(&policy_t::ApplyAdjointTileProgram, circuit_tiling::Schedule{}) {
+    if (sim == nullptr) {
+        throw std::invalid_argument("Cannot prepare an adjoint circuit without a simulator.");
+    }
+    const auto last_gradient_gate = std::find_if(circuit.rbegin(), circuit.rend(), [](const auto& gate) {
+        if (gate == nullptr) {
+            throw std::invalid_argument("Cannot prepare an adjoint circuit containing a null gate.");
+        }
+        return gate->GradRequired();
+    });
+    if (last_gradient_gate == circuit.rend()) {
+        return {};
+    }
+    const circuit_t active_circuit(circuit.begin(), last_gradient_gate.base());
+    circuit_tiling::Schedule plan;
+    if (sim->dim < policy_t::DimTh) {
+        plan.reserve(active_circuit.size());
+        for (const auto& gate : active_circuit) {
+            if (gate->GetID() != GateID::I) {
+                plan.emplace_back(gate);
+            }
+        }
+        return plan;
+    }
+    return circuit_tiling::Planner(sim->n_qubits).PlanAdjoint(active_circuit);
+}
+
+template <typename sim_t_>
+template <typename policy_t>
+auto VectorStateAdjoint<sim_t_>::RunAdjointSweep(sim_t* shared_state, const VT<sim_t*>& batch_states,
+                                                 const circuit_tiling::Schedule& plan,
+                                                 const parameter::ParameterResolver& pr,
+                                                 const MST<size_t>& parameter_map, bool conjugate_output,
+                                                 VVT<py_qs_data_t>* output)
+    -> decltype(&policy_t::ApplyAdjointTileProgram, void()) {
+    const auto output_size = 1 + parameter_map.size();
+    if (shared_state == nullptr || output == nullptr || batch_states.empty() || output->size() != batch_states.size()) {
+        throw std::invalid_argument("Adjoint sweep metadata is inconsistent.");
+    }
+    for (size_t batch = 0; batch < batch_states.size(); ++batch) {
+        if (batch_states[batch] == nullptr || batch_states[batch]->dim != shared_state->dim
+            || (*output)[batch].size() != output_size) {
+            throw std::invalid_argument("Adjoint sweep states or outputs have inconsistent dimensions.");
+        }
+    }
+
+    std::vector<qs_data_p_t*> batch_state_pointers;
+    batch_state_pointers.reserve(batch_states.size());
+    for (auto* state : batch_states) {
+        batch_state_pointers.push_back(&state->qs);
+    }
+
+    auto overlap_computed = false;
+    const auto compute_overlap = [&]() {
+        if (overlap_computed) {
+            return;
+        }
+        for (size_t batch = 0; batch < batch_states.size(); ++batch) {
+            auto overlap = policy_t::Vdot(shared_state->qs, batch_states[batch]->qs, shared_state->dim);
+            if (conjugate_output) {
+                overlap = std::conj(overlap);
+            }
+            (*output)[batch][0] += overlap;
+        }
+        overlap_computed = true;
+    };
+
+    circuit_tiling::AdjointProgram<py_qs_data_t> program;
+    program.output_size = output_size;
+    const auto flush_program = [&]() {
+        if (program.tiles.empty()) {
+            return;
+        }
+        program.compute_overlap = !overlap_computed;
+        policy_t::ApplyAdjointTileProgram(&shared_state->qs, batch_state_pointers, program, shared_state->dim, output,
+                                          conjugate_output);
+        overlap_computed = true;
+        program.tiles.clear();
+    };
+
+    for (const auto& planned : plan) {
+        if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&planned); tile != nullptr) {
+            program.tiles.push_back(
+                circuit_tiling::Builder<py_qs_data_t>::BuildAdjoint(*tile, pr, parameter_map, shared_state->dim));
+            continue;
+        }
+
+        // A non-tileable gate is an explicit program barrier.  Materialize
+        // the pending tiles, execute its exact established semantics once,
+        // then start a new tiled program.
+        flush_program();
+        compute_overlap();
+        const auto& gate = std::get<std::shared_ptr<BasicGate>>(planned);
+        ApplyGate(shared_state, gate, pr);
+        if (GateRequiresGrad(gate)) {
+            const auto& [title, jacobian] = GetJacobi(gate);
+            if (!title.empty()) {
+                for (size_t batch = 0; batch < batch_states.size(); ++batch) {
+                    const auto intrinsic = ExpectDiffGate(shared_state, batch_states[batch], gate, pr);
+                    const auto parameter_gradient = tensor::ops::cpu::to_vector<py_qs_data_t>(
+                        tensor::ops::MatMul(intrinsic, jacobian));
+                    for (const auto& [name, column] : title) {
+                        auto contribution = parameter_gradient[0][column];
+                        if (conjugate_output) {
+                            contribution = std::conj(contribution);
+                        }
+                        (*output)[batch][1 + parameter_map.at(name)] += contribution;
+                    }
+                }
+            }
+        }
+        for (auto* state : batch_states) {
+            ApplyGate(state, gate, pr);
+        }
+    }
+    flush_program();
+    compute_overlap();
+}
+
 template <typename qs_policy_t_>
 void VectorState<qs_policy_t_>::SetSeed(unsigned new_seed) {
     this->seed = new_seed;
@@ -727,8 +872,8 @@ auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham
 
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ_right,
-                                               const circuit_t& circ_left,
-                                               const parameter::ParameterResolver& pr) const -> py_qs_data_t {
+                                               const circuit_t& circ_left, const parameter::ParameterResolver& pr) const
+    -> py_qs_data_t {
     py_qs_data_t out;
     auto sub_seed_bra = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
     auto sub_seed_ket = static_cast<unsigned int>(static_cast<calc_type>(rng_()) * (1 << 20));
@@ -777,8 +922,8 @@ auto VectorState<qs_policy_t_>::astype(unsigned seed) const -> VectorState<polic
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                                const std::shared_ptr<BasicGate>& gate,
-                                               const parameter::ParameterResolver& pr,
-                                               index_t dim) const -> tensor::Matrix {
+                                               const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
     auto id = gate->GetID();
     auto g = static_cast<Parameterizable*>(gate.get());
     auto val = tensor::ops::cpu::to_vector<calc_type>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
@@ -853,8 +998,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffGate(const qs_data_p_t& bra, const qs_
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                              const std::shared_ptr<BasicGate>& gate,
-                                             const parameter::ParameterResolver& pr,
-                                             index_t dim) const -> tensor::Matrix {
+                                             const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0, 0};
     auto u3 = static_cast<U3*>(gate.get());
     if (u3->Parameterized()) {
@@ -887,8 +1032,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffU3(const qs_data_p_t& bra, const qs_da
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                              const std::shared_ptr<BasicGate>& gate,
-                                             const parameter::ParameterResolver& pr,
-                                             index_t dim) const -> tensor::Matrix {
+                                             const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0, 0};
     auto rn = static_cast<Rn*>(gate.get());
     if (rn->Parameterized()) {
@@ -921,8 +1066,8 @@ auto VectorState<qs_policy_t_>::ExpectDiffRn(const qs_data_p_t& bra, const qs_da
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffFSim(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                                const std::shared_ptr<BasicGate>& gate,
-                                               const parameter::ParameterResolver& pr,
-                                               index_t dim) const -> tensor::Matrix {
+                                               const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0};
     auto fsim = static_cast<FSim*>(gate.get());
     if (fsim->Parameterized()) {
@@ -949,12 +1094,35 @@ template <typename qs_policy_t_>
 std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ,
                                                                    const parameter::ParameterResolver& pr) {
     std::map<std::string, int> result;
-    for (auto& g : circ) {
-        if (g->GetID() == GateID::M) {
-            result[static_cast<MeasureGate*>(g.get())->Name()] = ApplyMeasure(g);
-        } else {
-            ApplyGate(g, pr, false);
+    const auto apply_gate = [this, &pr, &result](const std::shared_ptr<BasicGate>& gate) {
+        if (gate == nullptr) {
+            throw std::invalid_argument("Cannot apply a null gate.");
         }
+        if (gate->GetID() == GateID::M) {
+            result[static_cast<MeasureGate*>(gate.get())->Name()] = ApplyMeasure(gate);
+        } else {
+            ApplyGate(gate, pr, false);
+        }
+    };
+
+    if constexpr (HasCircuitTileExecutor<qs_policy_t, py_qs_data_t>::value) {
+        if (dim >= qs_policy_t::DimTh && circ.size() > 1) {
+            const auto plan = circuit_tiling::Planner(n_qubits).Plan(circ);
+            for (const auto& planned : plan) {
+                if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&planned); tile != nullptr) {
+                    const auto prepared = circuit_tiling::Builder<py_qs_data_t>::Build(*tile, pr, dim);
+                    if (!prepared.operations.empty()) {
+                        qs_policy_t::ApplyCircuitTile(&qs, prepared, dim);
+                    }
+                } else {
+                    apply_gate(std::get<std::shared_ptr<BasicGate>>(planned));
+                }
+            }
+            return result;
+        }
+    }
+    for (const auto& gate : circ) {
+        apply_gate(gate);
     }
     return result;
 }
@@ -974,8 +1142,8 @@ void VectorState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_type>& h
 }
 
 template <typename qs_policy_t_>
-auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ,
-                                                 const parameter::ParameterResolver& pr) const -> VVT<py_qs_data_t> {
+auto VectorState<qs_policy_t_>::GetCircuitMatrix(const circuit_t& circ, const parameter::ParameterResolver& pr) const
+    -> VVT<py_qs_data_t> {
     VVT<CT<calc_type>> out((static_cast<uint64_t>(1) << n_qubits),
                            VT<CT<calc_type>>((static_cast<uint64_t>(1) << n_qubits), 0));
     for (size_t i = 0; i < (static_cast<uint64_t>(1) << n_qubits); i++) {
@@ -1375,8 +1543,8 @@ VT<unsigned> VectorState<qs_policy_t_>::SamplingMeasurementEndingWithoutNoise(co
 template <typename qs_policy_t_>
 auto VectorState<qs_policy_t_>::ExpectDiffCustomTwoParam(const qs_data_p_t& bra, const qs_data_p_t& ket,
                                                          const std::shared_ptr<BasicGate>& gate,
-                                                         const parameter::ParameterResolver& pr,
-                                                         index_t dim) const -> tensor::Matrix {
+                                                         const parameter::ParameterResolver& pr, index_t dim) const
+    -> tensor::Matrix {
     VT<py_qs_data_t> grad = {0, 0};
     auto custom_gate = static_cast<CustomTwoParamGate*>(gate.get());
     if (custom_gate->Parameterized()) {
@@ -1389,14 +1557,14 @@ auto VectorState<qs_policy_t_>::ExpectDiffCustomTwoParam(const qs_data_p_t& bra,
         if (param1.data_.size() != param1.no_grad_parameters_.size()) {
             m = custom_gate->GetDiffMatrix1Wrapper()(param1_const, param2_const);
             grad[0] = qs_policy_t::ExpectDiffMatrixGate(bra, ket, custom_gate->GetObjQubits(),
-                                                               custom_gate->GetCtrlQubits(),
-                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+                                                        custom_gate->GetCtrlQubits(),
+                                                        tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         }
         if (param2.data_.size() != param2.no_grad_parameters_.size()) {
             m = custom_gate->GetDiffMatrix2Wrapper()(param1_const, param2_const);
             grad[1] = qs_policy_t::ExpectDiffMatrixGate(bra, ket, custom_gate->GetObjQubits(),
-                                                               custom_gate->GetCtrlQubits(),
-                                                               tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+                                                        custom_gate->GetCtrlQubits(),
+                                                        tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         }
     }
     return tensor::Matrix(VVT<py_qs_data_t>{grad});

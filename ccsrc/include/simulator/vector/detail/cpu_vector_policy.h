@@ -22,8 +22,13 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
+
+#ifdef USE_OPENMP
+#    include <omp.h>
+#endif
 
 #include "config/openmp.h"
 #include "core/mq_base_types.h"
@@ -31,6 +36,7 @@
 #include "core/utils.h"
 #include "math/tensor/ops_cpu/utils.h"
 #include "math/tensor/traits.h"
+#include "simulator/vector/circuit_tiling.h"
 
 namespace mindquantum::sim::vector::detail {
 struct CPUVectorPolicyAvxFloat;
@@ -44,10 +50,25 @@ struct CPUVectorPolicyBase {
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
     static constexpr tensor::TDtype dtype = tensor::to_dtype_v<py_qs_data_t>;
-    static constexpr index_t DimTh = static_cast<uint64_t>(1) << 13;
+    static constexpr index_t DimTh = static_cast<index_t>(1) << mindquantum::nQubitTh;
 
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
+
+    static auto SelectGradientBatchThreads(index_t dim, size_t requested_threads) -> size_t {
+        if (requested_threads == 0) {
+            throw std::invalid_argument("Gradient batch thread count cannot be zero.");
+        }
+#ifdef USE_OPENMP
+        // Full-state kernels already consume an OpenMP team.  Serializing the
+        // outer parameter batch avoids nested teams and memory-bandwidth
+        // oversubscription; small states retain independent batch workers.
+        if (dim >= DimTh && omp_get_max_threads() > 1) {
+            return 1;
+        }
+#endif
+        return requested_threads;
+    }
 
     // basic
     // ========================================================================================================
@@ -98,6 +119,12 @@ struct CPUVectorPolicyBase {
                                          const qs_data_p_t& bra, const qs_data_p_t& ket, index_t dim);
     static VT<calc_type> GetCumulativeProbs(const qs_data_p_t& qs_p, index_t dim);
     static VT<unsigned> LowerBound(const VT<calc_type>& cum_prob, const VT<calc_type>& sampled_probs);
+
+    static void ApplyCircuitTile(qs_data_p_t* qs_p, const circuit_tiling::PreparedTile<py_qs_data_t>& tile,
+                                 index_t dim);
+    static void ApplyAdjointTileProgram(qs_data_p_t* shared_state, const std::vector<qs_data_p_t*>& batch_states,
+                                        const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim,
+                                        VVT<py_qs_data_t>* output, bool conjugate_output);
     // X like operator
     // ========================================================================================================
 

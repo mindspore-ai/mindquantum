@@ -32,6 +32,8 @@ syntaxError:ccsrc/include/core/sparse/algo.h
 syntaxError:ccsrc/include/ops/gates/terms_operator_base_external_ops.h:92
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
+syntaxError:ccsrc/lib/simulator/vector/detail/cpu_arm/cpu_vector_sve_utils.h
+syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_circuit_tiling.cpp
 syntaxError:ccsrc/python/mqbackend/lib/details/define_terms_ops.h
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_condition.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_expect.cpp

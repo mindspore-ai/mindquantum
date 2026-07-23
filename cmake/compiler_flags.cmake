@@ -215,11 +215,15 @@ if(X86_64)
     NO_MQ_TARGET NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET
     FLAGS "-mavx2 -xCORE-AVX2 /QxCORE-AVX2 /arch:AVX2")
 elseif(AARCH64)
-  test_compile_option(
-    intrin_flag
-    LANGS C CXX DPCXX
-    NO_MQ_TARGET NO_TRYCOMPILE_TARGET NO_TRYCOMPILE_FLAGCHECK_TARGET
-    FLAGS "-march=armv8.5-a -march=armv8.4-a -march=armv8.3-a -march=armv8.2-a")
+  # AArch64 wheels have no platform tag for optional ISA revisions.  Keep the
+  # common targets at the compiler's architecture baseline; optimized kernels
+  # add their ISA flags to dedicated translation units and use runtime dispatch.
+  foreach(_lang C CXX DPCXX)
+    is_language_enabled(${_lang} _enabled)
+    if(_enabled AND NOT TARGET intrin_flag_${_lang})
+      add_library(intrin_flag_${_lang} INTERFACE)
+    endif()
+  endforeach()
 endif()
 
 foreach(_lang C CXX DPCXX)
