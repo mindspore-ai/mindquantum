@@ -1,0 +1,20 @@
+# Generated explicit conda environment for the MindQuantum Linux AArch64 release toolchain.
+# Every archive is immutable and authenticated with SHA-256. Do not resolve this file at build time.
+# platform: linux-aarch64
+@EXPLICIT
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/libgomp-10.4.0-h9a8471f_19.tar.bz2#507131344518f243fdd55a37c47b535880c88bcc07393919d3295aea6eb0696c
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/libstdcxx-ng-10.4.0-h0e20637_19.tar.bz2#fe88a3de8aab7e13bbd9ac592ee51f0d08ff8011d27760e8940831d21ad6e28d
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/ld_impl_linux-aarch64-2.39-h16cd69b_1.conda#aae71464a25bc5f32db5211621798a0725fc910a6a2a19a6161dbfcb0a7b1e35
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/libgcc-devel_linux-aarch64-10.4.0-h3c6860a_19.tar.bz2#35223b103f877564ae73ed1bea5d522057b69306d7e2155b6b5388310cad52cf
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/libstdcxx-devel_linux-aarch64-10.4.0-h3c6860a_19.tar.bz2#6c52715362529ef14a1a04ece9c33b2b029d02d63fb00bf4406ee8091115e3f5
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/_openmp_mutex-4.5-20_gnu.conda#a2527b1d81792a0ccd2c05850960df119c2b6d8f5fdec97f2db7d25dc23b1068
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/libgcc-ng-10.4.0-h9a8471f_19.tar.bz2#c4eb7a87462627e81e0f3c5e20f10bf066678bdaa41d1a5ee85a186db4078f59
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/libsanitizer-10.4.0-h0e20637_19.tar.bz2#4132132b4265028a368e1f630b2cb567d67051f22b3cd39c00992de6bf48c204
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/noarch/kernel-headers_linux-aarch64-4.18.0-h05a177a_18.conda#99731884b26d5801c931f6ed4e1d40f0d1b2efc60ab2d1d49e9b3a6508a390df
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/noarch/tzdata-2026c-h151e31d_0.conda#b928c30ddcb0e3f544c6eade8352737e6e610e263276b90232db6a578ef899d8
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/noarch/sysroot_linux-aarch64-2.17-h5b4a56d_18.conda#769a720e0066e3b5c4168d6de455dbde12c2ee11ee3a19fc614659d04f726370
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/binutils_impl_linux-aarch64-2.39-h48546ad_1.conda#dbdcca1fc9601ebc035d61283ceb317fe9b006dc7a9aa65d696769e9c74c5580
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/gcc_impl_linux-aarch64-10.4.0-h9569200_19.tar.bz2#18155529cf647fe012f1a577a24df72c0d3fd6daad2ffa0dd0f3860b6cdc8b7f
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/gxx_impl_linux-aarch64-10.4.0-h9569200_19.tar.bz2#df210e3cf25aab7b38370427a3299c508ead109afe7ac9167666afd54778d513
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/gcc-10.4.0-h27fe70b_13.conda#6fcf0d58685f9bd5fb8e14444c9d19baadbd240460347903e9a89db9ba36fa9e
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-aarch64/gxx-10.4.0-h27fe70b_13.conda#af7d34263ef2f6b2e9863ba795b41cecc27e68f553f3dfe1a10e89155747c676
