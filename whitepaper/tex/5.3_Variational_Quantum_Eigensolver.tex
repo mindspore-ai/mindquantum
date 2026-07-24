@@ -104,6 +104,8 @@ In \MindQuantum, the gradient operator of VQE can be obtained as
     Hamiltonian(hamiltonian_QubitOp.real),
     total_circuit)
 \end{lstlisting}
+This mapped-qubit circuit workflow is the natural choice when the same ansatz will later be compiled, optimized, or executed on a quantum chip, and it is also compatible with the general-purpose simulators introduced earlier. For numerical quantum chemistry experiments based on UCC single and double excitations, \MindQuantum\ also provides the dedicated \texttt{mqchem} backend described in Sec.~\ref{sec:mqchem}. That backend evolves the state in a fixed-electron-number CI space and applies UCC excitation gates directly, so it avoids expanding every excitation into a Pauli-string time-evolution circuit during classical simulation.
+
 In general, we need to provide appropriate initial parameter for circuit such that we can more quickly converge to the minimal value. For UCCSD ansatz, the CCSD value is a good choice, which can be obtained by
 \begin{lstlisting}
     init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(

@@ -104,6 +104,7 @@ ansatz_parameter_names = ansatz_circuit.params_name
     Hamiltonian(hamiltonian_QubitOp.real),
     total_circuit)
 \end{lstlisting}
+上述流程把费米子哈密顿量和 UCC ansatz 都转换到量子比特线路上，因此适合与真实量子芯片执行、线路编译以及通用模拟器保持一致。若研究目标是量子化学 VQE 的数值实验，且 ansatz 主要由 UCC 单、双激发构成，也可以使用第~\ref{sec:mqchem} 节介绍的 \texttt{mqchem} 后端。该后端直接在固定电子数 CI 子空间中保存波函数，并通过 \texttt{UCCExcitationGate} 与 \texttt{CIHamiltonian} 计算能量和梯度，从而避免把每个费米子激发先展开为 Pauli 演化线路。
 通常，需要为线路提供合适的初始参数，以便更快收敛到最小值。对于 UCCSD ansatz，CCSD 值是一个很好的选择，可以通过如下方式获得：
 \begin{lstlisting}
     init_amplitudes_ccsd = uccsd_singlet_get_packed_amplitudes(
