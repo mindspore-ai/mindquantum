@@ -2,7 +2,7 @@ include *.txt
 include NOTICE
 
 recursive-include _build *.py
-recursive-include cmake *.cmake
+recursive-include cmake *.cmake *.cpp
 recursive-include tests *.txt* *.py *.hpp *.cpp *.hdf5 *.sh
 recursive-include third_party *.patch*
 recursive-include mindquantum *.txt *.h *.hpp *.cc *.cpp

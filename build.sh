@@ -36,6 +36,9 @@ fi
 # Load common bash helper functions
 . "$ROOTDIR/scripts/build/common_functions.sh"
 
+# Load the managed release-toolchain bootstrap
+. "$ROOTDIR/scripts/build/managed_gnu_toolchain.sh"
+
 check_for_verbose "$@"
 
 # ------------------------------------------------------------------------------
@@ -52,6 +55,13 @@ else
 fi
 
 if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
+    if [[ "$(uname -s)" == "Linux" && "$(uname -m)" =~ ^(aarch64|arm64)$ ]]; then
+        managed_toolchain_root=$(mktemp -d "${TMPDIR:-/tmp}/mindquantum-toolchain.XXXXXXXX") \
+            || die "Unable to create a temporary directory for the managed GNU toolchain"
+        trap 'rm -rf -- "$managed_toolchain_root"' EXIT
+        setup_managed_gnu_toolchain "$managed_toolchain_root"
+    fi
+
     for var in CUDA_HOME CUDA_PATH; do
         if [ -n "${!var}" ]; then
             echo "$var = ${!var}"

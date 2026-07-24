@@ -27,22 +27,10 @@ set(_mq_arm_sve_compile_option "-march=armv8-a+sve")
 if(MQ_VECTOR_ARM_SVE AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(_mq_saved_required_flags "${CMAKE_REQUIRED_FLAGS}")
   set(CMAKE_REQUIRED_FLAGS "${_mq_saved_required_flags} ${_mq_arm_sve_compile_option}")
-  check_cxx_source_compiles(
-    "#include <arm_sve.h>
-     #if !defined(__ARM_FEATURE_SVE)
-     #error SVE is unavailable
-     #endif
-     int main() {
-       const auto pg32 = svptrue_b32();
-       const auto value32 = svdup_n_f32(1.0F);
-       const auto result32 = svcmla_f32_x(pg32, value32, value32, value32, 0);
-       const auto pg64 = svptrue_b64();
-       const auto value64 = svdup_n_f64(1.0);
-       const auto result64 = svcmla_f64_x(pg64, value64, value64, value64, 0);
-       return static_cast<int>(svlastb_f32(pg32, result32) + svlastb_f64(pg64, result64));
-     }"
-    MQ_VECTOR_COMPILER_HAS_ARM_SVE_FCMA)
+  file(READ "${PROJECT_SOURCE_DIR}/cmake/probes/arm_sve_fcma.cpp" _mq_arm_sve_probe)
+  check_cxx_source_compiles("${_mq_arm_sve_probe}" MQ_VECTOR_COMPILER_HAS_ARM_SVE_FCMA)
   set(CMAKE_REQUIRED_FLAGS "${_mq_saved_required_flags}")
+  unset(_mq_arm_sve_probe)
   unset(_mq_saved_required_flags)
 
   if(NOT MQ_VECTOR_COMPILER_HAS_ARM_SVE_FCMA)
