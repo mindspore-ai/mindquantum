@@ -1,141 +1,116 @@
-# To use:
+# Local checks are organised in three tiers, so that legacy files are never
+# scanned or reformatted as a side effect of an unrelated change. The PR gate
+# (MindSpore CI) remains the single authority; everything here only exists to
+# catch gate findings before the gate does.
 #
-#     pre-commit run -a
+#   Tier 1  pre-commit stage: fast hygiene checks (merge markers, huge files,
+#           YAML/TOML syntax, forgotten breakpoints). Never modifies files.
+#   Tier 2  pre-push stage: mirror of the CI gate checkers (ruff, cpplint,
+#           cppcheck, cmakelint, lizard, codespell, ...). Check-only, and runs
+#           only on the commits being pushed, i.e. the same diff the gate sees.
+#   Tier 3  manual stage: formatters/fixers and the exact pylint configuration
+#           of the CI gate. Only ever runs on demand.
 #
-# Or:
+# Setup (once):
 #
-#     pre-commit install  # (runs every time you commit in git)
+#     pre-commit install            # installs the pre-commit and pre-push hooks
 #
-# To update this file:
+# Everyday usage: just `git commit` (tier 1) and `git push` (tier 2).
 #
-#     pre-commit autoupdate
+# On demand:
 #
-# See https://github.com/pre-commit/pre-commit
+#     # dry-run the CI gate against your full PR diff
+#     pre-commit run --hook-stage pre-push --from-ref upstream/master --to-ref HEAD
+#
+#     # format/fix only the files touched by your PR (+ pylint parity check)
+#     pre-commit run --hook-stage manual --from-ref upstream/master --to-ref HEAD
+#
+#     # escape hatches (the CI gate has the final say anyway)
+#     SKIP=cppcheck git push        # skip a single hook
+#     git push --no-verify          # skip everything
+#
+# Avoid `pre-commit run -a` / `--all-files`: with the remaining legacy
+# formatting debt it would produce large diffs unrelated to your change.
+#
+# Maintenance: style hooks are updated with `pre-commit autoupdate`; tools that
+# mirror the CI gate (cpplint, lizard, cmakelint, pylint) are pinned through
+# `additional_dependencies` and must be bumped in lockstep with the gate.
 
 ---
 
 ci:
-  skip: [check-manifest, cppcheck]
+  skip: [cppcheck]
+
+minimum_pre_commit_version: '3.2.0'
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-push]
+
+exclude: ^third_party/
 
 repos:
+  # ===========================================================================
+  # Tier 1: hygiene checks on every commit (fast, never modify files)
+
   - repo: meta
     hooks:
       - id: check-useless-excludes
+        stages: [pre-commit]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: check-added-large-files
+        stages: [pre-commit]
       - id: check-case-conflict
+        stages: [pre-commit]
       - id: check-merge-conflict
+        stages: [pre-commit]
       - id: check-symlinks
+        stages: [pre-commit]
       - id: check-yaml
+        stages: [pre-commit]
       - id: check-toml
+        stages: [pre-commit]
       - id: debug-statements
-      - id: end-of-file-fixer
-        exclude: ^(.*patch[0-9]*)$
-      - id: mixed-line-ending
-      - id: trailing-whitespace
-        exclude: ^(.*patch[0-9]*)$
+        stages: [pre-commit]
 
-  # Changes tabs to spaces
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.6
-    hooks:
-      - id: remove-tabs
-        exclude: ^(.*Makefile|.*patch[0-9]*)$
+  # ===========================================================================
+  # Tier 2: CI gate mirror, runs on `git push` against the pushed commits.
+  # Check-only: nothing below modifies files.
 
-  - repo: https://github.com/PyCQA/doc8/
-    rev: v1.1.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
     hooks:
-      - id: doc8
-        alias: doc8-lint
-        require_serial: false
-
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
-    hooks:
-      - id: shellcheck
-        require_serial: false
-        args: [-x, --severity=warning]
+      # Local counterpart of the gate's pylint scan (see also pylint-ci).
+      - id: ruff-check
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.2
     hooks:
       - id: codespell
-        require_serial: false
         files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
-        args: [-S, '.git,third_party', -I, .codespell.allow]
+        args: [-S, '.git,third_party', -I, .jenkins/rules/codespell/codespell.allow]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [-x, --severity=warning]
+
+  - repo: https://github.com/PyCQA/doc8/
+    rev: v1.1.2
+    hooks:
+      - id: doc8
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0
     hooks:
       - id: yamllint
-        require_serial: false
-
-  - repo: https://github.com/cheshirekow/cmake-format-precommit
-    rev: v0.6.13
-    hooks:
-      - id: cmake-format
-        require_serial: false
-        additional_dependencies: [pyyaml]
-
-  - repo: local
-    hooks:
-      - id: cmakelint-ci
-        name: cmakelint (CI parity)
-        entry: cmakelint
-        language: python
-        types: [cmake]
-        require_serial: false
-        additional_dependencies: [cmakelint==1.4.1]
-        args: [--config=None, --spaces=2, --linelength=120]
-
-  # ---- Python: ruff replaces black, flake8, isort, pyupgrade, pydocstyle ----
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.7
-    hooks:
-      - id: ruff-format
-      - id: ruff
-        args: [--fix]
-
-  - repo: https://github.com/adamchainz/blacken-docs
-    rev: 1.20.0
-    hooks:
-      - id: blacken-docs
-        args: [-l, '120']
-        additional_dependencies: [black]
-
-  # ---- C++ tooling ----
-
-  - repo: https://github.com/Takishima/cmake-pre-commit-hooks/
-    rev: v1.9.6
-    hooks:
-      - id: cpplint
-        require_serial: false
-        args: [--quiet]
-        files: .*\.(h|hpp|tpp|cpp|cc)$
-        additional_dependencies: ['cpplint']
-      - id: lizard
-        require_serial: false
-        files: .*\.(h|hpp|tpp|cpp|cc|py)$
-        args: [--languages=cpp, --languages=python, --languages=java,
-               -C19, -L100,
-               --exclude=*/tests/*, --exclude=*/test/*, --exclude=*/third_party/*,
-               -W.whitelizard.txt, -w, --no-cmake-configure]
-        additional_dependencies: ['lizard']
-
-  - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.1
-    hooks:
-      - id: clang-format
-        args: ["-i", "--style=file"]
-        files: .*\.(h|hpp|tpp|cpp|cc)$
 
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
+      # Requires a system-wide cppcheck installation.
       - id: cppcheck
         files: .*\.(h|hpp|tpp|cpp|cc)$
         args: [--force,
@@ -145,3 +120,99 @@ repos:
                --std=c++20,
                --language=c++,
                --suppressions-list=.cppcheck.suppressions]
+
+  - repo: local
+    hooks:
+      - id: cpplint
+        name: cpplint (CI parity)
+        entry: cpplint
+        language: python
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        args: [--quiet]
+        additional_dependencies: [cpplint==2.0.2]
+
+      - id: lizard
+        name: lizard (CI parity)
+        entry: lizard
+        language: python
+        files: .*\.(h|hpp|tpp|cpp|cc|py)$
+        args: [--languages=cpp, --languages=python, --languages=java,
+               -C19, -L100,
+               --exclude=*/tests/*, --exclude=*/test/*, --exclude=*/third_party/*,
+               -W.whitelizard.txt, -w]
+        additional_dependencies: [lizard==1.23.0]
+
+      - id: cmakelint-ci
+        name: cmakelint (CI parity)
+        entry: cmakelint
+        language: python
+        types: [cmake]
+        args: [--config=None, --spaces=2, --linelength=120]
+        additional_dependencies: [cmakelint==1.4.1]
+
+  # ===========================================================================
+  # Tier 3: on demand only (--hook-stage manual): formatters/fixers, plus the
+  # exact pylint configuration used by the CI gate.
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+        stages: [manual]
+      - id: mixed-line-ending
+        stages: [manual]
+      - id: trailing-whitespace
+        stages: [manual]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.6
+    hooks:
+      - id: remove-tabs
+        exclude: .*Makefile$
+        stages: [manual]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
+    hooks:
+      - id: ruff-check
+        alias: ruff-fix
+        name: ruff (autofix)
+        args: [--fix]
+        stages: [manual]
+      - id: ruff-format
+        stages: [manual]
+
+  - repo: https://github.com/adamchainz/blacken-docs
+    rev: 1.20.0
+    hooks:
+      - id: blacken-docs
+        args: [-l, '120']
+        additional_dependencies: [black]
+        stages: [manual]
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+        additional_dependencies: [pyyaml]
+        stages: [manual]
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v22.1.1
+    hooks:
+      - id: clang-format
+        args: [-i, --style=file]
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        stages: [manual]
+
+  - repo: local
+    hooks:
+      - id: pylint-ci
+        name: pylint (exact CI gate configuration)
+        entry: pylint
+        language: python
+        types: [python]
+        args: [--rcfile=.jenkins/rules/pylint/pylintrc]
+        require_serial: true
+        stages: [manual]
+        additional_dependencies: [pylint==3.3.9]
