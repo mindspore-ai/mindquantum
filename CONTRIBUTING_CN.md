@@ -302,7 +302,7 @@ mindquantum基于pytest编写单元测试用例，建议开发者在实现一个
 
 - 编码指南
 
-  MindSpore Quantum社区使用[Python PEP 8 编码风格](https://pep8.org/)和[谷歌C++编码风格](http://google.github.io/styleguide/cppguide.html)。我们使用 [Ruff](https://docs.astral.sh/ruff/) 进行 Python 代码检查和格式化（替代 black、flake8、isort、pyupgrade、pydocstyle），以及 [CppLint](https://github.com/cpplint/cpplint)、[CppCheck](http://cppcheck.sourceforge.net)、[CMakeLint](https://github.com/cmake-lint/cmake-lint)、[CodeSpell](https://github.com/codespell-project/codespell)、[Lizard](http://www.lizard.ws)、[ShellCheck](https://github.com/koalaman/shellcheck) 检查代码格式。所有检查均通过 [pre-commit](https://pre-commit.com/) 集成——运行 `pre-commit install` 设置 git hooks，每次提交时自动执行检查。
+  MindSpore Quantum社区使用[Python PEP 8 编码风格](https://pep8.org/)和[谷歌C++编码风格](http://google.github.io/styleguide/cppguide.html)。我们使用 [Ruff](https://docs.astral.sh/ruff/) 进行 Python 代码检查和格式化（替代 black、flake8、isort、pyupgrade、pydocstyle），以及 [CppLint](https://github.com/cpplint/cpplint)、[CppCheck](http://cppcheck.sourceforge.net)、[CMakeLint](https://github.com/cmake-lint/cmake-lint)、[CodeSpell](https://github.com/codespell-project/codespell)、[Lizard](http://www.lizard.ws)、[ShellCheck](https://github.com/koalaman/shellcheck) 检查代码格式。PR 门禁（MindSpore CI）是这些检查的唯一裁判，本地 [pre-commit](https://pre-commit.com/) 配置只是门禁的镜像，用于在提交 PR 之前提前发现门禁会报告的问题。运行一次 `pre-commit install` 完成安装：此后 `git commit` 仅执行快速卫生检查且从不改写文件，`git push` 则针对待推送的提交运行门禁镜像检查。格式化工具（`ruff-format`、`clang-format`、`cmake-format` 等）不会自动运行，如需格式化本次 PR 涉及的文件，请执行 `pre-commit run --hook-stage manual --from-ref upstream/master --to-ref HEAD`。请勿使用 `pre-commit run -a`，以免历史遗留文件被无关地重排；完整命令说明见 `.pre-commit-config.yaml` 文件头部注释。
 - 单元测试指南
 
   MindSpore社区使用Python单元测试框架[pytest](http://www.pytest.org/en/latest/)。注释名称需反映测试用例的设计意图。
