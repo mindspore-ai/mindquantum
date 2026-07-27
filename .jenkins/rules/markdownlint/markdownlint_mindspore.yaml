@@ -1,0 +1,34 @@
+---
+# Node markdownlint configuration mirroring the ruleset used by the MindSpore
+# CI gate (Check_Markdownlint, Ruby mdl 0.13):
+#   https://tools.mindspore.cn/tools/check/markdownlint/rules/markdownlint_mindspore.rb
+# Rule numbering is shared between both implementations; rules that exist only
+# in the Node implementation are disabled to stay aligned with the gate.
+default: true
+MD007:
+  indent: 4
+MD009:
+  br_spaces: 2
+MD005: false
+MD013: false
+MD024: false
+MD025: false
+MD029: false
+MD033: false
+MD041: false
+# Node-only rules (absent from the gate's mdl):
+MD042: false
+MD043: false
+MD044: false
+MD045: false
+MD048: false
+MD049: false
+MD050: false
+MD051: false
+MD052: false
+MD053: false
+MD054: false
+MD055: false
+MD056: false
+MD058: false
+MD059: false

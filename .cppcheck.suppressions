@@ -1,8 +1,12 @@
 missingInclude
 missingReturn
+unusedFunction
 
 constParameter:tests/*
 unreadVariable:tests/*
+
+constStatement:ccsrc/lib/mq_base/gates/details/fermion_operator_term_policy.cpp
+constStatement:ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp
 
 assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.h
 assignBoolToPointer:ccsrc/python/simulator/include/python/densitymatrix/bind_mat_state.h
@@ -15,8 +19,11 @@ cstyleCast:ccsrc/include/simulator/cintrin.h
 
 duplicateExpression:ccsrc/include/core/parameter_resolver.h:707
 duplicateExpression:ccsrc/python/math/lib/bind_math.cpp
+duplicateExpression:ccsrc/python/mqbackend/lib/binding.cc
 
+noExplicitConstructor:ccsrc/python/mqbackend/include/python/ops/basic_gate.h
 
+noValidConfiguration:ccsrc/include/config/config.h
 noValidConfiguration:ccsrc/include/config/details/cxx20_compatibility.h
 noValidConfiguration:ccsrc/include/config/type_traits.h
 noValidConfiguration:tests/decompositions/test_apply_atoms.cpp
@@ -27,6 +34,7 @@ preprocessorErrorDirective:tests/decompositions/test_apply_atoms.cpp
 preprocessorErrorDirective:tests/ops/test_angle_parametric_gates.cpp
 unusedStructMember:ccsrc/include/math/tensor/ops_cpu/utils.h
 
+syntaxError:ccsrc/include/config/config.h
 syntaxError:ccsrc/include/core/parameter_resolver_external_ops.h:90
 syntaxError:ccsrc/include/core/sparse/algo.h
 syntaxError:ccsrc/include/ops/gates/terms_operator_base_external_ops.h:92
@@ -34,6 +42,7 @@ syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_vector_policy_gate_expec.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_arm/cpu_vector_sve_utils.h
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_circuit_tiling.cpp
+syntaxError:ccsrc/python/mqbackend/lib/binding.cc
 syntaxError:ccsrc/python/mqbackend/lib/details/define_terms_ops.h
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_condition.cpp
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_expect.cpp
@@ -44,6 +53,10 @@ syntaxError:ccsrc/python/device/include/python/device/binding.h
 syntaxError:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp
 syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_condition.cpp
 syntaxError:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp
+
+uninitMemberVar:ccsrc/include/core/numba_wrapper.h
+
+cppcheckError:ccsrc/include/simulator/vector/vector_state.tpp
 
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_rot_pauli.cpp
 unknownMacro:ccsrc/include/core/sparse/paulimat.h
@@ -59,6 +72,17 @@ unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_ma
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_matrix_gate.cpp
 unknownMacro:ccsrc/include/simulator/vector/detail/cpu_vector_policy.h
 unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_swap_like.cpp
+unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_avx_double/cpu_vector_core_gate_expect.cpp
+unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_condition.cpp
+unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_dot_like.cpp
+unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_gate_expect.cpp
+unknownMacro:ccsrc/lib/simulator/vector/detail/cpu_common/cpu_vector_core_policy.cpp
+unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_policy.cpp
+unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_z_like.cpp
+unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_x_like.cpp
+unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_channel.cpp
+unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_common/cpu_densitymatrix_core_gate_expect.cpp
+unknownMacro:ccsrc/include/simulator/densitymatrix/detail/cpu_densitymatrix_policy.h
 unknownMacro:ccsrc/include/simulator/mps/mps_state.tpp
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.h
