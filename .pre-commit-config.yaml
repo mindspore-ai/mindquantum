@@ -5,9 +5,9 @@
 #
 #   Tier 1  pre-commit stage: fast hygiene checks (merge markers, huge files,
 #           YAML/TOML syntax, forgotten breakpoints). Never modifies files.
-#   Tier 2  pre-push stage: mirror of the CI gate checkers (ruff, cpplint,
-#           cppcheck, cmakelint, lizard, codespell, ...). Check-only, and runs
-#           only on the commits being pushed, i.e. the same diff the gate sees.
+#   Tier 2  pre-push stage: mirror of the CI gate checkers. Check-only, and
+#           runs only on the commits being pushed, i.e. the same diff the
+#           gate sees.
 #   Tier 3  manual stage: formatters/fixers and the exact pylint configuration
 #           of the CI gate. Only ever runs on demand.
 #
@@ -32,9 +32,14 @@
 # Avoid `pre-commit run -a` / `--all-files`: with the remaining legacy
 # formatting debt it would produce large diffs unrelated to your change.
 #
-# Maintenance: style hooks are updated with `pre-commit autoupdate`; tools that
-# mirror the CI gate (cpplint, lizard, cmakelint, pylint) are pinned through
-# `additional_dependencies` and must be bumped in lockstep with the gate.
+# Gate parity: tool versions and flags below were transcribed from the gate
+# run of PR #3153 (ms-pipeline, 2026-07-25). Parity tools are pinned through
+# `additional_dependencies` and must be bumped in lockstep with the gate;
+# style-only hooks may follow `pre-commit autoupdate`.
+#
+# Gate checks with no local mirror: rstlint (approximated by doc8), linklint,
+# notebooklint, DT design, scanoss and the sensitive-words scan (all bound to
+# MindSpore-internal tools or services).
 
 ---
 
@@ -81,21 +86,103 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.7
     hooks:
-      # Local counterpart of the gate's pylint scan (see also pylint-ci).
+      # Fast approximation of the gate's pylint scan; the authoritative
+      # configuration is the manual pylint-ci hook below.
       - id: ruff-check
 
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
-    hooks:
-      - id: codespell
-        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
-        args: [-S, '.git,third_party', -I, .jenkins/rules/codespell/codespell.allow]
-
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+    rev: v0.11.0.1  # shellcheck 0.11.0 == gate
     hooks:
       - id: shellcheck
-        args: [-x, --severity=warning]
+        args: [--severity=warning, '--exclude=SC2086,SC1090,SC1091,SC2155,SC2164,SC1003']
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      # The gate runs the Ruby mdl; this Node port shares the rule numbering
+      # and the config disables the rules that only exist in the Node version.
+      - id: markdownlint
+        args: [--config, .jenkins/rules/markdownlint/markdownlint_mindspore.yaml]
+
+  - repo: local
+    hooks:
+      # Requires a system-wide cppcheck installation (brew/apt install
+      # cppcheck), otherwise skip with `SKIP=cppcheck git push`. The gate runs
+      # cppcheck 1.90 with --enable=style; --std/--language compensate for
+      # newer local versions parsing modern C++.
+      - id: cppcheck
+        name: cppcheck (CI parity)
+        entry: cppcheck
+        language: system
+        files: .*\.(h|hpp|tpp|cpp|cc)$
+        args: [--force,
+               --enable=style,
+               --error-exitcode=1,
+               --inline-suppr,
+               --std=c++20,
+               --language=c++,
+               --suppressions-list=.cppcheck.suppressions]
+
+      - id: cpplint
+        name: cpplint (CI parity)
+        entry: cpplint
+        language: python
+        files: .*\.(h|hh|hpp|hxx|h\+\+|c|cc|cpp|cxx|c\+\+|cu|cuh|cl|tpp|txx)$
+        args: [--quiet, --linelength=120,
+               "--filter=-build/header_guard,-build/c++11,\
+               -build/include_what_you_use,-whitespace/indent_namespace,\
+               -whitespace/newline,-readability/casting"]
+        additional_dependencies: [cpplint==2.0.2]
+
+      - id: lizard
+        name: lizard (CI parity)
+        entry: lizard
+        language: python
+        files: .*\.(h|hh|hpp|hxx|c|cc|cpp|cxx|cu|cuh|tpp|txx|py)$
+        args: [--languages=cpp, --languages=python, --languages=java,
+               -C19, -L100,
+               --exclude=*/tests/*, --exclude=*/test/*, --exclude=*/third_party/*,
+               -W.whitelizard.txt, -w]
+        additional_dependencies: [lizard==1.17.19]
+
+      - id: cmakelint-ci
+        name: cmakelint (CI parity)
+        entry: cmakelint
+        language: python
+        types: [cmake]
+        args: [--config=None, --spaces=2, --linelength=120, --quiet,
+               "--filter=+convention/filename,+linelength,+package/consistency,\
+               +readability/logic,-readability/mixedcase,-readability/wonkycase,\
+               -syntax,+whitespace/eol,+whitespace/extra,+whitespace/indent,\
+               +whitespace/mismatch,+whitespace/newline,+whitespace/tabs"]
+        additional_dependencies: [cmakelint==1.4.1]
+
+      # The gate additionally pipes codespell output through a filter that
+      # drops words of four characters or less; local runs are thus slightly
+      # stricter on short words.
+      - id: codespell-ci
+        name: codespell (CI parity)
+        entry: codespell
+        language: python
+        types: [text]
+        args: [-q, '7', -S, '.jenkins,.git,third_party',
+               -I, .jenkins/rules/codespell/codespell.allow]
+        additional_dependencies: [codespell==2.0.0]
+
+      - id: forbid-tabs
+        name: tab check (CI parity)
+        language: pygrep
+        entry: '\t'
+        types: [text]
+        exclude: >-
+          (?x)(
+              [^/]*Makefile[^/]*$
+            | \.(bin|xml|rst|docx|xlsx|pdf|mindir|css|js|html|patch)$
+            | \.git[a-z]+$
+          )
+
+  # ---------------------------------------------------------------------------
+  # Extras beyond the gate (check-only, low noise)
 
   - repo: https://github.com/PyCQA/doc8/
     rev: v1.1.2
@@ -106,49 +193,6 @@ repos:
     rev: v1.38.0
     hooks:
       - id: yamllint
-
-  - repo: https://github.com/pocc/pre-commit-hooks
-    rev: v1.3.5
-    hooks:
-      # Requires a system-wide cppcheck installation.
-      - id: cppcheck
-        files: .*\.(h|hpp|tpp|cpp|cc)$
-        args: [--force,
-               --enable=all,
-               --error-exitcode=1,
-               --inline-suppr,
-               --std=c++20,
-               --language=c++,
-               --suppressions-list=.cppcheck.suppressions]
-
-  - repo: local
-    hooks:
-      - id: cpplint
-        name: cpplint (CI parity)
-        entry: cpplint
-        language: python
-        files: .*\.(h|hpp|tpp|cpp|cc)$
-        args: [--quiet]
-        additional_dependencies: [cpplint==2.0.2]
-
-      - id: lizard
-        name: lizard (CI parity)
-        entry: lizard
-        language: python
-        files: .*\.(h|hpp|tpp|cpp|cc|py)$
-        args: [--languages=cpp, --languages=python, --languages=java,
-               -C19, -L100,
-               --exclude=*/tests/*, --exclude=*/test/*, --exclude=*/third_party/*,
-               -W.whitelizard.txt, -w]
-        additional_dependencies: [lizard==1.23.0]
-
-      - id: cmakelint-ci
-        name: cmakelint (CI parity)
-        entry: cmakelint
-        language: python
-        types: [cmake]
-        args: [--config=None, --spaces=2, --linelength=120]
-        additional_dependencies: [cmakelint==1.4.1]
 
   # ===========================================================================
   # Tier 3: on demand only (--hook-stage manual): formatters/fixers, plus the
@@ -198,11 +242,11 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.1
+    rev: v18.1.8  # clang-format 18.1.8 == gate (Check_ClangFormat)
     hooks:
       - id: clang-format
         args: [-i, --style=file]
-        files: .*\.(h|hpp|tpp|cpp|cc)$
+        files: .*\.(h|hh|hpp|hxx|h\+\+|c|cc|cpp|cxx|c\+\+|cu|cuh|cl|tpp|txx)$
         stages: [manual]
 
   - repo: local
@@ -215,4 +259,4 @@ repos:
         args: [--rcfile=.jenkins/rules/pylint/pylintrc]
         require_serial: true
         stages: [manual]
-        additional_dependencies: [pylint==3.3.9]
+        additional_dependencies: [pylint==3.3.7, astroid==3.3.11]
