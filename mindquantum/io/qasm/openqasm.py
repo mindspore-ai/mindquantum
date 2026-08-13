@@ -507,7 +507,7 @@ def qasm_to_mq_v2(qasm: str, gate_map_openqasm_mq):
             cmd = i.strip()
             gate_name, params, qids = parse_gate_cmd(cmd, qregs, cregs)
             if gate_name == 'barrier':
-                circ += gate_map_openqasm_mq['barrier'](params, [q[0] for q in qids])
+                circ += gate_map_openqasm_mq['barrier'](params, [qubit for qid in qids for qubit in qid])
                 continue
             for qid in qids:
                 if gate_name in custom_gate:
@@ -549,7 +549,7 @@ class OpenQASM:
         from mindquantum.core.circuit import Circuit
 
         self.gate_map_openqasm_mq = {
-            'barrier': lambda prs, qids: Circuit([G.BarrierGate().on(qids)]),
+            'barrier': lambda prs, qids: G.BarrierGate().on(qids),
             'ccx': lambda prs, qids: G.X.on(qids[-1], qids[:-1]),
             'ch': lambda prs, qids: G.H.on(qids[-1], qids[:-1]),
             'cp': lambda prs, qids: G.PhaseShift(prs[0]).on(qids[-1], qids[:-1]),

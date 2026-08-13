@@ -17,7 +17,7 @@
 import numpy as np
 
 from mindquantum.core import U3, UN, Circuit, H, X
-from mindquantum.core.gates import Measure
+from mindquantum.core.gates import BarrierGate, Measure
 from mindquantum.io import OpenQASM
 from mindquantum.simulator import Simulator
 from mindquantum.utils import random_circuit
@@ -39,6 +39,25 @@ def test_openqasm():
     test_openqasms = 'OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[2];\ncrz(0.1) q[1],q[0];'
     test_cir = OpenQASM().from_string(test_openqasms)
     assert np.allclose(test_cir.matrix(), cir.matrix())
+
+
+def test_openqasm_preserves_explicit_barrier_qubits():
+    """
+    Feature: OpenQASM barrier parsing.
+    Description: Parse barriers that explicitly list contiguous or noncontiguous qubits.
+    Expectation: The parsed barrier retains all explicitly listed qubits.
+    """
+    header = 'OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[4];\n'
+    cases = [
+        ('barrier q[0],q[1],q[2],q[3];', [[0, 1, 2, 3]]),
+        ('barrier q[0],q[2];', [[0], [2]]),
+    ]
+
+    for command, expected_qubits in cases:
+        circ = OpenQASM().from_string(header + command)
+
+        assert all(isinstance(gate, BarrierGate) for gate in circ)
+        assert [gate.obj_qubits for gate in circ] == expected_qubits
 
 
 def test_openqasm_custom_gate1():
