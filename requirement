@@ -1,0 +1,7 @@
+gcc
+cmake
+pybind11
+numpy
+pandas
+sicpy
+mindquantum
