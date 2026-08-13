@@ -2,4 +2,4 @@ https://apt.repos.intel.com/oneapi
 https://github.com/Kitware/CMake/releases/download
 https://github.com/ccache/ccache/releases/download/
 https://github.com/ccache/ccache/releases/download/v
-https://pypi.tuna.tsinghua.edu.cn/simple
+https://mirrors.huaweicloud.com/repository/pypi/simple
