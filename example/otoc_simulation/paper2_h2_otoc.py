@@ -25,15 +25,18 @@ H2 STO-3G 系数 (来自 Seeley et al., 用 BK 编码后, 后续合并对称等�
 """
 
 import os
+import pickle
 import sys
 import time
-import pickle
+
 import numpy as np
 import matplotlib.pyplot as plt
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.gates import H, X, Z
+from mindquantum.core.operators import QubitOperator, Hamiltonian, TimeEvolution
+from mindquantum.simulator import Simulator
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-
-import mindquantum as mq
 
 # 避免 scipy 与 mindquantum 内置 BLAS 的 DLL 冲突 (Windows 上会段错误),
 # 改用 numpy 实现的简单 cubic-Hermite 样条 / 分段三次插值.
@@ -83,10 +86,6 @@ class _NPCubicSpline:
 
 
 CubicSpline = _NPCubicSpline
-from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates import H, X, Y, Z, RX, RY, RZ
-from mindquantum.core.operators import QubitOperator, Hamiltonian, TimeEvolution
-from mindquantum.simulator import Simulator
 
 
 # ============================================================
@@ -297,8 +296,8 @@ def run_panel_d(
             f"|OTOC| range=[{results[r].min():+.3f}, {results[r].max():+.3f}]"
         )
     with open(cache_path, "wb") as f:
-        pickle.dump(dict(t_grid=t_grid, curves=results), f)
-    return dict(t_grid=t_grid, curves=results)
+        pickle.dump({"t_grid": t_grid, "curves": results}, f)
+    return {"t_grid": t_grid, "curves": results}
 
 
 # ============================================================
@@ -349,33 +348,40 @@ def run_panel_e(
     r_hat_lo = []
     r_hat_hi = []
     mse_at_truth = []  # 顶图: covariance-weighted 误差
-    for N in n_points_grid:
+    for n_points in n_points_grid:
         ests = []
         for _ in range(n_bootstrap):
-            exp_curve = exp_curve_clean[:N] + rng.normal(0, noise_sigma, size=N)
-            mse = np.mean((sim_lib[:, :N] - exp_curve[None, :]) ** 2, axis=1)
+            exp_curve = exp_curve_clean[:n_points] + rng.normal(
+                0, noise_sigma, size=n_points
+            )
+            mse = np.mean(
+                (sim_lib[:, :n_points] - exp_curve[None, :]) ** 2, axis=1
+            )
             ests.append(float(r_scan[int(np.argmin(mse))]))
         ests = np.array(ests)
         r_hat_mean.append(ests.mean())
         r_hat_lo.append(np.quantile(ests, 0.025))
         r_hat_hi.append(np.quantile(ests, 0.975))
         # 顶图: 在 r_truth 附近, 评价 sim - exp 的均方误差 vs 不同假设 r
-        mse_curve = np.mean((sim_lib[:, :N] - exp_curve_clean[:N][None, :]) ** 2, axis=1)
+        mse_curve = np.mean(
+            (sim_lib[:, :n_points] - exp_curve_clean[:n_points][None, :]) ** 2,
+            axis=1,
+        )
         mse_at_truth.append(mse_curve)
         print(
-            f"  N={N:3d}  r_hat={ests.mean():.3f}+-{ests.std():.3f} "
+            f"  N={n_points:3d}  r_hat={ests.mean():.3f}+-{ests.std():.3f} "
             f"(2sig: [{r_hat_lo[-1]:.3f},{r_hat_hi[-1]:.3f}])"
         )
 
-    out = dict(
-        r_truth=r_truth,
-        r_scan=r_scan,
-        n_points_grid=list(n_points_grid),
-        r_hat_mean=r_hat_mean,
-        r_hat_lo=r_hat_lo,
-        r_hat_hi=r_hat_hi,
-        mse_at_truth=mse_at_truth,
-    )
+    out = {
+        "r_truth": r_truth,
+        "r_scan": r_scan,
+        "n_points_grid": list(n_points_grid),
+        "r_hat_mean": r_hat_mean,
+        "r_hat_lo": r_hat_lo,
+        "r_hat_hi": r_hat_hi,
+        "mse_at_truth": mse_at_truth,
+    }
     with open(cache_path, "wb") as f:
         pickle.dump(out, f)
     return out
@@ -401,7 +407,7 @@ def _draw_h2_inset(ax_parent, loc_box=(0.05, 0.05, 0.32, 0.32)):
     ax.plot([-0.28, 0.28], [0, 0], "k-", lw=2.0, zorder=2)
     # 距离标注
     ax.annotate("", xy=(0.6, -0.55), xytext=(-0.6, -0.55),
-                arrowprops=dict(arrowstyle="<->", color="#d77a17", lw=1.8))
+                arrowprops={"arrowstyle": "<->", "color": "#d77a17", "lw": 1.8})
     ax.text(0, -0.78, r"$r_{H-H}$", ha="center", va="top",
             fontsize=10, color="#d77a17", fontweight="bold")
 
@@ -557,41 +563,41 @@ if __name__ == "__main__":
     os.makedirs(cache_dir, exist_ok=True)
 
     # FIG.2(d)：计算不同H—H键长下的OTOC时间曲线。
-    r_list = (0.50, 0.65, 0.74, 0.90, 1.10, 1.40, 1.80)
+    bond_lengths = (0.50, 0.65, 0.74, 0.90, 1.10, 1.40, 1.80)
     t_grid_d = np.linspace(0.0, 1.6, 25)
     n_trotter = 20
 
-    d_data = run_panel_d(
-        r_list,
+    panel_d_data = run_panel_d(
+        bond_lengths,
         t_grid_d,
         n_trotter,
         cache_path=os.path.join(cache_dir, "h2_paneld.pkl"),
     )
     plot_panel_d(
-        d_data,
+        panel_d_data,
         save_path=os.path.join(output_dir, "h2_panel_d.png"),
     )
 
     # FIG.2(e)：由合成OTOC观测数据反演H—H键长。
-    r_truth = 0.74
-    r_scan = np.arange(0.66, 0.83, 0.01)
-    t_full = np.linspace(0.1, 1.6, 25)
-    n_points_grid = (3, 5, 8, 12, 16, 20, 25)
+    target_bond_length = 0.74
+    bond_length_scan = np.arange(0.66, 0.83, 0.01)
+    learning_times = np.linspace(0.1, 1.6, 25)
+    sample_counts = (3, 5, 8, 12, 16, 20, 25)
     noise = 0.02
-    n_bootstrap = 200
+    bootstrap_samples = 200
 
-    e_data = run_panel_e(
-        r_truth,
-        r_scan,
-        t_full,
+    panel_e_data = run_panel_e(
+        target_bond_length,
+        bond_length_scan,
+        learning_times,
         n_trotter,
-        n_points_grid,
-        n_bootstrap,
+        sample_counts,
+        bootstrap_samples,
         noise,
         cache_path=os.path.join(cache_dir, "h2_panele.pkl"),
     )
     plot_panel_e(
-        e_data,
+        panel_e_data,
         save_path=os.path.join(output_dir, "h2_panel_e.png"),
     )
 

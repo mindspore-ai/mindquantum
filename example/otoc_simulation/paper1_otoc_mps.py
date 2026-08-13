@@ -21,21 +21,21 @@ FIG.2(c): 1D 链 (本机 N_1D=32 比特), bond_dim=96。
 """
 
 import os
+import multiprocessing as mp
+import pickle
 import sys
 import time
-import pickle
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
-import multiprocessing as mp
-
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import RX, RZ, ISWAP, PhaseShift, X, Z
 from mindquantum.core.operators import QubitOperator, Hamiltonian
 from mindquantum.simulator import Simulator
 from mindquantum._mq_mps.double import mqmps as MqMpsDouble
+
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
 # ============================================================
@@ -135,8 +135,7 @@ def rc2idx(r: int, c: int) -> int:
     """
     if r % 2 == 0:
         return r * COLS + c
-    else:
-        return r * COLS + (COLS - 1 - c)
+    return r * COLS + (COLS - 1 - c)
 
 
 def idx2rc(i: int) -> tuple:
@@ -209,7 +208,7 @@ def build_random_circuit(
 # ============================================================
 # 关联函数 (2D 和 1D 共用)
 # ============================================================
-def measure_C1_cached(s_fwd: Simulator, qm: int) -> float:
+def measure_c1_cached(s_fwd: Simulator, qm: int) -> float:
     """
     测量 C^(1) = ⟨Z_qm(t)⟩ (TOC)。
     无时间反演，对动力学细节不敏感，通常指数快速衰减。
@@ -219,7 +218,7 @@ def measure_C1_cached(s_fwd: Simulator, qm: int) -> float:
     ))
 
 
-def measure_C2_cached(
+def measure_c2_cached(
     s_fwd: Simulator, circ_bwd: Circuit, qm: int, qb: int
 ) -> float:
     """
@@ -232,7 +231,7 @@ def measure_C2_cached(
     return float(np.real(s.get_expectation(Hamiltonian(QubitOperator(f"Z{qm}")))))
 
 
-def measure_C4_cached(
+def measure_c4_cached(
     s_fwd: Simulator,
     circ_fwd: Circuit,
     circ_bwd: Circuit,
@@ -286,7 +285,7 @@ def _pin_to_pcores():
     try:
         import psutil
         psutil.Process().cpu_affinity(list(range(12)))
-    except Exception:
+    except (ImportError, AttributeError, OSError, ValueError):
         pass  # psutil 未安装或平台不支持时静默跳过
 
 
@@ -300,7 +299,7 @@ def _worker_2b(args):
     _pin_to_pcores()
     s_idx, cyc, seed_inst, bond_dim, qm, all_qbs = args
     rng = np.random.default_rng(seed_inst)
-    coords, ce, co = build_2d_lattice()
+    _, ce, co = build_2d_lattice()
     circ_f = build_random_circuit(ce, co, cyc, rng)
     circ_b = circ_f.hermitian()
     s_fwd = make_mps_sim(bond_dim, seed=seed_inst)
@@ -311,7 +310,7 @@ def _worker_2b(args):
             # qm 是参考点: B 作用在 qm 自身无物理意义，存 NaN，绘图用紫点标记，
             # 不参与 colormap (不伪造数据)。
             continue
-        row[qb] = measure_C4_cached(s_fwd, circ_f, circ_b, qm, qb)
+        row[qb] = measure_c4_cached(s_fwd, circ_f, circ_b, qm, qb)
     return s_idx, row
 
 
@@ -330,7 +329,7 @@ def _worker_1d(args):
     返回: (c1, {off: c2}, {off: c4}, {off: c4_off})
     """
     _pin_to_pcores()
-    s_idx, cyc, qm_1d, seed_inst, bond_dim, cand_offsets = args
+    _, cyc, qm_1d, seed_inst, bond_dim, cand_offsets = args
 
     # ── C(1): N=12 精确系统, qm 单点 ⟨Z(t)⟩ ──────────────────────────
     rng_c1 = np.random.default_rng(seed_inst)
@@ -339,25 +338,25 @@ def _worker_1d(args):
     circ_c1 = build_random_circuit_n(ce_c1, co_c1, N_C1, cyc, rng=rng_c1)
     s_c1    = make_mps_sim(BOND_DIM_C1, seed=seed_inst, n_qubits=N_C1)
     s_c1.apply_circuit(circ_c1)
-    c1 = measure_C1_cached(s_c1, QM_C1)
+    c1 = measure_c1_cached(s_c1, QM_C1)
 
     # ── C(2)/C(4): 扫描候选 qb offset ────────────────────────────────
-    N   = N_1D
+    n_qubits = N_1D
     rng = np.random.default_rng(seed_inst)
-    ce  = [(i, i+1) for i in range(0, N-1, 2)]
-    co  = [(i, i+1) for i in range(1, N-1, 2)]
-    circ_f = build_random_circuit_n(ce, co, N, cyc, rng=rng)
+    ce  = [(i, i+1) for i in range(0, n_qubits-1, 2)]
+    co  = [(i, i+1) for i in range(1, n_qubits-1, 2)]
+    circ_f = build_random_circuit_n(ce, co, n_qubits, cyc, rng=rng)
     circ_b = circ_f.hermitian()
-    s_fwd  = make_mps_sim(bond_dim, seed=seed_inst, n_qubits=N)
+    s_fwd  = make_mps_sim(bond_dim, seed=seed_inst, n_qubits=n_qubits)
     s_fwd.apply_circuit(circ_f)
 
     c2m, c4m, c4om = {}, {}, {}
     for off in cand_offsets:
         qb = qm_1d + off
-        if qb > N - 2:
+        if qb > n_qubits - 2:
             continue
-        c2 = measure_C2_cached(s_fwd, circ_b, qm_1d, qb)
-        c4 = measure_C4_cached(s_fwd, circ_f, circ_b, qm_1d, qb)
+        c2 = measure_c2_cached(s_fwd, circ_b, qm_1d, qb)
+        c4 = measure_c4_cached(s_fwd, circ_f, circ_b, qm_1d, qb)
         c2m[off]  = c2
         c4m[off]  = c4
         c4om[off] = c4 - c2 ** 2
@@ -377,6 +376,7 @@ def run_figure_2b(
     cache_path: str,
     n_workers: int = None,
 ):
+    """Calculate FIG.2(b) C^(4) mean and standard-deviation maps."""
     if os.path.isfile(cache_path):
         print(f"[cache] loading {cache_path}")
         with open(cache_path, "rb") as f:
@@ -392,8 +392,8 @@ def run_figure_2b(
     all_qbs = list(range(N_QUBITS))
 
     for cyc in cycles_list:
-        Lr = cyc * 0.5 + 1.0
-        in_cone = int((dist <= Lr).sum())
+        lightcone_radius = cyc * 0.5 + 1.0
+        in_cone = int((dist <= lightcone_radius).sum())
         print(f"\n[FIG2b] cycles={cyc}, instances={n_instances}, bond={bond_dim}, "
               f"in-cone≈{in_cone}/{N_QUBITS} (全部qb真算), workers={n_workers}")
         t0 = time.time()
@@ -486,8 +486,12 @@ def run_figure_2c(
               f"C4={sigmas['C4'][-1]:.2e} C4o={sigmas['C4_off'][-1]:.2e} "
               f"t={time.time()-t0:.1f}s")
 
-    out = dict(cycles=list(cycle_grid)[:len(sigmas["C1"])], sigmas=sigmas,
-               means_c2=means_c2, chosen_qb=chosen_qb)
+    out = {
+        "cycles": list(cycle_grid)[:len(sigmas["C1"])],
+        "sigmas": sigmas,
+        "means_c2": means_c2,
+        "chosen_qb": chosen_qb,
+    }
     with open(cache_path, "wb") as f:
         pickle.dump(out, f)
     return out
@@ -505,8 +509,6 @@ def _draw_diamond_2d(
     vmin: float,
     vmax: float,
     lightcone_radius: float,
-    mask_outside_cone: bool = False,  # kept for API compat, unused
-    show_grid_outside: bool = False,  # kept for API compat, unused
 ):
     """Draw all qubits with their values; lightcone boundary in cyan."""
     qx, qy = coords[qm]
@@ -542,6 +544,7 @@ def _draw_diamond_2d(
 
 
 def _draw_lightcone_outline(ax, coords, dist, radius):
+    """Draw the outer boundary of sites inside the estimated light cone."""
     cone = dist <= radius + 0.5
     edge_count = {}
     for i, (cx, cy) in enumerate(coords):
@@ -566,6 +569,7 @@ def _draw_lightcone_outline(ax, coords, dist, radius):
 
 
 def plot_fig2b(results, qm, save_path):
+    """Plot the FIG.2(b) C^(4) mean and standard-deviation panels."""
     coords, _, _ = build_2d_lattice()
     cycles = sorted(results.keys())
 
@@ -579,16 +583,20 @@ def plot_fig2b(results, qm, save_path):
 
     for col, cyc in enumerate(cycles):
         mean_map, std_map = results[cyc]
-        Lr = max(1.0, cyc * 0.5)
+        lightcone_radius = max(1.0, cyc * 0.5)
 
         ax = axes[0, col]
         # inferno_r: C4=1 (outside cone) → dark/black; C4≈0 (inside, scrambled) → bright
-        _draw_diamond_2d(ax, coords, mean_map, qm, "inferno_r", mean_lo, mean_hi, Lr)
+        _draw_diamond_2d(
+            ax, coords, mean_map, qm, "inferno_r", mean_lo, mean_hi, lightcone_radius
+        )
         ax.set_title(f"Cycle {cyc}", fontsize=14)
 
         ax = axes[1, col]
         # hot_r: std=0 → white (outside cone / near qm); high std → dark red/black (wavefront)
-        _draw_diamond_2d(ax, coords, std_map, qm, "hot_r", std_lo, std_hi, Lr)
+        _draw_diamond_2d(
+            ax, coords, std_map, qm, "hot_r", std_lo, std_hi, lightcone_radius
+        )
 
     cax1 = fig.add_axes([0.025, 0.55, 0.012, 0.36])
     plt.colorbar(plt.cm.ScalarMappable(cmap="inferno_r",
@@ -613,7 +621,7 @@ def plot_fig2c(c_data, save_path):
     """FIG.2(c): 四曲线 sigma 对数衰减。"""
     cycles = c_data["cycles"]
     sig    = c_data["sigmas"]
-    fig, ax = plt.subplots(figsize=(6.5, 5.5))
+    _, ax = plt.subplots(figsize=(6.5, 5.5))
 
     cyc_arr = np.array(cycles, dtype=float)
 
@@ -624,10 +632,10 @@ def plot_fig2c(c_data, save_path):
 
     # OTOC 三条线: 波前到达前 σ≈0 (C2=1 恒定)，是物理零点不是数据，
     # 只画 σ 超过噪声地板的点 (波前到达后)，避免竖线伪影。
-    FLOOR = 1e-3
+    floor = 1e-3
     def _plot_otoc(key, color, mfc, mec, lab):
         arr = np.array(sig[key])
-        mask = arr > FLOOR
+        mask = arr > floor
         ax.semilogy(cyc_arr[mask], arr[mask], "-o", color=color, markersize=8,
                     markerfacecolor=mfc, markeredgecolor=mec, lw=1.8, label=lab)
 
@@ -638,7 +646,7 @@ def plot_fig2c(c_data, save_path):
 
     # 幂律参考线 ~ t^{-1/4}（论文 SI Eq.79）: 从波前到达点 (C2 首个非零) 起算
     c2_arr = np.array(sig["C2"])
-    nz = np.where(c2_arr > FLOOR)[0]
+    nz = np.where(c2_arr > floor)[0]
     if len(nz) >= 2:
         i0 = nz[0]
         t0, s0 = cyc_arr[i0], c2_arr[i0]
@@ -674,8 +682,12 @@ def plot_fig2c(c_data, save_path):
             f"1D chain  (paper: 2D, 103q)",
             transform=ax.transAxes, ha="right", va="top", fontsize=8.5,
             color="gray",
-            bbox=dict(boxstyle="round,pad=0.3", fc="white",
-                      ec="lightgray", alpha=0.85))
+            bbox={
+                "boxstyle": "round,pad=0.3",
+                "fc": "white",
+                "ec": "lightgray",
+                "alpha": 0.85,
+            })
     plt.tight_layout()
     plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.close()
@@ -733,6 +745,6 @@ if __name__ == "__main__":
     )
     plot_fig2c(res_c, save_path=out_c)
 
-    print(f"\nAll done.")
+    print("\nAll done.")
     print(f"  FIG2b → {out_b}")
     print(f"  FIG2c → {out_c}")
