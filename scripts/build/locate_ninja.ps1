@@ -64,7 +64,7 @@ if(-Not $has_ninja) {
 if (-Not $has_ninja) {
     $pip_args = @()
     if ($_IS_MINDSPORE_CI) {
-        $pip_args += '-i', 'https://pypi.tuna.tsinghua.edu.cn/simple'
+        $pip_args += '-i', 'https://mirrors.huaweicloud.com/repository/pypi/simple'
     }
 
     Write-Output ("Upgrading pip: $PYTHON -m pip install " + ($pip_args -Join ' ') + " -U pip")
