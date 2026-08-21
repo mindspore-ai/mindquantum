@@ -420,6 +420,124 @@ class BSB(SB):  # noqa: N801
                 self.y = torch.where(cond, torch.zeros_like(self.x), self.y)
 
 
+class GBSB(SB):  # noqa: N801
+    r"""
+    Generalized Ballistic Simulated Bifurcation 'GBSB' algorithm.
+
+    Reference: `Edge-of-chaos enhanced quantum-inspired algorithm for combinatorial
+    optimization <https://arxiv.org/abs/2508.17655>`_.
+
+    Note:
+        For memory efficiency, the input array 'x' is not copied and will be modified
+        in-place during optimization. If you need to preserve the original data,
+        please pass a copy using `x.copy()`.
+
+    Args:
+        J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
+        h (numpy.array): The external field with shape (N, ).
+        x (numpy.array): The initialized spin value with shape (N x batch_size).
+            Will be modified during optimization. If not provided (``None``), will be initialized as
+            random values uniformly distributed in [-0.01, 0.01]. Default: ``None``.
+        n_iter (int): The number of iterations. Default: ``1000``.
+        batch_size (int): The number of sampling. Default: ``1``.
+        dt (float): The step size. Default: ``1.25``.
+        xi (float): positive constant with the dimension of frequency. Default: ``None``.
+        A (float): The strength of the nonlinear control of individual bifurcation
+            parameters. Default: ``0.2``.
+        backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
+            'npu-float32'. Default: ``'cpu-float32'``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mindquantum.algorithm.qaia import GBSB
+        >>> J = np.array([[0, -1], [-1, 0]])
+        >>> solver = GBSB(J, batch_size=5, backend='cpu-float32')
+        >>> solver.update()
+        >>> print(solver.calc_cut())
+        [1. 1. 1. 1. 1.]
+        >>> print(solver.calc_energy())
+        [-1. -1. -1. -1. -1.]
+    """
+
+    # pylint: disable=too-many-arguments
+    def __init__(
+        self,
+        J,
+        h=None,
+        x=None,
+        n_iter=1000,
+        batch_size=1,
+        dt=1.25,
+        xi=None,
+        A=0.2,
+        backend='cpu-float32',
+    ):
+        """Construct GBSB algorithm."""
+        valid_backends = {'cpu-float32', 'gpu-float32', 'npu-float32'}
+        if not isinstance(backend, str):
+            raise TypeError(f"backend requires a string, but get {type(backend)}")
+        if backend not in valid_backends:
+            raise ValueError(f"backend must be one of {valid_backends}")
+
+        _check_number_type("A", A)
+        _check_value_should_not_less("A", 0, A)
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
+        self.A = A
+        if self.backend == "cpu-float32":
+            self.p_i = np.ones((self.N, self.batch_size))
+        else:
+            self.p_i = torch.ones_like(self.x)
+
+    def update(self):
+        """Dynamical evolution based on Modified explicit symplectic Euler method."""
+        if self.backend == "cpu-float32":
+            for i in range(self.n_iter):
+                self.p_i -= (1 - self.A * self.x**2) * self.p_i / (self.n_iter - i)
+
+                if self.h is None:
+                    self.y += (-self.p_i * self.x + self.xi * self.J.dot(self.x)) * self.dt
+                else:
+                    self.y += (-self.p_i * self.x + self.xi * (self.J.dot(self.x) + self.h)) * self.dt
+
+                self.x += self.dt * self.y * self.delta
+
+                cond = np.abs(self.x) > 1
+                self.x = np.where(cond, np.sign(self.x), self.x)
+                self.y = np.where(cond, np.zeros_like(self.x), self.y)
+        elif self.backend == "gpu-float32":
+            for i in range(self.n_iter):
+                self.p_i -= (1 - self.A * self.x**2) * self.p_i / (self.n_iter - i)
+
+                if self.h is None:
+                    self.y += (-self.p_i * self.x + self.xi * torch.sparse.mm(self.J, self.x)) * self.dt
+                else:
+                    self.y += (
+                        -self.p_i * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                    ) * self.dt
+
+                self.x += self.dt * self.y * self.delta
+
+                cond = torch.abs(self.x) > 1
+                self.x = torch.where(cond, torch.sign(self.x), self.x)
+                self.y = torch.where(cond, torch.zeros_like(self.x), self.y)
+        elif self.backend == "npu-float32":
+            for i in range(self.n_iter):
+                self.p_i -= (1 - self.A * self.x**2) * self.p_i / (self.n_iter - i)
+
+                if self.h is None:
+                    self.y += (-self.p_i * self.x + self.xi * torch.sparse.mm(self.J, self.x)) * self.dt
+                else:
+                    self.y += (
+                        -self.p_i * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
+                    ) * self.dt
+
+                self.x += self.dt * self.y * self.delta
+
+                cond = torch.abs(self.x) > 1
+                self.x = torch.where(cond, torch.sign(self.x), self.x)
+                self.y = torch.where(cond, torch.zeros_like(self.x), self.y)
+
+
 class DSB(SB):  # noqa: N801
     r"""
     Discrete SB algorithm.

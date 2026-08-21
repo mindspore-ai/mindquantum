@@ -22,7 +22,7 @@ from scipy.sparse import coo_matrix
 
 import pytest
 
-from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, SFC, NMFA, SimCIM
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, GBSB, LQA, SFC, NMFA, SimCIM
 from mindquantum.utils.fdopen import fdopen
 
 
@@ -197,6 +197,34 @@ def test_bSB_npu():
         ENERGY_TOLERANCE,
         SEED,
         'npu-float32',
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.platform_arm_ascend910b_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_NPU, reason='Machine does not has Ascend NPU.')
+def test_gbSB_npu():
+    """
+    Description: Test GBSB NPU
+    Expectation: success
+    """
+    run_and_check_npu(
+        GBSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'npu-float32',
+        dt=1.0,
+        A=0.5,
     )
 
 

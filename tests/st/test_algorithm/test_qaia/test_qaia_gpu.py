@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 from scipy.sparse import coo_matrix
 
-from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, LSB, NMFA, SFC, TSB, USB, SimCIM
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, GBSB, LQA, LSB, NMFA, SFC, TSB, USB, SimCIM
 from mindquantum.utils.fdopen import fdopen
 
 pytestmark = pytest.mark.skip(
@@ -230,6 +230,33 @@ def test_bSB_gpu():
         ENERGY_TOLERANCE,
         SEED,
         'gpu-int8',
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_gpu_training
+@pytest.mark.env_onecard
+@pytest.mark.skipif(not _HAS_GPU, reason='Machine does not has GPU.')
+def test_gbSB_gpu():
+    """
+    Description: Test GBSB GPU
+    Expectation: success
+    """
+    run_and_check_gpu(
+        GBSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        'gpu-float32',
+        dt=1.0,
+        A=0.5,
     )
 
 

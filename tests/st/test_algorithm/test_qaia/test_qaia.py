@@ -21,7 +21,7 @@ import numpy as np
 import pytest
 from scipy.sparse import coo_matrix
 
-from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, LQA, LSB, NMFA, SFC, TSB, USB, SimCIM
+from mindquantum.algorithm.qaia import ASB, BSB, CAC, CFC, DSB, GBSB, LQA, LSB, NMFA, SFC, TSB, USB, SimCIM
 from mindquantum.utils.fdopen import fdopen
 
 OPTIMAL_CUT_G43 = 6660.0
@@ -159,6 +159,30 @@ def test_bSB():
         BENCHMARK_ENERGY_H,
         ENERGY_TOLERANCE,
         SEED,
+    )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_gbSB():
+    """
+    Description: Test GBSB CPU
+    Expectation: success
+    """
+    run_and_check(
+        GBSB,
+        G,
+        h_test,
+        x_init_test,
+        N_ITER,
+        BATCH_SIZE,
+        OPTIMAL_CUT_G43,
+        TOLERANCE,
+        BENCHMARK_ENERGY_H,
+        ENERGY_TOLERANCE,
+        SEED,
+        dt=1.0,
+        A=0.5,
     )
 
 
