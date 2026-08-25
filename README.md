@@ -21,6 +21,23 @@
 * **内存管理：** 内核使用了双缓冲概念（尽管对于 N=1024 在此简化为单缓冲区），并管理全局内存（GM）和统一缓冲区（UB）之间的数据移动。
 * **性能：** 整个循环在 AI Core 上运行，避免了 100 次往返主机端的通信。
 
+## 数据集
+
+基准数据集不随仓库分发（已在 `.gitignore` 中忽略），运行基准测试前请先下载到 `data/` 目录：
+
+* **Gset 最大割基准**（`test_gset.py` 使用）：从 <https://web.stanford.edu/~yyye/yyye/Gset/> 下载 `G22`、`G30`、`G50`、`G60`，放入 `data/gset/`：
+
+  ```bash
+  mkdir -p data/gset
+  for g in G22 G30 G50 G60; do
+      wget -P data/gset https://web.stanford.edu/~yyye/yyye/Gset/${g}
+  done
+  ```
+
+* **QPLIB 基准**（`test_qplib.py` 使用）：从 QPLIB 官网 <https://qplib.zib.de/>（或 GitHub 镜像 <https://github.com/ralna/QPLIB>）下载以下编号实例的 `QPLIB_XXXX.qplib` 文件，放入 `data/`：
+
+  3506、3565、3642、3650、3693、3705、3706、3738、3745、3822、3832、3838、3850、3852、3877、5721、5725、5755、5875、5881、5882、5909、5922
+
 ## 如何运行
 
 可以执行提供的运行脚本来构建和执行示例：
