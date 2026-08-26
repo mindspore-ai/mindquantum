@@ -31,6 +31,12 @@ from mindquantum.simulator import Simulator, fidelity
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 from mindquantum.utils import random_circuit, random_hamiltonian
 
+# The experimental NPU backend has a deliberately smaller API than these
+# legacy all-backend tests exercise. It has dedicated coverage below.
+SUPPORTED_SIMULATOR = [
+    config for config in SUPPORTED_SIMULATOR if config != 'stabilizer' and config[0] != 'mqvector_npu'
+]
+
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu

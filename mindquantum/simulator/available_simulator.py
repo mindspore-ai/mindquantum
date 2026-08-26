@@ -21,12 +21,15 @@ import warnings
 from mindquantum import _mq_matrix, _mq_mps, _mq_stabilizer, _mq_vector, mqbackend
 from mindquantum.dtype import complex64, complex128
 from mindquantum.simulator.backend_base import BackendBase
+from mindquantum.simulator.npu_backend import probe_npu_backend
 from mindquantum.utils.error import SimNotAvailableError
 
 GPU_DISABLED_REASON = None
 CUQUANTUM_DISABLED_REASON = None
+NPU_DISABLED_REASON = None
 MQVECTOR_GPU_SUPPORTED = False
 MQVECTOR_CUQUANTUM_SUPPORTED = False
+MQVECTOR_NPU_SUPPORTED = False
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -49,6 +52,12 @@ if MQVECTOR_GPU_SUPPORTED:
         )
 else:
     CUQUANTUM_DISABLED_REASON = GPU_DISABLED_REASON
+
+_mq_vector_npu, _npu_disabled_reason = probe_npu_backend()
+if _mq_vector_npu is not None:
+    MQVECTOR_NPU_SUPPORTED = True
+else:
+    NPU_DISABLED_REASON = _npu_disabled_reason
 
 
 class _AvailableSimulator:
@@ -89,6 +98,11 @@ class _AvailableSimulator:
                 complex64: _mq_vector_gpu.cuquantum_float,
                 complex128: _mq_vector_gpu.cuquantum_double,
             }
+        if MQVECTOR_NPU_SUPPORTED:
+            self.base_module['mqvector_npu'] = _mq_vector_npu
+            self.sims['mqvector_npu'] = {
+                complex64: _mq_vector_npu.float,
+            }
 
     def is_available(self, sim: typing.Union[str, BackendBase], dtype) -> bool:
         """Check a simulator with given data type is available or not."""
@@ -106,6 +120,8 @@ class _AvailableSimulator:
             warnings.warn(f"{GPU_DISABLED_REASON}", stacklevel=3)
         if sim == 'mqvector_cq' and not MQVECTOR_CUQUANTUM_SUPPORTED:
             warnings.warn(f"{CUQUANTUM_DISABLED_REASON}", stacklevel=3)
+        if sim == 'mqvector_npu' and not MQVECTOR_NPU_SUPPORTED:
+            warnings.warn(f"{NPU_DISABLED_REASON}", stacklevel=3)
 
         if dtype is None:
             if sim not in self.base_module:
@@ -121,8 +137,15 @@ class _AvailableSimulator:
             raise ValueError(f"{GPU_DISABLED_REASON}")
         if sim == 'mqvector_cq' and not MQVECTOR_CUQUANTUM_SUPPORTED:
             raise ValueError(f"{CUQUANTUM_DISABLED_REASON}")
+        if sim == 'mqvector_npu' and not MQVECTOR_NPU_SUPPORTED:
+            raise ValueError(f"{NPU_DISABLED_REASON}")
 
         if sim in self.sims:
+            if sim == 'mqvector_npu':
+                # pylint: disable=import-outside-toplevel
+                from mindquantum.simulator.mqvector_npu import MQVectorNPU
+
+                return MQVectorNPU
             if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix', 'mqvector_cq', 'mqmps']:
                 # pylint: disable=import-outside-toplevel
                 from mindquantum.simulator.mqsim import MQSim

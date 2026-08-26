@@ -23,7 +23,7 @@ from mindquantum.core.operators import TimeEvolution, count_qubits
 from mindquantum.core.operators._term_value import TermValue
 from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
+AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer' and x[0] != 'mqvector_npu', SUPPORTED_SIMULATOR))
 
 
 @pytest.mark.level0

@@ -312,6 +312,8 @@ def ground_state_of_sum_zz(ops: QubitOperator, sim='mqvector') -> float:
 
     if sim.startswith('mqmatrix'):
         raise ValueError("mqmatrix simulator not support this method yet.")
+    if sim == 'mqvector_npu':
+        raise ValueError("mqvector_npu simulator does not support ground_state_of_sum_zz yet.")
     c_module = SUPPORTED_SIMULATOR.c_module(sim)
     ground_state_of_zs = getattr(c_module, "ground_state_of_zs")
     masks_value = {}
