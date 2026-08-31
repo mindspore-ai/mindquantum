@@ -77,5 +77,6 @@ mindquantum_add_pkg(
   TARGET_ALIAS mindquantum::catch2 Catch2::Catch2
   TARGET_ALIAS mindquantum::catch2_main Catch2::Catch2WithMain
   SKIP_IN_INSTALL_CONFIG
+  PATCHES ${CMAKE_CURRENT_LIST_DIR}/patch/gcc13-missing-cstdint.patch001
   LOCAL_EXTRA_DEFINES ${Catch2_LOCAL_EXTRA_DEFINES} ${Catch2WithMain_LOCAL_EXTRA_DEFINES}
   SYSTEM_EXTRA_DEFINES ${Catch2_SYSTEM_EXTRA_DEFINES} ${Catch2WithMain_SYSTEM_EXTRA_DEFINES})
