@@ -26,17 +26,14 @@
 #include <type_traits>
 #include <vector>
 
-#ifdef USE_OPENMP
-#    include <omp.h>
-#endif
-
 #include "config/openmp.h"
 #include "core/mq_base_types.h"
 #include "core/sparse/csrhdmatrix.h"
 #include "core/utils.h"
 #include "math/tensor/ops_cpu/utils.h"
 #include "math/tensor/traits.h"
-#include "simulator/vector/circuit_tiling.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
+#include "simulator/utils.h"
 
 namespace mindquantum::sim::vector::detail {
 struct CPUVectorPolicyAvxFloat;
@@ -56,18 +53,7 @@ struct CPUVectorPolicyBase {
     static constexpr qs_data_t IMAGE_I = {0, 1};
 
     static auto SelectGradientBatchThreads(index_t dim, size_t requested_threads) -> size_t {
-        if (requested_threads == 0) {
-            throw std::invalid_argument("Gradient batch thread count cannot be zero.");
-        }
-#ifdef USE_OPENMP
-        // Full-state kernels already consume an OpenMP team.  Serializing the
-        // outer parameter batch avoids nested teams and memory-bandwidth
-        // oversubscription; small states retain independent batch workers.
-        if (dim >= DimTh && omp_get_max_threads() > 1) {
-            return 1;
-        }
-#endif
-        return requested_threads;
+        return sim::SelectGradientBatchThreads(dim, DimTh, requested_threads);
     }
 
     // basic

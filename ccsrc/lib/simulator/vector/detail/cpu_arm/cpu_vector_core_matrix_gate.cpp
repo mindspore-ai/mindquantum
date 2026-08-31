@@ -19,7 +19,7 @@
 #include <algorithm>
 
 #include "cpu_vector_arm_backend.h"
-#include "cpu_vector_sve_utils.h"
+#include "simulator/arm_sve/sve_utils.h"
 #include "simulator/vector/detail/cpu_vector_matrix_gate_utils.h"
 
 #if !defined(__ARM_FEATURE_SVE)

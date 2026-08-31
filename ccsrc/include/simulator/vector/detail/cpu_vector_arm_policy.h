@@ -23,20 +23,16 @@
 #include "simulator/vector/detail/cpu_vector_policy.h"
 
 namespace mindquantum::sim::vector::detail {
-// The Arm policies share one ISA-dispatched implementation.  Precision is a
-// compile-time property, while the usable instruction set is selected once at
-// runtime for each concrete policy.
+// The Arm policies share one ISA-dispatched dense matrix implementation.
+// Precision is a compile-time property, while the usable instruction set is
+// selected once at runtime for each concrete policy.  Circuit tiles are
+// executed by the shared, runtime-dispatched circuit-tiling engine.
 template <typename derived_, typename calc_type_>
 struct CPUVectorPolicyArm : public CPUVectorPolicyBase<derived_, calc_type_> {
     using base_t = CPUVectorPolicyBase<derived_, calc_type_>;
     using typename base_t::py_qs_data_t;
     using typename base_t::qs_data_p_t;
 
-    static void ApplyCircuitTile(qs_data_p_t* qs_p, const circuit_tiling::PreparedTile<py_qs_data_t>& tile,
-                                 index_t dim);
-    static void ApplyAdjointTileProgram(qs_data_p_t* shared_state, const std::vector<qs_data_p_t*>& batch_states,
-                                        const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim,
-                                        VVT<py_qs_data_t>* output, bool conjugate_output);
     static void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
                                        const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& matrix,
                                        index_t dim);

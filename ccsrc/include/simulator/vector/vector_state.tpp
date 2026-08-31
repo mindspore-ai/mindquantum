@@ -49,8 +49,8 @@
 #include "ops/gate_id.h"
 #include "ops/gates.h"
 #include "ops/hamiltonian.h"
-#include "simulator/vector/circuit_tiling_builder.h"
-#include "simulator/vector/circuit_tiling_planner.h"
+#include "simulator/circuit_tiling/builder.h"
+#include "simulator/circuit_tiling/planner.h"
 #include "simulator/vector/gradient.h"
 #include "simulator/vector/vector_state.h"
 
@@ -102,7 +102,7 @@ auto VectorStateAdjoint<sim_t_>::PrepareAdjointCircuit(const sim_t* sim, const c
         }
         return plan;
     }
-    return circuit_tiling::Planner(sim->n_qubits).PlanAdjoint(active_circuit);
+    return circuit_tiling::Planner(circuit_tiling::StateSpace::Vector(sim->n_qubits)).PlanAdjoint(active_circuit);
 }
 
 template <typename sim_t_>
@@ -160,8 +160,9 @@ auto VectorStateAdjoint<sim_t_>::RunAdjointSweep(sim_t* shared_state, const VT<s
 
     for (const auto& planned : plan) {
         if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&planned); tile != nullptr) {
-            program.tiles.push_back(
-                circuit_tiling::Builder<py_qs_data_t>::BuildAdjoint(*tile, pr, parameter_map, shared_state->dim));
+            program.tiles.push_back(circuit_tiling::Builder<py_qs_data_t>::BuildAdjoint(
+                *tile, pr, parameter_map, circuit_tiling::StateSpace::Vector(shared_state->n_qubits),
+                circuit_tiling::Builder<py_qs_data_t>::AdjointGates::Daggered));
             continue;
         }
 
@@ -1107,10 +1108,11 @@ std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit
 
     if constexpr (HasCircuitTileExecutor<qs_policy_t, py_qs_data_t>::value) {
         if (dim >= qs_policy_t::DimTh && circ.size() > 1) {
-            const auto plan = circuit_tiling::Planner(n_qubits).Plan(circ);
+            const auto space = circuit_tiling::StateSpace::Vector(n_qubits);
+            const auto plan = circuit_tiling::Planner(space).Plan(circ);
             for (const auto& planned : plan) {
                 if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&planned); tile != nullptr) {
-                    const auto prepared = circuit_tiling::Builder<py_qs_data_t>::Build(*tile, pr, dim);
+                    const auto prepared = circuit_tiling::Builder<py_qs_data_t>::Build(*tile, pr, space);
                     if (!prepared.operations.empty()) {
                         qs_policy_t::ApplyCircuitTile(&qs, prepared, dim);
                     }

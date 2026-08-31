@@ -14,28 +14,33 @@
  * limitations under the License.
  */
 
+#ifndef INCLUDE_SIMULATOR_CIRCUIT_TILING_DETAIL_SVE_RUNTIME_H_
+#define INCLUDE_SIMULATOR_CIRCUIT_TILING_DETAIL_SVE_RUNTIME_H_
+
+#if !defined(__ARM_FEATURE_SVE)
+#    error "The Arm SVE circuit-tiling runtime requires SVE FCMLA support."
+#endif
+
 #include <arm_sve.h>
 
 #include <complex>
 #include <cstdint>
 #include <vector>
 
-#include "cpu_vector_arm_backend.h"
-#include "cpu_vector_sve_utils.h"
+#include "core/mq_base_types.h"
 #include "core/utils.h"
-#include "simulator/vector/detail/circuit_tiling_executor.h"
+#include "simulator/arm_sve/sve_utils.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
+#include "simulator/state_index.h"
 
-#if !defined(__ARM_FEATURE_SVE)
-#    error "The Arm SVE circuit-tiling backend requires SVE FCMLA support."
-#endif
-
-namespace mindquantum::sim::vector::detail {
-namespace {
+namespace mindquantum::sim::circuit_tiling::detail {
 struct SveIndexContext {
     index_t window_origin = 0;
     index_t local_mask = 0;
 };
 
+// The Arm SVE algebra: one complex amplitude per lane pair, with FCMLA
+// complex multiply-accumulate.
 template <typename calc_type_>
 struct SveTileAlgebra {
     using calc_type = calc_type_;
@@ -64,8 +69,7 @@ struct SveTileAlgebra {
     [[nodiscard]] static auto ExternalParity(predicate_t predicate, state_index_t state_base,
                                              const index_context_t& context, index_t mask) -> predicate_t {
         const auto fixed_mask = mask & ~context.local_mask;
-        const auto fixed_parity
-            = (CountOne(static_cast<std::uint64_t>(context.window_origin & fixed_mask)) & 1U) != 0;
+        const auto fixed_parity = (CountOne(static_cast<std::uint64_t>(context.window_origin & fixed_mask)) & 1U) != 0;
         auto parity = sve::DuplicateIndex<calc_type>(fixed_parity ? 1 : 0);
         auto local_mask = mask & context.local_mask;
         while (local_mask != 0) {
@@ -159,15 +163,25 @@ struct SveTileAlgebra {
     }
 };
 
-template <typename policy_t>
+struct SveTraversal {
+    state_index::StateIndexWindow window;
+    index_t block_count;
+};
+
+template <typename calc_type_>
 struct SveTileRuntime {
-    using calc_type = typename policy_t::calc_type;
+    using calc_type = calc_type_;
+    using value_t = std::complex<calc_type>;
     using algebra_t = SveTileAlgebra<calc_type>;
     using storage_t = typename algebra_t::storage_t;
-    using traversal_t = state_index::StateIndexWindow;
+    using traversal_t = SveTraversal;
 
-    [[nodiscard]] static auto MakeTraversal(const circuit_tiling::TileLayout& layout) -> traversal_t {
-        return {sve::LocalStateIndexBits<calc_type>(), layout.qubits};
+    // Every block is evolved; Hermitian mirroring is left to the scalar
+    // runtime, whose block traversal is not lane-batched.
+    static constexpr bool kMirrorsHermitianTiles = false;
+
+    [[nodiscard]] static auto MakeTraversal(const TileLayout& layout) -> traversal_t {
+        return {state_index::StateIndexWindow(sve::LocalStateIndexBits<calc_type>(), layout.qubits), layout.tile_count};
     }
 
     [[nodiscard]] static auto ThreadScratch(size_t logical_size) -> storage_t* {
@@ -183,19 +197,25 @@ struct SveTileRuntime {
     }
 
     template <typename function_t>
-    static void ForEachInParallel(const traversal_t& traversal, index_t tile_count, const function_t& function) {
-        sve::ForEachStateIndexBatchInParallel<calc_type>(
-            traversal, tile_count, [&](const state_index::StateIndexBatch& batch, index_t state_window_origin) {
-                const auto loop_index = sve::LoopIndex<calc_type>(batch.local_compressed_start);
-                const auto active = sve::ActiveComplexPredicate<calc_type>(loop_index, batch.local_compressed_count);
-                const auto state_base = sve::ExpandBaseIndex<calc_type>(active, loop_index,
-                                                                        traversal.LocalExcludedQubits());
-                function(active, state_base, SveIndexContext{state_window_origin, traversal.LocalStateMask()});
+    static void ForEach(const traversal_t& traversal, const function_t& function) {
+        sve::ForEachStateIndexBatchSerial<calc_type>(
+            traversal.window, traversal.block_count,
+            [&](const state_index::StateIndexBatch& batch, index_t state_window_origin) {
+                Invoke(traversal.window, batch, state_window_origin, function);
             });
     }
 
-    static void Gather(const typename policy_t::qs_data_p_t state, const circuit_tiling::TileLayout& layout,
-                       svbool_t active, sve::index_vector_t<calc_type> state_base, const SveIndexContext& index_context,
+    template <typename function_t>
+    static void ForEachInParallel(const traversal_t& traversal, const function_t& function) {
+        sve::ForEachStateIndexBatchInParallel<calc_type>(
+            traversal.window, traversal.block_count,
+            [&](const state_index::StateIndexBatch& batch, index_t state_window_origin) {
+                Invoke(traversal.window, batch, state_window_origin, function);
+            });
+    }
+
+    static void Gather(const value_t* state, const TileLayout& layout, svbool_t active,
+                       sve::index_vector_t<calc_type> state_base, const SveIndexContext& index_context,
                        storage_t* tile) {
         for (size_t basis = 0; basis < layout.dimension; ++basis) {
             sve::StoreCachedComplex<calc_type>(
@@ -205,7 +225,7 @@ struct SveTileRuntime {
         }
     }
 
-    static void Scatter(typename policy_t::qs_data_p_t state, const circuit_tiling::TileLayout& layout, svbool_t active,
+    static void Scatter(value_t* state, const TileLayout& layout, svbool_t active,
                         sve::index_vector_t<calc_type> state_base, const SveIndexContext& index_context,
                         const storage_t* tile) {
         for (size_t basis = 0; basis < layout.dimension; ++basis) {
@@ -213,37 +233,17 @@ struct SveTileRuntime {
                                              state_base, sve::LoadCachedComplex<calc_type>(tile, basis));
         }
     }
+
+ private:
+    template <typename function_t>
+    static void Invoke(const state_index::StateIndexWindow& window, const state_index::StateIndexBatch& batch,
+                       index_t state_window_origin, const function_t& function) {
+        const auto loop_index = sve::LoopIndex<calc_type>(batch.local_compressed_start);
+        const auto active = sve::ActiveComplexPredicate<calc_type>(loop_index, batch.local_compressed_count);
+        const auto state_base = sve::ExpandBaseIndex<calc_type>(active, loop_index, window.LocalExcludedQubits());
+        function(active, state_base, SveIndexContext{state_window_origin, window.LocalStateMask()});
+    }
 };
-}  // namespace
+}  // namespace mindquantum::sim::circuit_tiling::detail
 
-template <typename policy_t>
-void arm_sve::ApplyCircuitTile(typename policy_t::qs_data_p_t* state,
-                               const circuit_tiling::PreparedTile<typename policy_t::py_qs_data_t>& tile, index_t dim) {
-    circuit_tiling::ApplyTile<policy_t, SveTileRuntime<policy_t>>(state, tile, dim);
-}
-
-template <typename policy_t>
-void arm_sve::ApplyAdjointTileProgram(typename policy_t::qs_data_p_t* shared_state,
-                                      const std::vector<typename policy_t::qs_data_p_t*>& batch_states,
-                                      const circuit_tiling::AdjointProgram<typename policy_t::py_qs_data_t>& program,
-                                      index_t dim, VVT<typename policy_t::py_qs_data_t>* output,
-                                      bool conjugate_output) {
-    circuit_tiling::ApplyAdjointProgram<policy_t, SveTileRuntime<policy_t>>(shared_state, batch_states, program, dim,
-                                                                            output, conjugate_output);
-}
-
-template void arm_sve::ApplyCircuitTile<CPUVectorPolicyArmFloat>(
-    CPUVectorPolicyArmFloat::qs_data_p_t*, const circuit_tiling::PreparedTile<CPUVectorPolicyArmFloat::py_qs_data_t>&,
-    index_t);
-template void arm_sve::ApplyCircuitTile<CPUVectorPolicyArmDouble>(
-    CPUVectorPolicyArmDouble::qs_data_p_t*, const circuit_tiling::PreparedTile<CPUVectorPolicyArmDouble::py_qs_data_t>&,
-    index_t);
-template void arm_sve::ApplyAdjointTileProgram<CPUVectorPolicyArmFloat>(
-    CPUVectorPolicyArmFloat::qs_data_p_t*, const std::vector<CPUVectorPolicyArmFloat::qs_data_p_t*>&,
-    const circuit_tiling::AdjointProgram<CPUVectorPolicyArmFloat::py_qs_data_t>&, index_t,
-    VVT<CPUVectorPolicyArmFloat::py_qs_data_t>*, bool);
-template void arm_sve::ApplyAdjointTileProgram<CPUVectorPolicyArmDouble>(
-    CPUVectorPolicyArmDouble::qs_data_p_t*, const std::vector<CPUVectorPolicyArmDouble::qs_data_p_t*>&,
-    const circuit_tiling::AdjointProgram<CPUVectorPolicyArmDouble::py_qs_data_t>&, index_t,
-    VVT<CPUVectorPolicyArmDouble::py_qs_data_t>*, bool);
-}  // namespace mindquantum::sim::vector::detail
+#endif  // INCLUDE_SIMULATOR_CIRCUIT_TILING_DETAIL_SVE_RUNTIME_H_

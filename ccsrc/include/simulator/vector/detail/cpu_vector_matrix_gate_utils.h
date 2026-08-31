@@ -28,7 +28,7 @@
 
 #include "core/utils.h"
 #include "core/mq_base_types.h"
-#include "simulator/vector/detail/state_index.h"
+#include "simulator/state_index.h"
 
 namespace mindquantum::sim::vector::detail::matrix_gate {
 inline constexpr size_t kMaxStaticMatrixGateQubits = 4;

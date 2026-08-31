@@ -18,11 +18,11 @@
 #include <limits>
 #include <vector>
 
-#include "simulator/vector/detail/state_index.h"
+#include "simulator/state_index.h"
 
 #include <catch2/catch_test_macros.hpp>
 
-namespace state_index = mindquantum::sim::vector::detail::state_index;
+namespace state_index = mindquantum::sim::state_index;
 using mindquantum::index_t;
 
 TEST_CASE("State-index windows preserve the full expanded index") {

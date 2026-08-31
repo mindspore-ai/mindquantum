@@ -1,0 +1,48 @@
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2026. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "sve_executor.h"
+
+#include <complex>
+#include <vector>
+
+#include "simulator/circuit_tiling/detail/sve_runtime.h"
+#include "simulator/circuit_tiling/detail/tile_engine.h"
+
+namespace mindquantum::sim::circuit_tiling::arm_sve {
+template <typename value_t>
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel) {
+    detail::ApplyTile<detail::SveTileRuntime<typename value_t::value_type>>(state, tile, parallel);
+}
+
+template <typename value_t>
+void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
+                         const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
+                         bool parallel) {
+    detail::ApplyAdjointProgram<detail::SveTileRuntime<typename value_t::value_type>>(
+        shared_state, batch_states, program, output, conjugate_output, parallel);
+}
+
+template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&, bool);
+template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&, bool);
+template void ApplyAdjointProgram<std::complex<float>>(std::complex<float>*, const std::vector<std::complex<float>*>&,
+                                                       const AdjointProgram<std::complex<float>>&,
+                                                       VVT<std::complex<float>>*, bool, bool);
+template void ApplyAdjointProgram<std::complex<double>>(std::complex<double>*,
+                                                        const std::vector<std::complex<double>*>&,
+                                                        const AdjointProgram<std::complex<double>>&,
+                                                        VVT<std::complex<double>>*, bool, bool);
+}  // namespace mindquantum::sim::circuit_tiling::arm_sve

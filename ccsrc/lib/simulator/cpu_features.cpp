@@ -16,6 +16,7 @@
 
 #if defined(__linux__) && defined(__aarch64__)
 #    include <sys/auxv.h>
+#    include <sys/prctl.h>
 #endif
 
 #include <cstdint>
@@ -31,6 +32,22 @@ namespace {
 inline constexpr std::uint64_t kLinuxHwcapFcma = std::uint64_t{1} << 14;
 inline constexpr std::uint64_t kLinuxHwcapSve = std::uint64_t{1} << 22;
 #endif
+
+#if defined(__linux__) && defined(__aarch64__)
+// Stable Linux prctl ABI values from linux/prctl.h, for the same reason.
+inline constexpr int kLinuxPrctlSveGetVl = 51;
+inline constexpr int kLinuxPrctlSveVlLenMask = 0xffff;
+#endif
+
+[[nodiscard]] auto DetectArmSveVectorLengthBytes() noexcept -> unsigned {
+#if defined(__linux__) && defined(__aarch64__)
+    const auto result = prctl(kLinuxPrctlSveGetVl);
+    if (result >= 0) {
+        return static_cast<unsigned>(result & kLinuxPrctlSveVlLenMask);
+    }
+#endif
+    return 0;
+}
 
 [[nodiscard]] auto DetectHostCpuFeatures() noexcept -> CpuFeatureSet {
     auto features = CpuFeatureSet{};
@@ -50,5 +67,10 @@ inline constexpr std::uint64_t kLinuxHwcapSve = std::uint64_t{1} << 22;
 auto HostCpuFeatures() noexcept -> const CpuFeatureSet& {
     static const auto features = DetectHostCpuFeatures();
     return features;
+}
+
+auto ArmSveVectorLengthBytes() noexcept -> unsigned {
+    static const auto length = HostCpuFeatures().Contains(CpuFeature::ArmSve) ? DetectArmSveVectorLengthBytes() : 0;
+    return length;
 }
 }  // namespace mindquantum::sim::cpu

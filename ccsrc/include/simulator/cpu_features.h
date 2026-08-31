@@ -45,6 +45,16 @@ class CpuFeatureSet {
 };
 
 [[nodiscard]] auto HostCpuFeatures() noexcept -> const CpuFeatureSet&;
+
+// The Arm SVE simulator kernels rely on FCMLA complex arithmetic, so both
+// features must be present before they may be selected.
+[[nodiscard]] inline auto HostHasArmSveFcma() noexcept -> bool {
+    const auto& features = HostCpuFeatures();
+    return features.Contains(CpuFeature::ArmFcma) && features.Contains(CpuFeature::ArmSve);
+}
+
+// The Arm SVE vector length of this process in bytes, or 0 without SVE.
+[[nodiscard]] auto ArmSveVectorLengthBytes() noexcept -> unsigned;
 }  // namespace mindquantum::sim::cpu
 
 #endif  // INCLUDE_SIMULATOR_CPU_FEATURES_H_

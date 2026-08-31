@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_BUILDER_H_
-#define INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_BUILDER_H_
+#ifndef INCLUDE_SIMULATOR_CIRCUIT_TILING_BUILDER_H_
+#define INCLUDE_SIMULATOR_CIRCUIT_TILING_BUILDER_H_
 
 #include <cmath>
 
@@ -29,6 +29,7 @@
 #include <limits>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <fmt/format.h>
@@ -40,23 +41,41 @@
 #include "ops/basic_gate.h"
 #include "ops/gate_id.h"
 #include "ops/gates.h"
-#include "simulator/vector/circuit_tiling.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
+#include "simulator/circuit_tiling/state_space.h"
 
-namespace mindquantum::sim::vector::detail::circuit_tiling {
+namespace mindquantum::sim::circuit_tiling {
+// Lowers the gates of a circuit tile into the mask-free kernels executed by
+// the tile engine.  A gate is lowered once per image of its qubits in the
+// state space; a noise channel is lowered as a superoperator on both images
+// of a density matrix.
 template <typename value_t>
 class Builder {
  public:
     using calc_type = typename value_t::value_type;
 
+    // How the gates listed in an adjoint tile relate to the differentiated
+    // circuit.
+    enum class AdjointGates : std::uint8_t {
+        // The tile lists the daggered gates of the reversed circuit, so each
+        // lowering is applied as-is.
+        Daggered,
+        // The tile lists the original gates in reverse order, so the adjoint
+        // of each lowering is applied.  Noise channels are adjoint-evolved as
+        // well, which is the Heisenberg-picture evolution of an observable.
+        Reversed,
+    };
+
     [[nodiscard]] static auto Build(const CircuitTile& tile, const parameter::ParameterResolver& parameter_resolver,
-                                    index_t state_dim) -> PreparedTile<value_t> {
-        ValidateTile(tile, state_dim);
+                                    const StateSpace& space) -> PreparedTile<value_t> {
+        ValidateTile(tile, space);
         PreparedTile<value_t> prepared;
-        prepared.layout = BuildLayout(tile, state_dim);
-        prepared.operations.reserve(tile.gates.size());
+        prepared.layout = BuildLayout(tile, space);
+        prepared.operations.reserve(tile.gates.size() * space.Images().size());
         for (const auto& gate : tile.gates) {
-            prepared.operations.push_back(
-                PrepareOperation(BuildOperation(*gate, tile.qubits, parameter_resolver), prepared.layout.dimension));
+            auto operations = LowerGate(*gate, tile.qubits, parameter_resolver, space);
+            prepared.operations.insert(prepared.operations.end(), std::make_move_iterator(operations.begin()),
+                                       std::make_move_iterator(operations.end()));
         }
         prepared.operations = FoldDiagonalRuns(std::move(prepared.operations), prepared.layout.dimension);
         for (const auto& operation : prepared.operations) {
@@ -67,37 +86,122 @@ class Builder {
 
     [[nodiscard]] static auto BuildAdjoint(const CircuitTile& tile,
                                            const parameter::ParameterResolver& parameter_resolver,
-                                           const MST<size_t>& parameter_map, index_t state_dim)
-        -> PreparedAdjointTile<value_t> {
-        ValidateTile(tile, state_dim);
+                                           const MST<size_t>& parameter_map, const StateSpace& space,
+                                           AdjointGates convention) -> PreparedAdjointTile<value_t> {
+        ValidateTile(tile, space);
         PreparedAdjointTile<value_t> prepared;
-        prepared.layout = BuildLayout(tile, state_dim);
+        prepared.layout = BuildLayout(tile, space);
+        const auto tile_dim = prepared.layout.dimension;
         prepared.operations.reserve(tile.gates.size());
 
         for (const auto& gate : tile.gates) {
-            auto evolution = BuildOperation(*gate, tile.qubits, parameter_resolver);
             AdjointOperation<value_t> adjoint;
-            if (gate->GradRequired()) {
-                auto derivatives = BuildIntrinsicDerivatives(*gate, tile.qubits, parameter_resolver, evolution);
-                auto targets = BuildGradientTargets(*gate, parameter_map, derivatives.size());
-                for (size_t derivative_index = 0; derivative_index < derivatives.size(); ++derivative_index) {
-                    if (targets[derivative_index].empty()) {
-                        continue;
+            if (IsNoiseChannel(gate->GetID())) {
+                adjoint.evolution.push_back(PrepareOperation(BuildChannel(*gate, tile.qubits, space), tile_dim));
+            } else {
+                const auto images = space.Images();
+                for (size_t image_index = 0; image_index < images.size(); ++image_index) {
+                    const auto& image = images[image_index];
+                    auto evolution = BuildOperation(*gate, tile.qubits, parameter_resolver, image);
+                    if (image_index + 1 == images.size() && gate->GradRequired()) {
+                        auto derivatives = BuildIntrinsicDerivatives(*gate, tile.qubits, parameter_resolver, evolution,
+                                                                     image);
+                        auto targets = BuildGradientTargets(*gate, parameter_map, derivatives.size());
+                        for (size_t derivative_index = 0; derivative_index < derivatives.size(); ++derivative_index) {
+                            if (targets[derivative_index].empty()) {
+                                continue;
+                            }
+                            auto derivative = PrepareDerivative(std::move(derivatives[derivative_index]), tile_dim);
+                            derivative.targets = std::move(targets[derivative_index]);
+                            adjoint.derivatives.push_back(std::move(derivative));
+                        }
+                        adjoint.derivative_position = adjoint.evolution.size();
                     }
-                    auto derivative = PrepareDerivative(std::move(derivatives[derivative_index]),
-                                                        prepared.layout.dimension);
-                    derivative.targets = std::move(targets[derivative_index]);
-                    prepared.layout.workspace_size = std::max(prepared.layout.workspace_size,
-                                                              WorkspaceSize(derivative.kernel));
-                    adjoint.derivatives.push_back(std::move(derivative));
+                    auto operation = PrepareOperation(std::move(evolution), tile_dim);
+                    if (image.conjugated) {
+                        Conjugate(&operation);
+                    }
+                    adjoint.evolution.push_back(std::move(operation));
                 }
             }
-            adjoint.evolution = PrepareOperation(std::move(evolution), prepared.layout.dimension);
-            prepared.layout.workspace_size = std::max(prepared.layout.workspace_size,
-                                                      WorkspaceSize(adjoint.evolution.kernel));
+            if (convention == AdjointGates::Reversed) {
+                for (auto& operation : adjoint.evolution) {
+                    Adjoint(&operation);
+                }
+                for (auto& derivative : adjoint.derivatives) {
+                    Adjoint(&derivative);
+                }
+            }
+            for (const auto& operation : adjoint.evolution) {
+                prepared.layout.workspace_size = std::max(prepared.layout.workspace_size,
+                                                          WorkspaceSize(operation.kernel));
+            }
+            for (const auto& derivative : adjoint.derivatives) {
+                prepared.layout.workspace_size = std::max(prepared.layout.workspace_size,
+                                                          WorkspaceSize(derivative.kernel));
+            }
             prepared.operations.push_back(std::move(adjoint));
         }
         return prepared;
+    }
+
+    // Lowers the derivative of the single parameterized gate in `tile` on
+    // every image: on a density matrix this realises dU rho dU^dagger.
+    [[nodiscard]] static auto BuildDerivative(const CircuitTile& tile,
+                                              const parameter::ParameterResolver& parameter_resolver,
+                                              const StateSpace& space) -> PreparedTile<value_t> {
+        ValidateTile(tile, space);
+        if (tile.gates.size() != 1) {
+            throw std::invalid_argument("A derivative tile must hold exactly one gate.");
+        }
+        const auto& gate = *tile.gates.front();
+        if (IsNoiseChannel(gate.GetID())) {
+            throw std::invalid_argument(fmt::format("Gate {} has no derivative.", gate.GetID()));
+        }
+        PreparedTile<value_t> prepared;
+        prepared.layout = BuildLayout(tile, space);
+        for (const auto& image : space.Images()) {
+            auto evolution = BuildOperation(gate, tile.qubits, parameter_resolver, image);
+            auto derivatives = BuildIntrinsicDerivatives(gate, tile.qubits, parameter_resolver, evolution, image);
+            if (derivatives.size() != 1) {
+                throw std::invalid_argument(
+                    fmt::format("Gate {} has {} intrinsic derivatives; only single-parameter derivatives can "
+                                "be applied.",
+                                gate.GetID(), derivatives.size()));
+            }
+            auto operation = PrepareOperation(std::move(derivatives.front()), prepared.layout.dimension);
+            if (image.conjugated) {
+                Conjugate(&operation);
+            }
+            prepared.layout.workspace_size = std::max(prepared.layout.workspace_size, WorkspaceSize(operation.kernel));
+            prepared.operations.push_back(std::move(operation));
+        }
+        return prepared;
+    }
+
+    // The evolution of an adjoint tile without its derivatives.
+    [[nodiscard]] static auto EvolutionOnly(PreparedAdjointTile<value_t> tile) -> PreparedTile<value_t> {
+        PreparedTile<value_t> prepared;
+        prepared.layout = std::move(tile.layout);
+        for (auto& operation : tile.operations) {
+            prepared.operations.insert(prepared.operations.end(), std::make_move_iterator(operation.evolution.begin()),
+                                       std::make_move_iterator(operation.evolution.end()));
+        }
+        return prepared;
+    }
+
+    // Replaces a lowered linear map by its complex conjugate.
+    static void Conjugate(Operation<value_t>* operation) {
+        std::visit([](auto& kernel) { ConjugateKernel(&kernel); }, operation->kernel);
+    }
+
+    // Replaces a lowered linear map by its Hermitian adjoint.
+    static void Adjoint(Operation<value_t>* operation) {
+        std::visit([](auto& kernel) { AdjointKernel(&kernel); }, operation->kernel);
+    }
+
+    static void Adjoint(Derivative<value_t>* derivative) {
+        std::visit([](auto& kernel) { AdjointKernel(&kernel); }, derivative->kernel);
     }
 
  private:
@@ -114,6 +218,7 @@ class Builder {
         ISwap,
         FSim,
         DenseMatrix,
+        Depolarizing,
     };
 
     struct RawOperation {
@@ -128,6 +233,7 @@ class Builder {
         index_t external_pauli_z_mask = 0;
         calc_type rotation_cos = 1;
         calc_type rotation_sin = 0;
+        calc_type probability = 0;
         value_t phase = 1;
         std::array<value_t, 4> matrix2{value_t{1, 0}, value_t{0, 0}, value_t{0, 0}, value_t{1, 0}};
         size_t matrix_dim = 0;
@@ -135,48 +241,53 @@ class Builder {
         std::vector<value_t> matrix;
     };
 
-    [[nodiscard]] static auto BuildLayout(const CircuitTile& tile, index_t state_dim) -> TileLayout {
+    [[nodiscard]] static auto IsImageSymmetric(const qbits_t& tile_qubits, qbit_t image_shift) -> bool {
+        const auto half = tile_qubits.size() / 2;
+        if (tile_qubits.size() != 2 * half) {
+            return false;
+        }
+        for (size_t index = 0; index < half; ++index) {
+            if (tile_qubits[index] >= image_shift || tile_qubits[index + half] != tile_qubits[index] + image_shift) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    [[nodiscard]] static auto BuildLayout(const CircuitTile& tile, const StateSpace& space) -> TileLayout {
         TileLayout layout;
         layout.qubits = tile.qubits;
         layout.dimension = size_t{1} << layout.qubits.size();
-        layout.tile_count = state_dim >> layout.qubits.size();
+        layout.tile_count = space.dimension() >> layout.qubits.size();
         layout.state_offsets.resize(layout.dimension, 0);
-        for (size_t basis = 0; basis < layout.dimension; ++basis) {
-            for (size_t bit = 0; bit < layout.qubits.size(); ++bit) {
-                if ((basis & (size_t{1} << bit)) != 0) {
-                    layout.state_offsets[basis] |= index_t{1} << layout.qubits[bit];
+        for (size_t bit = 0; bit < layout.qubits.size(); ++bit) {
+            const auto offset = index_t{1} << layout.qubits[bit];
+            const auto stride = size_t{1} << bit;
+            for (size_t basis = stride; basis < layout.dimension; basis += 2 * stride) {
+                for (size_t inner = 0; inner < stride; ++inner) {
+                    layout.state_offsets[basis + inner] |= offset;
                 }
             }
+        }
+        if (space.kind() == StateSpace::Kind::DensityMatrix && IsImageSymmetric(tile.qubits, space.circuit_qubits())) {
+            layout.mirror_shift = space.circuit_qubits();
         }
         return layout;
     }
 
-    [[nodiscard]] static auto StateQubitCount(index_t dim) -> qbit_t {
-        if (dim == 0 || (dim & (dim - 1)) != 0) {
-            throw std::invalid_argument("State dimension must be a non-zero power of two.");
-        }
-        qbit_t count = 0;
-        while (dim > 1) {
-            dim >>= 1;
-            ++count;
-        }
-        return count;
-    }
-
-    static void ValidateTile(const CircuitTile& tile, index_t state_dim) {
+    static void ValidateTile(const CircuitTile& tile, const StateSpace& space) {
         if (tile.gates.empty()) {
             throw std::invalid_argument("A circuit tile cannot be empty.");
         }
         if (tile.qubits.size() >= std::numeric_limits<size_t>::digits) {
             throw std::invalid_argument("Circuit tile is too large for local indexing.");
         }
-        const auto state_qubits = StateQubitCount(state_dim);
         if (!std::is_sorted(tile.qubits.begin(), tile.qubits.end())) {
             throw std::invalid_argument("Circuit tile qubits must be sorted.");
         }
         for (size_t index = 0; index < tile.qubits.size(); ++index) {
             const auto qubit = tile.qubits[index];
-            if (qubit < 0 || qubit >= state_qubits || (index != 0 && qubit == tile.qubits[index - 1])) {
+            if (qubit < 0 || qubit >= space.state_qubits() || (index != 0 && qubit == tile.qubits[index - 1])) {
                 throw std::invalid_argument("Circuit tile qubits are invalid for the state.");
             }
         }
@@ -185,64 +296,88 @@ class Builder {
         }
     }
 
+    [[nodiscard]] static auto LowerGate(const BasicGate& gate, const qbits_t& tile_qubits,
+                                        const parameter::ParameterResolver& parameter_resolver, const StateSpace& space)
+        -> std::vector<Operation<value_t>> {
+        const auto tile_dim = size_t{1} << tile_qubits.size();
+        if (IsNoiseChannel(gate.GetID())) {
+            return {PrepareOperation(BuildChannel(gate, tile_qubits, space), tile_dim)};
+        }
+        std::vector<Operation<value_t>> operations;
+        for (const auto& image : space.Images()) {
+            auto operation = PrepareOperation(BuildOperation(gate, tile_qubits, parameter_resolver, image), tile_dim);
+            if (image.conjugated) {
+                Conjugate(&operation);
+            }
+            operations.push_back(std::move(operation));
+        }
+        return operations;
+    }
+
     [[nodiscard]] static auto ResolveScalar(const parameter::ParameterResolver& coefficient,
                                             const parameter::ParameterResolver& parameter_resolver) -> calc_type {
         return tensor::ops::cpu::to_vector<calc_type>(coefficient.Combination(parameter_resolver).const_value)[0];
     }
 
-    static void RequireObjectCount(const BasicGate& gate, size_t expected) {
-        const auto actual = gate.GetObjQubits().size();
-        if (actual != expected) {
+    static void RequireObjectCount(const BasicGate& gate, const qbits_t& objects, size_t expected) {
+        if (objects.size() != expected) {
             throw std::invalid_argument(
-                fmt::format("Gate {} requires {} object qubits, but got {}.", gate.GetID(), expected, actual));
+                fmt::format("Gate {} requires {} object qubits, but got {}.", gate.GetID(), expected, objects.size()));
         }
     }
 
-    [[nodiscard]] static auto LocalMask(const qbits_t& tile_qubits, qbit_t qubit) -> index_t {
-        const auto position = std::lower_bound(tile_qubits.begin(), tile_qubits.end(), qubit);
-        if (position == tile_qubits.end() || *position != qubit) {
+    [[nodiscard]] static auto LocalMask(const qbits_t& tile_qubits, qbit_t state_qubit) -> index_t {
+        const auto position = std::lower_bound(tile_qubits.begin(), tile_qubits.end(), state_qubit);
+        if (position == tile_qubits.end() || *position != state_qubit) {
             return 0;
         }
         return index_t{1} << std::distance(tile_qubits.begin(), position);
     }
 
-    static void ConfigureControls(const BasicGate& gate, const qbits_t& tile_qubits, RawOperation* operation) {
+    [[nodiscard]] static auto RequireLocalMask(const qbits_t& tile_qubits, qbit_t state_qubit) -> index_t {
+        const auto local = LocalMask(tile_qubits, state_qubit);
+        if (local == 0) {
+            throw std::invalid_argument(
+                fmt::format("State-index bit {} is mixed by a gate but is not part of its circuit tile.", state_qubit));
+        }
+        return local;
+    }
+
+    static void ConfigureControls(const BasicGate& gate, const qbits_t& tile_qubits, const QubitImage& image,
+                                  RawOperation* operation) {
         for (auto control : gate.GetCtrlQubits()) {
-            AddConditionQubit(control, tile_qubits, operation);
+            AddConditionQubit(control + image.offset, tile_qubits, operation);
         }
     }
 
-    static void AddConditionQubit(qbit_t qubit, const qbits_t& tile_qubits, RawOperation* operation) {
-        const auto local = LocalMask(tile_qubits, qubit);
+    static void AddConditionQubit(qbit_t state_qubit, const qbits_t& tile_qubits, RawOperation* operation) {
+        const auto local = LocalMask(tile_qubits, state_qubit);
         if (local != 0) {
             operation->local_control_mask |= local;
         } else {
-            operation->external_control_mask |= index_t{1} << qubit;
+            operation->external_control_mask |= index_t{1} << state_qubit;
         }
     }
 
-    static void SetLocalOrExternalZ(qbit_t qubit, const qbits_t& tile_qubits, RawOperation* operation) {
-        const auto local = LocalMask(tile_qubits, qubit);
+    static void SetLocalOrExternalZ(qbit_t state_qubit, const qbits_t& tile_qubits, RawOperation* operation) {
+        const auto local = LocalMask(tile_qubits, state_qubit);
         if (local != 0) {
             operation->pauli_z_mask |= local;
         } else {
-            operation->external_pauli_z_mask |= index_t{1} << qubit;
+            operation->external_pauli_z_mask |= index_t{1} << state_qubit;
         }
     }
 
-    static void SetLocalPauli(qbit_t qubit, char pauli, const qbits_t& tile_qubits, RawOperation* operation) {
-        const auto local = LocalMask(tile_qubits, qubit);
+    static void SetLocalPauli(qbit_t state_qubit, char pauli, const qbits_t& tile_qubits, RawOperation* operation) {
         switch (pauli) {
             case 'X':
-                assert(local != 0);
-                operation->pauli_x_mask |= local;
+                operation->pauli_x_mask |= RequireLocalMask(tile_qubits, state_qubit);
                 break;
             case 'Y':
-                assert(local != 0);
-                operation->pauli_y_mask |= local;
+                operation->pauli_y_mask |= RequireLocalMask(tile_qubits, state_qubit);
                 break;
             case 'Z':
-                SetLocalOrExternalZ(qubit, tile_qubits, operation);
+                SetLocalOrExternalZ(state_qubit, tile_qubits, operation);
                 break;
             default:
                 assert(false && "Unexpected Pauli label");
@@ -250,15 +385,16 @@ class Builder {
         }
     }
 
-    static void ConfigurePauliMask(const PauliMask& mask, const qbits_t& tile_qubits, RawOperation* operation) {
+    static void ConfigurePauliMask(const PauliMask& mask, const qbits_t& tile_qubits, const QubitImage& image,
+                                   RawOperation* operation) {
         for (qbit_t qubit = 0; qubit < static_cast<qbit_t>(std::numeric_limits<index_t>::digits); ++qubit) {
             const auto global = index_t{1} << qubit;
             if ((mask.mask_x & global) != 0) {
-                SetLocalPauli(qubit, 'X', tile_qubits, operation);
+                SetLocalPauli(qubit + image.offset, 'X', tile_qubits, operation);
             } else if ((mask.mask_y & global) != 0) {
-                SetLocalPauli(qubit, 'Y', tile_qubits, operation);
+                SetLocalPauli(qubit + image.offset, 'Y', tile_qubits, operation);
             } else if ((mask.mask_z & global) != 0) {
-                SetLocalPauli(qubit, 'Z', tile_qubits, operation);
+                SetLocalPauli(qubit + image.offset, 'Z', tile_qubits, operation);
             }
         }
     }
@@ -303,10 +439,24 @@ class Builder {
         return MatrixFromTensor(custom->GetMatrixWrapper()(first, second), expected_dim);
     }
 
+    // Local offsets of every basis state of `objects` placed in `image`.
+    [[nodiscard]] static auto ObjectOffsets(const qbits_t& objects, const qbits_t& tile_qubits, const QubitImage& image)
+        -> std::vector<index_t> {
+        std::vector<index_t> offsets(size_t{1} << objects.size(), 0);
+        for (size_t basis = 0; basis < offsets.size(); ++basis) {
+            for (size_t bit = 0; bit < objects.size(); ++bit) {
+                if ((basis & (size_t{1} << bit)) != 0) {
+                    offsets[basis] |= RequireLocalMask(tile_qubits, objects[bit] + image.offset);
+                }
+            }
+        }
+        return offsets;
+    }
+
     [[nodiscard]] static auto MatrixOperation(const BasicGate& gate, const qbits_t& tile_qubits,
-                                              std::vector<value_t> matrix) -> RawOperation {
+                                              const QubitImage& image, std::vector<value_t> matrix) -> RawOperation {
         RawOperation operation;
-        ConfigureControls(gate, tile_qubits, &operation);
+        ConfigureControls(gate, tile_qubits, image, &operation);
         const auto objects = gate.GetObjQubits();
         operation.matrix_dim = size_t{1} << objects.size();
         if (matrix.size() != operation.matrix_dim * operation.matrix_dim) {
@@ -314,8 +464,7 @@ class Builder {
         }
         if (objects.size() == 1) {
             operation.kernel = RawKernel::PairMatrix;
-            operation.target_mask = LocalMask(tile_qubits, objects.front());
-            assert(operation.target_mask != 0);
+            operation.target_mask = RequireLocalMask(tile_qubits, objects.front() + image.offset);
             std::copy_n(matrix.begin(), 4, operation.matrix2.begin());
             operation.matrix_dim = 0;
             return operation;
@@ -323,68 +472,62 @@ class Builder {
 
         operation.kernel = RawKernel::DenseMatrix;
         operation.matrix = std::move(matrix);
-        operation.target_offsets.resize(operation.matrix_dim, 0);
-        for (size_t basis = 0; basis < operation.matrix_dim; ++basis) {
-            for (size_t bit = 0; bit < objects.size(); ++bit) {
-                if ((basis & (size_t{1} << bit)) != 0) {
-                    const auto local = LocalMask(tile_qubits, objects[bit]);
-                    assert(local != 0);
-                    operation.target_offsets[basis] |= local;
-                }
-            }
-        }
+        operation.target_offsets = ObjectOffsets(objects, tile_qubits, image);
         return operation;
     }
 
-    static void ConfigureRotation(const BasicGate& gate, const qbits_t& tile_qubits,
-                                  const parameter::ParameterResolver& parameter_resolver, RawOperation* operation) {
-        const auto objects = gate.GetObjQubits();
+    static void ConfigureRotation(const BasicGate& gate, const qbits_t& objects, const qbits_t& tile_qubits,
+                                  const parameter::ParameterResolver& parameter_resolver, const QubitImage& image,
+                                  RawOperation* operation) {
+        const auto set_pauli = [&](size_t object_index, char pauli) {
+            SetLocalPauli(objects[object_index] + image.offset, pauli, tile_qubits, operation);
+        };
         switch (gate.GetID()) {
             case GateID::RX:
-                RequireObjectCount(gate, 1);
-                SetLocalPauli(objects[0], 'X', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 1);
+                set_pauli(0, 'X');
                 break;
             case GateID::RY:
-                RequireObjectCount(gate, 1);
-                SetLocalPauli(objects[0], 'Y', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 1);
+                set_pauli(0, 'Y');
                 break;
             case GateID::RZ:
-                RequireObjectCount(gate, 1);
-                SetLocalPauli(objects[0], 'Z', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 1);
+                set_pauli(0, 'Z');
                 break;
             case GateID::Rxx:
-                RequireObjectCount(gate, 2);
-                SetLocalPauli(objects[0], 'X', tile_qubits, operation);
-                SetLocalPauli(objects[1], 'X', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 2);
+                set_pauli(0, 'X');
+                set_pauli(1, 'X');
                 break;
             case GateID::Ryy:
-                RequireObjectCount(gate, 2);
-                SetLocalPauli(objects[0], 'Y', tile_qubits, operation);
-                SetLocalPauli(objects[1], 'Y', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 2);
+                set_pauli(0, 'Y');
+                set_pauli(1, 'Y');
                 break;
             case GateID::Rzz:
-                RequireObjectCount(gate, 2);
-                SetLocalPauli(objects[0], 'Z', tile_qubits, operation);
-                SetLocalPauli(objects[1], 'Z', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 2);
+                set_pauli(0, 'Z');
+                set_pauli(1, 'Z');
                 break;
             case GateID::Rxy:
-                RequireObjectCount(gate, 2);
-                SetLocalPauli(objects[0], 'X', tile_qubits, operation);
-                SetLocalPauli(objects[1], 'Y', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 2);
+                set_pauli(0, 'X');
+                set_pauli(1, 'Y');
                 break;
             case GateID::Rxz:
-                RequireObjectCount(gate, 2);
-                SetLocalPauli(objects[0], 'X', tile_qubits, operation);
-                SetLocalPauli(objects[1], 'Z', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 2);
+                set_pauli(0, 'X');
+                set_pauli(1, 'Z');
                 break;
             case GateID::Ryz:
-                RequireObjectCount(gate, 2);
-                SetLocalPauli(objects[0], 'Y', tile_qubits, operation);
-                SetLocalPauli(objects[1], 'Z', tile_qubits, operation);
+                RequireObjectCount(gate, objects, 2);
+                set_pauli(0, 'Y');
+                set_pauli(1, 'Z');
                 break;
             case GateID::RPS:
                 ConfigurePauliMask(static_cast<const RotPauliString*>(&gate)->GetPauliString().GetPauliMask(),
-                                   tile_qubits, operation);
+                                   tile_qubits, image, operation);
                 break;
             default:
                 assert(false && "Unexpected Pauli rotation gate");
@@ -397,24 +540,27 @@ class Builder {
     }
 
     [[nodiscard]] static auto BuildOperation(const BasicGate& gate, const qbits_t& tile_qubits,
-                                             const parameter::ParameterResolver& parameter_resolver) -> RawOperation {
+                                             const parameter::ParameterResolver& parameter_resolver,
+                                             const QubitImage& image) -> RawOperation {
         RawOperation operation;
-        ConfigureControls(gate, tile_qubits, &operation);
+        ConfigureControls(gate, tile_qubits, image, &operation);
         const auto objects = gate.GetObjQubits();
+        const auto placed = [&image](qbit_t qubit) { return qubit + image.offset; };
         constexpr auto half = calc_type{0.5};
         switch (gate.GetID()) {
             case GateID::X:
             case GateID::Y:
             case GateID::Z: {
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::Pauli;
                 const auto pauli = gate.GetID() == GateID::X ? 'X' : (gate.GetID() == GateID::Y ? 'Y' : 'Z');
-                SetLocalPauli(objects[0], pauli, tile_qubits, &operation);
+                SetLocalPauli(placed(objects[0]), pauli, tile_qubits, &operation);
                 break;
             }
             case GateID::PauliString:
                 operation.kernel = RawKernel::Pauli;
-                ConfigurePauliMask(static_cast<const PauliString*>(&gate)->GetPauliMask(), tile_qubits, &operation);
+                ConfigurePauliMask(static_cast<const PauliString*>(&gate)->GetPauliMask(), tile_qubits, image,
+                                   &operation);
                 break;
             case GateID::RX:
             case GateID::RY:
@@ -427,24 +573,23 @@ class Builder {
             case GateID::Ryz:
             case GateID::RPS:
                 operation.kernel = RawKernel::PauliRotation;
-                ConfigureRotation(gate, tile_qubits, parameter_resolver, &operation);
+                ConfigureRotation(gate, objects, tile_qubits, parameter_resolver, image, &operation);
                 break;
             case GateID::H:
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::Hadamard;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                assert(operation.target_mask != 0);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
                 break;
             case GateID::S:
             case GateID::Sdag:
             case GateID::T:
             case GateID::Tdag:
             case GateID::PS: {
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::Phase;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
+                operation.target_mask = LocalMask(tile_qubits, placed(objects[0]));
                 if (operation.target_mask == 0) {
-                    operation.external_control_mask |= index_t{1} << objects[0];
+                    operation.external_control_mask |= index_t{1} << placed(objects[0]);
                 }
                 if (gate.GetID() == GateID::S) {
                     operation.phase = value_t{0, 1};
@@ -462,7 +607,7 @@ class Builder {
                 break;
             }
             case GateID::GP: {
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::Phase;
                 const auto angle = ResolveScalar(static_cast<const Parameterizable*>(&gate)->GetCoeffs()[0],
                                                  parameter_resolver);
@@ -471,10 +616,9 @@ class Builder {
             }
             case GateID::SX:
             case GateID::SXdag: {
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::PairMatrix;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                assert(operation.target_mask != 0);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
                 const auto sign = gate.GetID() == GateID::SXdag ? calc_type{-1} : calc_type{1};
                 const auto diagonal = value_t{half, sign * half};
                 const auto off_diagonal = value_t{half, -sign * half};
@@ -482,25 +626,23 @@ class Builder {
                 break;
             }
             case GateID::SWAP:
-                RequireObjectCount(gate, 2);
+                RequireObjectCount(gate, objects, 2);
                 operation.kernel = RawKernel::Swap;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                operation.target_mask_2 = LocalMask(tile_qubits, objects[1]);
-                assert(operation.target_mask != 0 && operation.target_mask_2 != 0);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
+                operation.target_mask_2 = RequireLocalMask(tile_qubits, placed(objects[1]));
                 break;
             case GateID::ISWAP:
-                RequireObjectCount(gate, 2);
+                RequireObjectCount(gate, objects, 2);
                 operation.kernel = RawKernel::ISwap;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                operation.target_mask_2 = LocalMask(tile_qubits, objects[1]);
-                assert(operation.target_mask != 0 && operation.target_mask_2 != 0);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
+                operation.target_mask_2 = RequireLocalMask(tile_qubits, placed(objects[1]));
                 operation.phase = static_cast<const ISWAPGate*>(&gate)->Daggered() ? value_t{0, -1} : value_t{0, 1};
                 break;
             case GateID::SWAPalpha: {
-                RequireObjectCount(gate, 2);
+                RequireObjectCount(gate, objects, 2);
                 operation.kernel = RawKernel::PairMatrix;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                operation.target_mask_2 = LocalMask(tile_qubits, objects[1]);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
+                operation.target_mask_2 = RequireLocalMask(tile_qubits, placed(objects[1]));
                 const auto angle = ResolveScalar(static_cast<const Parameterizable*>(&gate)->GetCoeffs()[0],
                                                  parameter_resolver);
                 const auto exponential = std::exp(value_t{0, static_cast<calc_type>(M_PI) * angle});
@@ -510,10 +652,10 @@ class Builder {
                 break;
             }
             case GateID::Givens: {
-                RequireObjectCount(gate, 2);
+                RequireObjectCount(gate, objects, 2);
                 operation.kernel = RawKernel::PairMatrix;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                operation.target_mask_2 = LocalMask(tile_qubits, objects[1]);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
+                operation.target_mask_2 = RequireLocalMask(tile_qubits, placed(objects[1]));
                 const auto angle = ResolveScalar(static_cast<const Parameterizable*>(&gate)->GetCoeffs()[0],
                                                  parameter_resolver);
                 const auto cosine = static_cast<calc_type>(std::cos(angle));
@@ -522,10 +664,10 @@ class Builder {
                 break;
             }
             case GateID::FSim: {
-                RequireObjectCount(gate, 2);
+                RequireObjectCount(gate, objects, 2);
                 operation.kernel = RawKernel::FSim;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
-                operation.target_mask_2 = LocalMask(tile_qubits, objects[1]);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
+                operation.target_mask_2 = RequireLocalMask(tile_qubits, placed(objects[1]));
                 const auto* fsim = static_cast<const FSim*>(&gate);
                 const auto theta = ResolveScalar(fsim->GetTheta(), parameter_resolver);
                 const auto phi = ResolveScalar(fsim->GetPhi(), parameter_resolver);
@@ -536,9 +678,9 @@ class Builder {
                 break;
             }
             case GateID::U3: {
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::PairMatrix;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
                 const auto* u3 = static_cast<const U3*>(&gate);
                 const auto theta = ResolveScalar(u3->GetTheta(), parameter_resolver);
                 const auto phi = ResolveScalar(u3->GetPhi(), parameter_resolver);
@@ -551,9 +693,9 @@ class Builder {
                 break;
             }
             case GateID::Rn: {
-                RequireObjectCount(gate, 1);
+                RequireObjectCount(gate, objects, 1);
                 operation.kernel = RawKernel::PairMatrix;
-                operation.target_mask = LocalMask(tile_qubits, objects[0]);
+                operation.target_mask = RequireLocalMask(tile_qubits, placed(objects[0]));
                 const auto* rn = static_cast<const Rn*>(&gate);
                 const auto alpha = ResolveScalar(rn->GetAlpha(), parameter_resolver);
                 const auto beta = ResolveScalar(rn->GetBeta(), parameter_resolver);
@@ -573,7 +715,7 @@ class Builder {
             }
             case GateID::CUSTOM:
             case GateID::CUSTOM_TWO_PARAM:
-                return MatrixOperation(gate, tile_qubits, CustomMatrix(gate, parameter_resolver));
+                return MatrixOperation(gate, tile_qubits, image, CustomMatrix(gate, parameter_resolver));
             default:
                 throw std::invalid_argument(fmt::format("Gate {} cannot be lowered to a circuit tile.", gate.GetID()));
         }
@@ -582,7 +724,8 @@ class Builder {
 
     [[nodiscard]] static auto BuildIntrinsicDerivatives(const BasicGate& gate, const qbits_t& tile_qubits,
                                                         const parameter::ParameterResolver& parameter_resolver,
-                                                        const RawOperation& evolution) -> std::vector<RawOperation> {
+                                                        const RawOperation& evolution, const QubitImage& image)
+        -> std::vector<RawOperation> {
         const auto objects = gate.GetObjQubits();
         switch (gate.GetID()) {
             case GateID::RX:
@@ -636,21 +779,26 @@ class Builder {
                 const auto phi = u3->GetPhi().Combination(parameter_resolver).const_value;
                 const auto lambda = u3->GetLambda().Combination(parameter_resolver).const_value;
                 return {
-                    MatrixOperation(gate, tile_qubits, MatrixFromTensor(U3DiffThetaMatrix(theta, phi, lambda), 2)),
-                    MatrixOperation(gate, tile_qubits, MatrixFromTensor(U3DiffPhiMatrix(theta, phi, lambda), 2)),
-                    MatrixOperation(gate, tile_qubits, MatrixFromTensor(U3DiffLambdaMatrix(theta, phi, lambda), 2))};
+                    MatrixOperation(gate, tile_qubits, image,
+                                    MatrixFromTensor(U3DiffThetaMatrix(theta, phi, lambda), 2)),
+                    MatrixOperation(gate, tile_qubits, image, MatrixFromTensor(U3DiffPhiMatrix(theta, phi, lambda), 2)),
+                    MatrixOperation(gate, tile_qubits, image,
+                                    MatrixFromTensor(U3DiffLambdaMatrix(theta, phi, lambda), 2))};
             }
             case GateID::Rn: {
                 const auto* rn = static_cast<const Rn*>(&gate);
                 const auto alpha = rn->GetAlpha().Combination(parameter_resolver).const_value;
                 const auto beta = rn->GetBeta().Combination(parameter_resolver).const_value;
                 const auto gamma = rn->GetGamma().Combination(parameter_resolver).const_value;
-                return {MatrixOperation(gate, tile_qubits, MatrixFromTensor(RnDiffAlphaMatrix(alpha, beta, gamma), 2)),
-                        MatrixOperation(gate, tile_qubits, MatrixFromTensor(RnDiffBetaMatrix(alpha, beta, gamma), 2)),
-                        MatrixOperation(gate, tile_qubits, MatrixFromTensor(RnDiffGammaMatrix(alpha, beta, gamma), 2))};
+                return {MatrixOperation(gate, tile_qubits, image,
+                                        MatrixFromTensor(RnDiffAlphaMatrix(alpha, beta, gamma), 2)),
+                        MatrixOperation(gate, tile_qubits, image,
+                                        MatrixFromTensor(RnDiffBetaMatrix(alpha, beta, gamma), 2)),
+                        MatrixOperation(gate, tile_qubits, image,
+                                        MatrixFromTensor(RnDiffGammaMatrix(alpha, beta, gamma), 2))};
             }
             case GateID::FSim: {
-                RequireObjectCount(gate, 2);
+                RequireObjectCount(gate, objects, 2);
                 const auto* fsim = static_cast<const FSim*>(&gate);
                 const auto theta = ResolveScalar(fsim->GetTheta(), parameter_resolver);
                 const auto phi = ResolveScalar(fsim->GetPhi(), parameter_resolver);
@@ -663,9 +811,9 @@ class Builder {
 
                 RawOperation phi_derivative;
                 phi_derivative.kernel = RawKernel::Phase;
-                ConfigureControls(gate, tile_qubits, &phi_derivative);
-                AddConditionQubit(objects[0], tile_qubits, &phi_derivative);
-                AddConditionQubit(objects[1], tile_qubits, &phi_derivative);
+                ConfigureControls(gate, tile_qubits, image, &phi_derivative);
+                AddConditionQubit(objects[0] + image.offset, tile_qubits, &phi_derivative);
+                AddConditionQubit(objects[1] + image.offset, tile_qubits, &phi_derivative);
                 phi_derivative.phase = value_t{0, -1} * std::exp(value_t{0, -phi});
                 return {std::move(theta_derivative), std::move(phi_derivative)};
             }
@@ -673,7 +821,7 @@ class Builder {
                 const auto* custom = static_cast<const CustomGate*>(&gate);
                 const auto value = ResolveScalar(custom->GetCoeffs()[0], parameter_resolver);
                 const auto expected_dim = size_t{1} << objects.size();
-                return {MatrixOperation(gate, tile_qubits,
+                return {MatrixOperation(gate, tile_qubits, image,
                                         MatrixFromTensor(custom->GetDiffMatrixWrapper()(value), expected_dim))};
             }
             case GateID::CUSTOM_TWO_PARAM: {
@@ -683,9 +831,9 @@ class Builder {
                 const auto second = ResolveScalar(coefficients[1], parameter_resolver);
                 const auto expected_dim = size_t{1} << objects.size();
                 return {
-                    MatrixOperation(gate, tile_qubits,
+                    MatrixOperation(gate, tile_qubits, image,
                                     MatrixFromTensor(custom->GetDiffMatrix1Wrapper()(first, second), expected_dim)),
-                    MatrixOperation(gate, tile_qubits,
+                    MatrixOperation(gate, tile_qubits, image,
                                     MatrixFromTensor(custom->GetDiffMatrix2Wrapper()(first, second), expected_dim))};
             }
             default:
@@ -729,6 +877,152 @@ class Builder {
         return targets;
     }
 
+    // Noise channels
+    // ------------------------------------------------------------------------
+
+    [[nodiscard]] static auto ConjugateTranspose(const std::vector<value_t>& matrix, size_t dim)
+        -> std::vector<value_t> {
+        std::vector<value_t> result(matrix.size());
+        for (size_t row = 0; row < dim; ++row) {
+            for (size_t column = 0; column < dim; ++column) {
+                result[row * dim + column] = std::conj(matrix[column * dim + row]);
+            }
+        }
+        return result;
+    }
+
+    // Kraus operators of a channel as flattened row-major 2^m x 2^m matrices.
+    [[nodiscard]] static auto KrausOperators(const BasicGate& gate) -> std::vector<std::vector<value_t>> {
+        const auto sqrt = [](double value) { return static_cast<calc_type>(std::sqrt(value)); };
+        switch (gate.GetID()) {
+            case GateID::AD: {
+                const auto* channel = static_cast<const AmplitudeDampingChannel*>(&gate);
+                const auto gamma = channel->GetDampingCoeff();
+                std::vector<value_t> decay{0, sqrt(gamma), 0, 0};
+                if (channel->Daggered()) {
+                    decay = ConjugateTranspose(decay, 2);
+                }
+                return {{1, 0, 0, sqrt(1 - gamma)}, std::move(decay)};
+            }
+            case GateID::PD: {
+                const auto gamma = static_cast<const PhaseDampingChannel*>(&gate)->GetDampingCoeff();
+                return {{1, 0, 0, sqrt(1 - gamma)}, {0, 0, 0, sqrt(gamma)}};
+            }
+            case GateID::PL: {
+                const auto probabilities = static_cast<const PauliChannel*>(&gate)->GetProbs();
+                const auto x = sqrt(probabilities[0]);
+                const auto y = sqrt(probabilities[1]);
+                const auto z = sqrt(probabilities[2]);
+                const auto identity = sqrt(probabilities[3]);
+                return {{0, x, x, 0}, {0, value_t{0, -y}, value_t{0, y}, 0}, {z, 0, 0, -z}, {identity, 0, 0, identity}};
+            }
+            case GateID::KRAUS: {
+                const auto expected_dim = size_t{1} << gate.GetObjQubits().size();
+                std::vector<std::vector<value_t>> operators;
+                for (const auto& matrix : static_cast<const KrausChannel*>(&gate)->GetKrausOperatorSet()) {
+                    operators.push_back(MatrixFromTensor(matrix, expected_dim));
+                }
+                if (operators.empty()) {
+                    throw std::invalid_argument("A Kraus channel requires at least one Kraus operator.");
+                }
+                return operators;
+            }
+            default:
+                throw std::invalid_argument(fmt::format("Gate {} is not a Kraus channel.", gate.GetID()));
+        }
+    }
+
+    // The superoperator of a channel on the row-major (row, column) operand
+    // block: S[(r', c'), (r, c)] = sum_k K_k[r'][r] conj(K_k[c'][c]).
+    [[nodiscard]] static auto ChannelSuperoperator(const BasicGate& gate) -> std::vector<value_t> {
+        if (gate.GetID() == GateID::TR) {
+            const auto* channel = static_cast<const ThermalRelaxationChannel*>(&gate);
+            const auto t1 = channel->GetT1();
+            const auto t2 = channel->GetT2();
+            if (t2 > 2 * t1) {
+                throw std::invalid_argument("Thermal relaxation requires T2 <= 2 * T1.");
+            }
+            const auto e1 = static_cast<calc_type>(std::exp(-channel->GetGateTime() / t1));
+            const auto e2 = static_cast<calc_type>(std::exp(-channel->GetGateTime() / t2));
+            // rho00 += (1 - e1) rho11, rho01 *= e2, rho10 *= e2, rho11 *= e1.
+            std::vector<value_t> superoperator(16, 0);
+            superoperator[0 * 4 + 0] = 1;
+            superoperator[0 * 4 + 3] = 1 - e1;
+            superoperator[1 * 4 + 1] = e2;
+            superoperator[2 * 4 + 2] = e2;
+            superoperator[3 * 4 + 3] = e1;
+            return superoperator;
+        }
+        const auto operators = KrausOperators(gate);
+        const auto dim = size_t{1} << gate.GetObjQubits().size();
+        const auto super_dim = dim * dim;
+        std::vector<value_t> superoperator(super_dim * super_dim, 0);
+        for (const auto& kraus : operators) {
+            for (size_t row_out = 0; row_out < dim; ++row_out) {
+                for (size_t column_out = 0; column_out < dim; ++column_out) {
+                    const auto out = row_out * dim + column_out;
+                    for (size_t row_in = 0; row_in < dim; ++row_in) {
+                        const auto left = kraus[row_out * dim + row_in];
+                        for (size_t column_in = 0; column_in < dim; ++column_in) {
+                            superoperator[out * super_dim + row_in * dim + column_in]
+                                += left * std::conj(kraus[column_out * dim + column_in]);
+                        }
+                    }
+                }
+            }
+        }
+        return superoperator;
+    }
+
+    // Local offsets of the (row, column) operand block of `objects`, ordered
+    // row-major to match the superoperator index convention.
+    [[nodiscard]] static auto OperandBlockOffsets(const qbits_t& objects, const qbits_t& tile_qubits,
+                                                  const StateSpace& space) -> std::vector<index_t> {
+        const auto row_offsets = ObjectOffsets(objects, tile_qubits, space.RowImage());
+        const auto column_offsets = ObjectOffsets(objects, tile_qubits, space.ColumnImage());
+        std::vector<index_t> offsets;
+        offsets.reserve(row_offsets.size() * column_offsets.size());
+        for (auto row : row_offsets) {
+            for (auto column : column_offsets) {
+                offsets.push_back(row | column);
+            }
+        }
+        return offsets;
+    }
+
+    [[nodiscard]] static auto BuildChannel(const BasicGate& gate, const qbits_t& tile_qubits, const StateSpace& space)
+        -> RawOperation {
+        if (space.kind() != StateSpace::Kind::DensityMatrix) {
+            throw std::invalid_argument(
+                fmt::format("Noise channel {} can only be lowered onto a density matrix.", gate.GetID()));
+        }
+        if (gate.GetID() == GateID::GPL) {
+            throw std::invalid_argument("Grouped Pauli channels must be expanded before lowering.");
+        }
+        if (!gate.GetCtrlQubits().empty()) {
+            throw std::invalid_argument("Noise channels cannot have control qubits.");
+        }
+        const auto objects = gate.GetObjQubits();
+        if (objects.empty()) {
+            throw std::invalid_argument(fmt::format("Noise channel {} requires object qubits.", gate.GetID()));
+        }
+        RawOperation operation;
+        operation.target_offsets = OperandBlockOffsets(objects, tile_qubits, space);
+        if (gate.GetID() == GateID::DEP) {
+            operation.kernel = RawKernel::Depolarizing;
+            operation.matrix_dim = size_t{1} << objects.size();
+            operation.probability = static_cast<calc_type>(static_cast<const DepolarizingChannel*>(&gate)->GetProb());
+            return operation;
+        }
+        operation.kernel = RawKernel::DenseMatrix;
+        operation.matrix_dim = operation.target_offsets.size();
+        operation.matrix = ChannelSuperoperator(gate);
+        return operation;
+    }
+
+    // Lowering to hot-path kernels
+    // ------------------------------------------------------------------------
+
     [[nodiscard]] static auto LocalPauliPhase(const RawOperation& operation, size_t basis) -> value_t {
         auto phase = value_t{1, 0};
         auto y_mask = operation.pauli_y_mask;
@@ -755,6 +1049,7 @@ class Builder {
         };
         const auto flip_mask = raw.pauli_x_mask | raw.pauli_y_mask;
         if (flip_mask == 0) {
+            kernel->scales.reserve(tile_dim);
             for (size_t basis = 0; basis < tile_dim; ++basis) {
                 if (controls_match(basis)) {
                     kernel->scales.push_back({basis, LocalPauliPhase(raw, basis)});
@@ -762,6 +1057,7 @@ class Builder {
             }
             return;
         }
+        kernel->pairs.reserve(tile_dim / 2);
         for (size_t lhs = 0; lhs < tile_dim; ++lhs) {
             if (!controls_match(lhs)) {
                 continue;
@@ -817,6 +1113,7 @@ class Builder {
 
     [[nodiscard]] static auto PrepareDiagonal(RawOperation raw, size_t tile_dim) -> Operation<value_t> {
         DiagonalKernel<value_t> kernel;
+        kernel.scales.reserve(tile_dim);
         for (size_t basis = 0; basis < tile_dim; ++basis) {
             const auto controls_match = (basis & raw.local_control_mask) == static_cast<size_t>(raw.local_control_mask);
             const auto target_matches = raw.target_mask == 0 || (basis & raw.target_mask) != 0;
@@ -833,6 +1130,7 @@ class Builder {
             return (basis & raw.local_control_mask) == raw.local_control_mask;
         };
         std::vector<IndexPair> pairs;
+        pairs.reserve(tile_dim / 2);
         if (raw.target_mask_2 == 0) {
             for (size_t basis = 0; basis < tile_dim; ++basis) {
                 if (controls_match(basis) && (basis & raw.target_mask) == 0) {
@@ -852,25 +1150,39 @@ class Builder {
         return pairs;
     }
 
-    [[nodiscard]] static auto PrepareDense(RawOperation raw, size_t tile_dim) -> DenseMatrixKernel<value_t> {
-        assert(raw.matrix_dim != 0 && raw.target_offsets.size() == raw.matrix_dim);
-        assert(raw.matrix.size() == raw.matrix_dim * raw.matrix_dim);
+    template <typename append_t>
+    static void ForEachOperandBlock(const RawOperation& raw, size_t tile_dim, const append_t& append) {
         index_t object_mask = 0;
         for (auto offset : raw.target_offsets) {
             object_mask |= offset;
         }
-
-        DenseMatrixKernel<value_t> kernel;
-        kernel.matrix_dim = raw.matrix_dim;
-        kernel.matrix = std::move(raw.matrix);
         for (size_t basis = 0; basis < tile_dim; ++basis) {
             if ((basis & raw.local_control_mask) != raw.local_control_mask || (basis & object_mask) != 0) {
                 continue;
             }
             for (auto offset : raw.target_offsets) {
-                kernel.indices.push_back(basis | offset);
+                append(basis | offset);
             }
         }
+    }
+
+    [[nodiscard]] static auto PrepareDense(RawOperation raw, size_t tile_dim) -> DenseMatrixKernel<value_t> {
+        assert(raw.matrix_dim != 0 && raw.target_offsets.size() == raw.matrix_dim);
+        assert(raw.matrix.size() == raw.matrix_dim * raw.matrix_dim);
+        DenseMatrixKernel<value_t> kernel;
+        kernel.matrix_dim = raw.matrix_dim;
+        kernel.matrix = std::move(raw.matrix);
+        ForEachOperandBlock(raw, tile_dim, [&kernel](size_t index) { kernel.indices.push_back(index); });
+        return kernel;
+    }
+
+    [[nodiscard]] static auto PrepareDepolarizing(RawOperation raw, size_t tile_dim) -> DepolarizingKernel<value_t> {
+        assert(raw.matrix_dim != 0 && raw.target_offsets.size() == raw.matrix_dim * raw.matrix_dim);
+        DepolarizingKernel<value_t> kernel;
+        kernel.local_dim = raw.matrix_dim;
+        kernel.keep = 1 - raw.probability;
+        kernel.mix = raw.probability / static_cast<calc_type>(raw.matrix_dim);
+        ForEachOperandBlock(raw, tile_dim, [&kernel](size_t index) { kernel.indices.push_back(index); });
         return kernel;
     }
 
@@ -903,6 +1215,8 @@ class Builder {
             }
             case RawKernel::DenseMatrix:
                 return {raw.external_control_mask, PrepareDense(std::move(raw), tile_dim)};
+            case RawKernel::Depolarizing:
+                return {raw.external_control_mask, PrepareDepolarizing(std::move(raw), tile_dim)};
         }
         assert(false && "Unknown raw circuit-tile kernel");
         std::terminate();
@@ -976,7 +1290,122 @@ class Builder {
         }
         return 0;
     }
-};
-}  // namespace mindquantum::sim::vector::detail::circuit_tiling
 
-#endif  // INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_BUILDER_H_
+    // Conjugation and adjoint of lowered kernels
+    // ------------------------------------------------------------------------
+    // Every kernel is a linear map with explicit complex coefficients over a
+    // real index structure, so conjugation conjugates the coefficients and
+    // the adjoint additionally transposes the index structure.
+
+    template <typename entries_t>
+    static void ConjugateEntries(entries_t* entries) {
+        for (auto& entry : *entries) {
+            entry.factor = std::conj(entry.factor);
+        }
+    }
+
+    static void ConjugatePairs(std::vector<PauliPair<value_t>>* pairs) {
+        for (auto& pair : *pairs) {
+            pair.lhs_from_rhs = std::conj(pair.lhs_from_rhs);
+            pair.rhs_from_lhs = std::conj(pair.rhs_from_lhs);
+        }
+    }
+
+    static void TransposePairs(std::vector<PauliPair<value_t>>* pairs) {
+        for (auto& pair : *pairs) {
+            std::swap(pair.lhs_from_rhs, pair.rhs_from_lhs);
+        }
+    }
+
+    static void ConjugateKernel(PauliKernel<value_t>* kernel) {
+        ConjugateEntries(&kernel->scales);
+        ConjugatePairs(&kernel->pairs);
+    }
+
+    static void ConjugateKernel(PauliRotationKernel<value_t>* kernel) {
+        // cos I - i sin P conjugates to cos I + i sin conj(P).
+        kernel->sine = -kernel->sine;
+        ConjugateEntries(&kernel->scales);
+        ConjugatePairs(&kernel->pairs);
+    }
+
+    static void ConjugateKernel(DiagonalKernel<value_t>* kernel) {
+        ConjugateEntries(&kernel->scales);
+    }
+
+    static void ConjugateKernel(HadamardKernel*) {
+    }
+
+    static void ConjugateKernel(PairMatrixKernel<value_t>* kernel) {
+        for (auto& entry : kernel->matrix) {
+            entry = std::conj(entry);
+        }
+    }
+
+    static void ConjugateKernel(SwapKernel*) {
+    }
+
+    static void ConjugateKernel(ISwapKernel<value_t>* kernel) {
+        kernel->phase = std::conj(kernel->phase);
+    }
+
+    static void ConjugateKernel(FSimKernel<value_t>* kernel) {
+        for (auto& entry : kernel->exchange) {
+            entry = std::conj(entry);
+        }
+        kernel->phase = std::conj(kernel->phase);
+    }
+
+    static void ConjugateKernel(DenseMatrixKernel<value_t>* kernel) {
+        for (auto& entry : kernel->matrix) {
+            entry = std::conj(entry);
+        }
+    }
+
+    static void ConjugateKernel(DepolarizingKernel<value_t>*) {
+    }
+
+    static void AdjointKernel(PauliKernel<value_t>* kernel) {
+        ConjugateKernel(kernel);
+        TransposePairs(&kernel->pairs);
+    }
+
+    static void AdjointKernel(PauliRotationKernel<value_t>* kernel) {
+        ConjugateKernel(kernel);
+        TransposePairs(&kernel->pairs);
+    }
+
+    static void AdjointKernel(DiagonalKernel<value_t>* kernel) {
+        ConjugateKernel(kernel);
+    }
+
+    static void AdjointKernel(HadamardKernel*) {
+    }
+
+    static void AdjointKernel(PairMatrixKernel<value_t>* kernel) {
+        ConjugateKernel(kernel);
+        std::swap(kernel->matrix[1], kernel->matrix[2]);
+    }
+
+    static void AdjointKernel(SwapKernel*) {
+    }
+
+    static void AdjointKernel(ISwapKernel<value_t>* kernel) {
+        ConjugateKernel(kernel);
+    }
+
+    static void AdjointKernel(FSimKernel<value_t>* kernel) {
+        ConjugateKernel(kernel);
+        std::swap(kernel->exchange[1], kernel->exchange[2]);
+    }
+
+    static void AdjointKernel(DenseMatrixKernel<value_t>* kernel) {
+        kernel->matrix = ConjugateTranspose(kernel->matrix, kernel->matrix_dim);
+    }
+
+    static void AdjointKernel(DepolarizingKernel<value_t>*) {
+    }
+};
+}  // namespace mindquantum::sim::circuit_tiling
+
+#endif  // INCLUDE_SIMULATOR_CIRCUIT_TILING_BUILDER_H_

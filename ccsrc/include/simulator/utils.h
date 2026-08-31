@@ -17,8 +17,16 @@
 #ifndef INCLUDE_QUANTUMSTATE_UTILS_HPP
 #define INCLUDE_QUANTUMSTATE_UTILS_HPP
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <stdexcept>
+#include <thread>
 #include <vector>
+
+#ifdef USE_OPENMP
+#    include <omp.h>
+#endif
 
 #include "core/mq_base_types.h"
 
@@ -56,6 +64,63 @@ struct DoubleQubitGateMask {
         (des) = (((ori) & (obj_rev_low_mask)) << 1) + ((ori) & (obj_low_mask));                                        \
         (des) = (((des) & (obj_rev_high_mask)) << 1) + ((des) & (obj_high_mask));                                      \
     } while (0)
+
+// Number of independent worker threads for a batch of gradient evaluations
+// over a state of `n_amplitudes` amplitudes.  Full-state kernels already
+// consume an OpenMP team above `parallel_threshold`, so serializing the outer
+// batch there avoids nested teams and memory-bandwidth oversubscription; small
+// states retain independent batch workers.
+inline auto SelectGradientBatchThreads(index_t n_amplitudes, index_t parallel_threshold, size_t requested_threads)
+    -> size_t {
+    if (requested_threads == 0) {
+        throw std::invalid_argument("Gradient batch thread count cannot be zero.");
+    }
+#ifdef USE_OPENMP
+    if (n_amplitudes >= parallel_threshold && omp_get_max_threads() > 1) {
+        return 1;
+    }
+#else
+    (void) n_amplitudes;
+    (void) parallel_threshold;
+#endif
+    return requested_threads;
+}
+
+// Runs `task(index)` for every index in [0, count) on at most `threads`
+// worker threads, on the calling thread when one suffices.
+template <typename task_t>
+void ParallelBatch(size_t threads, size_t count, const task_t& task) {
+    if (count == 0) {
+        throw std::invalid_argument("Gradient parameter batch cannot be empty.");
+    }
+    if (threads == 0) {
+        throw std::invalid_argument("Gradient batch thread count cannot be zero.");
+    }
+    threads = std::min(threads, count);
+    if (threads == 1) {
+        for (size_t index = 0; index < count; ++index) {
+            task(index);
+        }
+        return;
+    }
+    std::vector<std::thread> workers;
+    workers.reserve(threads);
+    const auto chunk = count / threads;
+    const auto remainder = count % threads;
+    size_t end = 0;
+    for (size_t worker = 0; worker < threads; ++worker) {
+        const auto start = end;
+        end = start + chunk + (worker < remainder ? 1 : 0);
+        workers.emplace_back([&task, start, end]() {
+            for (size_t index = start; index < end; ++index) {
+                task(index);
+            }
+        });
+    }
+    for (auto& worker : workers) {
+        worker.join();
+    }
+}
 }  // namespace mindquantum::sim
 
 #endif

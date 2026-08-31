@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef LIB_SIMULATOR_VECTOR_DETAIL_CPU_ARM_CPU_VECTOR_SVE_UTILS_H_
-#define LIB_SIMULATOR_VECTOR_DETAIL_CPU_ARM_CPU_VECTOR_SVE_UTILS_H_
+#ifndef INCLUDE_SIMULATOR_ARM_SVE_SVE_UTILS_H_
+#define INCLUDE_SIMULATOR_ARM_SVE_SVE_UTILS_H_
 
 #include <arm_sve.h>
 
@@ -29,9 +29,9 @@
 #include "config/config.h"
 #include "config/openmp.h"
 #include "core/mq_base_types.h"
-#include "simulator/vector/detail/state_index.h"
+#include "simulator/state_index.h"
 
-namespace mindquantum::sim::vector::detail::sve {
+namespace mindquantum::sim::sve {
 template <typename calc_type>
 struct Traits;
 
@@ -419,6 +419,6 @@ void ForEachStateIndexBatchWithScratch(index_t dim, index_t dim_threshold,
         index_window, compressed_count,
         [&](const state_index::StateIndexBatch& batch, index_t state_origin) { kernel(batch, state_origin, scratch); });
 }
-}  // namespace mindquantum::sim::vector::detail::sve
+}  // namespace mindquantum::sim::sve
 
-#endif  // LIB_SIMULATOR_VECTOR_DETAIL_CPU_ARM_CPU_VECTOR_SVE_UTILS_H_
+#endif  // INCLUDE_SIMULATOR_ARM_SVE_SVE_UTILS_H_
