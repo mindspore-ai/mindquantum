@@ -132,6 +132,7 @@ def _known_gate_circuit():  # pylint: disable=too-many-statements
     circuit += G.AmplitudeDampingChannel(0.15).hermitian().on(3)
     circuit += G.PhaseDampingChannel(0.3).on(4)
     circuit += G.PauliChannel(0.1, 0.2, 0.3).on(5)
+    circuit += G.PauliChannel(0.0, 0.0, 0.3).on(0)
     circuit += G.BitFlipChannel(0.25).on(6)
     circuit += G.GroupedPauliChannel(np.array([[0.1, 0.05, 0.02], [0.03, 0.04, 0.2]])).on([0, 3])
     circuit += G.KrausChannel('kraus', G.DepolarizingChannel(0.4).matrix()).on(1)
@@ -418,6 +419,41 @@ def test_apply_derivative_gate():
     derivative = np.kron(np.diag([0.0, 1.0]), gate.diff_matrix({'theta': theta}))
     full = _kraus_matrix(derivative, [1, 2], 3)
     assert np.allclose(simulator.get_qs(), full @ rho @ full.conj().T, atol=1e-11)
+
+
+def _invalid_channels():
+    from mindquantum import mqbackend as mb  # pylint: disable=import-outside-toplevel
+
+    return [
+        mb.gate.AmplitudeDampingChannel(False, 2.0, [0], []),
+        mb.gate.AmplitudeDampingChannel(False, float('nan'), [0], []),
+        mb.gate.AmplitudeDampingChannel(False, 0.1, [0, 1], []),
+        mb.gate.PhaseDampingChannel(-0.5, [0], []),
+        mb.gate.DepolarizingChannel(float('nan'), [0], []),
+        mb.gate.DepolarizingChannel(2.0, [0], []),
+        mb.gate.PauliChannel(0.8, 0.8, 0.8, [0], []),
+        mb.gate.KrausChannel([[[2 + 0j, 0], [0, 2]]], [0], []),
+        mb.gate.ThermalRelaxationChannel(100.0, 300.0, 10.0, [0], []),
+        mb.gate.ThermalRelaxationChannel(-1.0, 1.0, 10.0, [0], []),
+        mb.gate.AmplitudeDampingChannel(False, 0.1, [0], [1]),
+    ]
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_invalid_channels_are_rejected():
+    """
+    Feature: Channel validation.
+    Description: Apply channels with unphysical parameters or qubit structure.
+    Expectation: Every invalid channel raises a ValueError and leaves the state untouched.
+    """
+    expected = np.zeros((4, 4), dtype=complex)
+    expected[0, 0] = 1
+    for bad in _invalid_channels():
+        simulator = Simulator('mqmatrix', 2)
+        with pytest.raises(ValueError, match="requires"):
+            simulator.backend.sim.apply_gate(bad)
+        assert np.allclose(simulator.get_qs(), expected)
 
 
 @pytest.mark.level0

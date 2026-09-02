@@ -35,6 +35,7 @@
 #include <fmt/format.h>
 
 #include "core/mq_base_types.h"
+#include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "math/tensor/matrix.h"
 #include "math/tensor/ops_cpu/memory_operator.h"
@@ -218,6 +219,9 @@ class Builder {
         ISwap,
         FSim,
         DenseMatrix,
+        // A diagonal matrix on the operand block: `matrix` holds one factor
+        // per entry of `target_offsets`.
+        Diagonal,
         Depolarizing,
     };
 
@@ -879,6 +883,22 @@ class Builder {
 
     // Noise channels
     // ------------------------------------------------------------------------
+    // A channel is lowered to the exact superoperator of its Kraus form on the
+    // row-major (row, column) operand block of a density matrix.  Every
+    // parameter is validated here, before any amplitude is touched: a channel
+    // outside its physical range would otherwise poison the state silently.
+
+    static void RequireChannel(bool condition, const BasicGate& gate, const char* requirement) {
+        if (!condition) {
+            throw std::invalid_argument(fmt::format("Channel {} requires {}.", gate.GetID(), requirement));
+        }
+    }
+
+    [[nodiscard]] static auto RequireUnitInterval(double value, const BasicGate& gate, const char* requirement)
+        -> calc_type {
+        RequireChannel(IsFinite(value) && value >= 0 && value <= 1, gate, requirement);
+        return static_cast<calc_type>(value);
+    }
 
     [[nodiscard]] static auto ConjugateTranspose(const std::vector<value_t>& matrix, size_t dim)
         -> std::vector<value_t> {
@@ -891,87 +911,153 @@ class Builder {
         return result;
     }
 
-    // Kraus operators of a channel as flattened row-major 2^m x 2^m matrices.
-    [[nodiscard]] static auto KrausOperators(const BasicGate& gate) -> std::vector<std::vector<value_t>> {
-        const auto sqrt = [](double value) { return static_cast<calc_type>(std::sqrt(value)); };
-        switch (gate.GetID()) {
-            case GateID::AD: {
-                const auto* channel = static_cast<const AmplitudeDampingChannel*>(&gate);
-                const auto gamma = channel->GetDampingCoeff();
-                std::vector<value_t> decay{0, sqrt(gamma), 0, 0};
-                if (channel->Daggered()) {
-                    decay = ConjugateTranspose(decay, 2);
+    // Adds weight * (K rho K^dagger) to the superoperator on a 2^m-dimensional
+    // operand: S[(r', c'), (r, c)] += weight * K[r'][r] conj(K[c'][c]).
+    static void AccumulateKrausTerm(calc_type weight, const std::vector<value_t>& kraus, size_t dim,
+                                    std::vector<value_t>* superoperator) {
+        assert(kraus.size() == dim * dim && superoperator->size() == dim * dim * dim * dim);
+        const auto super_dim = dim * dim;
+        for (size_t row_out = 0; row_out < dim; ++row_out) {
+            for (size_t column_out = 0; column_out < dim; ++column_out) {
+                auto* out = superoperator->data() + (row_out * dim + column_out) * super_dim;
+                for (size_t row_in = 0; row_in < dim; ++row_in) {
+                    const auto left = weight * kraus[row_out * dim + row_in];
+                    for (size_t column_in = 0; column_in < dim; ++column_in) {
+                        out[row_in * dim + column_in] += left * std::conj(kraus[column_out * dim + column_in]);
+                    }
                 }
-                return {{1, 0, 0, sqrt(1 - gamma)}, std::move(decay)};
             }
-            case GateID::PD: {
-                const auto gamma = static_cast<const PhaseDampingChannel*>(&gate)->GetDampingCoeff();
-                return {{1, 0, 0, sqrt(1 - gamma)}, {0, 0, 0, sqrt(gamma)}};
-            }
-            case GateID::PL: {
-                const auto probabilities = static_cast<const PauliChannel*>(&gate)->GetProbs();
-                const auto x = sqrt(probabilities[0]);
-                const auto y = sqrt(probabilities[1]);
-                const auto z = sqrt(probabilities[2]);
-                const auto identity = sqrt(probabilities[3]);
-                return {{0, x, x, 0}, {0, value_t{0, -y}, value_t{0, y}, 0}, {z, 0, 0, -z}, {identity, 0, 0, identity}};
-            }
-            case GateID::KRAUS: {
-                const auto expected_dim = size_t{1} << gate.GetObjQubits().size();
-                std::vector<std::vector<value_t>> operators;
-                for (const auto& matrix : static_cast<const KrausChannel*>(&gate)->GetKrausOperatorSet()) {
-                    operators.push_back(MatrixFromTensor(matrix, expected_dim));
-                }
-                if (operators.empty()) {
-                    throw std::invalid_argument("A Kraus channel requires at least one Kraus operator.");
-                }
-                return operators;
-            }
-            default:
-                throw std::invalid_argument(fmt::format("Gate {} is not a Kraus channel.", gate.GetID()));
         }
+    }
+
+    // Kraus operators of a user-defined channel, validated as a complete set:
+    // sum_k K_k^dagger K_k = I.  The check runs in double precision so that
+    // it does not depend on the simulator's value type.
+    [[nodiscard]] static auto ValidatedKrausOperators(const KrausChannel& gate, size_t dim)
+        -> std::vector<std::vector<value_t>> {
+        const auto& operators = gate.GetKrausOperatorSet();
+        RequireChannel(!operators.empty(), gate, "at least one Kraus operator");
+        std::vector<std::complex<double>> completeness(dim * dim, 0);
+        std::vector<std::vector<value_t>> lowered;
+        lowered.reserve(operators.size());
+        for (const auto& matrix : operators) {
+            RequireChannel(matrix.n_row == dim && matrix.n_col == dim, gate,
+                           "square Kraus operators over its object qubits");
+            const auto rows = tensor::ops::cpu::to_vector<std::complex<double>>(matrix);
+            std::vector<value_t> flat;
+            flat.reserve(dim * dim);
+            for (const auto& row : rows) {
+                RequireChannel(row.size() == dim, gate, "square Kraus operators over its object qubits");
+                for (const auto entry : row) {
+                    RequireChannel(IsFinite(entry.real()) && IsFinite(entry.imag()), gate,
+                                   "finite Kraus operator entries");
+                    flat.push_back(value_t{static_cast<calc_type>(entry.real()), static_cast<calc_type>(entry.imag())});
+                }
+            }
+            for (size_t k = 0; k < dim; ++k) {
+                for (size_t row = 0; row < dim; ++row) {
+                    for (size_t column = 0; column < dim; ++column) {
+                        completeness[row * dim + column] += std::conj(rows[k][row]) * rows[k][column];
+                    }
+                }
+            }
+            lowered.push_back(std::move(flat));
+        }
+        constexpr double tolerance = 1e-6;
+        for (size_t row = 0; row < dim; ++row) {
+            for (size_t column = 0; column < dim; ++column) {
+                const auto expected = row == column ? 1.0 : 0.0;
+                RequireChannel(std::abs(completeness[row * dim + column] - expected) <= tolerance, gate,
+                               "Kraus operators satisfying sum_k K_k^dagger K_k = I");
+            }
+        }
+        return lowered;
     }
 
     // The superoperator of a channel on the row-major (row, column) operand
     // block: S[(r', c'), (r, c)] = sum_k K_k[r'][r] conj(K_k[c'][c]).
     [[nodiscard]] static auto ChannelSuperoperator(const BasicGate& gate) -> std::vector<value_t> {
-        if (gate.GetID() == GateID::TR) {
-            const auto* channel = static_cast<const ThermalRelaxationChannel*>(&gate);
-            const auto t1 = channel->GetT1();
-            const auto t2 = channel->GetT2();
-            if (t2 > 2 * t1) {
-                throw std::invalid_argument("Thermal relaxation requires T2 <= 2 * T1.");
+        const auto objects = gate.GetObjQubits();
+        const auto dim = size_t{1} << objects.size();
+        std::vector<value_t> superoperator(dim * dim * dim * dim, 0);
+        switch (gate.GetID()) {
+            case GateID::AD: {
+                RequireObjectCount(gate, objects, 1);
+                const auto* channel = static_cast<const AmplitudeDampingChannel*>(&gate);
+                const auto gamma = RequireUnitInterval(channel->GetDampingCoeff(), gate,
+                                                       "a damping coefficient in [0, 1]");
+                std::vector<value_t> decay{0, std::sqrt(gamma), 0, 0};
+                if (channel->Daggered()) {
+                    decay = ConjugateTranspose(decay, 2);
+                }
+                AccumulateKrausTerm(1, {1, 0, 0, std::sqrt(1 - gamma)}, dim, &superoperator);
+                AccumulateKrausTerm(1, decay, dim, &superoperator);
+                break;
             }
-            const auto e1 = static_cast<calc_type>(std::exp(-channel->GetGateTime() / t1));
-            const auto e2 = static_cast<calc_type>(std::exp(-channel->GetGateTime() / t2));
-            // rho00 += (1 - e1) rho11, rho01 *= e2, rho10 *= e2, rho11 *= e1.
-            std::vector<value_t> superoperator(16, 0);
-            superoperator[0 * 4 + 0] = 1;
-            superoperator[0 * 4 + 3] = 1 - e1;
-            superoperator[1 * 4 + 1] = e2;
-            superoperator[2 * 4 + 2] = e2;
-            superoperator[3 * 4 + 3] = e1;
-            return superoperator;
+            case GateID::PD: {
+                RequireObjectCount(gate, objects, 1);
+                const auto gamma = RequireUnitInterval(
+                    static_cast<const PhaseDampingChannel*>(&gate)->GetDampingCoeff(), gate,
+                    "a damping coefficient in [0, 1]");
+                AccumulateKrausTerm(1, {1, 0, 0, std::sqrt(1 - gamma)}, dim, &superoperator);
+                AccumulateKrausTerm(1, {0, 0, 0, std::sqrt(gamma)}, dim, &superoperator);
+                break;
+            }
+            case GateID::PL: {
+                RequireObjectCount(gate, objects, 1);
+                const auto probabilities = static_cast<const PauliChannel*>(&gate)->GetProbs();
+                const auto x = RequireUnitInterval(probabilities[0], gate, "Pauli probabilities in [0, 1]");
+                const auto y = RequireUnitInterval(probabilities[1], gate, "Pauli probabilities in [0, 1]");
+                const auto z = RequireUnitInterval(probabilities[2], gate, "Pauli probabilities in [0, 1]");
+                RequireChannel(probabilities[0] + probabilities[1] + probabilities[2] <= 1, gate,
+                               "Pauli probabilities summing to at most 1");
+                // rho -> sum_k p_k P_k rho P_k is linear in the probabilities,
+                // so the Pauli matrices enter unscaled.
+                AccumulateKrausTerm(x, {0, 1, 1, 0}, dim, &superoperator);
+                AccumulateKrausTerm(y, {0, value_t{0, -1}, value_t{0, 1}, 0}, dim, &superoperator);
+                AccumulateKrausTerm(z, {1, 0, 0, -1}, dim, &superoperator);
+                AccumulateKrausTerm(1 - (x + y + z), {1, 0, 0, 1}, dim, &superoperator);
+                break;
+            }
+            case GateID::KRAUS:
+                for (const auto& kraus : ValidatedKrausOperators(*static_cast<const KrausChannel*>(&gate), dim)) {
+                    AccumulateKrausTerm(1, kraus, dim, &superoperator);
+                }
+                break;
+            case GateID::TR: {
+                RequireObjectCount(gate, objects, 1);
+                const auto* channel = static_cast<const ThermalRelaxationChannel*>(&gate);
+                const auto t1 = channel->GetT1();
+                const auto t2 = channel->GetT2();
+                const auto gate_time = channel->GetGateTime();
+                RequireChannel(IsFinite(t1) && t1 > 0 && IsFinite(t2) && t2 > 0, gate, "positive, finite T1 and T2");
+                RequireChannel(IsFinite(gate_time) && gate_time >= 0, gate, "a non-negative, finite gate time");
+                RequireChannel(t2 <= 2 * t1, gate, "T2 <= 2 * T1");
+                const auto e1 = static_cast<calc_type>(std::exp(-gate_time / t1));
+                const auto e2 = static_cast<calc_type>(std::exp(-gate_time / t2));
+                // rho00 += (1 - e1) rho11, rho01 *= e2, rho10 *= e2, rho11 *= e1.
+                superoperator[0 * 4 + 0] = 1;
+                superoperator[0 * 4 + 3] = 1 - e1;
+                superoperator[1 * 4 + 1] = e2;
+                superoperator[2 * 4 + 2] = e2;
+                superoperator[3 * 4 + 3] = e1;
+                break;
+            }
+            default:
+                throw std::invalid_argument(fmt::format("Gate {} is not a Kraus channel.", gate.GetID()));
         }
-        const auto operators = KrausOperators(gate);
-        const auto dim = size_t{1} << gate.GetObjQubits().size();
-        const auto super_dim = dim * dim;
-        std::vector<value_t> superoperator(super_dim * super_dim, 0);
-        for (const auto& kraus : operators) {
-            for (size_t row_out = 0; row_out < dim; ++row_out) {
-                for (size_t column_out = 0; column_out < dim; ++column_out) {
-                    const auto out = row_out * dim + column_out;
-                    for (size_t row_in = 0; row_in < dim; ++row_in) {
-                        const auto left = kraus[row_out * dim + row_in];
-                        for (size_t column_in = 0; column_in < dim; ++column_in) {
-                            superoperator[out * super_dim + row_in * dim + column_in]
-                                += left * std::conj(kraus[column_out * dim + column_in]);
-                        }
-                    }
+        return superoperator;
+    }
+
+    [[nodiscard]] static auto IsDiagonal(const std::vector<value_t>& matrix, size_t dim) -> bool {
+        for (size_t row = 0; row < dim; ++row) {
+            for (size_t column = 0; column < dim; ++column) {
+                if (row != column && matrix[row * dim + column] != value_t{0, 0}) {
+                    return false;
                 }
             }
         }
-        return superoperator;
+        return true;
     }
 
     // Local offsets of the (row, column) operand block of `objects`, ordered
@@ -999,24 +1085,38 @@ class Builder {
         if (gate.GetID() == GateID::GPL) {
             throw std::invalid_argument("Grouped Pauli channels must be expanded before lowering.");
         }
-        if (!gate.GetCtrlQubits().empty()) {
-            throw std::invalid_argument("Noise channels cannot have control qubits.");
-        }
+        RequireChannel(gate.GetCtrlQubits().empty(), gate, "no control qubits");
         const auto objects = gate.GetObjQubits();
-        if (objects.empty()) {
-            throw std::invalid_argument(fmt::format("Noise channel {} requires object qubits.", gate.GetID()));
-        }
+        RequireChannel(!objects.empty(), gate, "object qubits");
         RawOperation operation;
         operation.target_offsets = OperandBlockOffsets(objects, tile_qubits, space);
         if (gate.GetID() == GateID::DEP) {
+            // rho -> (1 - p) rho + p Tr_Q(rho) (x) I / 2^m is completely
+            // positive up to p = 4^m / (4^m - 1), where it inverts the Bloch
+            // sphere.
+            const auto probability = static_cast<const DepolarizingChannel*>(&gate)->GetProb();
+            const auto pauli_count = std::ldexp(1.0, 2 * static_cast<int>(objects.size()));
+            RequireChannel(IsFinite(probability) && probability >= 0 && probability <= pauli_count / (pauli_count - 1),
+                           gate, "a probability in [0, 4^m / (4^m - 1)]");
             operation.kernel = RawKernel::Depolarizing;
             operation.matrix_dim = size_t{1} << objects.size();
-            operation.probability = static_cast<calc_type>(static_cast<const DepolarizingChannel*>(&gate)->GetProb());
+            operation.probability = static_cast<calc_type>(probability);
+            return operation;
+        }
+        operation.matrix_dim = operation.target_offsets.size();
+        operation.matrix = ChannelSuperoperator(gate);
+        if (IsDiagonal(operation.matrix, operation.matrix_dim)) {
+            // Dephasing-type channels scale each block entry independently;
+            // the diagonal kernel folds into neighbouring diagonal gates.
+            std::vector<value_t> diagonal(operation.matrix_dim);
+            for (size_t entry = 0; entry < operation.matrix_dim; ++entry) {
+                diagonal[entry] = operation.matrix[entry * operation.matrix_dim + entry];
+            }
+            operation.kernel = RawKernel::Diagonal;
+            operation.matrix = std::move(diagonal);
             return operation;
         }
         operation.kernel = RawKernel::DenseMatrix;
-        operation.matrix_dim = operation.target_offsets.size();
-        operation.matrix = ChannelSuperoperator(gate);
         return operation;
     }
 
@@ -1150,8 +1250,10 @@ class Builder {
         return pairs;
     }
 
-    template <typename append_t>
-    static void ForEachOperandBlock(const RawOperation& raw, size_t tile_dim, const append_t& append) {
+    // Visits every local basis of every operand block that satisfies the
+    // local controls, as (tile basis, position within the block).
+    template <typename visit_t>
+    static void ForEachOperandBlock(const RawOperation& raw, size_t tile_dim, const visit_t& visit) {
         index_t object_mask = 0;
         for (auto offset : raw.target_offsets) {
             object_mask |= offset;
@@ -1160,8 +1262,8 @@ class Builder {
             if ((basis & raw.local_control_mask) != raw.local_control_mask || (basis & object_mask) != 0) {
                 continue;
             }
-            for (auto offset : raw.target_offsets) {
-                append(basis | offset);
+            for (size_t entry = 0; entry < raw.target_offsets.size(); ++entry) {
+                visit(basis | raw.target_offsets[entry], entry);
             }
         }
     }
@@ -1172,7 +1274,19 @@ class Builder {
         DenseMatrixKernel<value_t> kernel;
         kernel.matrix_dim = raw.matrix_dim;
         kernel.matrix = std::move(raw.matrix);
-        ForEachOperandBlock(raw, tile_dim, [&kernel](size_t index) { kernel.indices.push_back(index); });
+        ForEachOperandBlock(raw, tile_dim, [&kernel](size_t index, size_t) { kernel.indices.push_back(index); });
+        return kernel;
+    }
+
+    [[nodiscard]] static auto PrepareDiagonalTable(const RawOperation& raw, size_t tile_dim)
+        -> DiagonalKernel<value_t> {
+        assert(raw.matrix.size() == raw.target_offsets.size());
+        DiagonalKernel<value_t> kernel;
+        ForEachOperandBlock(raw, tile_dim, [&raw, &kernel](size_t index, size_t entry) {
+            if (raw.matrix[entry] != value_t{1, 0}) {
+                kernel.scales.push_back({index, raw.matrix[entry]});
+            }
+        });
         return kernel;
     }
 
@@ -1182,7 +1296,7 @@ class Builder {
         kernel.local_dim = raw.matrix_dim;
         kernel.keep = 1 - raw.probability;
         kernel.mix = raw.probability / static_cast<calc_type>(raw.matrix_dim);
-        ForEachOperandBlock(raw, tile_dim, [&kernel](size_t index) { kernel.indices.push_back(index); });
+        ForEachOperandBlock(raw, tile_dim, [&kernel](size_t index, size_t) { kernel.indices.push_back(index); });
         return kernel;
     }
 
@@ -1215,6 +1329,8 @@ class Builder {
             }
             case RawKernel::DenseMatrix:
                 return {raw.external_control_mask, PrepareDense(std::move(raw), tile_dim)};
+            case RawKernel::Diagonal:
+                return {raw.external_control_mask, PrepareDiagonalTable(raw, tile_dim)};
             case RawKernel::Depolarizing:
                 return {raw.external_control_mask, PrepareDepolarizing(std::move(raw), tile_dim)};
         }

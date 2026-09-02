@@ -18,8 +18,10 @@
 
 #include <algorithm>
 #include <complex>
+#include <limits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
@@ -244,6 +246,58 @@ TEST_CASE("The depolarizing kernel mixes the operand block towards the identity"
         }
     }
     CheckClose(ApplyOnDensityMatrix(channel, pr, rho, false), expected);
+}
+
+TEST_CASE("Dephasing channels lower to diagonal kernels") {
+    const parameter::ParameterResolver pr;
+    const auto space = mqt::StateSpace::DensityMatrix(kQubits);
+    const auto rho = RandomDensityMatrix();
+    const auto gamma = 0.3;
+    const mqt::CircuitTile tile{{1, 4}, {std::make_shared<mq::PhaseDampingChannel>(gamma, mq::qbits_t{1})}};
+    const auto prepared = builder_t::Build(tile, pr, space);
+    REQUIRE(prepared.operations.size() == 1);
+    CHECK(std::holds_alternative<mqt::DiagonalKernel<value_t>>(prepared.operations.front().kernel));
+
+    auto expected = rho;
+    for (size_t row = 0; row < kDim; ++row) {
+        for (size_t column = 0; column < kDim; ++column) {
+            if (((row ^ column) & 0b010) != 0) {
+                expected[row * kDim + column] *= std::sqrt(1 - gamma);
+            }
+        }
+    }
+    auto state = rho;
+    mqt::detail::ApplyTile<runtime_t>(state.data(), prepared, false);
+    CheckClose(state, expected);
+}
+
+TEST_CASE("Channels outside their physical range are rejected before lowering") {
+    const parameter::ParameterResolver pr;
+    const auto space = mqt::StateSpace::DensityMatrix(kQubits);
+    const auto lower = [&](const gate_t& gate) {
+        const mqt::CircuitTile tile{{1, 4}, {gate}};
+        return builder_t::Build(tile, pr, space);
+    };
+    const auto nan = std::numeric_limits<double>::quiet_NaN();
+    CHECK_THROWS_AS(lower(std::make_shared<mq::AmplitudeDampingChannel>(false, 1.5, mq::qbits_t{1})),
+                    std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::AmplitudeDampingChannel>(false, nan, mq::qbits_t{1})),
+                    std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::PhaseDampingChannel>(-0.1, mq::qbits_t{1})), std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::DepolarizingChannel>(1.5, mq::qbits_t{1})), std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::PauliChannel>(0.5, 0.5, 0.5, mq::qbits_t{1})), std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::ThermalRelaxationChannel>(10.0, 30.0, 1.0, mq::qbits_t{1})),
+                    std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::ThermalRelaxationChannel>(-1.0, 1.0, 1.0, mq::qbits_t{1})),
+                    std::invalid_argument);
+    CHECK_THROWS_AS(lower(std::make_shared<mq::AmplitudeDampingChannel>(false, 0.1, mq::qbits_t{1}, mq::qbits_t{0})),
+                    std::invalid_argument);
+    // The single-qubit channels only act on one qubit.
+    CHECK_THROWS_AS(lower(std::make_shared<mq::AmplitudeDampingChannel>(false, 0.1, mq::qbits_t{0, 1})),
+                    std::invalid_argument);
+    // The depolarizing channel remains completely positive up to 4^m / (4^m - 1).
+    CHECK_NOTHROW(lower(std::make_shared<mq::DepolarizingChannel>(4.0 / 3.0, mq::qbits_t{1})));
+    CHECK_NOTHROW(lower(std::make_shared<mq::PauliChannel>(0.3, 0.3, 0.4, mq::qbits_t{1})));
 }
 
 TEST_CASE("Adjoint lowering inverts unitary evolution") {
