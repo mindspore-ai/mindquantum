@@ -18,8 +18,11 @@
 #define INCLUDE_QUANTUMSTATE_UTILS_HPP
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cstddef>
+#include <exception>
+#include <mutex>
 #include <stdexcept>
 #include <thread>
 #include <vector>
@@ -87,7 +90,9 @@ inline auto SelectGradientBatchThreads(index_t n_amplitudes, index_t parallel_th
 }
 
 // Runs `task(index)` for every index in [0, count) on at most `threads`
-// worker threads, on the calling thread when one suffices.
+// worker threads, on the calling thread when one suffices.  The first
+// exception thrown by a task cancels the remaining work and is rethrown on
+// the calling thread once every worker has joined.
 template <typename task_t>
 void ParallelBatch(size_t threads, size_t count, const task_t& task) {
     if (count == 0) {
@@ -103,6 +108,25 @@ void ParallelBatch(size_t threads, size_t count, const task_t& task) {
         }
         return;
     }
+
+    std::mutex failure_mutex;
+    std::exception_ptr failure;
+    std::atomic<bool> failed{false};
+    const auto run_chunk = [&](size_t start, size_t end) {
+        for (size_t index = start; index < end && !failed.load(std::memory_order_relaxed); ++index) {
+            try {
+                task(index);
+            } catch (...) {
+                const std::lock_guard<std::mutex> lock(failure_mutex);
+                if (failure == nullptr) {
+                    failure = std::current_exception();
+                }
+                failed.store(true, std::memory_order_relaxed);
+                return;
+            }
+        }
+    };
+
     std::vector<std::thread> workers;
     workers.reserve(threads);
     const auto chunk = count / threads;
@@ -111,14 +135,13 @@ void ParallelBatch(size_t threads, size_t count, const task_t& task) {
     for (size_t worker = 0; worker < threads; ++worker) {
         const auto start = end;
         end = start + chunk + (worker < remainder ? 1 : 0);
-        workers.emplace_back([&task, start, end]() {
-            for (size_t index = start; index < end; ++index) {
-                task(index);
-            }
-        });
+        workers.emplace_back(run_chunk, start, end);
     }
     for (auto& worker : workers) {
         worker.join();
+    }
+    if (failure != nullptr) {
+        std::rethrow_exception(failure);
     }
 }
 }  // namespace mindquantum::sim

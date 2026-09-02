@@ -422,6 +422,23 @@ def test_apply_derivative_gate():
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
+def test_gradient_worker_errors_propagate():
+    """
+    Feature: Batched gradient evaluation.
+    Description: Evaluate a gradient on several worker threads with a parameter missing from the resolver.
+    Expectation: The worker's exception is raised on the calling thread instead of terminating the process.
+    """
+    hamiltonian = [Hamiltonian(QubitOperator('Z0')).get_cpp_obj()]
+    circuit = Circuit().rx('a', 0).as_encoder()
+    simulator = Simulator('mqmatrix', 1)
+    with pytest.raises(RuntimeError, match="parameter"):
+        simulator.backend.sim.get_expectation_with_grad_multi_multi(
+            hamiltonian, circuit.get_cpp_obj(), np.array([[0.1], [0.2], [0.3], [0.4]]), np.array([]), ['b'], [], 4, 1
+        )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
 def test_partial_trace_and_reduced_density_matrix_agree():
     """
     Feature: Partial trace.
