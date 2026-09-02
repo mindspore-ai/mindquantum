@@ -1150,48 +1150,40 @@ class Builder {
     // Lowering to hot-path kernels
     // ------------------------------------------------------------------------
 
-    [[nodiscard]] static auto LocalPauliPhase(const RawOperation& operation, size_t basis) -> value_t {
-        auto phase = value_t{1, 0};
-        auto y_mask = operation.pauli_y_mask;
-        while (y_mask != 0) {
-            const auto bit = y_mask & (~y_mask + 1);
-            phase *= (basis & bit) != 0 ? value_t{0, -1} : value_t{0, 1};
-            y_mask &= y_mask - 1;
-        }
-        auto z_mask = operation.pauli_z_mask;
-        while (z_mask != 0) {
-            const auto bit = z_mask & (~z_mask + 1);
-            if ((basis & bit) != 0) {
-                phase = -phase;
-            }
-            z_mask &= z_mask - 1;
-        }
-        return phase;
-    }
-
+    // The local Pauli string maps |basis> to phase(basis) |basis ^ flips> with
+    // phase(basis) = i^(#Y) (-1)^parity(basis & (Y | Z)).  The bases are
+    // visited in Gray code order, in which consecutive bases differ in one
+    // bit, so the sign follows incrementally; flipping the X and Y bits
+    // toggles it exactly when #Y is odd, which relates the two phases of a
+    // pair.  The loop body is deliberately self-contained: it runs once per
+    // local basis for every lowered Pauli gate.
     template <typename pauli_kernel_t>
     static void PreparePauliEntries(const RawOperation& raw, size_t tile_dim, pauli_kernel_t* kernel) {
-        const auto controls_match = [&raw](size_t basis) {
-            return (basis & raw.local_control_mask) == raw.local_control_mask;
-        };
+        constexpr std::array<value_t, 4> powers_of_i{value_t{1, 0}, value_t{0, 1}, value_t{-1, 0}, value_t{0, -1}};
+        const auto y_count = CountOne(static_cast<std::uint64_t>(raw.pauli_y_mask));
+        const auto sign_mask = raw.pauli_y_mask | raw.pauli_z_mask;
         const auto flip_mask = raw.pauli_x_mask | raw.pauli_y_mask;
+        const auto partner_sign = (y_count & 1U) != 0 ? calc_type{-1} : calc_type{1};
         if (flip_mask == 0) {
             kernel->scales.reserve(tile_dim);
-            for (size_t basis = 0; basis < tile_dim; ++basis) {
-                if (controls_match(basis)) {
-                    kernel->scales.push_back({basis, LocalPauliPhase(raw, basis)});
+        } else {
+            kernel->pairs.reserve(tile_dim / 2);
+        }
+
+        auto phase = powers_of_i[y_count % 4];
+        size_t basis = 0;
+        for (size_t step = 0; step < tile_dim; ++step) {
+            if ((basis & raw.local_control_mask) == raw.local_control_mask) {
+                if (flip_mask == 0) {
+                    kernel->scales.push_back({basis, phase});
+                } else if (const auto partner = basis ^ flip_mask; basis < partner) {
+                    kernel->pairs.push_back({{basis, partner}, phase * partner_sign, phase});
                 }
             }
-            return;
-        }
-        kernel->pairs.reserve(tile_dim / 2);
-        for (size_t lhs = 0; lhs < tile_dim; ++lhs) {
-            if (!controls_match(lhs)) {
-                continue;
-            }
-            const auto rhs = lhs ^ flip_mask;
-            if (lhs < rhs) {
-                kernel->pairs.push_back({{lhs, rhs}, LocalPauliPhase(raw, rhs), LocalPauliPhase(raw, lhs)});
+            const auto toggled = (step + 1) & (~step);  // the lowest set bit of step + 1
+            basis ^= toggled;
+            if ((toggled & sign_mask) != 0) {
+                phase = -phase;
             }
         }
     }

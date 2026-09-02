@@ -196,21 +196,30 @@ def test_gate_by_gate_matches_dense_reference(n_qubits):
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-def test_oversized_gate_runs_in_its_own_tile():
+@pytest.mark.parametrize(
+    "n_qubits, gate",
+    [
+        (6, G.UnivMathGate('custom_5q', _unitary(32, 103)).on([5, 0, 3, 1, 4], 2)),
+        (9, G.GroupedPauli('XYXZXYXYX').on(list(range(9)))),
+        (9, G.RotPauliString('XYZXYZXY', 0.37).on(list(range(8)), 8)),
+    ],
+)
+def test_oversized_gate_runs_in_its_own_tile(n_qubits, gate):
     """
     Feature: Gates mixing more index bits than a shared tile holds.
-    Description: Apply a five-qubit dense unitary, whose ten density-matrix index bits exceed the tile budget.
+    Description: Apply gates whose doubled footprint exceeds the tile budget: a dense five-qubit unitary and
+        nine-qubit Pauli strings.
     Expectation: The result matches the dense reference.
     """
-    n_qubits = 6
     rho = _random_density_matrix(n_qubits, 20260803)
-    gate = G.UnivMathGate('custom_5q', _unitary(32, 103)).on([5, 0, 3, 1, 4], 2)
+    circuit = Circuit([G.H.on(2), gate, G.H.on(2)])
 
     simulator = Simulator('mqmatrix', n_qubits)
     simulator.set_qs(rho)
-    simulator.apply_circuit(Circuit([G.H.on(2), gate, G.H.on(2)]))
-    reference = _evolve_reference(_evolve_reference(rho, G.H.on(2), n_qubits, {}), gate, n_qubits, {})
-    reference = _evolve_reference(reference, G.H.on(2), n_qubits, {})
+    simulator.apply_circuit(circuit)
+    reference = rho
+    for step in circuit:
+        reference = _evolve_reference(reference, step, n_qubits, {})
     assert np.allclose(simulator.get_qs(), reference, atol=1e-11)
 
 
