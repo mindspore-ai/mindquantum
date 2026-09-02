@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <vector>
 
 #include "config/openmp.h"
@@ -22,26 +23,30 @@
 
 namespace mindquantum::sim::densitymatrix::detail {
 template <typename calc_type_>
-auto CPUDensityMatrixPolicy<calc_type_>::OutcomeProbability(const qs_data_p_t& qs, qbit_t qubit, index_t dim)
-    -> calc_type {
+auto CPUDensityMatrixPolicy<calc_type_>::OutcomeWeights(const qs_data_p_t& qs, qbit_t qubit, index_t dim)
+    -> std::array<calc_type, 2> {
     const auto mask = index_t{1} << qubit;
-    calc_type probability = 0;
+    calc_type zero = 0;
+    calc_type one = 0;
     THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : probability)), Size(dim), DimTh,
+        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : zero, one)), Size(dim), DimTh,
                      for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+                         const auto population = qs[static_cast<index_t>(i) * dim + static_cast<index_t>(i)].real();
                          if ((static_cast<index_t>(i) & mask) != 0) {
-                             probability += qs[static_cast<index_t>(i) * dim + static_cast<index_t>(i)].real();
+                             one += population;
+                         } else {
+                             zero += population;
                          }
                      })
-    return probability;
+    return {zero, one};
 }
 
 template <typename calc_type_>
-void CPUDensityMatrixPolicy<calc_type_>::Collapse(qs_data_p_t qs, qbit_t qubit, bool outcome, calc_type probability,
+void CPUDensityMatrixPolicy<calc_type_>::Collapse(qs_data_p_t qs, qbit_t qubit, bool outcome, calc_type weight,
                                                   index_t dim) {
     const auto mask = index_t{1} << qubit;
     const index_t expected = outcome ? mask : 0;
-    const auto scale = 1 / probability;
+    const auto scale = 1 / weight;
     THRESHOLD_OMP_FOR(
         Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             auto* row = qs + static_cast<index_t>(i) * dim;

@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -33,6 +34,7 @@
 #include <fmt/format.h>
 
 #include "core/mq_base_types.h"
+#include "core/utils.h"
 #include "math/pr/parameter_resolver.h"
 #include "ops/basic_gate.h"
 #include "ops/gate_id.h"
@@ -108,7 +110,7 @@ auto DensityMatrixState<qs_policy_t_>::CloneState(const qs_data_p_t& qs, index_t
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::Normalize(const circuit_t& circ) -> circuit_t {
+auto DensityMatrixState<qs_policy_t_>::Expand(const circuit_t& circ) -> circuit_t {
     circuit_t expanded;
     expanded.reserve(circ.size());
     for (const auto& gate : circ) {
@@ -119,8 +121,6 @@ auto DensityMatrixState<qs_policy_t_>::Normalize(const circuit_t& circ) -> circu
             expanded.push_back(gate);
             continue;
         }
-        // A grouped Pauli channel is a product of single-qubit Pauli
-        // channels; the planner tiles those independently.
         const auto* grouped = static_cast<const GroupedPauliChannel*>(gate.get());
         for (auto channel = grouped->begin(); channel != grouped->end(); ++channel) {
             expanded.push_back(std::make_shared<PauliChannel>(*channel));
@@ -205,7 +205,7 @@ void DensityMatrixState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_t
     qs_policy_t::ApplyHamiltonian(qs_.get(), ham, dim_);
 }
 
-// Gate application
+// Compilation
 // ============================================================================
 
 template <typename qs_policy_t_>
@@ -240,23 +240,94 @@ auto DensityMatrixState<qs_policy_t_>::PlanCircuit(const circuit_t& gates, bool 
 }
 
 template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::TileOf(const circuit_tiling::ScheduleEntry& entry) const
+    -> circuit_tiling::CircuitTile {
+    if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&entry); tile != nullptr) {
+        return *tile;
+    }
+    return GateTile(std::get<std::shared_ptr<BasicGate>>(entry), false);
+}
+
+template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::PrepareSchedule(const circuit_tiling::Schedule& schedule,
                                                        const parameter::ParameterResolver& pr) const
     -> std::vector<prepared_tile_t> {
-    using builder_t = circuit_tiling::Builder<py_qs_data_t>;
     const auto space = Space();
     std::vector<prepared_tile_t> prepared;
     prepared.reserve(schedule.size());
     for (const auto& entry : schedule) {
-        if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&entry); tile != nullptr) {
-            prepared.push_back(builder_t::Build(*tile, pr, space));
-        } else {
-            prepared.push_back(
-                builder_t::Build(GateTile(std::get<std::shared_ptr<BasicGate>>(entry), false), pr, space));
-        }
+        prepared.push_back(circuit_tiling::Builder<py_qs_data_t>::Build(TileOf(entry), pr, space));
     }
     return prepared;
 }
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::CompileMeasurement(const BasicGate& gate) const -> PreparedMeasurement {
+    if (gate.GetID() != GateID::M) {
+        throw std::invalid_argument(fmt::format("Gate {} is not a measurement.", gate.GetID()));
+    }
+    const auto& measure = static_cast<const MeasureGate&>(gate);
+    const auto objects = gate.GetObjQubits();
+    if (objects.size() != 1 || !gate.GetCtrlQubits().empty()) {
+        throw std::invalid_argument("A measurement acts on exactly one qubit and takes no controls.");
+    }
+    if (objects.front() < 0 || objects.front() >= n_qubits_) {
+        throw std::invalid_argument(fmt::format("Measured qubit {} is out of range.", objects.front()));
+    }
+    PreparedMeasurement prepared;
+    prepared.name = measure.Name();
+    prepared.qubit = objects.front();
+    if (measure.WillReset()) {
+        if (measure.GetRestTo() > 1) {
+            throw std::invalid_argument("A measurement can only reset its qubit to 0 or 1.");
+        }
+        prepared.reset_to = measure.GetRestTo();
+        prepared.flip = circuit_tiling::Builder<py_qs_data_t>::Build(
+            GateTile(std::make_shared<XGate>(qbits_t{prepared.qubit}), false), parameter::ParameterResolver(), Space());
+    }
+    return prepared;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::CompileGate(const std::shared_ptr<BasicGate>& gate,
+                                                   const parameter::ParameterResolver& pr, bool derivative) const
+    -> Program {
+    using builder_t = circuit_tiling::Builder<py_qs_data_t>;
+    Program program;
+    for (const auto& expanded : Expand({gate})) {
+        if (expanded->GetID() == GateID::I) {
+            continue;
+        }
+        if (derivative && expanded->GradRequired()) {
+            program.emplace_back(builder_t::BuildDerivative(GateTile(expanded, true), pr, Space()));
+        } else {
+            program.emplace_back(builder_t::Build(GateTile(expanded, false), pr, Space()));
+        }
+    }
+    return program;
+}
+
+template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::Compile(const circuit_t& circ, const parameter::ParameterResolver& pr) const
+    -> Program {
+    // Planning is cheap relative to lowering and executing tiles, and every
+    // merged gate saves a state pass, so circuits are always planned.  The
+    // planner keeps measurements in order as lone gates.
+    const auto space = Space();
+    Program program;
+    for (const auto& entry : PlanCircuit(Expand(circ), false)) {
+        const auto* gate = std::get_if<std::shared_ptr<BasicGate>>(&entry);
+        if (gate != nullptr && (*gate)->GetID() == GateID::M) {
+            program.emplace_back(CompileMeasurement(**gate));
+        } else {
+            program.emplace_back(circuit_tiling::Builder<py_qs_data_t>::Build(TileOf(entry), pr, space));
+        }
+    }
+    return program;
+}
+
+// Execution
+// ============================================================================
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, index_t dim) {
@@ -266,13 +337,36 @@ void DensityMatrixState<qs_policy_t_>::ApplyTileTo(qs_data_p_t qs, const prepare
 }
 
 template <typename qs_policy_t_>
-void DensityMatrixState<qs_policy_t_>::ApplyTiledGate(const std::shared_ptr<BasicGate>& gate,
-                                                      const parameter::ParameterResolver& pr, bool diff) {
-    using builder_t = circuit_tiling::Builder<py_qs_data_t>;
-    if (diff && gate->GradRequired()) {
-        ApplyTileTo(qs_.get(), builder_t::BuildDerivative(GateTile(gate, true), pr, Space()), dim_);
-    } else {
-        ApplyTileTo(qs_.get(), builder_t::Build(GateTile(gate, false), pr, Space()), dim_);
+auto DensityMatrixState<qs_policy_t_>::ExecuteMeasurement(const PreparedMeasurement& measurement) -> index_t {
+    const auto weights = qs_policy_t::OutcomeWeights(qs_.get(), measurement.qubit, dim_);
+    const auto trace = static_cast<double>(weights[0] + weights[1]);
+    if (!IsFinite(trace) || trace <= 0) {
+        throw std::runtime_error(fmt::format(
+            "Cannot measure qubit {}: the density matrix does not have a finite, positive trace.", measurement.qubit));
+    }
+    // Drawing from the branch-weight ratio and renormalising by the surviving
+    // weight keeps the collapse exact under rounding drift of the trace.  The
+    // draw is below 1, so an outcome of weight zero is never selected.
+    const bool outcome = Random() < static_cast<double>(weights[1]) / trace;
+    qs_policy_t::Collapse(qs_.get(), measurement.qubit, outcome, weights[outcome ? 1 : 0], dim_);
+    if (measurement.reset_to.has_value() && static_cast<index_t>(outcome) != *measurement.reset_to) {
+        ApplyTileTo(qs_.get(), measurement.flip, dim_);
+    }
+    return static_cast<index_t>(outcome);
+}
+
+template <typename qs_policy_t_>
+void DensityMatrixState<qs_policy_t_>::Execute(const Program& program, std::map<std::string, int>* outcomes) {
+    for (const auto& entry : program) {
+        if (const auto* tile = std::get_if<prepared_tile_t>(&entry); tile != nullptr) {
+            ApplyTileTo(qs_.get(), *tile, dim_);
+            continue;
+        }
+        const auto& measurement = std::get<PreparedMeasurement>(entry);
+        const auto outcome = ExecuteMeasurement(measurement);
+        if (outcomes != nullptr) {
+            (*outcomes)[measurement.name] = static_cast<int>(outcome);
+        }
     }
 }
 
@@ -282,69 +376,27 @@ auto DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate
     if (gate == nullptr) {
         throw std::invalid_argument("Cannot apply a null gate.");
     }
-    switch (gate->GetID()) {
-        case GateID::I:
-            break;
-        case GateID::M:
-            return ApplyMeasure(gate);
-        case GateID::GPL:
-            for (const auto& channel : Normalize({gate})) {
-                ApplyTiledGate(channel, pr, false);
-            }
-            break;
-        default:
-            ApplyTiledGate(gate, pr, diff);
-            break;
+    if (gate->GetID() == GateID::M) {
+        return ApplyMeasure(gate);
     }
+    Execute(CompileGate(gate, pr, diff), nullptr);
     return 2;
 }
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t {
-    const auto* measure = static_cast<const MeasureGate*>(gate.get());
-    const auto objects = gate->GetObjQubits();
-    if (objects.size() != 1 || objects.front() < 0 || objects.front() >= n_qubits_) {
-        throw std::invalid_argument("A measurement acts on exactly one qubit of the simulator.");
+    if (gate == nullptr) {
+        throw std::invalid_argument("Cannot apply a null gate.");
     }
-    const auto qubit = objects.front();
-    const auto one = qs_policy_t::OutcomeProbability(qs_.get(), qubit, dim_);
-    const bool outcome = Random() < one;
-    qs_policy_t::Collapse(qs_.get(), qubit, outcome, outcome ? one : 1 - one, dim_);
-    if (measure->WillReset() && static_cast<index_t>(outcome) != measure->GetRestTo()) {
-        ApplyTiledGate(std::make_shared<XGate>(qbits_t{qubit}), parameter::ParameterResolver(), false);
-    }
-    return static_cast<index_t>(outcome);
+    return ExecuteMeasurement(CompileMeasurement(*gate));
 }
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr)
     -> std::map<std::string, int> {
-    std::map<std::string, int> result;
-    const auto circuit = Normalize(circ);
-    const auto apply_gate = [this, &pr, &result](const std::shared_ptr<BasicGate>& gate) {
-        if (gate->GetID() == GateID::M) {
-            result[static_cast<MeasureGate*>(gate.get())->Name()] = ApplyMeasure(gate);
-        } else {
-            ApplyGate(gate, pr, false);
-        }
-    };
-    if (circuit.size() < 2) {
-        for (const auto& gate : circuit) {
-            apply_gate(gate);
-        }
-        return result;
-    }
-    // Planning is cheap relative to lowering and executing tiles, and every
-    // merged gate saves a state pass, so circuits are always planned.
-    const auto space = Space();
-    for (const auto& entry : PlanCircuit(circuit, false)) {
-        if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&entry); tile != nullptr) {
-            ApplyTileTo(qs_.get(), circuit_tiling::Builder<py_qs_data_t>::Build(*tile, pr, space), dim_);
-        } else {
-            apply_gate(std::get<std::shared_ptr<BasicGate>>(entry));
-        }
-    }
-    return result;
+    std::map<std::string, int> outcomes;
+    Execute(Compile(circ, pr), &outcomes);
+    return outcomes;
 }
 
 // Observables
@@ -363,7 +415,7 @@ template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::PlanGradient(const circuit_t& circ) const -> GradientPlan {
     GradientPlan plan;
     plan.segments.emplace_back();
-    for (const auto& gate : Normalize(circ)) {
+    for (const auto& gate : Expand(circ)) {
         if (gate->GetID() == GateID::M) {
             throw std::invalid_argument("A circuit for gradient evaluation cannot contain measurements.");
         }
@@ -407,11 +459,7 @@ auto DensityMatrixState<qs_policy_t_>::PrepareSegments(const GradientPlan& plan,
     constexpr auto convention = builder_t::AdjointGates::Reversed;
     const auto space = Space();
     const auto build_adjoint = [&](const circuit_tiling::ScheduleEntry& entry) {
-        if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&entry); tile != nullptr) {
-            return builder_t::BuildAdjoint(*tile, pr, parameter_map, space, convention);
-        }
-        return builder_t::BuildAdjoint(GateTile(std::get<std::shared_ptr<BasicGate>>(entry), false), pr, parameter_map,
-                                       space, convention);
+        return builder_t::BuildAdjoint(TileOf(entry), pr, parameter_map, space, convention);
     };
 
     std::vector<PreparedSegment> prepared(plan.segments.size());
@@ -574,18 +622,47 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
 // ============================================================================
 
 template <typename qs_policy_t_>
+auto DensityMatrixState<qs_policy_t_>::OutputColumn(const MST<size_t>& key_map, const std::string& name) -> size_t {
+    const auto column = key_map.find(name);
+    if (column == key_map.end()) {
+        throw std::invalid_argument(fmt::format("Measurement key '{}' is missing from the sampling key map.", name));
+    }
+    return column->second;
+}
+
+template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr,
                                                 size_t shots, const MST<size_t>& key_map, unsigned seed) const
     -> VT<unsigned> {
+    auto program = Compile(circ, pr);
+    for (const auto& entry : program) {
+        if (const auto* measurement = std::get_if<PreparedMeasurement>(&entry); measurement != nullptr) {
+            OutputColumn(key_map, measurement->name);
+        }
+    }
+    // Everything before the first measurement is deterministic on a density
+    // matrix, channels included: evolve that prefix once and replay only the
+    // suffix per shot.
+    const auto suffix_begin = std::find_if(program.begin(), program.end(), [](const auto& entry) {
+        return std::holds_alternative<PreparedMeasurement>(entry);
+    });
+    Program suffix(std::make_move_iterator(suffix_begin), std::make_move_iterator(program.end()));
+    program.erase(suffix_begin, program.end());
+    derived_t prefix(*this);
+    prefix.Execute(program, nullptr);
+
     const auto key_size = key_map.size();
     VT<unsigned> result(shots * key_size);
     RndEngine engine(seed);
     std::uniform_real_distribution<double> sub_seed(1.0, static_cast<double>(1 << 20));
+    std::map<std::string, int> outcomes;
     for (size_t shot = 0; shot < shots; ++shot) {
-        derived_t trajectory(*this);
+        derived_t trajectory(prefix);
         trajectory.SetSeed(static_cast<unsigned>(sub_seed(engine)));
-        for (const auto& [name, outcome] : trajectory.ApplyCircuit(circ, pr)) {
-            result[shot * key_size + key_map.at(name)] = static_cast<unsigned>(outcome);
+        outcomes.clear();
+        trajectory.Execute(suffix, &outcomes);
+        for (const auto& [name, outcome] : outcomes) {
+            result[shot * key_size + OutputColumn(key_map, name)] = static_cast<unsigned>(outcome);
         }
     }
     return result;
@@ -607,16 +684,18 @@ auto DensityMatrixState<qs_policy_t_>::SamplingMeasurementEnding(const circuit_t
             evolution.push_back(gate);
             continue;
         }
-        const auto qubit = gate->GetObjQubits().at(0);
-        if (qubit < 0 || qubit >= n_qubits_ || measured[static_cast<size_t>(qubit)]) {
+        const auto measurement = CompileMeasurement(*gate);
+        if (measured[static_cast<size_t>(measurement.qubit)]) {
             throw std::invalid_argument("Quantum circuit is not a measurement ending circuit.");
         }
-        measured[static_cast<size_t>(qubit)] = true;
-        outputs.emplace_back(qubit, key_map.at(static_cast<MeasureGate*>(gate.get())->Name()));
+        measured[static_cast<size_t>(measurement.qubit)] = true;
+        outputs.emplace_back(measurement.qubit, OutputColumn(key_map, measurement.name));
     }
 
+    // Every gate commutes with the later measurements of other qubits, so
+    // the outcomes are read from the diagonal of the fully evolved state.
     derived_t evolved(*this);
-    evolved.ApplyCircuit(evolution, pr);
+    evolved.Execute(Compile(evolution, pr), nullptr);
     const auto cumulative = qs_policy_t::DiagonalCumulativeProbabilities(evolved.qs_.get(), dim_);
 
     const auto key_size = key_map.size();

@@ -23,6 +23,7 @@
 #include <optional>
 #include <random>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "core/mq_base_types.h"
@@ -39,9 +40,12 @@ namespace mindquantum::sim::densitymatrix::detail {
 // Gates and noise channels are executed as circuit tiles on the row-major
 // matrix viewed as a 2n-qubit state vector, so the same planning, lowering,
 // and vectorised execution serve both this simulator and the state vector
-// simulator.  Gradients use adjoint differentiation: the observable is
-// evolved in the Heisenberg picture while the state is evolved backwards
-// through unitary segments and re-simulated across noise channels.
+// simulator.  A circuit is compiled into a program before it is executed:
+// every gate is validated and lowered first, so an invalid circuit fails
+// before the state is modified, and a compiled program can be replayed.
+// Gradients use adjoint differentiation: the observable is evolved in the
+// Heisenberg picture while the state is evolved backwards through unitary
+// segments and re-simulated across noise channels.
 template <typename qs_policy_t_>
 class DensityMatrixState {
  public:
@@ -138,6 +142,21 @@ class DensityMatrixState {
     using prepared_tile_t = circuit_tiling::PreparedTile<py_qs_data_t>;
     using adjoint_program_t = circuit_tiling::AdjointProgram<py_qs_data_t>;
 
+    // A validated measurement.  The reset flip is lowered ahead of time so
+    // that a replayed program never lowers gates again.
+    struct PreparedMeasurement {
+        std::string name;
+        qbit_t qubit = 0;
+        // When set, the qubit is flipped to this value after collapsing to
+        // the other one.
+        std::optional<index_t> reset_to;
+        prepared_tile_t flip;
+    };
+
+    // A circuit lowered for one parameter set, ready to execute.
+    using ProgramEntry = std::variant<prepared_tile_t, PreparedMeasurement>;
+    using Program = std::vector<ProgramEntry>;
+
     // A maximal run of unitary gates followed by at most one noise channel.
     struct GradientSegment {
         circuit_t gates;
@@ -175,18 +194,31 @@ class DensityMatrixState {
     [[nodiscard]] auto Random() const -> double;
     [[nodiscard]] auto CloneState() const -> state_ptr_t;
     [[nodiscard]] static auto CloneState(const qs_data_p_t& qs, index_t dim) -> state_ptr_t;
-    [[nodiscard]] static auto Normalize(const circuit_t& circ) -> circuit_t;
+    // Rejects null gates and expands grouped Pauli channels into the
+    // single-qubit channels the planner tiles independently.
+    [[nodiscard]] static auto Expand(const circuit_t& circ) -> circuit_t;
 
-    // The tile of a lone gate.  A derivative tile holds the gate's whole
-    // footprint so that the derivative can vanish outside its controls.
+    // Compilation: validation and lowering, without touching the state.
     [[nodiscard]] auto GateTile(const std::shared_ptr<BasicGate>& gate, bool derivative) const
         -> circuit_tiling::CircuitTile;
+    // The planned tile of a schedule entry, or a lone gate's own tile.
+    [[nodiscard]] auto TileOf(const circuit_tiling::ScheduleEntry& entry) const -> circuit_tiling::CircuitTile;
     [[nodiscard]] auto PlanCircuit(const circuit_t& gates, bool adjoint) const -> circuit_tiling::Schedule;
     [[nodiscard]] auto PrepareSchedule(const circuit_tiling::Schedule& schedule,
                                        const parameter::ParameterResolver& pr) const -> std::vector<prepared_tile_t>;
-    static void ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, index_t dim);
-    void ApplyTiledGate(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr, bool diff);
+    [[nodiscard]] auto CompileMeasurement(const BasicGate& gate) const -> PreparedMeasurement;
+    [[nodiscard]] auto CompileGate(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
+                                   bool derivative) const -> Program;
+    [[nodiscard]] auto Compile(const circuit_t& circ, const parameter::ParameterResolver& pr) const -> Program;
 
+    // Execution of compiled programs.
+    static void ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, index_t dim);
+    auto ExecuteMeasurement(const PreparedMeasurement& measurement) -> index_t;
+    void Execute(const Program& program, std::map<std::string, int>* outcomes);
+    // The output column of a measurement name, which must be a sampling key.
+    static auto OutputColumn(const MST<size_t>& key_map, const std::string& name) -> size_t;
+
+    // Gradients.
     [[nodiscard]] auto PlanGradient(const circuit_t& circ) const -> GradientPlan;
     [[nodiscard]] auto PrepareSegments(const GradientPlan& plan, const parameter::ParameterResolver& pr,
                                        const MST<size_t>& parameter_map) const -> std::vector<PreparedSegment>;

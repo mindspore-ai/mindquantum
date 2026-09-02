@@ -17,6 +17,7 @@
 #ifndef INCLUDE_DENSITYMATRIX_DETAIL_CPU_DENSITYMATRIX_POLICY_HPP
 #define INCLUDE_DENSITYMATRIX_DETAIL_CPU_DENSITYMATRIX_POLICY_HPP
 
+#include <array>
 #include <complex>
 #include <cstddef>
 #include <type_traits>
@@ -94,8 +95,11 @@ struct CPUDensityMatrixPolicy {
     // Measurement
     // ========================================================================================================
 
-    [[nodiscard]] static auto OutcomeProbability(const qs_data_p_t& qs, qbit_t qubit, index_t dim) -> calc_type;
-    static void Collapse(qs_data_p_t qs, qbit_t qubit, bool outcome, calc_type probability, index_t dim);
+    // The diagonal weight of each outcome of `qubit`: {Tr(P0 rho), Tr(P1 rho)}.
+    [[nodiscard]] static auto OutcomeWeights(const qs_data_p_t& qs, qbit_t qubit, index_t dim)
+        -> std::array<calc_type, 2>;
+    // Projects onto `outcome` of `qubit` and divides by the surviving weight.
+    static void Collapse(qs_data_p_t qs, qbit_t qubit, bool outcome, calc_type weight, index_t dim);
     [[nodiscard]] static auto DiagonalCumulativeProbabilities(const qs_data_p_t& qs, index_t dim) -> VT<calc_type>;
 
     // Observables

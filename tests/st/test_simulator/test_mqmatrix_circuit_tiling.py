@@ -492,11 +492,11 @@ def _invalid_channels():
 
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-def test_invalid_channels_are_rejected():
+def test_invalid_circuits_are_rejected_before_execution():
     """
-    Feature: Channel validation.
-    Description: Apply channels with unphysical parameters or qubit structure.
-    Expectation: Every invalid channel raises a ValueError and leaves the state untouched.
+    Feature: Compilation before execution.
+    Description: Apply channels with unphysical parameters, alone and behind valid gates in a circuit.
+    Expectation: Every invalid input raises a ValueError and leaves the state untouched.
     """
     expected = np.zeros((4, 4), dtype=complex)
     expected[0, 0] = 1
@@ -505,6 +505,36 @@ def test_invalid_channels_are_rejected():
         with pytest.raises(ValueError, match="requires"):
             simulator.backend.sim.apply_gate(bad)
         assert np.allclose(simulator.get_qs(), expected)
+
+        simulator = Simulator('mqmatrix', 2)
+        with pytest.raises(ValueError, match="requires"):
+            simulator.backend.sim.apply_circuit([G.H.on(0).get_cpp_obj(), G.X.on(1, 0).get_cpp_obj(), bad])
+        assert np.allclose(simulator.get_qs(), expected)
+
+        simulator = Simulator('mqmatrix', 2)
+        with pytest.raises(ValueError, match="requires"):
+            simulator.backend.sim.sampling(
+                [G.H.on(0).get_cpp_obj(), bad, G.Measure('m').on(0).get_cpp_obj()],
+                mq.ParameterResolver(),
+                10,
+                {'m': 0},
+                1,
+            )
+        assert np.allclose(simulator.get_qs(), expected)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_measurement_rejects_an_invalid_state():
+    """
+    Feature: Measurement.
+    Description: Measure a density matrix whose trace is not finite.
+    Expectation: A RuntimeError instead of a silently arbitrary outcome.
+    """
+    simulator = Simulator('mqmatrix', 1)
+    simulator.backend.sim.set_dm(np.array([[complex(np.nan), 0], [0, 0]]))
+    with pytest.raises(RuntimeError, match="trace"):
+        simulator.apply_gate(G.Measure('m').on(0))
 
 
 @pytest.mark.level0
@@ -522,6 +552,28 @@ def test_gradient_worker_errors_propagate():
         simulator.backend.sim.get_expectation_with_grad_multi_multi(
             hamiltonian, circuit.get_cpp_obj(), np.array([[0.1], [0.2], [0.3], [0.4]]), np.array([]), ['b'], [], 4, 1
         )
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_mid_circuit_measurement_sampling():
+    """
+    Feature: Sampling with mid-circuit measurements.
+    Description: Sample a circuit whose measurements are followed by further gates, including a reset.
+    Expectation: The joint outcome statistics match the exact branch probabilities.
+    """
+    circuit = Circuit([G.H.on(0), G.X.on(1, 0), G.DepolarizingChannel(0.1).on(1)])
+    circuit += G.Measure('first', reset_to=1).on(0)
+    circuit += Circuit([G.H.on(1), G.Measure('second').on(0), G.Measure('third').on(1)])
+    shots = 40000
+    result = Simulator('mqmatrix', 2).sampling(circuit, shots=shots, seed=11)
+
+    # Keys read `first second third`.  `first` is uniform, the reset pins
+    # `second` to 1, and after the Hadamard `third` is uniform and independent.
+    frequencies = {key: count / shots for key, count in result.data.items()}
+    assert set(frequencies) == {'010', '011', '110', '111'}
+    for frequency in frequencies.values():
+        assert abs(frequency - 0.25) < 0.02
 
 
 @pytest.mark.level0
