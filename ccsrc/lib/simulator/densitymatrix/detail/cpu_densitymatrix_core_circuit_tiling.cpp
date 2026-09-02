@@ -36,17 +36,6 @@ void CPUDensityMatrixPolicy<calc_type_>::ApplyAdjointTileProgram(
     circuit_tiling::ApplyAdjointProgram(shared_state, batch_states, program, output, false, Parallel(dim));
 }
 
-template <typename calc_type_>
-void CPUDensityMatrixPolicy<calc_type_>::ProjectOntoControls(qs_data_p_t qs, index_t state_mask, index_t dim) {
-    const auto size = Size(dim);
-    THRESHOLD_OMP_FOR(
-        size, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
-            if ((static_cast<index_t>(i) & state_mask) != state_mask) {
-                qs[i] = 0;
-            }
-        })
-}
-
 template struct CPUDensityMatrixPolicy<float>;
 template struct CPUDensityMatrixPolicy<double>;
 }  // namespace mindquantum::sim::densitymatrix::detail

@@ -90,8 +90,6 @@ struct CPUDensityMatrixPolicy {
     static void ApplyAdjointTileProgram(qs_data_p_t shared_state, const std::vector<qs_data_p_t>& batch_states,
                                         const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim,
                                         VVT<py_qs_data_t>* output);
-    // Zeroes every amplitude whose state index does not satisfy `state_mask`.
-    static void ProjectOntoControls(qs_data_p_t qs, index_t state_mask, index_t dim);
 
     // Measurement
     // ========================================================================================================

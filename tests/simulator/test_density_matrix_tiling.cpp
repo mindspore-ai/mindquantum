@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <array>
 #include <complex>
 #include <limits>
 #include <map>
@@ -246,6 +247,68 @@ TEST_CASE("The depolarizing kernel mixes the operand block towards the identity"
         }
     }
     CheckClose(ApplyOnDensityMatrix(channel, pr, rho, false), expected);
+}
+
+TEST_CASE("Derivative tiles realise dU rho dU^dagger, which vanishes outside the support of dU") {
+    const auto rho = RandomDensityMatrix();
+    const parameter::ParameterResolver pr;
+    const auto space = mqt::StateSpace::DensityMatrix(kQubits);
+    const auto theta = 0.7;
+    const auto derivative_of = [&](const gate_t& gate) {
+        const auto access = mqt::DescribeGateAccess(gate, space);
+        REQUIRE(access.has_value());
+        const mqt::CircuitTile tile{
+            mqt::QubitsFromMask(access->mixing_mask | access->object_mask | access->control_mask), {gate}};
+        auto state = rho;
+        mqt::detail::ApplyTile<runtime_t>(state.data(), builder_t::BuildDerivative(tile, pr, space), false);
+        return state;
+    };
+    const auto embed_single = [](const std::array<value_t, 4>& local, size_t qubit, size_t control) {
+        std::vector<value_t> matrix(kDim * kDim, 0);
+        const auto bit = size_t{1} << qubit;
+        for (size_t basis = 0; basis < kDim; ++basis) {
+            if (control != kDim && (basis & (size_t{1} << control)) == 0) {
+                continue;
+            }
+            const auto low = basis & ~bit;
+            const auto high = basis | bit;
+            const bool set = (basis & bit) != 0;
+            matrix[low * kDim + basis] += local[set ? 1 : 0];
+            matrix[high * kDim + basis] += local[set ? 3 : 2];
+        }
+        return matrix;
+    };
+
+    SECTION("a phase shift derivative is supported on |1> only") {
+        const auto gate = std::make_shared<mq::PSGate>(parameter::ParameterResolver{theta}, mq::qbits_t{1});
+        const auto d_phase = value_t{0, 1} * std::exp(value_t{0, theta});
+        const auto matrix = embed_single({0, 0, 0, d_phase}, 1, kDim);
+        CheckClose(derivative_of(gate), Sandwich(matrix, rho, matrix));
+    }
+    SECTION("a controlled rotation derivative vanishes off the control subspace") {
+        const auto gate = std::make_shared<mq::RYGate>(parameter::ParameterResolver{theta}, mq::qbits_t{0},
+                                                       mq::qbits_t{2});
+        const auto cosine = std::cos(theta / 2) / 2;
+        const auto sine = std::sin(theta / 2) / 2;
+        // d/dtheta RY(theta) = (1/2) [[-sin(theta/2), -cos(theta/2)], [cos(theta/2), -sin(theta/2)]]
+        const auto matrix = embed_single({-sine, -cosine, cosine, -sine}, 0, 2);
+        CheckClose(derivative_of(gate), Sandwich(matrix, rho, matrix));
+    }
+    SECTION("an exchange derivative vanishes on |00> and |11>") {
+        const auto gate = std::make_shared<mq::SWAPalphaGate>(parameter::ParameterResolver{theta}, mq::qbits_t{0, 2});
+        const auto diagonal = value_t{0, M_PI_2} * std::exp(value_t{0, M_PI * theta});
+        std::vector<value_t> matrix(kDim * kDim, 0);
+        for (size_t basis = 0; basis < kDim; ++basis) {
+            const bool first = (basis & 0b001) != 0;
+            const bool second = (basis & 0b100) != 0;
+            if (first == second) {
+                continue;
+            }
+            matrix[basis * kDim + basis] += diagonal;
+            matrix[(basis ^ 0b101) * kDim + basis] -= diagonal;
+        }
+        CheckClose(derivative_of(gate), Sandwich(matrix, rho, matrix));
+    }
 }
 
 TEST_CASE("Dephasing channels lower to diagonal kernels") {

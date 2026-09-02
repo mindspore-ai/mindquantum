@@ -93,7 +93,8 @@ class DensityMatrixState {
     /*!
      * \brief Apply a quantum gate, a measurement, or a noise channel.  With
      * `diff` the derivative of a single-parameter gate is applied on both
-     * sides: rho -> dU rho dU^dagger.  Returns the outcome of a measurement.
+     * sides, rho -> dU rho dU^dagger, which is zero outside the derivative's
+     * support.  Returns the outcome of a measurement.
      */
     auto ApplyGate(const std::shared_ptr<BasicGate>& gate,
                    const parameter::ParameterResolver& pr = parameter::ParameterResolver(), bool diff = false)
@@ -176,7 +177,10 @@ class DensityMatrixState {
     [[nodiscard]] static auto CloneState(const qs_data_p_t& qs, index_t dim) -> state_ptr_t;
     [[nodiscard]] static auto Normalize(const circuit_t& circ) -> circuit_t;
 
-    [[nodiscard]] auto SingleGateTile(const std::shared_ptr<BasicGate>& gate) const -> circuit_tiling::CircuitTile;
+    // The tile of a lone gate.  A derivative tile holds the gate's whole
+    // footprint so that the derivative can vanish outside its controls.
+    [[nodiscard]] auto GateTile(const std::shared_ptr<BasicGate>& gate, bool derivative) const
+        -> circuit_tiling::CircuitTile;
     [[nodiscard]] auto PlanCircuit(const circuit_t& gates, bool adjoint) const -> circuit_tiling::Schedule;
     [[nodiscard]] auto PrepareSchedule(const circuit_tiling::Schedule& schedule,
                                        const parameter::ParameterResolver& pr) const -> std::vector<prepared_tile_t>;

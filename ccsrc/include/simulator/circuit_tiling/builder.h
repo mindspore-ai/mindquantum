@@ -147,7 +147,13 @@ class Builder {
     }
 
     // Lowers the derivative of the single parameterized gate in `tile` on
-    // every image: on a density matrix this realises dU rho dU^dagger.
+    // every image as a linear map: on a density matrix this realises
+    // dU rho dU^dagger.  A lowered kernel leaves the bases it does not mention
+    // unchanged, which is right for a gate but not for its derivative: dU is
+    // zero there (outside a control subspace, on the |0> of a phase shift, on
+    // the |00> and |11> of an exchange).  The tile therefore ends with the
+    // projection onto the support of the derivative, which requires every
+    // control of the gate to be a tile qubit.
     [[nodiscard]] static auto BuildDerivative(const CircuitTile& tile,
                                               const parameter::ParameterResolver& parameter_resolver,
                                               const StateSpace& space) -> PreparedTile<value_t> {
@@ -161,6 +167,8 @@ class Builder {
         }
         PreparedTile<value_t> prepared;
         prepared.layout = BuildLayout(tile, space);
+        const auto tile_dim = prepared.layout.dimension;
+        std::vector<bool> support(tile_dim, true);
         for (const auto& image : space.Images()) {
             auto evolution = BuildOperation(gate, tile.qubits, parameter_resolver, image);
             auto derivatives = BuildIntrinsicDerivatives(gate, tile.qubits, parameter_resolver, evolution, image);
@@ -170,12 +178,31 @@ class Builder {
                                 "be applied.",
                                 gate.GetID(), derivatives.size()));
             }
-            auto operation = PrepareOperation(std::move(derivatives.front()), prepared.layout.dimension);
+            auto operation = PrepareOperation(std::move(derivatives.front()), tile_dim);
+            if (operation.external_control_mask != 0) {
+                throw std::invalid_argument("A derivative tile must contain every control qubit of its gate.");
+            }
             if (image.conjugated) {
                 Conjugate(&operation);
             }
-            prepared.layout.workspace_size = std::max(prepared.layout.workspace_size, WorkspaceSize(operation.kernel));
+            const auto touched = TouchedBases(operation.kernel, tile_dim);
+            for (size_t basis = 0; basis < tile_dim; ++basis) {
+                support[basis] = support[basis] && touched[basis];
+            }
             prepared.operations.push_back(std::move(operation));
+        }
+        DiagonalKernel<value_t> projection;
+        for (size_t basis = 0; basis < tile_dim; ++basis) {
+            if (!support[basis]) {
+                projection.scales.push_back({basis, value_t{0, 0}});
+            }
+        }
+        if (!projection.scales.empty()) {
+            prepared.operations.push_back({0, std::move(projection)});
+        }
+        prepared.operations = FoldDiagonalRuns(std::move(prepared.operations), tile_dim);
+        for (const auto& operation : prepared.operations) {
+            prepared.layout.workspace_size = std::max(prepared.layout.workspace_size, WorkspaceSize(operation.kernel));
         }
         return prepared;
     }
@@ -1398,6 +1425,81 @@ class Builder {
             return dense->matrix_dim;
         }
         return 0;
+    }
+
+    // The local bases a prepared kernel reads or writes.  Every other basis
+    // is left unchanged by the kernel, which for a derivative operator means
+    // it lies outside the operator's support.
+    [[nodiscard]] static auto TouchedBases(const Kernel<value_t>& kernel, size_t tile_dim) -> std::vector<bool> {
+        std::vector<bool> touched(tile_dim, false);
+        std::visit([&touched](const auto& typed) { MarkTouched(typed, &touched); }, kernel);
+        return touched;
+    }
+
+    template <typename pauli_kernel_t>
+    static void MarkTouchedPauli(const pauli_kernel_t& kernel, std::vector<bool>* touched) {
+        for (const auto& scale : kernel.scales) {
+            (*touched)[scale.basis] = true;
+        }
+        MarkTouchedPairs(kernel.pairs, touched);
+    }
+
+    template <typename pair_t>
+    static void MarkTouchedPairs(const std::vector<pair_t>& pairs, std::vector<bool>* touched) {
+        for (const auto& pair : pairs) {
+            (*touched)[pair.lhs] = true;
+            (*touched)[pair.rhs] = true;
+        }
+    }
+
+    static void MarkTouched(const PauliKernel<value_t>& kernel, std::vector<bool>* touched) {
+        MarkTouchedPauli(kernel, touched);
+    }
+
+    static void MarkTouched(const PauliRotationKernel<value_t>& kernel, std::vector<bool>* touched) {
+        MarkTouchedPauli(kernel, touched);
+    }
+
+    static void MarkTouched(const DiagonalKernel<value_t>& kernel, std::vector<bool>* touched) {
+        for (const auto& scale : kernel.scales) {
+            (*touched)[scale.basis] = true;
+        }
+    }
+
+    static void MarkTouched(const HadamardKernel& kernel, std::vector<bool>* touched) {
+        MarkTouchedPairs(kernel.pairs, touched);
+    }
+
+    static void MarkTouched(const PairMatrixKernel<value_t>& kernel, std::vector<bool>* touched) {
+        MarkTouchedPairs(kernel.pairs, touched);
+    }
+
+    static void MarkTouched(const SwapKernel& kernel, std::vector<bool>* touched) {
+        MarkTouchedPairs(kernel.pairs, touched);
+    }
+
+    static void MarkTouched(const ISwapKernel<value_t>& kernel, std::vector<bool>* touched) {
+        MarkTouchedPairs(kernel.pairs, touched);
+    }
+
+    static void MarkTouched(const FSimKernel<value_t>& kernel, std::vector<bool>* touched) {
+        for (const auto& indices : kernel.indices) {
+            (*touched)[indices.lhs] = true;
+            (*touched)[indices.rhs] = true;
+            (*touched)[indices.both] = true;
+        }
+    }
+
+    static void MarkTouched(const DenseMatrixKernel<value_t>& kernel, std::vector<bool>* touched) {
+        for (const auto index : kernel.indices) {
+            (*touched)[index] = true;
+        }
+    }
+
+    static void MarkTouched(const DepolarizingKernel<value_t>& kernel, std::vector<bool>* touched) {
+        for (const auto index : kernel.indices) {
+            (*touched)[index] = true;
+        }
     }
 
     [[nodiscard]] static auto WorkspaceSize(const DerivativeKernel<value_t>& kernel) -> size_t {

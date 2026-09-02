@@ -209,22 +209,23 @@ void DensityMatrixState<qs_policy_t_>::ApplyHamiltonian(const Hamiltonian<calc_t
 // ============================================================================
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::SingleGateTile(const std::shared_ptr<BasicGate>& gate) const
+auto DensityMatrixState<qs_policy_t_>::GateTile(const std::shared_ptr<BasicGate>& gate, bool derivative) const
     -> circuit_tiling::CircuitTile {
-    const auto access = circuit_tiling::DescribeGateAccess(gate, Space());
+    const auto space = Space();
+    const auto access = circuit_tiling::DescribeGateAccess(gate, space);
     if (!access.has_value()) {
         throw std::invalid_argument(fmt::format("Apply of gate {} not implement.", gate->GetID()));
     }
-    // A lone gate keeps its diagonal operands and controls local when they
-    // fit, so that the tile hot loop resolves them without external masks,
-    // and fills the remaining tile width with further image pairs so that
-    // the per-block overhead is amortised over full-width blocks.
-    const auto space = Space();
     const auto count = [](index_t mask) { return CountOne(static_cast<std::uint64_t>(mask)); };
-    auto mask = access->mixing_mask | access->object_mask | access->control_mask;
-    if (count(mask) > circuit_tiling::kMaxTileQubits) {
-        mask = access->mixing_mask;
-    }
+    const auto footprint = access->mixing_mask | access->object_mask | access->control_mask;
+    // A derivative is zero outside its control subspace, which the tile can
+    // only express when every control is local: its tile is the whole
+    // footprint however wide.  A gate keeps diagonal operands and controls
+    // local when they fit, so that the hot loop resolves them without
+    // external masks.
+    auto mask = derivative || count(footprint) <= circuit_tiling::kMaxTileQubits ? footprint : access->mixing_mask;
+    // Further image pairs fill the tile so that the per-block overhead is
+    // amortised over full-width, image-symmetric blocks.
     for (qbit_t qubit = 0; qubit < n_qubits_ && count(mask) + 2 <= circuit_tiling::kMaxTileQubits; ++qubit) {
         mask |= space.Embed(index_t{1} << qubit);
     }
@@ -251,7 +252,7 @@ auto DensityMatrixState<qs_policy_t_>::PrepareSchedule(const circuit_tiling::Sch
             prepared.push_back(builder_t::Build(*tile, pr, space));
         } else {
             prepared.push_back(
-                builder_t::Build(SingleGateTile(std::get<std::shared_ptr<BasicGate>>(entry)), pr, space));
+                builder_t::Build(GateTile(std::get<std::shared_ptr<BasicGate>>(entry), false), pr, space));
         }
     }
     return prepared;
@@ -268,17 +269,10 @@ template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::ApplyTiledGate(const std::shared_ptr<BasicGate>& gate,
                                                       const parameter::ParameterResolver& pr, bool diff) {
     using builder_t = circuit_tiling::Builder<py_qs_data_t>;
-    const auto tile = SingleGateTile(gate);
-    if (!(diff && gate->GradRequired())) {
-        ApplyTileTo(qs_.get(), builder_t::Build(tile, pr, Space()), dim_);
-        return;
-    }
-    // d(controlled U) = |1><1| (x) dU: the derivative vanishes outside the
-    // control subspace on both sides.
-    ApplyTileTo(qs_.get(), builder_t::BuildDerivative(tile, pr, Space()), dim_);
-    const auto controls = circuit_tiling::MaskFromQubits(gate->GetCtrlQubits());
-    if (controls != 0) {
-        qs_policy_t::ProjectOntoControls(qs_.get(), Space().Embed(controls), dim_);
+    if (diff && gate->GradRequired()) {
+        ApplyTileTo(qs_.get(), builder_t::BuildDerivative(GateTile(gate, true), pr, Space()), dim_);
+    } else {
+        ApplyTileTo(qs_.get(), builder_t::Build(GateTile(gate, false), pr, Space()), dim_);
     }
 }
 
@@ -416,7 +410,7 @@ auto DensityMatrixState<qs_policy_t_>::PrepareSegments(const GradientPlan& plan,
         if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&entry); tile != nullptr) {
             return builder_t::BuildAdjoint(*tile, pr, parameter_map, space, convention);
         }
-        return builder_t::BuildAdjoint(SingleGateTile(std::get<std::shared_ptr<BasicGate>>(entry)), pr, parameter_map,
+        return builder_t::BuildAdjoint(GateTile(std::get<std::shared_ptr<BasicGate>>(entry), false), pr, parameter_map,
                                        space, convention);
     };
 
@@ -426,7 +420,7 @@ auto DensityMatrixState<qs_policy_t_>::PrepareSegments(const GradientPlan& plan,
         auto& lowered = prepared[index];
         lowered.forward = PrepareSchedule(segment.forward, pr);
         if (segment.channel != nullptr) {
-            const auto tile = SingleGateTile(segment.channel);
+            const auto tile = GateTile(segment.channel, false);
             lowered.channel = builder_t::Build(tile, pr, space);
             lowered.adjoint_channel = builder_t::EvolutionOnly(
                 builder_t::BuildAdjoint(tile, pr, parameter_map, space, convention));

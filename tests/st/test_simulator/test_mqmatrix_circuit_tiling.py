@@ -401,24 +401,75 @@ def test_noisy_measurement_ending_sampling_uses_exact_distribution():
     assert np.allclose(empirical, probabilities, atol=5e-3)
 
 
+def _derivative_cases():
+    theta = 0.83
+    d_ps = 1j * np.exp(1j * theta) * np.diag([0.0, 1.0])
+    e_pi = np.exp(1j * np.pi * theta)
+    d_swap_alpha = 0.5j * np.pi * e_pi * np.array([[0, 0, 0, 0], [0, 1, -1, 0], [0, -1, 1, 0], [0, 0, 0, 0]])
+    d_givens = np.array(
+        [[0, 0, 0, 0], [0, -np.sin(theta), -np.cos(theta), 0], [0, np.cos(theta), -np.sin(theta), 0], [0, 0, 0, 0]]
+    )
+    pauli_string = np.kron(np.kron(np.kron(Z_MATRIX, Y_MATRIX), X_MATRIX), X_MATRIX)  # object order X X Y Z
+    d_rps = -0.5 * np.sin(theta / 2) * np.eye(16) - 0.5j * np.cos(theta / 2) * pauli_string
+
+    def controlled(matrix, n_controls):
+        for _ in range(n_controls):
+            matrix = np.kron(np.diag([0.0, 1.0]), matrix)
+        return matrix
+
+    ry = G.RY('theta').on(1, 2)
+    return [
+        # (gate, derivative operator on `qubits`, qubits)
+        (ry, controlled(ry.diff_matrix({'theta': theta}), 1), [1, 2]),
+        (G.RX('theta').on(1, [2, 0]), controlled(G.RX('theta').diff_matrix({'theta': theta}), 2), [1, 2, 0]),
+        (G.PhaseShift('theta').on(0), d_ps, [0]),
+        (G.PhaseShift('theta').on(0, 1), controlled(d_ps, 1), [0, 1]),
+        (G.SWAPalpha('theta').on([0, 1]), d_swap_alpha, [0, 1]),
+        (G.Givens('theta').on([2, 0]), d_givens, [2, 0]),
+        # Five circuit qubits: the derivative tile exceeds the shared tile budget.
+        (G.RotPauliString('XXYZ', 'theta').on([0, 1, 2, 3], 5), controlled(d_rps, 1), [0, 1, 2, 3, 5]),
+    ]
+
+
+X_MATRIX = np.array([[0, 1], [1, 0]], dtype=complex)
+Y_MATRIX = np.array([[0, -1j], [1j, 0]], dtype=complex)
+Z_MATRIX = np.array([[1, 0], [0, -1]], dtype=complex)
+
+
 @pytest.mark.level0
 @pytest.mark.platform_x86_cpu
-def test_apply_derivative_gate():
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.parametrize("case", _derivative_cases())
+def test_apply_derivative_gate(dtype, case):
     """
     Feature: Derivative application on a density matrix.
-    Description: Apply the derivative of a controlled rotation with `diff=True`.
-    Expectation: The state becomes dU rho dU^dagger with the controlled derivative vanishing off its subspace.
+    Description: Apply the derivative of a gate with `diff=True`, including derivatives that vanish on part of
+        their operand space (unsatisfied controls, the |0> of a phase shift, the |00> and |11> of an exchange).
+    Expectation: The state becomes dU rho dU^dagger, zero wherever dU vanishes.
     """
-    rho = _random_density_matrix(3, 20260806)
-    theta = 0.83
-    gate = G.RY('theta').on(1, 2)
-    simulator = Simulator('mqmatrix', 3)
+    gate, derivative, qubits = case
+    n_qubits = 6
+    rho = _random_density_matrix(n_qubits, 20260806)
+    simulator = Simulator('mqmatrix', n_qubits, dtype=dtype)
     simulator.set_qs(rho)
-    simulator.apply_gate(gate, {'theta': theta}, diff=True)
+    simulator.apply_gate(gate, {'theta': 0.83}, diff=True)
 
-    derivative = np.kron(np.diag([0.0, 1.0]), gate.diff_matrix({'theta': theta}))
-    full = _kraus_matrix(derivative, [1, 2], 3)
-    assert np.allclose(simulator.get_qs(), full @ rho @ full.conj().T, atol=1e-11)
+    full = _kraus_matrix(derivative, qubits, n_qubits)
+    atol = 2e-5 if dtype == mq.complex64 else 1e-11
+    assert np.allclose(simulator.get_qs(), full @ rho @ full.conj().T, atol=atol)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_multi_parameter_derivative_is_rejected():
+    """
+    Feature: Derivative application on a density matrix.
+    Description: Apply a gate with several intrinsic derivatives with `diff=True`.
+    Expectation: A ValueError, because the gate has no single derivative.
+    """
+    simulator = Simulator('mqmatrix', 1)
+    with pytest.raises(ValueError, match="intrinsic derivatives"):
+        simulator.apply_gate(G.U3('a', 'b', 'c').on(0), {'a': 0.1, 'b': 0.2, 'c': 0.3}, diff=True)
 
 
 def _invalid_channels():
