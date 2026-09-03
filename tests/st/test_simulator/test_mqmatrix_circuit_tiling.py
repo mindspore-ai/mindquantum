@@ -224,6 +224,7 @@ def test_oversized_gate_runs_in_its_own_tile(n_qubits, gate):
 
 
 def _gradient_circuit():
+    """Build a circuit covering every built-in derivative supported by the tile engine."""
     circuit = Circuit()
     circuit += G.H.on(0)
     circuit += G.X.on(1, 6)
@@ -250,6 +251,7 @@ def _gradient_circuit():
 
 
 def _hamiltonians(dtype):
+    """Build representative Hamiltonians for adjoint-gradient comparisons."""
     first = Hamiltonian(
         0.71 * QubitOperator('Z0')
         - 0.23 * QubitOperator('X2 Y5')
@@ -292,6 +294,7 @@ def test_noiseless_gradient_matches_state_vector(dtype):
 
 
 def _noisy_gradient_circuit():
+    """Build a circuit interleaving parameterized gates and noise channels."""
     circuit = Circuit()
     circuit += G.H.on(0)
     circuit += G.RX({'a': 1.0, 'b': 2.0}).on(1, 0)
@@ -341,13 +344,13 @@ def test_noisy_gradient_matches_finite_differences(n_qubits):
 
     assert np.allclose(value, expectation(parameters), atol=1e-10)
     step = 1e-5
-    for index in range(len(names)):
+    for index, name in enumerate(names):
         shifted = parameters.copy()
         shifted[index] += step
         upper = expectation(shifted)
         shifted[index] -= 2 * step
         lower = expectation(shifted)
-        assert np.isclose(gradient[0, 0, index], (upper - lower) / (2 * step), atol=1e-7), names[index]
+        assert np.isclose(gradient[0, 0, index], (upper - lower) / (2 * step), atol=1e-7), name
 
 
 @pytest.mark.level0
@@ -411,6 +414,7 @@ def test_noisy_measurement_ending_sampling_uses_exact_distribution():
 
 
 def _derivative_cases():
+    """Build gate derivative cases and their dense reference matrices."""
     theta = 0.83
     d_ps = 1j * np.exp(1j * theta) * np.diag([0.0, 1.0])
     e_pi = np.exp(1j * np.pi * theta)

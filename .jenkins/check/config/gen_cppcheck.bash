@@ -1,5 +1,10 @@
 #! /bin/bash
 
+# Maintenance note:
+#   .cppcheck.suppressions is the source of truth.  filter_cppcheck.txt is a generated,
+#   tracked artifact consumed directly by the remote ms-pipeline.  Do not edit it by hand;
+#   after changing the source file, run this script and commit both files.
+
 BASEPATH=$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}" )" &> /dev/null && pwd )
 
 # ==============================================================================
