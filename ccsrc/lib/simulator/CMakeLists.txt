@@ -25,8 +25,20 @@ if(MSVC)
   target_compile_options(mqsim_common PUBLIC /wd4661 /openmp:llvm)
 endif()
 
+include(${CMAKE_CURRENT_LIST_DIR}/arm_sve.cmake)
+
+# ==============================================================================
+
+add_library(mqsim_circuit_tiling STATIC)
+target_link_libraries(mqsim_circuit_tiling PUBLIC mqsim_common mq_math intrin_flag_CXX)
+force_at_least_cxx17_workaround(mqsim_circuit_tiling)
+append_to_property(mq_install_targets GLOBAL mqsim_circuit_tiling)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/circuit_tiling)
+
+# ==============================================================================
+
 add_library(mqsim_vector_cpu STATIC)
-target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common mq_math intrin_flag_CXX)
+target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_circuit_tiling)
 force_at_least_cxx17_workaround(mqsim_vector_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
 if(X86_64)
@@ -84,7 +96,7 @@ append_to_property(mq_install_targets GLOBAL mqsim_mps_cpu)
 # ==============================================================================
 
 add_library(mqsim_densitymatrix_cpu STATIC)
-target_link_libraries(mqsim_densitymatrix_cpu PUBLIC mqsim_common mq_math intrin_flag_CXX)
+target_link_libraries(mqsim_densitymatrix_cpu PUBLIC mqsim_circuit_tiling)
 force_at_least_cxx17_workaround(mqsim_densitymatrix_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_densitymatrix_cpu)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/densitymatrix/detail)

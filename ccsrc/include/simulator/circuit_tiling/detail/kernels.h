@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INCLUDE_SIMULATOR_VECTOR_DETAIL_CIRCUIT_TILING_KERNELS_H_
-#define INCLUDE_SIMULATOR_VECTOR_DETAIL_CIRCUIT_TILING_KERNELS_H_
+#ifndef INCLUDE_SIMULATOR_CIRCUIT_TILING_DETAIL_KERNELS_H_
+#define INCLUDE_SIMULATOR_CIRCUIT_TILING_DETAIL_KERNELS_H_
 
 #include <cmath>
 
@@ -25,9 +25,9 @@
 #include <type_traits>
 #include <variant>
 
-#include "simulator/vector/circuit_tiling.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
 
-namespace mindquantum::sim::vector::detail::circuit_tiling {
+namespace mindquantum::sim::circuit_tiling::detail {
 // backend_t is a zero-overhead numerical algebra.  Scalar and ISA-specific
 // implementations provide only predicates, cached loads/stores, and complex
 // arithmetic primitives; all quantum-operation semantics live here once.
@@ -184,7 +184,8 @@ class Kernels {
         }
     }
 
-    static void ApplyPairMatrix(const PairMatrixKernel<value_t>& kernel, predicate_t predicate, storage_t* tile) {
+    static void ApplyKernel(const PairMatrixKernel<value_t>& kernel, predicate_t predicate, state_index_t,
+                            const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
             const auto lhs = backend_t::Load(tile, pair.lhs);
             const auto rhs = backend_t::Load(tile, pair.rhs);
@@ -197,11 +198,6 @@ class Kernels {
             backend_t::Store(tile, pair.lhs, predicate, out_lhs);
             backend_t::Store(tile, pair.rhs, predicate, out_rhs);
         }
-    }
-
-    static void ApplyKernel(const PairMatrixKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t*) {
-        ApplyPairMatrix(kernel, predicate, tile);
     }
 
     static void ApplyKernel(const SwapKernel& kernel, predicate_t predicate, state_index_t, const index_context_t&,
@@ -258,6 +254,31 @@ class Kernels {
                                                                matrix_row[column]);
                 }
                 backend_t::Store(tile, kernel.indices[group + row], predicate, output);
+            }
+        }
+    }
+
+    static void ApplyKernel(const DepolarizingKernel<value_t>& kernel, predicate_t predicate, state_index_t,
+                            const index_context_t&, storage_t* tile, storage_t*) {
+        const auto block = kernel.local_dim * kernel.local_dim;
+        assert(kernel.local_dim != 0 && kernel.indices.size() % block == 0);
+        // Entry r * local_dim + c of a block is diagonal exactly when it is a
+        // multiple of local_dim + 1.
+        const auto diagonal_stride = kernel.local_dim + 1;
+        for (size_t group = 0; group < kernel.indices.size(); group += block) {
+            auto trace = backend_t::Zero();
+            for (size_t basis = 0; basis < kernel.local_dim; ++basis) {
+                trace = backend_t::Add(predicate, trace,
+                                       backend_t::Load(tile, kernel.indices[group + basis * diagonal_stride]));
+            }
+            const auto mixed = backend_t::Multiply(predicate, trace, kernel.mix);
+            for (size_t entry = 0; entry < block; ++entry) {
+                const auto index = kernel.indices[group + entry];
+                auto value = backend_t::Multiply(predicate, backend_t::Load(tile, index), kernel.keep);
+                if (entry % diagonal_stride == 0) {
+                    value = backend_t::Add(predicate, value, mixed);
+                }
+                backend_t::Store(tile, index, predicate, value);
             }
         }
     }
@@ -362,6 +383,6 @@ class Kernels {
         return result;
     }
 };
-}  // namespace mindquantum::sim::vector::detail::circuit_tiling
+}  // namespace mindquantum::sim::circuit_tiling::detail
 
-#endif  // INCLUDE_SIMULATOR_VECTOR_DETAIL_CIRCUIT_TILING_KERNELS_H_
+#endif  // INCLUDE_SIMULATOR_CIRCUIT_TILING_DETAIL_KERNELS_H_

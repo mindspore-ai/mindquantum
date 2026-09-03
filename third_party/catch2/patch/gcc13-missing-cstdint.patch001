@@ -1,0 +1,36 @@
+Catch2 v3.1.0 uses fixed-width integer types without including <cstdint>,
+which fails with GCC 13+ / libstdc++ 13+ where <string> no longer provides
+them transitively.  Upstream fixed this in Catch2 v3.3.0 (catchorg/Catch2#2627).
+diff -Npur catch2-orig/src/catch2/internal/catch_string_manip.hpp catch2-src/src/catch2/internal/catch_string_manip.hpp
+--- catch2-orig/src/catch2/internal/catch_string_manip.hpp	2022-07-17 20:18:44.000000000 +0200
++++ catch2-src/src/catch2/internal/catch_string_manip.hpp	2026-08-31 00:00:00.000000000 +0000
+@@ -10,6 +10,7 @@
+ 
+ #include <catch2/internal/catch_stringref.hpp>
+ 
++#include <cstdint>
+ #include <string>
+ #include <iosfwd>
+ #include <vector>
+diff -Npur catch2-orig/src/catch2/catch_test_case_info.hpp catch2-src/src/catch2/catch_test_case_info.hpp
+--- catch2-orig/src/catch2/catch_test_case_info.hpp	2022-07-17 20:18:44.000000000 +0200
++++ catch2-src/src/catch2/catch_test_case_info.hpp	2026-08-31 00:00:00.000000000 +0000
+@@ -15,6 +15,7 @@
+ #include <catch2/internal/catch_unique_ptr.hpp>
+ 
+ 
++#include <cstdint>
+ #include <string>
+ #include <vector>
+ 
+diff -Npur catch2-orig/src/catch2/internal/catch_xmlwriter.cpp catch2-src/src/catch2/internal/catch_xmlwriter.cpp
+--- catch2-orig/src/catch2/internal/catch_xmlwriter.cpp	2022-07-17 20:18:44.000000000 +0200
++++ catch2-src/src/catch2/internal/catch_xmlwriter.cpp	2026-08-31 00:00:00.000000000 +0000
+@@ -11,6 +11,7 @@
+ #include <catch2/internal/catch_enforce.hpp>
+ #include <catch2/internal/catch_xmlwriter.hpp>
+ 
++#include <cstdint>
+ #include <iomanip>
+ #include <type_traits>
+ 

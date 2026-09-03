@@ -288,6 +288,8 @@ class MQSim(BackendBase):
             pr_shift = True
         if pr_shift and not self.name.startswith('mqvector'):
             raise ValueError(f"{self.name} simulator not support parameter-shift rule.")
+        if self.name == 'mqmatrix' and (circ_left is not None or simulator_left is not None):
+            raise ValueError("mqmatrix simulator does not support non-hermitian expectation gradients.")
         non_hermitian = False
         if circ_left is not None:
             _check_input_type("circ_left", Circuit, circ_left)
@@ -345,9 +347,11 @@ class MQSim(BackendBase):
         hams_cpp = [ham.get_cpp_obj() for ham in hams]
         hams_cpp_herm = [ham.get_cpp_obj(hermitian=True) for ham in hams] if non_hermitian else None
         circ_left_cpp = circ_left.get_cpp_obj()
-        circ_left_cpp_herm = circ_left.get_cpp_obj(hermitian=True)
         circ_right_cpp = circ_right.get_cpp_obj()
-        circ_right_cpp_herm = circ_right.get_cpp_obj(hermitian=True)
+        # The density matrix backend derives the adjoint circuit itself.
+        needs_hermitian_circuits = self.name != 'mqmatrix'
+        circ_left_cpp_herm = circ_left.get_cpp_obj(hermitian=True) if needs_hermitian_circuits else None
+        circ_right_cpp_herm = circ_right.get_cpp_obj(hermitian=True) if needs_hermitian_circuits else None
 
         def _normalize_inputs(inputs_):
             inputs = list(inputs_)
@@ -409,11 +413,10 @@ class MQSim(BackendBase):
                     batch_threads,
                     mea_threads,
                 )
-            if circ_right.is_noise_circuit and self.name.startswith('mqmatrix'):
-                return self.sim.get_expectation_with_noise_grad_multi_multi(
+            if self.name == 'mqmatrix':
+                return self.sim.get_expectation_with_grad_multi_multi(
                     hams_cpp,
                     circ_right_cpp,
-                    circ_right_cpp_herm,
                     inputs0,
                     inputs1,
                     encoder_params_name,
@@ -511,7 +514,11 @@ class MQSim(BackendBase):
             _check_seed(seed)
         res = MeasureResult()
         res.add_measure(circuit.all_measures.keys())
-        if circuit.is_measure_end and not circuit.is_noise_circuit:
+        # A density matrix evolves noise exactly, so every measurement-ending
+        # circuit is sampled from one evolution; a state vector must resample
+        # each noisy trajectory.
+        exact_evolution = self.name == 'mqmatrix' or not circuit.is_noise_circuit
+        if circuit.is_measure_end and exact_evolution:
             sampler = self.sim.sampling_measure_ending_without_noise
         else:
             sampler = self.sim.sampling

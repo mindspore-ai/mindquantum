@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_PLANNER_H_
-#define INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_PLANNER_H_
+#ifndef INCLUDE_SIMULATOR_CIRCUIT_TILING_PLANNER_H_
+#define INCLUDE_SIMULATOR_CIRCUIT_TILING_PLANNER_H_
 
 #include <algorithm>
 #include <cassert>
@@ -33,15 +33,17 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
-
 #include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "ops/basic_gate.h"
 #include "ops/gate_id.h"
-#include "simulator/vector/circuit_tiling.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
+#include "simulator/circuit_tiling/state_space.h"
 
-namespace mindquantum::sim::vector::detail::circuit_tiling {
+namespace mindquantum::sim::circuit_tiling {
+// Groups a circuit into cache-resident tiles of state-index bits.  The
+// planner reasons purely about state accesses, so a density matrix circuit
+// is planned exactly like a state vector circuit on twice the index bits.
 class Planner {
  private:
     // A calibrated, bounded frontier prevents locally attractive masks from
@@ -49,21 +51,6 @@ class Planner {
     // and explainable; twelve candidates retain the measured plan quality
     // without the former dual-heuristic search.
     static constexpr size_t kCandidateWidth = 12;
-
-    enum class AccessPattern : uint8_t {
-        MixAllObjects,
-        DiagonalObjects,
-        MixFirstObject,
-        PauliString,
-        GlobalPhase,
-    };
-
-    struct GateAccess {
-        std::shared_ptr<BasicGate> gate;
-        index_t mixing_mask = 0;
-        index_t object_mask = 0;
-        index_t control_mask = 0;
-    };
 
     using segment_t = std::vector<GateAccess>;
 
@@ -82,11 +69,8 @@ class Planner {
  public:
     using circuit_t = std::vector<std::shared_ptr<BasicGate>>;
 
-    explicit Planner(qbit_t n_qubits, size_t max_tile_qubits = kMaxTileQubits)
-        : n_qubits_(n_qubits), max_tile_qubits_(max_tile_qubits) {
-        if (n_qubits_ < 0 || static_cast<size_t>(n_qubits_) >= std::numeric_limits<index_t>::digits) {
-            throw std::invalid_argument("Simulator qubit count is outside the state index range.");
-        }
+    explicit Planner(const StateSpace& space, size_t max_tile_qubits = kMaxTileQubits)
+        : space_(space), n_qubits_(space.state_qubits()), max_tile_qubits_(max_tile_qubits) {
         if (max_tile_qubits_ == 0 || max_tile_qubits_ >= std::numeric_limits<index_t>::digits) {
             throw std::invalid_argument("Circuit tile qubit count is outside the local index range.");
         }
@@ -103,6 +87,7 @@ class Planner {
     }
 
  private:
+    StateSpace space_;
     qbit_t n_qubits_;
     size_t max_tile_qubits_;
 
@@ -119,7 +104,7 @@ class Planner {
             if (gate->GetID() == GateID::I) {
                 continue;
             }
-            if (auto access = DescribeGate(gate);
+            if (auto access = DescribeGateAccess(gate, space_);
                 access.has_value() && PopCount(access->mixing_mask) <= max_tile_qubits_) {
                 segment.push_back(std::move(*access));
                 continue;
@@ -131,125 +116,8 @@ class Planner {
         return schedule;
     }
 
-    [[nodiscard]] static auto PatternFor(GateID gate_id) -> std::optional<AccessPattern> {
-        switch (gate_id) {
-            case GateID::X:
-            case GateID::Y:
-            case GateID::H:
-            case GateID::SX:
-            case GateID::SXdag:
-            case GateID::RX:
-            case GateID::RY:
-            case GateID::SWAP:
-            case GateID::ISWAP:
-            case GateID::SWAPalpha:
-            case GateID::Rxx:
-            case GateID::Ryy:
-            case GateID::Rxy:
-            case GateID::Givens:
-            case GateID::U3:
-            case GateID::Rn:
-            case GateID::FSim:
-            case GateID::CUSTOM:
-            case GateID::CUSTOM_TWO_PARAM:
-                return AccessPattern::MixAllObjects;
-            case GateID::Z:
-            case GateID::S:
-            case GateID::Sdag:
-            case GateID::T:
-            case GateID::Tdag:
-            case GateID::PS:
-            case GateID::RZ:
-            case GateID::Rzz:
-                return AccessPattern::DiagonalObjects;
-            case GateID::Rxz:
-            case GateID::Ryz:
-                return AccessPattern::MixFirstObject;
-            case GateID::PauliString:
-            case GateID::RPS:
-                return AccessPattern::PauliString;
-            case GateID::GP:
-                return AccessPattern::GlobalPhase;
-            default:
-                return std::nullopt;
-        }
-    }
-
-    void ValidateQubits(const BasicGate& gate, const qbits_t& objects, const qbits_t& controls) const {
-        const auto validate_set = [this, &gate](const qbits_t& qubits, const char* kind) {
-            auto sorted = qubits;
-            for (auto qubit : sorted) {
-                if (qubit < 0 || qubit >= n_qubits_) {
-                    throw std::invalid_argument(
-                        fmt::format("{} qubit {} of gate {} is out of range.", kind, qubit, gate.GetID()));
-                }
-            }
-            std::sort(sorted.begin(), sorted.end());
-            if (std::adjacent_find(sorted.begin(), sorted.end()) != sorted.end()) {
-                throw std::invalid_argument(
-                    fmt::format("{} qubits of gate {} contain duplicates.", kind, gate.GetID()));
-            }
-        };
-        validate_set(objects, "Object");
-        validate_set(controls, "Control");
-
-        auto all = objects;
-        all.insert(all.end(), controls.begin(), controls.end());
-        std::sort(all.begin(), all.end());
-        if (std::adjacent_find(all.begin(), all.end()) != all.end()) {
-            throw std::invalid_argument(
-                fmt::format("Object and control qubits of gate {} must be disjoint.", gate.GetID()));
-        }
-    }
-
-    [[nodiscard]] static auto QubitsToMask(const qbits_t& qubits) -> index_t {
-        index_t mask = 0;
-        for (auto qubit : qubits) {
-            mask |= index_t{1} << qubit;
-        }
-        return mask;
-    }
-
     [[nodiscard]] static auto PopCount(index_t value) noexcept -> size_t {
         return static_cast<size_t>(CountOne(static_cast<std::uint64_t>(value)));
-    }
-
-    [[nodiscard]] auto DescribeGate(const std::shared_ptr<BasicGate>& gate) const -> std::optional<GateAccess> {
-        const auto pattern = PatternFor(gate->GetID());
-        if (!pattern.has_value()) {
-            return std::nullopt;
-        }
-
-        const auto objects = gate->GetObjQubits();
-        const auto controls = gate->GetCtrlQubits();
-        ValidateQubits(*gate, objects, controls);
-        const auto object_mask = QubitsToMask(objects);
-
-        GateAccess access{gate, 0, object_mask, QubitsToMask(controls)};
-        switch (*pattern) {
-            case AccessPattern::MixAllObjects:
-                access.mixing_mask = object_mask;
-                break;
-            case AccessPattern::DiagonalObjects:
-                break;
-            case AccessPattern::MixFirstObject:
-                access.mixing_mask = objects.empty() ? 0 : index_t{1} << objects.front();
-                break;
-            case AccessPattern::PauliString: {
-                const auto mask = gate->GetID() == GateID::PauliString
-                                      ? static_cast<const PauliString*>(gate.get())->GetPauliMask()
-                                      : static_cast<const RotPauliString*>(gate.get())->GetPauliString().GetPauliMask();
-                access.mixing_mask = mask.mask_x | mask.mask_y;
-                // Identity labels in a Pauli string are not state accesses.
-                access.object_mask = access.mixing_mask | mask.mask_z;
-                break;
-            }
-            case AccessPattern::GlobalPhase:
-                // GP's public object label does not affect phase * I.
-                access.object_mask = 0;
-                break;
-        }
-        return access;
     }
 
     template <typename function_t>
@@ -261,25 +129,28 @@ class Planner {
         }
     }
 
-    [[nodiscard]] auto MaskToQubits(index_t mask) const -> qbits_t {
-        qbits_t qubits;
-        qubits.reserve(PopCount(mask));
-        ForEachQubit(mask, [&qubits](qbit_t qubit) { qubits.push_back(qubit); });
-        return qubits;
-    }
-
+    // Diagonal operands and controls become tile-local while the tile has
+    // room, most frequently accessed first.  Every image of a circuit qubit
+    // enters together, so density matrix tiles stay image-symmetric and the
+    // engine can evolve only half of their blocks.
     [[nodiscard]] auto SelectTileQubits(index_t mixing_mask, const std::vector<size_t>& gate_indices,
                                         const DependencyGraph& graph) const -> qbits_t {
-        std::vector<size_t> access_weights(static_cast<size_t>(n_qubits_), 0);
+        const auto n_circuit_qubits = space_.circuit_qubits();
+        if (n_circuit_qubits == 0) {
+            return QubitsFromMask(mixing_mask);
+        }
+        const auto images = static_cast<size_t>(n_qubits_ / n_circuit_qubits);
+        std::vector<size_t> access_weights(static_cast<size_t>(n_circuit_qubits), 0);
         for (auto gate_index : gate_indices) {
             const auto non_mixing_access = (graph.gates[gate_index].object_mask | graph.gates[gate_index].control_mask)
                                            & ~mixing_mask;
-            ForEachQubit(non_mixing_access,
-                         [&access_weights](qbit_t qubit) { ++access_weights[static_cast<size_t>(qubit)]; });
+            ForEachQubit(non_mixing_access, [&access_weights, n_circuit_qubits](qbit_t qubit) {
+                ++access_weights[static_cast<size_t>(qubit % n_circuit_qubits)];
+            });
         }
 
         std::vector<qbit_t> candidates;
-        for (qbit_t qubit = 0; qubit < n_qubits_; ++qubit) {
+        for (qbit_t qubit = 0; qubit < n_circuit_qubits; ++qubit) {
             if (access_weights[static_cast<size_t>(qubit)] != 0) {
                 candidates.push_back(qubit);
             }
@@ -293,16 +164,16 @@ class Planner {
         auto tile_mask = mixing_mask;
         auto tile_size = PopCount(tile_mask);
         for (auto qubit : candidates) {
-            if (tile_size == max_tile_qubits_) {
+            if (tile_size + images > max_tile_qubits_) {
                 break;
             }
-            const auto bit = index_t{1} << qubit;
-            if ((tile_mask & bit) == 0) {
-                tile_mask |= bit;
-                ++tile_size;
+            const auto image_mask = space_.Embed(index_t{1} << qubit);
+            if ((tile_mask & image_mask) == 0) {
+                tile_mask |= image_mask;
+                tile_size += images;
             }
         }
-        return MaskToQubits(tile_mask);
+        return QubitsFromMask(tile_mask);
     }
 
     [[nodiscard]] auto BuildDependencyGraph(segment_t segment) const -> DependencyGraph {
@@ -591,6 +462,6 @@ class Planner {
         segment->clear();
     }
 };
-}  // namespace mindquantum::sim::vector::detail::circuit_tiling
+}  // namespace mindquantum::sim::circuit_tiling
 
-#endif  // INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_PLANNER_H_
+#endif  // INCLUDE_SIMULATOR_CIRCUIT_TILING_PLANNER_H_

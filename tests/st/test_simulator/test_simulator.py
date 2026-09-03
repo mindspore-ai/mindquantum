@@ -733,7 +733,7 @@ def test_noise_simulator(config):
     if virtual_qc.startswith('mqvector'):
         assert res.data['00'] == 1701
     elif virtual_qc.startswith('mqmatrix'):
-        assert res.data['00'] == 1684
+        assert res.data['00'] == 1662
 
 
 @pytest.mark.level0

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_H_
-#define INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_H_
+#ifndef INCLUDE_SIMULATOR_CIRCUIT_TILING_CIRCUIT_TILING_H_
+#define INCLUDE_SIMULATOR_CIRCUIT_TILING_CIRCUIT_TILING_H_
 
 #include <array>
 #include <complex>
@@ -27,7 +27,12 @@
 #include "core/mq_base_types.h"
 #include "ops/basic_gate.h"
 
-namespace mindquantum::sim::vector::detail::circuit_tiling {
+// Circuit tiling executes a run of gates on one cache-resident block of state
+// amplitudes at a time.  The data model below is shared by every simulator
+// that stores its state as a flat array of complex amplitudes indexed by
+// state-index bits: a state vector directly, and a row-major density matrix
+// as a vector over twice as many index bits.
+namespace mindquantum::sim::circuit_tiling {
 // A 2^8-amplitude tile is the measured cache/performance optimum.  This is an
 // execution policy, not a user-facing tuning parameter.
 inline constexpr size_t kMaxTileQubits = 8;
@@ -120,10 +125,26 @@ struct DenseMatrixKernel {
     std::vector<value_t> matrix;
 };
 
+// The m-qubit depolarizing channel on a density matrix,
+// rho -> (1 - p) rho + p / 2^m Tr_Q(rho) (x) I_Q, acting on the row-major
+// (row, column) operand block of the local basis.  Its structure makes it
+// O(4^m) per block instead of the O(16^m) of the dense superoperator.
+template <typename value_t>
+struct DepolarizingKernel {
+    using calc_type = typename value_t::value_type;
+
+    size_t local_dim = 0;  // 2^m: the dimension of one operand copy
+    calc_type keep = 1;    // 1 - p
+    calc_type mix = 0;     // p / 2^m
+    // Consecutive local_dim * local_dim entries describe one block, ordered
+    // row-major as (row basis, column basis).
+    std::vector<size_t> indices;
+};
+
 template <typename value_t>
 using Kernel = std::variant<PauliKernel<value_t>, PauliRotationKernel<value_t>, DiagonalKernel<value_t>, HadamardKernel,
                             PairMatrixKernel<value_t>, SwapKernel, ISwapKernel<value_t>, FSimKernel<value_t>,
-                            DenseMatrixKernel<value_t>>;
+                            DenseMatrixKernel<value_t>, DepolarizingKernel<value_t>>;
 
 template <typename value_t>
 struct Operation {
@@ -150,9 +171,15 @@ struct Derivative {
 
 template <typename value_t>
 struct AdjointOperation {
-    // Adjoint-circuit order is significant: evolve the shared bra, evaluate
-    // derivatives against the current ket states, then evolve those kets.
-    Operation<value_t> evolution;
+    // Adjoint-circuit order is significant: the shared bra is evolved by
+    // every evolution operation; each ket is evolved by the first
+    // `derivative_position` operations, the derivatives are evaluated against
+    // that partially evolved ket, and its remaining evolution follows.  A
+    // state vector lowers a gate to one operation (position 0); a density
+    // matrix lowers it to a column-image and a row-image operation, and the
+    // row image carries the derivative (position 1).
+    std::vector<Operation<value_t>> evolution;
+    size_t derivative_position = 0;
     std::vector<Derivative<value_t>> derivatives;
 };
 
@@ -162,6 +189,12 @@ struct TileLayout {
     index_t tile_count = 0;
     std::vector<index_t> state_offsets;
     size_t workspace_size = 0;
+    // Non-zero for an image-symmetric tile of a Hermitian density matrix
+    // whose row index bits sit `mirror_shift` above its column index bits.
+    // The block at a base index and the block at the base with both halves
+    // swapped are conjugate transposes of each other, so a runtime may evolve
+    // only one of them and write the other as its mirror.
+    qbit_t mirror_shift = 0;
 };
 
 template <typename value_t>
@@ -184,8 +217,9 @@ struct AdjointProgram {
     std::vector<PreparedAdjointTile<value_t>> tiles;
 };
 
-// A scheduling-level tile: every gate that mixes amplitudes acts only on
-// `qubits`.  Controls and diagonal operands may remain external.
+// A scheduling-level tile: every gate that mixes amplitudes acts only on the
+// state-index bits `qubits`.  Controls and diagonal operands may remain
+// external.
 struct CircuitTile {
     qbits_t qubits;
     std::vector<std::shared_ptr<BasicGate>> gates;
@@ -193,6 +227,6 @@ struct CircuitTile {
 
 using ScheduleEntry = std::variant<std::shared_ptr<BasicGate>, CircuitTile>;
 using Schedule = std::vector<ScheduleEntry>;
-}  // namespace mindquantum::sim::vector::detail::circuit_tiling
+}  // namespace mindquantum::sim::circuit_tiling
 
-#endif  // INCLUDE_SIMULATOR_VECTOR_CIRCUIT_TILING_H_
+#endif  // INCLUDE_SIMULATOR_CIRCUIT_TILING_CIRCUIT_TILING_H_

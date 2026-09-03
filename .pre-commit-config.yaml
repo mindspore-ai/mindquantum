@@ -110,6 +110,10 @@ repos:
       # cppcheck), otherwise skip with `SKIP=cppcheck git push`. The gate runs
       # cppcheck 1.90 with --enable=style; --std/--language compensate for
       # newer local versions parsing modern C++.
+      #
+      # Maintain suppressions in .cppcheck.suppressions, then run
+      # `bash .jenkins/check/config/gen_cppcheck.bash` and commit the generated
+      # filter_cppcheck.txt because the remote gate does not regenerate it.
       - id: cppcheck
         name: cppcheck (CI parity)
         entry: cppcheck

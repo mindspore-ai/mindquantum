@@ -16,40 +16,38 @@
 
 #ifndef INCLUDE_DENSITYMATRIX_DENSITYMATRIX_STATE_HPP
 #define INCLUDE_DENSITYMATRIX_DENSITYMATRIX_STATE_HPP
-#include <cmath>
 
-#include <algorithm>
-#include <atomic>
-#include <cassert>
 #include <cstddef>
-#include <functional>
-#include <iterator>
 #include <map>
 #include <memory>
-#include <mutex>
+#include <optional>
 #include <random>
-#include <stdexcept>
 #include <string>
-#include <thread>
-#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "core/mq_base_types.h"
 #include "math/pr/parameter_resolver.h"
+#include "math/tensor/traits.h"
 #include "ops/basic_gate.h"
-#include "ops/gates.h"
 #include "ops/hamiltonian.h"
-#include "simulator/timer.h"
-#include "simulator/utils.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
+#include "simulator/circuit_tiling/state_space.h"
 
 namespace mindquantum::sim::densitymatrix::detail {
-template <typename qs_policy_t_>
-struct BLAS;
-
+// A mixed quantum state stored as a dense density matrix.
+//
+// Gates and noise channels are executed as circuit tiles on the row-major
+// matrix viewed as a 2n-qubit state vector, so the same planning, lowering,
+// and vectorised execution serve both this simulator and the state vector
+// simulator.  A circuit is compiled into a program before it is executed:
+// every gate is validated and lowered first, so an invalid circuit fails
+// before the state is modified, and a compiled program can be replayed.
+// Gradients use adjoint differentiation: the observable is evolved in the
+// Heisenberg picture while the state is evolved backwards through unitary
+// segments and re-simulated across noise channels.
 template <typename qs_policy_t_>
 class DensityMatrixState {
-    friend struct BLAS<qs_policy_t_>;
-
  public:
     using qs_policy_t = qs_policy_t_;
     using calc_type = typename qs_policy_t::calc_type;
@@ -62,144 +60,182 @@ class DensityMatrixState {
     using matrix_t = typename qs_policy_t::matrix_t;
     using RndEngine = std::mt19937;
 
-    //! ctor
-    DensityMatrixState() = default;
     explicit DensityMatrixState(qbit_t n_qubits, unsigned seed = 42);
-    DensityMatrixState(qs_data_p_t qs, qbit_t n_qubits, unsigned seed = 42);
+    // Adopts ownership of a state allocated by the policy.
+    DensityMatrixState(qs_data_p_t qs, qbit_t n_qubits, unsigned seed);
 
-    DensityMatrixState(const DensityMatrixState<qs_policy_t>& sim);
-    derived_t& operator=(const DensityMatrixState<qs_policy_t>& sim);
-    DensityMatrixState(DensityMatrixState<qs_policy_t>&& sim);
-    derived_t& operator=(DensityMatrixState<qs_policy_t>&& sim);
+    DensityMatrixState(const DensityMatrixState& other);
+    auto operator=(const DensityMatrixState& other) -> DensityMatrixState&;
+    DensityMatrixState(DensityMatrixState&& other) noexcept = default;
+    auto operator=(DensityMatrixState&& other) noexcept -> DensityMatrixState& = default;
+    ~DensityMatrixState() = default;
 
-    //! dtor
-    virtual ~DensityMatrixState() {
-        qs_policy_t::FreeState(&qs);
-    }
+    [[nodiscard]] auto DType() const -> tensor::TDtype;
 
-    virtual tensor::TDtype DType();
+    //! Reset the quantum state to the zero state |0...0><0...0|
+    void Reset();
 
-    //! Reset the quantum state to quantum zero state
-    virtual void Reset();
+    void SetSeed(unsigned seed);
 
     //! Display basic information of this quantum state
-    virtual void Display(qbit_t qubits_limit = 10) const;
+    void Display(qbit_t qubits_limit = 10) const;
 
-    //! Get the quantum state value
-    virtual matrix_t GetQS() const;
+    [[nodiscard]] auto GetQS() const -> matrix_t;
+    //! Set the state to the pure state |psi><psi|
+    void SetQS(const py_qs_datas_t& state_vector);
+    void SetDM(const matrix_t& density_matrix);
 
-    //! Set the quantum state value
-    virtual void SetQS(const py_qs_datas_t& qs_out);
-    virtual void SetDM(const matrix_t& qs_out);
-    virtual void CopyQS(const qs_data_p_t& qs_src);
+    [[nodiscard]] auto Purity() const -> calc_type;
+    [[nodiscard]] auto GetPartialTrace(const qbits_t& traced_qubits) const -> matrix_t;
+    [[nodiscard]] auto GetReducedDensityMatrix(const qbits_t& kept_qubits) const -> matrix_t;
+    //! The state vector of a pure density matrix, up to a global phase
+    [[nodiscard]] auto PureStateVector() const -> py_qs_datas_t;
 
-    //! Get the purity of density matrix
-    virtual calc_type Purity() const;
-
-    //! Get the partial trace of density matrix
-    virtual matrix_t GetPartialTrace(const qbits_t& objs) const;
-
-    //! Get the reduced density matrix
-    virtual matrix_t GetReducedDensityMatrix(const qbits_t& kept_qubits) const;
-
-    //! Transform to vector from a pure density matrix (with an unknown global phase)
-    virtual py_qs_datas_t PureStateVector();
-
-    //! Apply a hamiltonian on this quantum state
+    //! rho -> H rho H^dagger
     void ApplyHamiltonian(const Hamiltonian<calc_type>& ham);
 
     /*!
-     * \brief Apply a quantum gate on this quantum state, quantum gate can be
-     * normal quantum gate, measurement gate and noise channel
+     * \brief Apply a quantum gate, a measurement, or a noise channel.  With
+     * `diff` the derivative of a single-parameter gate is applied on both
+     * sides, rho -> dU rho dU^dagger, which is zero outside the derivative's
+     * support.  Returns the outcome of a measurement.
      */
-    virtual index_t ApplyGate(const std::shared_ptr<BasicGate>& gate,
-                              const parameter::ParameterResolver& pr = parameter::ParameterResolver(),
-                              bool diff = false);
+    auto ApplyGate(const std::shared_ptr<BasicGate>& gate,
+                   const parameter::ParameterResolver& pr = parameter::ParameterResolver(), bool diff = false)
+        -> index_t;
+    auto ApplyMeasure(const std::shared_ptr<BasicGate>& gate) -> index_t;
+    auto ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr = parameter::ParameterResolver())
+        -> std::map<std::string, int>;
 
-    virtual void ApplyChannel(const std::shared_ptr<BasicGate>& gate);
+    [[nodiscard]] auto GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
+                                      const parameter::ParameterResolver& pr) const -> py_qs_data_t;
 
-    //! Apply a quantum circuit on this quantum state
-    virtual std::map<std::string, int> ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr
-                                                                           = parameter::ParameterResolver());
-
-    virtual index_t ApplyMeasure(const std::shared_ptr<BasicGate>& gate);
-
-    virtual tensor::Matrix ExpectDiffGate(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
-                                          const std::shared_ptr<BasicGate>& gate,
-                                          const parameter::ParameterResolver& pr, index_t dim) const;
-
-    virtual tensor::Matrix ExpectDiffU3(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
-                                        const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
-                                        index_t dim) const;
-
-    virtual tensor::Matrix ExpectDiffRn(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
-                                        const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
-                                        index_t dim) const;
-
-    virtual tensor::Matrix ExpectDiffFSim(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
-                                          const std::shared_ptr<BasicGate>& gate,
-                                          const parameter::ParameterResolver& pr, index_t dim) const;
-
-    virtual tensor::Matrix ExpectDiffCustomTwoParam(const qs_data_p_t& dens_matrix, const qs_data_p_t& ham_matrix,
-                                                    const std::shared_ptr<BasicGate>& gate,
-                                                    const parameter::ParameterResolver& pr, index_t dim) const;
-
-    virtual py_qs_data_t GetStateExpectation(const qs_data_p_t& qs_out, const Hamiltonian<calc_type>& ham,
-                                             index_t dim) const;
-
-    virtual py_qs_data_t GetExpectation(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                        const parameter::ParameterResolver& pr) const;
-
-    virtual py_qs_datas_t GetExpectationWithReversibleGradOneOne(const Hamiltonian<calc_type>& ham,
-                                                                 const circuit_t& circ, const circuit_t& herm_circ,
-                                                                 const parameter::ParameterResolver& pr,
-                                                                 const MST<size_t>& p_map, int n_thread) const;
-
-    virtual VT<py_qs_datas_t> GetExpectationWithReversibleGradOneMulti(
+    //! Expectation values and gradients of every Hamiltonian for every
+    //! encoder parameter set, batched over `mea_threads` observables.
+    [[nodiscard]] auto GetExpectationWithGradMultiMulti(
         const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const circuit_t& herm_circ, const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
-        int n_thread) const;
+        const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name, const VS& ans_name,
+        size_t batch_threads, size_t mea_threads) const -> VT<VVT<py_qs_data_t>>;
 
-    virtual VT<VT<py_qs_datas_t>> GetExpectationWithReversibleGradMultiMulti(
-        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const circuit_t& herm_circ, const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name,
-        const VS& ans_name, size_t batch_threads, size_t mea_threads) const;
+    [[nodiscard]] auto Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
+                                const MST<size_t>& key_map, unsigned seed) const -> VT<unsigned>;
 
-    virtual py_qs_datas_t GetExpectationWithNoiseGradOneOne(const Hamiltonian<calc_type>& ham, const circuit_t& circ,
-                                                            const circuit_t& herm_circ,
-                                                            const parameter::ParameterResolver& pr,
-                                                            const MST<size_t>& p_map) const;
-
-    virtual VT<py_qs_datas_t> GetExpectationWithNoiseGradOneMulti(
-        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const circuit_t& herm_circ, const parameter::ParameterResolver& pr, const MST<size_t>& p_map,
-        int n_thread) const;
-
-    virtual VT<VT<py_qs_datas_t>> GetExpectationWithNoiseGradMultiMulti(
-        const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams, const circuit_t& circ,
-        const circuit_t& herm_circ, const VVT<calc_type>& enc_data, const VT<calc_type>& ans_data, const VS& enc_name,
-        const VS& ans_name, size_t batch_threads, size_t mea_threads) const;
-
-    virtual VT<unsigned> Sampling(const circuit_t& circ, const parameter::ParameterResolver& pr, size_t shots,
-                                  const MST<size_t>& key_map, unsigned int seed) const;
-
-    virtual VT<unsigned> SamplingMeasurementEndingWithoutNoise(const circuit_t& circ,
-                                                               const parameter::ParameterResolver& pr, size_t shots,
-                                                               const MST<size_t>& key_map, unsigned int seed) const;
+    //! Samples a circuit whose measurements all come last, from one exact
+    //! evolution of the (possibly noisy) circuit.
+    [[nodiscard]] auto SamplingMeasurementEnding(const circuit_t& circ, const parameter::ParameterResolver& pr,
+                                                 size_t shots, const MST<size_t>& key_map, unsigned seed) const
+        -> VT<unsigned>;
 
     template <typename policy_des, template <typename p_src, typename p_des> class cast_policy>
-    DensityMatrixState<policy_des> astype(unsigned new_seed) const {
-        return DensityMatrixState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(this->qs, this->dim),
-                                              this->n_qubits, new_seed);
+    [[nodiscard]] auto astype(unsigned new_seed) const -> DensityMatrixState<policy_des> {
+        return DensityMatrixState<policy_des>(cast_policy<qs_policy_t, policy_des>::cast(qs_.get(), dim_), n_qubits_,
+                                              new_seed);
     }
 
- protected:
-    qs_data_p_t qs = nullptr;
-    qbit_t n_qubits = 0;
-    index_t dim = 0;
-    unsigned seed = 0;
-    RndEngine rnd_eng_;
-    std::function<double()> rng_;
+ private:
+    struct StateDeleter {
+        void operator()(qs_data_t* qs) const noexcept {
+            qs_policy_t::FreeState(qs);
+        }
+    };
+    using state_ptr_t = std::unique_ptr<qs_data_t, StateDeleter>;
+    using prepared_tile_t = circuit_tiling::PreparedTile<py_qs_data_t>;
+    using adjoint_program_t = circuit_tiling::AdjointProgram<py_qs_data_t>;
+
+    // A validated measurement.  The reset flip is lowered ahead of time so
+    // that a replayed program never lowers gates again.
+    struct PreparedMeasurement {
+        std::string name;
+        qbit_t qubit = 0;
+        // When set, the qubit is flipped to this value after collapsing to
+        // the other one.
+        std::optional<index_t> reset_to;
+        prepared_tile_t flip;
+    };
+
+    // A circuit lowered for one parameter set, ready to execute.
+    using ProgramEntry = std::variant<prepared_tile_t, PreparedMeasurement>;
+    using Program = std::vector<ProgramEntry>;
+
+    // A maximal run of unitary gates followed by at most one noise channel.
+    struct GradientSegment {
+        circuit_t gates;
+        std::shared_ptr<BasicGate> channel;
+        bool has_gradient = false;
+        circuit_tiling::Schedule forward;
+        circuit_tiling::Schedule adjoint;
+    };
+
+    // The circuit structure of a gradient evaluation, shared by every
+    // parameter set of a batch.
+    struct GradientPlan {
+        std::vector<GradientSegment> segments;
+        size_t first_gradient_segment = 0;
+    };
+
+    // The lowering of one segment for one parameter set.
+    struct PreparedSegment {
+        std::vector<prepared_tile_t> forward;
+        std::optional<prepared_tile_t> channel;
+        std::optional<prepared_tile_t> adjoint_channel;
+        // Gradient segments run an adjoint program; the others only evolve
+        // the observables.
+        adjoint_program_t program;
+        std::vector<prepared_tile_t> observable_evolution;
+    };
+
+    // Observables evolved in one adjoint sweep are full density matrices;
+    // batching them bounds the working set.
+    static constexpr size_t kMaxObservableBatch = 16;
+
+    // Validates the qubit count against the state index range.
+    [[nodiscard]] static auto Dimension(qbit_t n_qubits) -> index_t;
+    [[nodiscard]] auto Space() const -> circuit_tiling::StateSpace;
+    [[nodiscard]] auto Random() const -> double;
+    [[nodiscard]] auto CloneState() const -> state_ptr_t;
+    [[nodiscard]] static auto CloneState(const qs_data_p_t& qs, index_t dim) -> state_ptr_t;
+    // Rejects null gates and expands grouped Pauli channels into the
+    // single-qubit channels the planner tiles independently.
+    [[nodiscard]] static auto Expand(const circuit_t& circ) -> circuit_t;
+
+    // Compilation: validation and lowering, without touching the state.
+    [[nodiscard]] auto GateTile(const std::shared_ptr<BasicGate>& gate, bool derivative) const
+        -> circuit_tiling::CircuitTile;
+    // The planned tile of a schedule entry, or a lone gate's own tile.
+    [[nodiscard]] auto TileOf(const circuit_tiling::ScheduleEntry& entry) const -> circuit_tiling::CircuitTile;
+    [[nodiscard]] auto PlanCircuit(const circuit_t& gates, bool adjoint) const -> circuit_tiling::Schedule;
+    [[nodiscard]] auto PrepareSchedule(const circuit_tiling::Schedule& schedule,
+                                       const parameter::ParameterResolver& pr) const -> std::vector<prepared_tile_t>;
+    [[nodiscard]] auto CompileMeasurement(const BasicGate& gate) const -> PreparedMeasurement;
+    [[nodiscard]] auto CompileGate(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& pr,
+                                   bool derivative) const -> Program;
+    [[nodiscard]] auto Compile(const circuit_t& circ, const parameter::ParameterResolver& pr) const -> Program;
+
+    // Execution of compiled programs.
+    static void ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, index_t dim);
+    auto ExecuteMeasurement(const PreparedMeasurement& measurement) -> index_t;
+    void Execute(const Program& program, std::map<std::string, int>* outcomes);
+    // The output column of a measurement name, which must be a sampling key.
+    static auto OutputColumn(const MST<size_t>& key_map, const std::string& name) -> size_t;
+
+    // Gradients.
+    [[nodiscard]] auto PlanGradient(const circuit_t& circ) const -> GradientPlan;
+    [[nodiscard]] auto PrepareSegments(const GradientPlan& plan, const parameter::ParameterResolver& pr,
+                                       const MST<size_t>& parameter_map) const -> std::vector<PreparedSegment>;
+    void ApplyForward(qs_data_p_t qs, const std::vector<PreparedSegment>& segments, size_t through_segment) const;
+    [[nodiscard]] auto ExpectationWithGradient(const GradientPlan& plan,
+                                               const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
+                                               const parameter::ParameterResolver& pr, const MST<size_t>& parameter_map,
+                                               size_t batch_size) const -> VVT<py_qs_data_t>;
+    void AdjointSweep(const GradientPlan& plan, const std::vector<PreparedSegment>& segments,
+                      const qs_data_p_t& final_state, const std::vector<qs_data_p_t>& observables,
+                      VVT<py_qs_data_t>* output) const;
+
+    state_ptr_t qs_;
+    qbit_t n_qubits_ = 0;
+    index_t dim_ = 0;
+    unsigned seed_ = 0;
+    mutable RndEngine rnd_eng_;
 };
 }  // namespace mindquantum::sim::densitymatrix::detail
 

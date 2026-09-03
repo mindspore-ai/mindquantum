@@ -42,9 +42,9 @@
 #include "ops/basic_gate.h"
 #include "ops/gates.h"
 #include "ops/hamiltonian.h"
+#include "simulator/circuit_tiling/circuit_tiling.h"
 #include "simulator/timer.h"
 #include "simulator/utils.h"
-#include "simulator/vector/circuit_tiling.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename qs_policy_t_>

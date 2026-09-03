@@ -20,6 +20,7 @@
 #include <complex>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <map>
 #include <numeric>
@@ -134,6 +135,16 @@ inline uint64_t CountLeadingZero(int64_t n) {
     return __builtin_clzll(uint64_t(n));
 }
 #endif  // _MSC_VER
+
+// Whether a double is neither infinite nor NaN.  Release builds use
+// -ffast-math, under which the compiler may fold std::isfinite to true and
+// drop NaN cases from comparisons, so input validation inspects the exponent
+// bits directly.
+inline bool IsFinite(double value) {
+    uint64_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(bits));
+    return ((bits >> 52U) & 0x7FFU) != 0x7FFU;
+}
 
 template <typename T>
 PauliTerm<T> GenerateRandomPauliTerm(Index n_qubits) {

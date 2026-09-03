@@ -77,9 +77,9 @@ option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (
 # Compilation options
 
 option(USE_OPENMP "Enable the use of OpenMP throughout the code" ON)
-option(MQ_VECTOR_ARM_SVE "Require the Arm SVE/FCMA mqvector backends on Linux AArch64 targets" ON)
-if(NOT MQ_VECTOR_ARM_SVE MATCHES "^(ON|OFF)$")
-  message(FATAL_ERROR "MQ_VECTOR_ARM_SVE must be ON or OFF (got '${MQ_VECTOR_ARM_SVE}').")
+option(MQ_ARM_SVE "Require the Arm SVE/FCMA simulator kernels on Linux AArch64 targets" ON)
+if(NOT MQ_ARM_SVE MATCHES "^(ON|OFF)$")
+  message(FATAL_ERROR "MQ_ARM_SVE must be ON or OFF (got '${MQ_ARM_SVE}').")
 endif()
 
 # cmake-lint: disable=C0103

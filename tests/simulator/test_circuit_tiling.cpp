@@ -24,13 +24,17 @@
 
 #include "math/pr/parameter_resolver.h"
 #include "ops/basic_gate.h"
-#include "simulator/vector/circuit_tiling_builder.h"
-#include "simulator/vector/circuit_tiling_planner.h"
+#include "simulator/circuit_tiling/builder.h"
+#include "simulator/circuit_tiling/planner.h"
 
 #include <catch2/catch_test_macros.hpp>
 
 namespace mq = mindquantum;
-namespace mqt = mindquantum::sim::vector::detail::circuit_tiling;
+namespace mqt = mindquantum::sim::circuit_tiling;
+
+auto VectorSpace(mq::qbit_t n_qubits) -> mqt::StateSpace {
+    return mqt::StateSpace::Vector(n_qubits);
+}
 
 namespace {
 using circuit_t = mqt::Planner::circuit_t;
@@ -73,7 +77,7 @@ TEST_CASE("Circuit tiles use the minimum passes for independent repeated gates")
                       std::make_shared<mq::HGate>(mq::qbits_t{2}), std::make_shared<mq::HGate>(mq::qbits_t{0}),
                       std::make_shared<mq::HGate>(mq::qbits_t{1}), std::make_shared<mq::HGate>(mq::qbits_t{2})};
 
-    const auto plan = mqt::Planner(12, 2).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(12), 2).Plan(circuit);
 
     REQUIRE(plan.size() == 2);
     for (const auto& operation : plan) {
@@ -88,7 +92,7 @@ TEST_CASE("Diagonal gates share a pass without consuming mixing capacity") {
     circuit_t circuit{std::make_shared<mq::ZGate>(mq::qbits_t{0}), std::make_shared<mq::SGate>(mq::qbits_t{7}),
                       std::make_shared<mq::PauliString>("IZ", mq::qbits_t{5, 9})};
 
-    const auto plan = mqt::Planner(12, 1).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(12), 1).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
     REQUIRE(std::holds_alternative<mqt::CircuitTile>(plan.front()));
@@ -106,7 +110,7 @@ TEST_CASE("A diagonal frontier can expand through the full block width") {
         circuit.push_back(std::make_shared<mq::HGate>(mq::qbits_t{qubit}));
     }
 
-    const auto plan = mqt::Planner(12, 4).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(12), 4).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
     REQUIRE(std::holds_alternative<mqt::CircuitTile>(plan.front()));
@@ -121,7 +125,7 @@ TEST_CASE("The default circuit tile holds eight mixing qubits") {
         circuit.push_back(std::make_shared<mq::HGate>(mq::qbits_t{qubit}));
     }
 
-    const auto plan = mqt::Planner(13).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(13)).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
     REQUIRE(std::holds_alternative<mqt::CircuitTile>(plan.front()));
@@ -146,7 +150,7 @@ TEST_CASE("Bounded closure search is efficient and deterministic") {
         }
     }
 
-    const mqt::Planner planner(12, 4);
+    const mqt::Planner planner(VectorSpace(12), 4);
     const auto expected = planner.Plan(circuit);
     REQUIRE(expected.size() == 2);
     const auto flattened = Flatten(expected);
@@ -228,7 +232,7 @@ TEST_CASE("Bounded closure search preserves future tile choices") {
         }
     }
 
-    const auto plan = mqt::Planner(6, 3).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(6), 3).Plan(circuit);
 
     REQUIRE(plan.size() == 4);
     const auto flattened = Flatten(plan);
@@ -250,7 +254,7 @@ TEST_CASE("Mixing dependencies preserve diagonal and controlled operations") {
                       second_control_mix,
                       std::make_shared<mq::HGate>(mq::qbits_t{11})};
 
-    const auto scheduled = Flatten(mqt::Planner(12, 2).Plan(circuit));
+    const auto scheduled = Flatten(mqt::Planner(VectorSpace(12), 2).Plan(circuit));
 
     CHECK(Position(scheduled, first_target_mix) < Position(scheduled, diagonal));
     CHECK(Position(scheduled, diagonal) < Position(scheduled, second_target_mix));
@@ -264,7 +268,7 @@ TEST_CASE("Non-unitary gates delimit independently scheduled segments") {
                       measurement, std::make_shared<mq::XGate>(mq::qbits_t{0}),
                       std::make_shared<mq::XGate>(mq::qbits_t{1})};
 
-    const auto plan = mqt::Planner(12, 2).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(12), 2).Plan(circuit);
 
     REQUIRE(plan.size() == 3);
     CHECK(std::holds_alternative<mqt::CircuitTile>(plan[0]));
@@ -276,7 +280,7 @@ TEST_CASE("Identity gates do not create state passes") {
     circuit_t circuit{std::make_shared<mq::IGate>(mq::qbits_t{0}), std::make_shared<mq::HGate>(mq::qbits_t{1}),
                       std::make_shared<mq::IGate>(mq::qbits_t{2})};
 
-    const auto plan = mqt::Planner(12, 2).Plan(circuit);
+    const auto plan = mqt::Planner(VectorSpace(12), 2).Plan(circuit);
 
     REQUIRE(plan.size() == 1);
     CHECK(std::get<std::shared_ptr<mq::BasicGate>>(plan.front())->GetID() == mq::GateID::H);
@@ -289,7 +293,7 @@ TEST_CASE("Circuit tile builder folds local diagonal runs") {
                   std::make_shared<mq::TGate>(mq::qbits_t{0})};
 
     const auto prepared = mqt::Builder<std::complex<double>>::Build(tile, parameter::ParameterResolver{},
-                                                                    static_cast<mq::index_t>(1) << 12);
+                                                                    VectorSpace(12));
 
     REQUIRE(prepared.operations.size() == 1);
     using diagonal_t = mqt::DiagonalKernel<std::complex<double>>;
@@ -304,7 +308,7 @@ TEST_CASE("Circuit tile builder prepares local Pauli rotation coefficients") {
     tile.gates = {std::make_shared<mq::RXGate>(parameter::ParameterResolver{0.37}, mq::qbits_t{3})};
 
     const auto prepared = mqt::Builder<std::complex<double>>::Build(tile, parameter::ParameterResolver{},
-                                                                    static_cast<mq::index_t>(1) << 12);
+                                                                    VectorSpace(12));
 
     REQUIRE(prepared.operations.size() == 1);
     using rotation_t = mqt::PauliRotationKernel<std::complex<double>>;
@@ -319,7 +323,7 @@ TEST_CASE("Identity Pauli strings lower to an empty circuit tile") {
                   std::make_shared<mq::PauliString>("II", mq::qbits_t{2, 7})};
 
     const auto prepared = mqt::Builder<std::complex<double>>::Build(tile, parameter::ParameterResolver{},
-                                                                    static_cast<mq::index_t>(1) << 12);
+                                                                    VectorSpace(12));
 
     CHECK(prepared.operations.empty());
 }

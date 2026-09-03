@@ -28,6 +28,7 @@
 #include "core/mq_base_types.h"
 #include "math/pr/parameter_resolver.h"
 #include "math/tensor/matrix.h"
+#include "simulator/utils.h"
 
 namespace mindquantum {
 /*
@@ -347,41 +348,8 @@ class GradientHelper {
         return f_g1;
     }
 
-    static void ParallelTask(size_t batch_threads, size_t n_prs, std::function<void(int)> run) {
-        if (n_prs == 0) {
-            throw std::invalid_argument("Gradient parameter batch cannot be empty.");
-        }
-        if (batch_threads == 0) {
-            throw std::invalid_argument("Gradient batch thread count cannot be zero.");
-        }
-        batch_threads = std::min(batch_threads, n_prs);
-        if (batch_threads == 1) {
-            for (size_t n = 0; n < n_prs; ++n) {
-                run(n);
-            }
-            return;
-        }
-        std::vector<std::thread> tasks;
-        tasks.reserve(batch_threads);
-        size_t end = 0;
-        size_t offset = n_prs / batch_threads;
-        size_t left = n_prs % batch_threads;
-        for (size_t i = 0; i < batch_threads; ++i) {
-            size_t start = end;
-            end = start + offset;
-            if (i < left) {
-                end += 1;
-            }
-            auto task = [&, start, end]() {
-                for (size_t n = start; n < end; n++) {
-                    run(n);
-                }
-            };
-            tasks.emplace_back(task);
-        }
-        for (auto& t : tasks) {
-            t.join();
-        }
+    static void ParallelTask(size_t batch_threads, size_t n_prs, const std::function<void(int)>& run) {
+        sim::ParallelBatch(batch_threads, n_prs, [&run](size_t index) { run(static_cast<int>(index)); });
     }
 };
 }  // namespace mindquantum

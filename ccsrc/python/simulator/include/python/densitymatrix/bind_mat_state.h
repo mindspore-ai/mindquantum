@@ -24,22 +24,8 @@
 #include <pybind11/stl.h>
 
 #include "math/pr/parameter_resolver.h"
-
-#ifdef __CUDACC__
-#    include "simulator/densitymatrix/detail/gpu_densitymatrix_double_policy.cuh"
-#    include "simulator/densitymatrix/detail/gpu_densitymatrix_float_policy.cuh"
-#    include "simulator/densitymatrix/detail/gpu_densitymatrix_policy.cuh"
-#elif defined(__x86_64__)
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_double_policy.h"
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_avx_float_policy.h"
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"
-#elif defined(__amd64)
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_double_policy.h"
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_arm_float_policy.h"
-#    include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"
-#endif  // __CUDACC__
-
 #include "simulator/densitymatrix/densitymatrix_state.h"
+#include "simulator/densitymatrix/detail/cpu_densitymatrix_policy.h"
 
 template <typename sim_t>
 auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLINT
@@ -63,10 +49,9 @@ auto BindSim(pybind11::module& module, const std::string_view& name) {  // NOLIN
         .def("apply_hamiltonian", &sim_t::ApplyHamiltonian)
         .def("copy", [](const sim_t& sim) { return sim; })
         .def("sampling", &sim_t::Sampling)
-        .def("sampling_measure_ending_without_noise", &sim_t::SamplingMeasurementEndingWithoutNoise)
+        .def("sampling_measure_ending_without_noise", &sim_t::SamplingMeasurementEnding)
         .def("get_expectation", &sim_t::GetExpectation)
-        .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithReversibleGradMultiMulti)
-        .def("get_expectation_with_noise_grad_multi_multi", &sim_t::GetExpectationWithNoiseGradMultiMulti);
+        .def("get_expectation_with_grad_multi_multi", &sim_t::GetExpectationWithGradMultiMulti);
 }
 
 #endif

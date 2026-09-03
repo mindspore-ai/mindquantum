@@ -46,9 +46,9 @@ mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_fermion_operators
 mindquantum/ccsrc/python/mqbackend/lib/binding.cc:init_qubit_operators
 mindquantum/ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
 # These routines are cohesive gate-dispatch/execution programs; splitting them obscures ordering and gate semantics.
-mindquantum/ccsrc/include/simulator/vector/detail/circuit_tiling_executor.h:mindquantum::sim::vector::detail::circuit_tiling::ApplyAdjointProgram
-mindquantum/ccsrc/include/simulator/vector/circuit_tiling_planner.h:mindquantum::sim::vector::detail::circuit_tiling::Planner::PatternFor
-mindquantum/ccsrc/include/simulator/vector/circuit_tiling_builder.h:mindquantum::sim::vector::detail::circuit_tiling::Builder::BuildOperation, mindquantum::sim::vector::detail::circuit_tiling::Builder::BuildIntrinsicDerivatives
+mindquantum/ccsrc/include/simulator/circuit_tiling/detail/tile_engine.h:mindquantum::sim::circuit_tiling::detail::ApplyAdjointProgram
+mindquantum/ccsrc/include/simulator/circuit_tiling/state_space.h:mindquantum::sim::circuit_tiling::detail::PatternFor
+mindquantum/ccsrc/include/simulator/circuit_tiling/builder.h:mindquantum::sim::circuit_tiling::Builder::BuildOperation, mindquantum::sim::circuit_tiling::Builder::BuildIntrinsicDerivatives
 mindquantum/ccsrc/include/math/tensor/ops_cpu/advance_math.h:tensor::ops::cpu::ElementFunc
 mindquantum/mindquantum/core/parameterresolver/parameterresolver.py:__init__
 mindquantum/ccsrc/python/math/lib/bind_math.cpp:mindquantum::python::BindQubitOperator

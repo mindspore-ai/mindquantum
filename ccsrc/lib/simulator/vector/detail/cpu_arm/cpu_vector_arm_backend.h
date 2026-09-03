@@ -29,33 +29,14 @@ using arm_matrix_t = std::vector<std::vector<typename policy_t::py_qs_data_t>>;
 
 template <typename policy_t>
 struct ArmBackend {
-    using apply_circuit_tile_t = void (*)(typename policy_t::qs_data_p_t*,
-                                          const circuit_tiling::PreparedTile<typename policy_t::py_qs_data_t>&,
-                                          index_t);
-    using apply_adjoint_tile_program_t
-        = void (*)(typename policy_t::qs_data_p_t*, const std::vector<typename policy_t::qs_data_p_t*>&,
-                   const circuit_tiling::AdjointProgram<typename policy_t::py_qs_data_t>&, index_t,
-                   VVT<typename policy_t::py_qs_data_t>*, bool);
     using apply_matrix_t = void (*)(const typename policy_t::qs_data_p_t&, typename policy_t::qs_data_p_t*,
                                     const qbits_t&, const qbits_t&, const arm_matrix_t<policy_t>&, index_t);
 
     const char* name;
-    apply_circuit_tile_t apply_circuit_tile;
-    apply_adjoint_tile_program_t apply_adjoint_tile_program;
     apply_matrix_t apply_matrix;
 };
 
 namespace arm_sve {
-template <typename policy_t>
-void ApplyCircuitTile(typename policy_t::qs_data_p_t* qs_p,
-                      const circuit_tiling::PreparedTile<typename policy_t::py_qs_data_t>& tile, index_t dim);
-
-template <typename policy_t>
-void ApplyAdjointTileProgram(typename policy_t::qs_data_p_t* shared_state,
-                             const std::vector<typename policy_t::qs_data_p_t*>& batch_states,
-                             const circuit_tiling::AdjointProgram<typename policy_t::py_qs_data_t>& program,
-                             index_t dim, VVT<typename policy_t::py_qs_data_t>* output, bool conjugate_output);
-
 template <typename policy_t>
 void ApplyMatrix(const typename policy_t::qs_data_p_t& src, typename policy_t::qs_data_p_t* des_p, const qbits_t& objs,
                  const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim);

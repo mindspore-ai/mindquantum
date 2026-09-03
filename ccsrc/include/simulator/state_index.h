@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INCLUDE_SIMULATOR_VECTOR_DETAIL_STATE_INDEX_H_
-#define INCLUDE_SIMULATOR_VECTOR_DETAIL_STATE_INDEX_H_
+#ifndef INCLUDE_SIMULATOR_STATE_INDEX_H_
+#define INCLUDE_SIMULATOR_STATE_INDEX_H_
 
 #include <algorithm>
 #include <cassert>
@@ -26,7 +26,7 @@
 
 #include "core/mq_base_types.h"
 
-namespace mindquantum::sim::vector::detail::state_index {
+namespace mindquantum::sim::state_index {
 class BitExpander {
  public:
     BitExpander() = default;
@@ -213,6 +213,6 @@ class StateIndexWindowCursor {
     index_t compressed_window_origin_ = 0;
     index_t state_origin_ = 0;
 };
-}  // namespace mindquantum::sim::vector::detail::state_index
+}  // namespace mindquantum::sim::state_index
 
-#endif  // INCLUDE_SIMULATOR_VECTOR_DETAIL_STATE_INDEX_H_
+#endif  // INCLUDE_SIMULATOR_STATE_INDEX_H_
