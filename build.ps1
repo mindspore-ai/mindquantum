@@ -45,7 +45,7 @@ Param(
     [switch]$NoDelocate,
     [switch]$NoFastBuild,
     [switch]$NoGitee,
-    [switch]$OnlyPytest,
+    [switch]$NoPythonDeps,
     [Alias("O")][ValidateNotNullOrEmpty()][string]$Output,
     [ValidateNotNullOrEmpty()][string]$PlatName,
     [switch]$Quiet,
@@ -638,8 +638,10 @@ Do not use a "fast" build process when building a wheel. See doc for -FastBuild.
 .PARAMETER NoGitee
 Do not favor Gitee over Github/Gitlab
 
-.PARAMETER OnlyPytest
-Only install pytest and its dependencies when creating/building the virtualenv
+.PARAMETER NoPythonDeps
+Do not install MindQuantum runtime dependencies ([project].dependencies) and the Python test extras (pytest, ...)
+from pyproject.toml into the virtualenv. By default they are installed so that the in-source build is directly usable.
+Only applies when the virtualenv is created or -UpdateVenv is passed.
 
 .PARAMETER Output
 Output directory for built wheels
@@ -654,7 +656,7 @@ Disable verbose build rules
 Show all known third-party libraries.
 
 .PARAMETER Test
-Build C++ tests and install dependencies for Python testing as well
+Build C++ tests
 
 .PARAMETER Verbose
 Enable verbose output from the Bash scripts

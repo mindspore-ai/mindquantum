@@ -54,17 +54,10 @@ if !cmake_from_venv! == 1 set pkgs=!pkgs! cmake
 
 if !ninja_from_venv! == 1 set pkgs=!pkgs! ninja
 
-if !enable_tests! == 1 (
-  if NOT "%VENV_PYTHON_TEST_PKGS%" == "" (
-    set pkgs=!pkgs! %VENV_PYTHON_TEST_PKGS%
-    goto :done_test_pkgs
-  )
-
-  if !only_install_pytest! == 1 (
-    set pkgs=!pkgs! pytest pytest-cov pytest-mock mock
-    goto :done_test_pkgs
-  )
-
+rem MindQuantum runtime dependencies ([project].dependencies) and Python test extras (pytest & co.). Both are read
+rem from pyproject.toml (single source of truth) so that the in-source build is directly importable and testable.
+rem Disable with /NoPythonDeps to get a build-toolchain-only virtualenv.
+if !install_python_deps! == 1 (
   call :mktemp tmp_file "%temp%"
 
   pushd "!ROOTDIR!"
@@ -73,9 +66,14 @@ if !enable_tests! == 1 (
 
   for /F %%i in ('findstr /v "^[ ]*$" "!tmp_file!"') do set pkgs=!pkgs! %%i
   del /F !tmp_file!
+) else (
+  echo Skipping installation of MindQuantum runtime and Python test dependencies ^(/NoPythonDeps^)
 )
 
-:done_test_pkgs
+rem Extra Python test packages (mostly a CI hook), e.g. VENV_PYTHON_TEST_PKGS=cirq openfermion
+if !enable_tests! == 1 (
+  if NOT "%VENV_PYTHON_TEST_PKGS%" == "" set pkgs=!pkgs! %VENV_PYTHON_TEST_PKGS%
+)
 
 if !do_docs! == 1 set pkgs=!pkgs! breathe sphinx sphinx_rtd_theme importlib-metadata myst-parser
 

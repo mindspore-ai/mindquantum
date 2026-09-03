@@ -45,7 +45,7 @@ Param(
     [switch]$Ninja,
     [switch]$NoConfig,
     [switch]$NoGitee,
-    [switch]$OnlyPytest,
+    [switch]$NoPythonDeps,
     [ValidateNotNullOrEmpty()][string]$Prefix,
     [switch]$Quiet,
     [switch]$ShowLibraries,
@@ -486,8 +486,10 @@ Ignore any configuration file
 .PARAMETER NoGitee
 Do not favor Gitee over Github/Gitlab
 
-.PARAMETER OnlyPytest
-Only install pytest and its dependencies when creating/building the virtualenv
+.PARAMETER NoPythonDeps
+Do not install MindQuantum runtime dependencies ([project].dependencies) and the Python test extras (pytest, ...)
+from pyproject.toml into the virtualenv. By default they are installed so that the in-source build is directly usable.
+Only applies when the virtualenv is created or -UpdateVenv is passed.
 
 .PARAMETER Prefix
 Specify installation prefix
@@ -499,7 +501,7 @@ Disable verbose build rules
 Show all known third-party libraries.
 
 .PARAMETER Test
-Build C++ tests and install dependencies for Python testing as well
+Build C++ tests
 
 .PARAMETER Verbose
 Enable verbose output from the Bash scripts

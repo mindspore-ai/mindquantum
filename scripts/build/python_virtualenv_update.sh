@@ -123,30 +123,34 @@ if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
         pkgs+=(ninja)
     fi
 
-    if [ "${enable_tests:-0}" -eq 1 ]; then
-        if [[ -n "$VENV_PYTHON_TEST_PKGS" ]]; then
-            read -ra test_pkgs <<< "$VENV_PYTHON_TEST_PKGS"
-            pkgs+=( "${test_pkgs[@]}" )
-        elif [ "${only_install_pytest:-0}" -eq 1 ]; then
-            pkgs+=( pytest pytest-cov pytest-mock mock )
+    # MindQuantum runtime dependencies ([project].dependencies) and Python test extras (pytest & co.). Both are read
+    # from pyproject.toml (single source of truth) so that the in-source build is directly importable and testable.
+    # Disable with --no-python-deps to get a build-toolchain-only virtualenv.
+    if [ "${install_python_deps:-1}" -eq 1 ]; then
+        tmp_file=$(mktemp req_mq_XXX)
+
+        pushd "$ROOTDIR" > /dev/null || exit 1
+        "$PYTHON" setup.py gen_reqfile --include-extras=test --output "$tmp_file"
+        popd > /dev/null || exit 1
+
+        if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+            while IFS= read -r line || [ -n "$line" ]; do
+                if [ -n "$line" ]; then
+                    pkgs+=("$line")
+                fi
+            done < "$tmp_file"
         else
-            tmp_file=$(mktemp req_mq_XXX)
-
-            pushd "$ROOTDIR" > /dev/null || exit 1
-            "$PYTHON" setup.py gen_reqfile --include-extras=test --output "$tmp_file"
-            popd > /dev/null || exit 1
-
-            if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
-                while IFS= read -r line || [ -n "$line" ]; do
-                    if [ -n "$line" ]; then
-                        pkgs+=("$line")
-                    fi
-                done < "$tmp_file"
-            else
-                mapfile -t -O "${#pkgs[@]}" pkgs <<< "$(grep '\S' "$tmp_file")"
-            fi
-            rm -f "$tmp_file"
+            mapfile -t -O "${#pkgs[@]}" pkgs <<< "$(grep '\S' "$tmp_file")"
         fi
+        rm -f "$tmp_file"
+    else
+        echo "Skipping installation of MindQuantum runtime and Python test dependencies (--no-python-deps)"
+    fi
+
+    # Extra Python test packages (mostly a CI hook), e.g. VENV_PYTHON_TEST_PKGS='cirq openfermion'
+    if [[ "${enable_tests:-0}" -eq 1 && -n "$VENV_PYTHON_TEST_PKGS" ]]; then
+        read -ra test_pkgs <<< "$VENV_PYTHON_TEST_PKGS"
+        pkgs+=( "${test_pkgs[@]}" )
     fi
 
     if [ "${do_docs:-0}" -eq 1 ]; then

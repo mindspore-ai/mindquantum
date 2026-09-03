@@ -128,8 +128,8 @@ help_message() {
     echo 'e.g. --no-logging to disable logging'
     echo ''
     echo 'Test related options:'
-    echo '  --test                 Build C++ tests and install dependencies for Python testing as well'
-    echo '  --only-pytest          Only install pytest and its dependencies when creating/building the virtualenv'
+    echo '  --test                 Build C++ tests'
+    echo '                         NB: Python test packages (pytest, ...) are installed by default (see --python-deps)'
     echo ''
     echo 'CUDA related options:'
     echo '  --cuda-arch=[arch]     Comma-separated list of architectures to generate device code for.'
@@ -138,6 +138,10 @@ help_message() {
     echo '                         Only useful if --gpu is passed.'
     echo ''
     echo 'Python related options:'
+    echo '  --python-deps          Install MindQuantum runtime dependencies ([project].dependencies) and the Python test'
+    echo '                         extras (pytest, ...) from pyproject.toml into the virtualenv (default: enabled)'
+    echo '                         Use --no-python-deps to only install the build toolchain into the virtualenv.'
+    echo '                         NB: only applies when the virtualenv is created or --update-venv is passed'
     echo '  --update-venv          Update the python virtual environment'
     echo ''
     echo 'Developer options:'
@@ -267,8 +271,8 @@ while getopts "${getopts_args}" OPT; do
         ninja )             no_arg;
                             set_var cmake_generator 'Ninja Multi-Config'
                             ;;
-        only-pytest )       no_arg;
-                            set_var only_install_pytest $flag_value
+        python-deps )       no_arg;
+                            set_var install_python_deps $flag_value
                             ;;
         quiet )             no_arg;
                             set_var cmake_make_silent $flag_value

@@ -68,16 +68,20 @@ You can setup MindQuantum for local development by using one of the local build 
 - `build_locally.ps1` (PowerShell script)
 - `build_locally.sh` (Bash script)
 
-Except a few minor differences [1]_, the functionalities of all three scripts are identical. All the scripts accept a flag to display the help message (``-h, --help``, ``-H, -Help`, ``/h, /Help`` for Bash, Powershell and MS-DOS BATCH). Please invoke the script of your choice in order to view the latest set of functionalities provided by it.
+Except a few minor differences [1]_, the functionalities of all three scripts are identical. All the scripts accept a flag to display the help message (``-h, --help``, ``-H, -Help``, ``/h, /Help`` for Bash, Powershell and MS-DOS BATCH). Please invoke the script of your choice in order to view the latest set of functionalities provided by it.
 
 1. Setup a Python virtual environment
-2. Update the virtual environment's packages and install some required dependencies
+2. Update the virtual environment's packages and install the required dependencies: the build toolchain
+   (`setuptools`, `pybind11`, `cmake`, ...), MindQuantum's runtime dependencies (`[project].dependencies` from
+   `pyproject.toml`) and the Python test extras (`pytest`, ...). The latter two can be skipped with `--no-python-deps`
+   (`-NoPythonDeps`, `/NoPythonDeps`) if you only want the build toolchain inside the virtual environment.
 3. Add a PTH-file to the Python virtual environment to make sure that MindQuantum will be detected
 4. Create a build directory and run CMake within it
 5. Compile MindQuantum in-place
 
 The next time you run the script, unless you specify one of the cleaning options or force a CMake configuration step,
-the script will only re-compile MindQuantum.
+the script will only re-compile MindQuantum. Python packages inside the virtual environment are only (re-)installed when
+the virtual environment is created or when `--update-venv` (`-UpdateVenv`, `/UpdateVenv`) is passed.
 
 For more information, have a look at the help message of the scripts which you can access using `./build_locally.sh -h` or `./build_locally.sh --help`. The output is shown below for reference.
 

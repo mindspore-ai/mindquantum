@@ -31,7 +31,7 @@ if DEFINED force_local_pkgs set force_local_pkgs=
 if DEFINED local_pkgs set local_pkg=
 if DEFINED n_jobs set n_jobs=
 if DEFINED prefix_dir set prefix_dir=
-if DEFINED only_install_pytest set only_install_pytest=
+if DEFINED install_python_deps set install_python_deps=
 if DEFINED verbose set verbose=
 
 if DEFINED n_jobs_default set n_jobs_default=

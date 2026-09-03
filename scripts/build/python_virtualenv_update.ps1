@@ -153,25 +153,27 @@ if ($created_venv -or $do_update_venv) {
         $pkgs += 'ninja'
     }
 
-    if ($enable_tests) {
-        if ("$Env:VENV_PYTHON_TEST_PKGS" -ne "") {
-            $pkgs += ( "$Env:VENV_PYTHON_TEST_PKGS" -Split ' ' )
-        }
-        elseif ($only_install_pytest) {
-            $pkgs += 'pytest', 'pytest-cov', 'pytest-mock', 'mock'
-        }
-        else {
-            $tmp_file = (New-TemporaryFile).Name
+    # MindQuantum runtime dependencies ([project].dependencies) and Python test extras (pytest & co.). Both are read
+    # from pyproject.toml (single source of truth) so that the in-source build is directly importable and testable.
+    # Disable with -NoPythonDeps to get a build-toolchain-only virtualenv.
+    if ($install_python_deps) {
+        $tmp_file = (New-TemporaryFile).Name
 
-            Push-Location "$ROOTDIR"
-            Invoke-Expression -Command "$PYTHON setup.py gen_reqfile --include-extras=test --output `"$tmp_file`""
-            Pop-Location
+        Push-Location "$ROOTDIR"
+        Invoke-Expression -Command "$PYTHON setup.py gen_reqfile --include-extras=test --output `"$tmp_file`""
+        Pop-Location
 
+        $tmp = Get-Content -Path "$tmp_file" | Select-String -Pattern '^\s*$' -NotMatch
+        $pkgs += $tmp -Split '\n'
+        Remove-Item -Force "$tmp_file" -ErrorAction SilentlyContinue
+    }
+    else {
+        Write-Output 'Skipping installation of MindQuantum runtime and Python test dependencies (-NoPythonDeps)'
+    }
 
-            $tmp = Get-Content -Path "$tmp_file" | Select-String -Pattern '^\s*$' -NotMatch
-            $pkgs += $tmp -Split '\n'
-            Remove-Item -Force "$tmp_file" -ErrorAction SilentlyContinue
-        }
+    # Extra Python test packages (mostly a CI hook), e.g. VENV_PYTHON_TEST_PKGS='cirq openfermion'
+    if ($enable_tests -And "$Env:VENV_PYTHON_TEST_PKGS" -ne "") {
+        $pkgs += ( "$Env:VENV_PYTHON_TEST_PKGS" -Split ' ' )
     }
 
     if ($do_docs) {

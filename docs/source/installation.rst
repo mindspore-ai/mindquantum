@@ -128,9 +128,9 @@ message):
                          (ignored if --local-pkgs is passed, except for projectq)
 
   Test related options:
-    --test               Build C++ tests and install dependencies for Python testing as well
-    --only-pytest        Only install pytest and its dependencies when creating/building the
-                         virtualenv
+    --test               Build C++ tests
+                         NB: Python test packages (pytest, ...) are installed by default (see
+                         --python-deps)
 
   CUDA related options:
     --cuda-arch=[arch]   Comma-separated list of architectures to generate device code for.
@@ -138,6 +138,12 @@ message):
                          information.
 
   Python related options:
+    --python-deps        Install MindQuantum runtime dependencies ([project].dependencies) and the
+                         Python test extras (pytest, ...) from pyproject.toml into the virtualenv
+                         (default: enabled)
+                         Use --no-python-deps to only install the build toolchain into the
+                         virtualenv.
+                         NB: only applies when the virtualenv is created or --update-venv is passed
     --update-venv        Update the python virtual environment
 
   Developer options:
@@ -334,9 +340,9 @@ It has similar options as the scripts described in :ref:`build_locally_for_devs`
                          (ignored if --local-pkgs is passed, except for projectq)
 
   Test related options:
-    --test               Build C++ tests and install dependencies for Python testing as well
-    --only-pytest        Only install pytest and its dependencies when creating/building the
-                         virtualenv
+    --test               Build C++ tests
+                         NB: Python test packages (pytest, ...) are installed by default (see
+                         --python-deps)
 
   CUDA related options:
     --cuda-arch=[arch]   Comma-separated list of architectures to generate device code for.
@@ -344,6 +350,12 @@ It has similar options as the scripts described in :ref:`build_locally_for_devs`
                          information.
 
   Python related options:
+    --python-deps        Install MindQuantum runtime dependencies ([project].dependencies) and the
+                         Python test extras (pytest, ...) from pyproject.toml into the virtualenv
+                         (default: enabled)
+                         Use --no-python-deps to only install the build toolchain into the
+                         virtualenv.
+                         NB: only applies when the virtualenv is created or --update-venv is passed
     --update-venv        Update the python virtual environment
 
   Developer options:

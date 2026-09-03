@@ -105,14 +105,18 @@ function Help-Message() {
     Write-Output 'NB: due to PowerShell limitations, if you specify both -NoLogging and -Logging, -NoLogging takes precedence.'
     Write-Output ''
     Write-Output 'Test related options'
-    Write-Output '  -Test               Build C++ tests and install dependencies for Python testing as well'
-    Write-Output '  -OnlyPytest         Only install pytest and its dependencies when creating/building the virtualenv'
+    Write-Output '  -Test               Build C++ tests'
+    Write-Output '                      NB: Python test packages (pytest, ...) are installed by default (see -NoPythonDeps)'
     Write-Output ''
     Write-Output 'CUDA related options:'
     Write-Output '  -CudaArch <arch>    Comma-separated list of architectures to generate device code for.'
     Write-Output '                      Only useful if -Gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.'
     Write-Output ''
     Write-Output 'Python related options:'
+    Write-Output '  -NoPythonDeps       Do not install MindQuantum runtime dependencies ([project].dependencies) and the'
+    Write-Output '                      Python test extras (pytest, ...) from pyproject.toml into the virtualenv.'
+    Write-Output '                      By default they are installed so that the in-source build is directly usable.'
+    Write-Output '                      NB: only applies when the virtualenv is created or -UpdateVenv is passed'
     Write-Output '  -UpdateVenv         Update the python virtual environment'
     Write-Output ''
     Write-Output 'Developer options:'
@@ -231,8 +235,8 @@ if (([bool]$Test)) {
     Set-Value 'enable_tests'
 }
 
-if (([bool]$OnlyPytest)) {
-    Set-Value 'only_install_pytest'
+if (([bool]$NoPythonDeps)) {
+    Set-Value 'install_python_deps' $false
 }
 
 if (([bool]$UpdateVenv)) {
