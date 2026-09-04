@@ -42,6 +42,9 @@ ccsrc/python/mqbackend/lib/binding.cc:BindOther
 ccsrc/python/mqbackend/lib/fermion_operators.cpp:init_fermion_operators
 ccsrc/python/mqbackend/lib/qubit_operators.cpp:init_qubit_operators
 ccsrc/python/mqbackend/lib/terms_operators.cpp:init_terms_operators
+# NPU dispatch and kernel loops preserve gate ordering and are intentionally cohesive.
+ccsrc/python/simulator/lib/_mq_vector_npu.cpp:NPUVectorState::ApplyCircuit, NPUVectorState::MakeCircuitGate, NPUVectorState::ReorderIndependentOperations
+ccsrc/python/simulator/lib/mqvector_npu_kernel.cpp:mqvector_apply_two_qubit, mqvector_apply_circuit, mqvector_apply_local_circuit, mqvector_apply_local_circuit_cached
 ccsrc/lib/simulator/vector/detail/runtime/cmd.cpp:mindquantum::sim::rt::cmd
 # These routines are cohesive gate-dispatch/execution programs; splitting them obscures ordering and gate semantics.
 ccsrc/include/simulator/vector/detail/circuit_tiling_executor.h:mindquantum::sim::vector::detail::circuit_tiling::ApplyAdjointProgram

@@ -7,7 +7,8 @@ mindquantum.core.operators.ground_state_of_sum_zz
 
     参数：
         - **ops** (QubitOperator) - 只有泡利 :math:`Z` 项的哈密顿量。
-        - **sim** (str) - 所使用模拟器的类型，当前支持 ``'mqvector'`` 和 ``'mqvector_gpu'``。默认值： ``'mqvector'``。
+        - **sim** (str) - 所使用模拟器的类型，当前支持 ``'mqvector'`` 和 ``'mqvector_gpu'``。
+          实验性 ``'mqvector_npu'`` 暂不支持此接口。默认值： ``'mqvector'``。
 
     返回：
        float，给定哈密顿量的基态能量。

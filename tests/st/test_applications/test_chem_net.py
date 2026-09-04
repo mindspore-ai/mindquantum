@@ -32,7 +32,7 @@ try:
     from mindquantum.simulator import Simulator
     from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
 
-    AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR))
+    AVAILABLE_BACKEND = list(filter(lambda x: x != 'stabilizer' and x[0] != 'mqvector_npu', SUPPORTED_SIMULATOR))
 
     ms.set_device("CPU")
     ms.set_context(mode=ms.PYNATIVE_MODE)

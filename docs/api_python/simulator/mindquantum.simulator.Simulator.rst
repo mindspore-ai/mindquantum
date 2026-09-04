@@ -25,6 +25,9 @@ mindquantum.simulator.Simulator
     - **mqvector_cq** -- 基于 NVIDIA cuQuantum SDK 的态矢量模拟器。与 ``mqvector_gpu``
       具有相同的功能，但利用 cuQuantum 进行优化。需要使用 ``ENABLE_CUQUANTUM=ON`` 构建，
       并正确安装 cuQuantum SDK。
+    - **mqvector_npu** -- 实验性的昇腾/NPU 态矢量模拟器，底层依赖 CANN/Ascend C 实现。
+      只有在 NPU 扩展通过运行时态矢量烟测后才会注册为可用后端。第一阶段目标为
+      ``mindquantum.complex64`` 和基础态矢量门，不应假定其与 ``mqvector`` 功能完全等价。
 
     使用 :func:`mindquantum.simulator.get_supported_simulator` 查看当前环境中可用的后端。
 
@@ -33,7 +36,8 @@ mindquantum.simulator.Simulator
         - **n_qubits** (int) - 量子模拟器的量子比特数量。默认值： ``None``。
         - **seed** (int) - 模拟器的随机种子，如果为 ``None``，种子将由 `numpy.random.randint` 生成。默认值： ``None``。
         - **dtype** (mindquantum.dtype) - 模拟器的数据类型。支持 ``mindquantum.complex64`` 和
-          ``mindquantum.complex128``。默认值： ``None`` （使用 ``complex128``）。
+          ``mindquantum.complex128``。默认值： ``None`` （使用 ``complex128``）。不同后端仍有
+          各自的精度限制；``mqvector_npu`` 仅支持 ``mindquantum.complex64``。
 
     异常：
         - **TypeError** - 如果 `backend` 不是str。

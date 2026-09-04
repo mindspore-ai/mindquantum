@@ -37,6 +37,12 @@ and verify quantum algorithms. MindQuantum Architecture
    tutorial
 
 .. toctree::
+   :caption: REPORTS
+   :maxdepth: 1
+
+   reports/mqvector_npu_test_report_20260822
+
+.. toctree::
    :caption: TABLE OF CONTENT
    :maxdepth: 2
 

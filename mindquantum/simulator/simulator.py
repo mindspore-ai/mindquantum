@@ -74,6 +74,11 @@ class Simulator:
       SDK. Same capabilities as ``mqvector_gpu`` but leverages cuQuantum
       for optimized performance. Requires a CUDA build with
       ``ENABLE_CUQUANTUM=ON`` and the cuQuantum SDK.
+    - **mqvector_npu** -- Experimental Ascend/NPU state vector simulator,
+      backed by a CANN/Ascend C implementation. It is registered only after
+      the NPU extension passes a runtime state-vector smoke check. The
+      initial feature set targets ``mindquantum.complex64`` and the basic
+      state-vector gates; do not assume feature parity with ``mqvector``.
 
     Use :func:`mindquantum.simulator.get_supported_simulator` to list backends
     available in your current environment.
@@ -86,7 +91,9 @@ class Simulator:
             by `numpy.random.randint`. Default: ``None``.
         dtype (mindquantum.dtype): the data type of simulator. Supports
             ``mindquantum.complex64`` and ``mindquantum.complex128``.
-            Default: ``None`` (uses ``complex128``).
+            Default: ``None`` (uses ``complex128``). Backend-specific dtype
+            restrictions still apply; ``mqvector_npu`` uses
+            ``mindquantum.complex64`` only.
 
     Raises:
         TypeError: if `backend` is not str.

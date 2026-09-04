@@ -10,6 +10,7 @@ constStatement:ccsrc/lib/mq_base/gates/details/qubit_operator_term_policy.cpp
 
 assignBoolToPointer:ccsrc/python/simulator/include/python/vector/bind_vec_state.h
 assignBoolToPointer:ccsrc/python/simulator/include/python/densitymatrix/bind_mat_state.h
+assignBoolToPointer:ccsrc/python/simulator/lib/_mq_vector_npu.cpp
 
 containerOutOfBounds:ccsrc/include/ops/gates/fermion_operator.tpp
 containerOutOfBounds:ccsrc/lib/ops/gates/fermion_operator.cpp

@@ -10,6 +10,7 @@
 
 "mindquantum/ccsrc/python/simulator/include/python/vector/bind_vec_state.h"                 "assignBoolToPointer"
 "mindquantum/ccsrc/python/simulator/include/python/densitymatrix/bind_mat_state.h"          "assignBoolToPointer"
+"mindquantum/ccsrc/python/simulator/lib/_mq_vector_npu.cpp"                                  "assignBoolToPointer"
 
 "mindquantum/ccsrc/include/ops/gates/fermion_operator.tpp"                                  "containerOutOfBounds"
 "mindquantum/ccsrc/lib/ops/gates/fermion_operator.cpp"                                      "containerOutOfBounds"

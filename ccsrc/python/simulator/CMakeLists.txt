@@ -39,6 +39,53 @@ endif()
 
 # ------------------------------------------------------------------------------
 
+find_package(ASCENDCL QUIET)
+if(ASCENDCL_FOUND)
+  set(MQVECTOR_NPU_KERNEL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/mqvector_npu_kernel.cpp)
+
+  # Use CANN's complete Ascend C build chain. In addition to compiling the
+  # device code, this generates the host stub and packs the device binary into
+  # the host object consumed by the extension.
+  get_filename_component(_ascendcl_lib_dir "${ASCENDCL_LIBRARY}" DIRECTORY)
+  get_filename_component(_ascend_cann_root "${_ascendcl_lib_dir}" DIRECTORY)
+  set(ASCEND_CANN_PACKAGE_PATH "${_ascend_cann_root}")
+  set(ASCEND_PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+  set(MQVECTOR_NPU_SOC_VERSION
+      "ascend910b2c"
+      CACHE STRING "Ascend SoC version used to compile mqvector_npu kernels")
+  if(NOT ASCENDCL_DEVKIT_ROOT)
+    message(FATAL_ERROR "ASCENDCL_DEVKIT_ROOT was not detected by FindASCENDCL.")
+  endif()
+  set(_ascendc_cmake "${ASCENDCL_DEVKIT_ROOT}/tikcpp/ascendc_kernel_cmake/ascendc.cmake")
+  if(NOT EXISTS "${_ascendc_cmake}")
+    message(
+      FATAL_ERROR
+        "Unable to locate the Ascend C CMake package at ${_ascendc_cmake}. "
+        "Check the CANN installation and target architecture.")
+  endif()
+  set(SOC_VERSION "${MQVECTOR_NPU_SOC_VERSION}")
+  set(RUN_MODE "npu")
+  set(ASCEND_KERNEL_LAUNCH_ONLY OFF)
+  include("${_ascendc_cmake}")
+  ascendc_library(
+    mqvector_npu_kernel_ascendc
+    STATIC
+    ${MQVECTOR_NPU_KERNEL_SOURCE})
+
+  pybind11_add_module(_mq_vector_npu MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector_npu.cpp
+                      OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
+
+  target_include_directories(_mq_vector_npu PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
+  force_at_least_cxx17_workaround(_mq_vector_npu)
+  target_link_libraries(_mq_vector_npu PUBLIC mq_python_core mq_math ASCENDCL::ascendcl
+                                              PRIVATE mqvector_npu_kernel_ascendc)
+  add_dependencies(_mq_vector_npu mqvector_npu_kernel_ascendc)
+else()
+  message(STATUS "CANN/AscendCL was not found; skipping the optional mqvector_npu extension.")
+endif()
+
+# ------------------------------------------------------------------------------
+
 # lint_cmake: -whitespace/indent
 
 pybind11_add_module(_mq_mps MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_mps.cpp OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")

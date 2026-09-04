@@ -56,6 +56,10 @@ Descriptions
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_CUQUANTUM``                | Enable the cuQuantum-backed CUDA simulator backend                    |
 +-------------------------------------+-----------------------------------------------------------------------+
+| ``ASCENDCL_ROOT``                   | Root directory of the Ascend CANN installation used by mqvector_npu   |
++-------------------------------------+-----------------------------------------------------------------------+
+| ``MQVECTOR_NPU_SOC_VERSION``        | Ascend SoC version used to compile mqvector_npu kernels               |
++-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_GCC_DEBUG_MODE`` *         | Enable the debug mode for GCC and libstdc++                           |
 +-------------------------------------+-----------------------------------------------------------------------+
 | ``ENABLE_GITEE``                    | Use Gitee instead of GitHub for (some) third-party dependencies       |
