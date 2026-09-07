@@ -71,12 +71,12 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 除了一些小差异，三个脚本的功能都是相同的。所有脚本都接受标志以显示帮助消息（`-h`， `--help`，`-H`，`-Help` 对于 Bash，PowerShell和MS-DOS batch）。请调用您选择的脚本，以查看其提供的最新功能集。
 
 1. 设置Python虚拟环境；
-2. 更新虚拟环境的软件包并安装一些必需的依赖；
+2. 更新虚拟环境的软件包并安装必需的依赖：构建工具链（`setuptools`、`pybind11`、`cmake` 等）、MindQuantum 的运行时依赖（`pyproject.toml` 中的 `[project].dependencies`）以及 Python 测试依赖（`pytest` 等）。如果只想在虚拟环境中安装构建工具链，可以通过 `--no-python-deps`（`-NoPythonDeps`、`/NoPythonDeps`）跳过后两者；
 3. 在Python虚拟环境中添加PTH文件，以确保MindQuantum能检测到；
 4. 创建一个 `build` 目录并在其中运行 CMake；
 5. 原地编译 MindQuantum。
 
-下次运行脚本时，除非指定清洁选项之一或强制CMAKE配置步骤，否则该脚本只会重新编译Mindquantum。
+下次运行脚本时，除非指定清洁选项之一或强制CMAKE配置步骤，否则该脚本只会重新编译Mindquantum。虚拟环境中的 Python 软件包只会在虚拟环境被创建或传入 `--update-venv`（`-UpdateVenv`、`/UpdateVenv`）时（重新）安装。
 
 有关更多信息，请查看脚本的帮助消息，您可以使用 `./build_locally.sh -h` 或 `./build_locally.sh --help`。输出如下所示，供参考。
 

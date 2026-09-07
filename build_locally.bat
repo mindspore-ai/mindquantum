@@ -154,6 +154,11 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/NoPythonDeps" (
+    set install_python_deps=0
+    shift & goto :initial
+  )
+
   if /I "%1" == "/Gitee" (
     set enable_gitee=1
     shift & goto :initial
@@ -207,11 +212,6 @@ rem ============================================================================
 
   if /I "%1" == "/Ninja" (
     set ninja=1
-    shift & goto :initial
-  )
-
-  if /I "%1" == "/OnlyPytest" (
-    set install_only_pytest=1
     shift & goto :initial
   )
 
@@ -561,14 +561,18 @@ exit /B 0
   rem echo                       (ignored if /LocalPkgs is passed)
   echo:
   echo Test related options:
-  echo   /Test               Build C++ tests and install dependencies for Python testing as well
-  echo   /OnlyPytest         Only install pytest and its dependencies when creating/building the virtualenv
+  echo   /Test               Build C++ tests
+  echo                       NB: Python test packages (pytest, ...) are installed by default (see /NoPythonDeps)
   echo:
   echo CUDA related options:
   echo   /CudaArch *arch*    Comma-separated list of architectures to generate device code for.
   echo                       Only useful if /Gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.
   echo:
   echo Python related options:
+  echo   /NoPythonDeps       Do not install MindQuantum runtime dependencies ([project].dependencies) and the
+  echo                       Python test extras (pytest, ...) from pyproject.toml into the virtualenv.
+  echo                       By default they are installed so that the in-source build is directly usable.
+  echo                       NB: only applies when the virtualenv is created or /UpdateVenv is passed
   echo   /UpdateVenv         Update the python virtual environment
   echo:
   echo NB: any unknown arguments will be passed onto the CMake during the configuration step.

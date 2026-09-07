@@ -193,7 +193,7 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee --debug
+          ./build_locally.sh --debug-cmake --ccache --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
 
@@ -285,7 +285,7 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee --debug
+          ./build_locally.sh --debug-cmake --ccache --no-gitee --debug
           --configure-only -c --logging --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
@@ -451,7 +451,7 @@ jobs:
       - name: Configure (Clang)
         if: matrix.clang != '8'
         run: >-
-          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee --debug
+          ./build_locally.sh --debug-cmake --ccache --no-gitee --debug
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
@@ -459,7 +459,7 @@ jobs:
       - name: Configure (Clang 8)
         if: matrix.clang == '8'
         run: >-
-          ./build_locally.sh --debug-cmake --ccache --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --ccache --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry -- -DENABLE_STACK_PROTECTION=ON
 
@@ -600,7 +600,7 @@ jobs:
           CC: cl
           CXX: cl
         run: >-
-           ./build_locally.ps1 -DebugCmake -Ninja -CCache -OnlyPytest -NoGitee
+           ./build_locally.ps1 -DebugCmake -Ninja -CCache -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry
            -DUSE_PARALLEL_STL=OFF
@@ -688,7 +688,7 @@ jobs:
           CC: clang-cl
           CXX: clang-cl
         run: >-
-           ./build_locally.ps1 -DebugCmake -Ninja -CCache -OnlyPytest -NoGitee
+           ./build_locally.ps1 -DebugCmake -Ninja -CCache -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry -Verbose
            -DUSE_PARALLEL_STL=OFF
@@ -783,7 +783,7 @@ jobs:
 
       - name: Configure
         run: >-
-           ./build_locally.ps1 -DebugCmake -Ninja -OnlyPytest -NoGitee
+           ./build_locally.ps1 -DebugCmake -Ninja -NoGitee
            -ConfigureOnly -C -Clean3rdParty -Prefix "${{ github.workspace }}/install"
            -CMakeNoRegistry
            --% -G "MinGW Makefiles" -DUSE_PARALLEL_STL=OFF
@@ -912,7 +912,7 @@ jobs:
           CC: ${{ matrix.CC }}
           CXX: ${{ matrix.CXX }}
         run: >-
-          ./build_locally.sh --debug-cmake --ccache -v --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --ccache -v --no-gitee
           --configure-only -c --clean-3rdparty --prefix="$PWD/install"
           --cmake-no-registry
           -- -G "MSYS Makefiles"
@@ -1008,7 +1008,7 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --gpu --ccache --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --gpu --ccache --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
 
@@ -1101,7 +1101,7 @@ jobs:
 
       - name: Configure
         run: >-
-          ./build_locally.sh --debug-cmake --gpu --ccache --only-pytest --no-gitee
+          ./build_locally.sh --debug-cmake --gpu --ccache --no-gitee
           --configure-only -c --clean-3rdparty --prefix="${{ github.workspace }}/install"
           --cmake-no-registry
 

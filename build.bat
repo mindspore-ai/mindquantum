@@ -186,6 +186,11 @@ rem ============================================================================
     shift & goto :initial
   )
 
+  if /I "%1" == "/NoPythonDeps" (
+    set install_python_deps=0
+    shift & goto :initial
+  )
+
   if /I "%1" == "/NoIsolation" (
     set build_isolation=0
     shift & goto :initial
@@ -249,11 +254,6 @@ rem ============================================================================
 
   if /I "%1" == "/Ninja" (
     set ninja=1
-    shift & goto :initial
-  )
-
-  if /I "%1" == "/OnlyPytest" (
-    set install_only_pytest=1
     shift & goto :initial
   )
 
@@ -625,10 +625,14 @@ rem ============================================================================
   rem echo                       (ignored if /LocalPkgs is passed)
   echo:
   echo Test related options:
-  echo   /Test               Build C++ tests and install dependencies for Python testing as well
-  echo   /OnlyPytest         Only install pytest and its dependencies when creating/building the virtualenv
+  echo   /Test               Build C++ tests
+  echo                       NB: Python test packages (pytest, ...) are installed by default (see /NoPythonDeps)
   echo:
   echo Python related options:
+  echo   /NoPythonDeps       Do not install MindQuantum runtime dependencies ([project].dependencies) and the
+  echo                       Python test extras (pytest, ...) from pyproject.toml into the virtualenv.
+  echo                       By default they are installed so that the in-source build is directly usable.
+  echo                       NB: only applies when the virtualenv is created or /UpdateVenv is passed
   echo   /UpdateVenv         Update the python virtual environment
   echo:
   echo NB: any unknown arguments will be passed on to 'python3 -m build'
