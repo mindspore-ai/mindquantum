@@ -138,6 +138,10 @@ repos:
                -whitespace/newline,-readability/casting"]
         additional_dependencies: [cpplint==2.0.2]
 
+      # Maintain the whitelist in .whitelizard.txt (repository root), then run
+      # `bash .jenkins/check/config/gen_lizard.bash` and commit the generated
+      # .jenkins/check/config/whitelizard.txt because the remote gate does not
+      # regenerate it.
       - id: lizard
         name: lizard (CI parity)
         entry: lizard

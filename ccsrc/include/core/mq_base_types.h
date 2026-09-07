@@ -140,14 +140,5 @@ constexpr const char gFSim[] = "FSim";
 constexpr const char cPL[] = "PL";   // Pauli channel
 constexpr const char cAD[] = "ADC";  // amplitude damping channel
 constexpr const char cPD[] = "PDC";  // phase damping channel
-
-/**
- * The qubits number threshold for a simulator to use OpenMP or not.
- * For a small system, it is move efficient to run simulation without OpenMP.
- * Qulacs also use this strategy:
- * https://github.com/qulacs/qulacs/blob/8cd29d4c1d7836c37b32b42a2516d1fbcd41535a/src/csim/update_ops_pauli_multi.c#L40
- *
- */
-static constexpr Index nQubitTh = 13;
 }  // namespace mindquantum
 #endif  // MINDQUANTUM_BASE_TYPES_HPP_

@@ -28,16 +28,16 @@ auto CPUDensityMatrixPolicy<calc_type_>::OutcomeWeights(const qs_data_p_t& qs, q
     const auto mask = index_t{1} << qubit;
     calc_type zero = 0;
     calc_type one = 0;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : zero, one)), Size(dim), DimTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-                         const auto population = qs[static_cast<index_t>(i) * dim + static_cast<index_t>(i)].real();
-                         if ((static_cast<index_t>(i) & mask) != 0) {
-                             one += population;
-                         } else {
-                             zero += population;
-                         }
-                     })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        Size(dim), schedule(static) reduction(+ : zero, one),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            const auto population = qs[static_cast<index_t>(i) * dim + static_cast<index_t>(i)].real();
+            if ((static_cast<index_t>(i) & mask) != 0) {
+                one += population;
+            } else {
+                zero += population;
+            }
+        })
     return {zero, one};
 }
 
@@ -47,8 +47,8 @@ void CPUDensityMatrixPolicy<calc_type_>::Collapse(qs_data_p_t qs, qbit_t qubit, 
     const auto mask = index_t{1} << qubit;
     const index_t expected = outcome ? mask : 0;
     const auto scale = 1 / weight;
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             auto* row = qs + static_cast<index_t>(i) * dim;
             const bool row_matches = (static_cast<index_t>(i) & mask) == expected;
             for (index_t j = 0; j < dim; j++) {

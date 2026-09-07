@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "config/openmp.h"
 #include "core/mq_base_types.h"
 #include "fmt/format.h"
 #include "math/operators/qubit_operator_view.h"
@@ -77,30 +78,31 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
     auto dim = static_cast<uint64_t>(1) << n_qubits;
     mq::VT<ele_set<calc_type>> all_value(dim);
     mq::index_t nnz = 0;
-#pragma omp parallel for schedule(static) reduction(+ : nnz)
-    for (mq::index_t i = 0; i < dim; i++) {
-        ele_set<calc_type> vals;
-        for (mq::index_t term_idx = 0; term_idx < ops.size(); term_idx++) {
-            auto& mask = pauli_mask[term_idx];
-            auto mask_f = mask.mask_x | mask.mask_y;
-            auto j = (i ^ mask_f);
-            auto axis2power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_z));  // -1
-            auto axis3power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_y));  // -1j
-            auto val = polar[(mask.num_y + 2 * axis3power + 2 * axis2power) & 3] * consts[term_idx];
-            typename EleComp<calc_type>::ele_t ele_new = {j, val};
-            auto prev = vals.find(ele_new);
-            if (prev != vals.end()) {
-                ele_new.second += (*prev).second;
-                vals.erase(prev);
+    MQ_OMP_PARALLEL_FOR_TEAM(
+        omp::TeamSize(dim, ops.size()), schedule(static) reduction(+ : nnz),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            ele_set<calc_type> vals;
+            for (mq::index_t term_idx = 0; term_idx < ops.size(); term_idx++) {
+                auto& mask = pauli_mask[term_idx];
+                auto mask_f = mask.mask_x | mask.mask_y;
+                auto j = (i ^ mask_f);
+                auto axis2power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_z));  // -1
+                auto axis3power = mq::CountOne(static_cast<uint64_t>(i & mask.mask_y));  // -1j
+                auto val = polar[(mask.num_y + 2 * axis3power + 2 * axis2power) & 3] * consts[term_idx];
+                typename EleComp<calc_type>::ele_t ele_new = {j, val};
+                auto prev = vals.find(ele_new);
+                if (prev != vals.end()) {
+                    ele_new.second += (*prev).second;
+                    vals.erase(prev);
+                }
+                if (std::abs(ele_new.second) < PRECISION) {
+                    continue;
+                }
+                vals.insert(ele_new);
             }
-            if (std::abs(ele_new.second) < PRECISION) {
-                continue;
-            }
-            vals.insert(ele_new);
-        }
-        nnz += vals.size();
-        all_value[i] = vals;
-    }
+            nnz += vals.size();
+            all_value[i] = vals;
+        })
     auto indptr = reinterpret_cast<mq::index_t*>(malloc(sizeof(mq::index_t) * (dim + 1)));
     auto indices = reinterpret_cast<mq::index_t*>(malloc(sizeof(mq::index_t) * nnz));
     auto data = reinterpret_cast<calc_type*>(malloc(sizeof(calc_type) * nnz));
@@ -109,16 +111,16 @@ tn::CsrMatrix GetMatrixImp(const qubit::QubitOperator& ops, int n_qubits) {
         auto& vals = all_value[i];
         indptr[i + 1] = indptr[i] + vals.size();
     }
-#pragma omp parallel for schedule(static)
-    for (mq::index_t i = 0; i < all_value.size(); i++) {
-        auto& vals = all_value[i];
-        auto begin = indptr[i];
-        for (auto& [idx, val] : vals) {
-            indices[begin] = idx;
-            data[begin] = val;
-            begin += 1;
-        }
-    }
+    MQ_OMP_PARALLEL_FOR(
+        nnz, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(all_value.size()); i++) {
+            auto& vals = all_value[i];
+            auto begin = indptr[i];
+            for (auto& [idx, val] : vals) {
+                indices[begin] = idx;
+                data[begin] = val;
+                begin += 1;
+            }
+        })
     return tn::CsrMatrix(dim, dim, nnz, indptr, indices,
                          tn::Tensor(dtype, tn::TDevice::CPU, reinterpret_cast<void*>(data), nnz));
 }

@@ -52,8 +52,8 @@ struct PauliMat {
         col_ = reinterpret_cast<Index *>(malloc(sizeof(Index) * dim_));
         auto mask = GetPauliMask(pt.first);
         auto mask_f = mask.mask_x | mask.mask_y;
-        THRESHOLD_OMP_FOR(
-            dim_, static_cast<uint64_t>(1) << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim_); i++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim_, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim_); i++) {
                 auto j = (i ^ mask_f);
                 col_[i] = j;
                 auto axis2power = CountOne(static_cast<uint64_t>(i & mask.mask_z));  // -1

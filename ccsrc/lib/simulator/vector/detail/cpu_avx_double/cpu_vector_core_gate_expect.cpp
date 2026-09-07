@@ -43,20 +43,20 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         // clang-format off
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
-                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    auto j = i + mask.obj_mask;
-                    __m256d mul_res;
-                    INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
-                    __m256d res;
-                    INTRIN_Conj_V2_dot_V2(bra, mul_res, i, j, neg, res);
-                    qs_data_t ress[2];
-                    INTRIN_m256_to_host(res, ress);
-                    res_real += ress[0].real() + ress[1].real();
-                    res_imag += ress[0].imag() + ress[1].imag();
-                });
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                auto j = i + mask.obj_mask;
+                __m256d mul_res;
+                INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
+                __m256d res;
+                INTRIN_Conj_V2_dot_V2(bra, mul_res, i, j, neg, res);
+                qs_data_t ress[2];
+                INTRIN_m256_to_host(res, ress);
+                res_real += ress[0].real() + ress[1].real();
+                res_imag += ress[0].imag() + ress[1].imag();
+            });
 
         // clang-format on
     } else {
@@ -74,11 +74,30 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
             auto first_high_mask = ~first_low_mask;
             auto second_high_mask = ~second_low_mask;
             // clang-format off
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                        auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
-                        i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+            MQ_OMP_PARALLEL_FOR_CLAUSES(
+                dim, reduction(+:res_real, res_imag) schedule(static),
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                    auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
+                    i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+                    auto j = i + mask.obj_mask;
+                    __m256d mul_res;
+                    INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
+                    __m256d res;
+                    INTRIN_Conj_V2_dot_V2(bra, mul_res, i, j, neg, res);
+                    qs_data_t ress[2];
+                    INTRIN_m256_to_host(res, ress);
+                    res_real += ress[0].real() + ress[1].real();
+                    res_imag += ress[0].imag() + ress[1].imag();
+                });
+
+            // clang-format on
+        } else {
+            // clang-format off
+            MQ_OMP_PARALLEL_FOR_CLAUSES(
+                dim, reduction(+:res_real, res_imag) schedule(static),
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
                         __m256d mul_res;
                         INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
@@ -88,27 +107,8 @@ auto CPUVectorPolicyAvxDouble::ExpectDiffSingleQubitMatrix(const qs_data_p_t& br
                         INTRIN_m256_to_host(res, ress);
                         res_real += ress[0].real() + ress[1].real();
                         res_imag += ress[0].imag() + ress[1].imag();
-                    });
-
-            // clang-format on
-        } else {
-            // clang-format off
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
-                        auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                            auto j = i + mask.obj_mask;
-                            __m256d mul_res;
-                            INTRIN_M2_dot_V2(ket, i, j, mm, mmt, mul_res);
-                            __m256d res;
-                            INTRIN_Conj_V2_dot_V2(bra, mul_res, i, j, neg, res);
-                            qs_data_t ress[2];
-                            INTRIN_m256_to_host(res, ress);
-                            res_real += ress[0].real() + ress[1].real();
-                            res_imag += ress[0].imag() + ress[1].imag();
-                        }
-                    });
+                    }
+                });
 
             // clang-format on
         }

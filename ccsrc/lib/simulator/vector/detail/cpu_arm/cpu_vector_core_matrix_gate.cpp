@@ -132,7 +132,7 @@ void ApplyMatrixImpl(const typename policy_t::qs_data_p_t& src_out, typename pol
 
     const state_index::StateIndexWindow index_window(sve::LocalStateIndexBits<calc_type>(), prepared.occupied_qubits);
     sve::ForEachStateIndexBatchWithScratch<calc_type>(
-        dim, policy_t::DimTh, index_window, prepared.block_count, prepared.gate_dim,
+        dim, index_window, prepared.block_count, prepared.gate_dim,
         [&](const state_index::StateIndexBatch& batch, index_t state_window_origin, calc_type* input) {
             const auto loop_index = sve::LoopIndex<calc_type>(batch.local_compressed_start);
             const auto pg = sve::ActiveComplexPredicate<calc_type>(loop_index, batch.local_compressed_count);

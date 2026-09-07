@@ -33,7 +33,7 @@ namespace {
 template <size_t static_gate_dim, typename qs_data_t, typename calc_type, typename py_qs_data_t>
 auto ExpectDiffNQubitsMatrixKernel(const qs_data_t* bra, const qs_data_t* ket, const qbits_t& objs,
                                    const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& gate,
-                                   index_t dim, index_t dim_threshold) -> qs_data_t {
+                                   index_t dim) -> qs_data_t {
     const auto prepared = matrix_gate::PrepareMatrixGate<static_gate_dim, qs_data_t>(objs, ctrls, gate, dim);
 
     const auto apply_block = [&](index_t block, qs_data_t* input) {
@@ -53,8 +53,8 @@ auto ExpectDiffNQubitsMatrixKernel(const qs_data_t* bra, const qs_data_t* ket, c
         }
         return block_sum;
     };
-    return matrix_gate::ReduceMatrixGateBlocks<static_gate_dim, qs_data_t, calc_type>(
-        dim, dim_threshold, prepared.block_count, prepared.gate_dim, apply_block);
+    return matrix_gate::ReduceMatrixGateBlocks<static_gate_dim, qs_data_t, calc_type>(dim, prepared.block_count,
+                                                                                      prepared.gate_dim, apply_block);
 }
 }  // namespace
 
@@ -79,8 +79,8 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffNQubitsMatrix(const qs
     }
 
     auto expect_kernel = [&](auto static_gate_dim) {
-        return ExpectDiffNQubitsMatrixKernel<decltype(static_gate_dim)::value, qs_data_t, calc_type>(
-            bra, ket, objs, ctrls, gate, dim, DimTh);
+        return ExpectDiffNQubitsMatrixKernel<decltype(static_gate_dim)::value, qs_data_t, calc_type>(bra, ket, objs,
+                                                                                                     ctrls, gate, dim);
     };
     const auto res = matrix_gate::DispatchStaticNQubits(n_qubit, expect_kernel);
     if (will_free_bra) {
@@ -113,37 +113,15 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(const 
     calc_type res_real = 0, res_imag = 0;
     // clang-format off
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-        for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-            index_t i;
-            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
-                            l, i);
-            auto j = i + mask.obj_min_mask;
-            auto k = i + mask.obj_max_mask;
-            auto m = i + mask.obj_mask;
-            auto v00 = gate[0][0] * ket[i] + gate[0][1] * ket[j] + gate[0][2] * ket[k] + gate[0][3] * ket[m];
-            auto v01 = gate[1][0] * ket[i] + gate[1][1] * ket[j] + gate[1][2] * ket[k] + gate[1][3] * ket[m];
-            auto v10 = gate[2][0] * ket[i] + gate[2][1] * ket[j] + gate[2][2] * ket[k] + gate[2][3] * ket[m];
-            auto v11 = gate[3][0] * ket[i] + gate[3][1] * ket[j] + gate[3][2] * ket[k] + gate[3][3] * ket[m];
-            auto this_res = std::conj(bra[i]) * v00;
-            this_res += std::conj(bra[j]) * v01;
-            this_res += std::conj(bra[k]) * v10;
-            this_res += std::conj(bra[m]) * v11;
-            res_real += this_res.real();
-            res_imag += this_res.imag();
-        })
-    } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-        for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-            index_t i;
-            SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                            mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-            if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                auto m = i + mask.obj_mask;
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
+                                l, i);
                 auto j = i + mask.obj_min_mask;
                 auto k = i + mask.obj_max_mask;
+                auto m = i + mask.obj_mask;
                 auto v00 = gate[0][0] * ket[i] + gate[0][1] * ket[j] + gate[0][2] * ket[k] + gate[0][3] * ket[m];
                 auto v01 = gate[1][0] * ket[i] + gate[1][1] * ket[j] + gate[1][2] * ket[k] + gate[1][3] * ket[m];
                 auto v10 = gate[2][0] * ket[i] + gate[2][1] * ket[j] + gate[2][2] * ket[k] + gate[2][3] * ket[m];
@@ -154,8 +132,30 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffTwoQubitsMatrix(const 
                 this_res += std::conj(bra[m]) * v11;
                 res_real += this_res.real();
                 res_imag += this_res.imag();
-            }
-        })
+            })
+    } else {
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                                mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v00 = gate[0][0] * ket[i] + gate[0][1] * ket[j] + gate[0][2] * ket[k] + gate[0][3] * ket[m];
+                    auto v01 = gate[1][0] * ket[i] + gate[1][1] * ket[j] + gate[1][2] * ket[k] + gate[1][3] * ket[m];
+                    auto v10 = gate[2][0] * ket[i] + gate[2][1] * ket[j] + gate[2][2] * ket[k] + gate[2][3] * ket[m];
+                    auto v11 = gate[3][0] * ket[i] + gate[3][1] * ket[j] + gate[3][2] * ket[k] + gate[3][3] * ket[m];
+                    auto this_res = std::conj(bra[i]) * v00;
+                    this_res += std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    this_res += std::conj(bra[m]) * v11;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     // clang-format on
     if (will_free_bra) {
@@ -188,9 +188,32 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
     auto b = std::cos(val / 2) / 2;
     // clang-format off
     if (!ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t i = 0; i < dim; i++) {
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t i = 0; i < dim; i++) {
+                auto j = i ^ mask_f;
+                if (i <= j) {
+                    auto axis2power = CountOne(i & mask.mask_z);  // -1
+                    auto axis3power = CountOne(i & mask.mask_y);  // -1j
+                    auto c = ComplexCast<double, calc_type>::apply(
+                        POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
+                    if (i == j) {
+                        auto tmp = std::conj(bra[i]) * ket[i] * (a - IMAGE_I * b * c);
+                        res_real += tmp.real();
+                        res_imag += tmp.imag();
+                    } else {
+                        auto tmp = std::conj(bra[i]) * (ket[i] * a - IMAGE_I * ket[j] * b / c);
+                        tmp += std::conj(bra[j]) * (ket[j] * a - IMAGE_I * ket[i] * b * c);
+                        res_real += tmp.real();
+                        res_imag += tmp.imag();
+                    }
+                }
+            })
+    } else {
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t i = 0; i < dim; i++) {
+                if ((i & ctrl_mask) == ctrl_mask) {
                     auto j = i ^ mask_f;
                     if (i <= j) {
                         auto axis2power = CountOne(i & mask.mask_z);  // -1
@@ -208,31 +231,8 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRPS(const qs_data_p_t&
                             res_imag += tmp.imag();
                         }
                     }
-                })
-    } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t i = 0; i < dim; i++) {
-                    if ((i & ctrl_mask) == ctrl_mask) {
-                        auto j = i ^ mask_f;
-                        if (i <= j) {
-                            auto axis2power = CountOne(i & mask.mask_z);  // -1
-                            auto axis3power = CountOne(i & mask.mask_y);  // -1j
-                            auto c = ComplexCast<double, calc_type>::apply(
-                                POLAR[static_cast<char>((mask.num_y + 2 * axis3power + 2 * axis2power) & 3)]);
-                            if (i == j) {
-                                auto tmp = std::conj(bra[i]) * ket[i] * (a - IMAGE_I * b * c);
-                                res_real += tmp.real();
-                                res_imag += tmp.imag();
-                            } else {
-                                auto tmp = std::conj(bra[i]) * (ket[i] * a - IMAGE_I * ket[j] * b / c);
-                                tmp += std::conj(bra[j]) * (ket[j] * a - IMAGE_I * ket[i] * b * c);
-                                res_real += tmp.real();
-                                res_imag += tmp.imag();
-                            }
-                        }
-                    }
-                })
+                }
+            })
     }
     // clang-format on
     if (will_free_bra) {
@@ -265,17 +265,17 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(cons
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
         // clang-format off
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
-                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    auto j = i + mask.obj_mask;
-                    auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
-                    auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
-                    auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
-                    res_real += this_res.real();
-                    res_imag += this_res.imag();
-                });
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                auto j = i + mask.obj_mask;
+                auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
+                auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
+                auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            });
         // clang-format on
     } else {
         if (mask.ctrl_qubits.size() == 1) {
@@ -292,34 +292,34 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSingleQubitMatrix(cons
             auto first_high_mask = ~first_low_mask;
             auto second_high_mask = ~second_low_mask;
             // clang-format off
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                        auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
-                        i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+            MQ_OMP_PARALLEL_FOR_CLAUSES(
+                dim, reduction(+:res_real, res_imag) schedule(static),
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                    auto i = ((l & first_high_mask) << 1) + (l & first_low_mask);
+                    i = ((i & second_high_mask) << 1) + (i & second_low_mask) + mask.ctrl_mask;
+                    auto j = i + mask.obj_mask;
+                    auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
+                    auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
+                    auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                });
+            // clang-format on
+        } else {
+            // clang-format off
+            MQ_OMP_PARALLEL_FOR_CLAUSES(
+                dim, reduction(+:res_real, res_imag) schedule(static),
+                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                         auto j = i + mask.obj_mask;
                         auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
                         auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
                         auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
                         res_real += this_res.real();
                         res_imag += this_res.imag();
-                    });
-            // clang-format on
-        } else {
-            // clang-format off
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
-                        auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                            auto j = i + mask.obj_mask;
-                            auto t1 = m[0][0] * ket[i] + m[0][1] * ket[j];
-                            auto t2 = m[1][0] * ket[i] + m[1][1] * ket[j];
-                            auto this_res = std::conj(bra[i]) * t1 + std::conj(bra[j]) * t2;
-                            res_real += this_res.real();
-                            res_imag += this_res.imag();
-                        }
-                    });
+                    }
+                });
             // clang-format on
         }
     }
@@ -409,29 +409,29 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffPS(const qs_data_p_t& 
 
     if (!mask.ctrl_mask) {
         // clang-format off
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
-                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                auto j = i + mask.obj_mask;
+                auto this_res = std::conj(bra[j]) * ket[j] * e;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
+        // clang-format on
+    } else {
+        // clang-format off
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+                auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i + mask.obj_mask;
                     auto this_res = std::conj(bra[j]) * ket[j] * e;
                     res_real += this_res.real();
                     res_imag += this_res.imag();
-                })
-        // clang-format on
-    } else {
-        // clang-format off
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
-                    auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
-                    if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                        auto j = i + mask.obj_mask;
-                        auto this_res = std::conj(bra[j]) * ket[j] * e;
-                        res_real += this_res.real();
-                        res_imag += this_res.imag();
-                    }
-                })
+                }
+            })
         // clang-format on
     }
     if (will_free_bra) {
@@ -463,49 +463,49 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxx(const qs_data_p_t&
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] + s * ket[m];
-                                                        auto v01 = c * ket[j] + s * ket[k];
-                                                        auto v10 = c * ket[k] + s * ket[j];
-                                                        auto v11 = c * ket[m] + s * ket[i];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto m = i + mask.obj_mask;
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v00 = c * ket[i] + s * ket[m];
+                auto v01 = c * ket[j] + s * ket[k];
+                auto v10 = c * ket[k] + s * ket[j];
+                auto v11 = c * ket[m] + s * ket[i];
+                auto this_res = std::conj(bra[i]) * v00;
+                this_res += std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                this_res += std::conj(bra[m]) * v11;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] + s * ket[m];
-                                                            auto v01 = c * ket[j] + s * ket[k];
-                                                            auto v10 = c * ket[k] + s * ket[j];
-                                                            auto v11 = c * ket[m] + s * ket[i];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v00 = c * ket[i] + s * ket[m];
+                    auto v01 = c * ket[j] + s * ket[k];
+                    auto v10 = c * ket[k] + s * ket[j];
+                    auto v11 = c * ket[m] + s * ket[i];
+                    auto this_res = std::conj(bra[i]) * v00;
+                    this_res += std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    this_res += std::conj(bra[m]) * v11;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -536,49 +536,49 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxy(const qs_data_p_t&
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] - s * ket[m];
-                                                        auto v01 = c * ket[j] - s * ket[k];
-                                                        auto v10 = c * ket[k] + s * ket[j];
-                                                        auto v11 = c * ket[m] + s * ket[i];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto m = i + mask.obj_mask;
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v00 = c * ket[i] - s * ket[m];
+                auto v01 = c * ket[j] - s * ket[k];
+                auto v10 = c * ket[k] + s * ket[j];
+                auto v11 = c * ket[m] + s * ket[i];
+                auto this_res = std::conj(bra[i]) * v00;
+                this_res += std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                this_res += std::conj(bra[m]) * v11;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] - s * ket[m];
-                                                            auto v01 = c * ket[j] - s * ket[k];
-                                                            auto v10 = c * ket[k] + s * ket[j];
-                                                            auto v11 = c * ket[m] + s * ket[i];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v00 = c * ket[i] - s * ket[m];
+                    auto v01 = c * ket[j] - s * ket[k];
+                    auto v10 = c * ket[k] + s * ket[j];
+                    auto v11 = c * ket[m] + s * ket[i];
+                    auto this_res = std::conj(bra[i]) * v00;
+                    this_res += std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    this_res += std::conj(bra[m]) * v11;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -609,39 +609,39 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffGivens(const qs_data_p
     auto s = std::cos(val);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v01 = c * ket[j] - s * ket[k];
-                                                        auto v10 = s * ket[j] + c * ket[k];
-                                                        auto this_res = std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v01 = c * ket[j] - s * ket[k];
+                auto v10 = s * ket[j] + c * ket[k];
+                auto this_res = std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v01 = c * ket[j] - s * ket[k];
-                                                            auto v10 = s * ket[j] + c * ket[k];
-                                                            auto this_res = std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v01 = c * ket[j] - s * ket[k];
+                    auto v10 = s * ket[j] + c * ket[k];
+                    auto this_res = std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -672,49 +672,49 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRxz(const qs_data_p_t&
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_MI;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] + s * ket[j];
-                                                        auto v01 = c * ket[j] + s * ket[i];
-                                                        auto v10 = c * ket[k] - s * ket[m];
-                                                        auto v11 = c * ket[m] - s * ket[k];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto m = i + mask.obj_mask;
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v00 = c * ket[i] + s * ket[j];
+                auto v01 = c * ket[j] + s * ket[i];
+                auto v10 = c * ket[k] - s * ket[m];
+                auto v11 = c * ket[m] - s * ket[k];
+                auto this_res = std::conj(bra[i]) * v00;
+                this_res += std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                this_res += std::conj(bra[m]) * v11;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] + s * ket[j];
-                                                            auto v01 = c * ket[j] + s * ket[i];
-                                                            auto v10 = c * ket[k] - s * ket[m];
-                                                            auto v11 = c * ket[m] - s * ket[k];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v00 = c * ket[i] + s * ket[j];
+                    auto v01 = c * ket[j] + s * ket[i];
+                    auto v10 = c * ket[k] - s * ket[m];
+                    auto v11 = c * ket[m] - s * ket[k];
+                    auto this_res = std::conj(bra[i]) * v00;
+                    this_res += std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    this_res += std::conj(bra[m]) * v11;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -745,49 +745,49 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyz(const qs_data_p_t&
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2);
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] - s * ket[j];
-                                                        auto v01 = c * ket[j] + s * ket[i];
-                                                        auto v10 = c * ket[k] + s * ket[m];
-                                                        auto v11 = c * ket[m] - s * ket[k];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto m = i + mask.obj_mask;
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v00 = c * ket[i] - s * ket[j];
+                auto v01 = c * ket[j] + s * ket[i];
+                auto v10 = c * ket[k] + s * ket[m];
+                auto v11 = c * ket[m] - s * ket[k];
+                auto this_res = std::conj(bra[i]) * v00;
+                this_res += std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                this_res += std::conj(bra[m]) * v11;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] - s * ket[j];
-                                                            auto v01 = c * ket[j] + s * ket[i];
-                                                            auto v10 = c * ket[k] + s * ket[m];
-                                                            auto v11 = c * ket[m] - s * ket[k];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v00 = c * ket[i] - s * ket[j];
+                    auto v01 = c * ket[j] + s * ket[i];
+                    auto v10 = c * ket[k] + s * ket[m];
+                    auto v11 = c * ket[m] - s * ket[k];
+                    auto this_res = std::conj(bra[i]) * v00;
+                    this_res += std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    this_res += std::conj(bra[m]) * v11;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -818,49 +818,49 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRyy(const qs_data_p_t&
     auto s = static_cast<calc_type_>(std::cos(val / 2) / 2) * IMAGE_I;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v00 = c * ket[i] + s * ket[m];
-                                                        auto v01 = c * ket[j] - s * ket[k];
-                                                        auto v10 = c * ket[k] - s * ket[j];
-                                                        auto v11 = c * ket[m] + s * ket[i];
-                                                        auto this_res = std::conj(bra[i]) * v00;
-                                                        this_res += std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        this_res += std::conj(bra[m]) * v11;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto m = i + mask.obj_mask;
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v00 = c * ket[i] + s * ket[m];
+                auto v01 = c * ket[j] - s * ket[k];
+                auto v10 = c * ket[k] - s * ket[j];
+                auto v11 = c * ket[m] + s * ket[i];
+                auto this_res = std::conj(bra[i]) * v00;
+                this_res += std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                this_res += std::conj(bra[m]) * v11;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v00 = c * ket[i] + s * ket[m];
-                                                            auto v01 = c * ket[j] - s * ket[k];
-                                                            auto v10 = c * ket[k] - s * ket[j];
-                                                            auto v11 = c * ket[m] + s * ket[i];
-                                                            auto this_res = std::conj(bra[i]) * v00;
-                                                            this_res += std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            this_res += std::conj(bra[m]) * v11;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v00 = c * ket[i] + s * ket[m];
+                    auto v01 = c * ket[j] - s * ket[k];
+                    auto v10 = c * ket[k] - s * ket[j];
+                    auto v11 = c * ket[m] + s * ket[i];
+                    auto this_res = std::conj(bra[i]) * v00;
+                    this_res += std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    this_res += std::conj(bra[m]) * v11;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -894,41 +894,41 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffRzz(const qs_data_p_t&
     auto me = c + IMAGE_MI * s;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto m = i + mask.obj_mask;
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto this_res = std::conj(bra[i]) * ket[i] * me;
-                                                        this_res += std::conj(bra[j]) * ket[j] * e;
-                                                        this_res += std::conj(bra[k]) * ket[k] * e;
-                                                        this_res += std::conj(bra[m]) * ket[m] * me;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto m = i + mask.obj_mask;
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto this_res = std::conj(bra[i]) * ket[i] * me;
+                this_res += std::conj(bra[j]) * ket[j] * e;
+                this_res += std::conj(bra[k]) * ket[k] * e;
+                this_res += std::conj(bra[m]) * ket[m] * me;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto m = i + mask.obj_mask;
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto this_res = std::conj(bra[i]) * ket[i] * me;
-                                                            this_res += std::conj(bra[j]) * ket[j] * e;
-                                                            this_res += std::conj(bra[k]) * ket[k] * e;
-                                                            this_res += std::conj(bra[m]) * ket[m] * me;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto m = i + mask.obj_mask;
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto this_res = std::conj(bra[i]) * ket[i] * me;
+                    this_res += std::conj(bra[j]) * ket[j] * e;
+                    this_res += std::conj(bra[k]) * ket[k] * e;
+                    this_res += std::conj(bra[m]) * ket[m] * me;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);
@@ -961,39 +961,39 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectDiffSWAPalpha(const qs_dat
     auto b = IMAGE_MI * static_cast<calc_type_>(M_PI_2) * e;
     calc_type res_real = 0, res_imag = 0;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        auto j = i + mask.obj_min_mask;
-                                                        auto k = i + mask.obj_max_mask;
-                                                        auto v01 = a * ket[j] + b * ket[k];
-                                                        auto v10 = a * ket[k] + b * ket[j];
-                                                        auto this_res = std::conj(bra[j]) * v01;
-                                                        this_res += std::conj(bra[k]) * v10;
-                                                        res_real += this_res.real();
-                                                        res_imag += this_res.imag();
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                auto j = i + mask.obj_min_mask;
+                auto k = i + mask.obj_max_mask;
+                auto v01 = a * ket[j] + b * ket[k];
+                auto v10 = a * ket[k] + b * ket[j];
+                auto this_res = std::conj(bra[j]) * v01;
+                this_res += std::conj(bra[k]) * v10;
+                res_real += this_res.real();
+                res_imag += this_res.imag();
+            })
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim, DimTh,
-                                                    for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
-                                                        index_t i;
-                                                        SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
-                                                                      mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
-                                                        if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
-                                                            auto j = i + mask.obj_min_mask;
-                                                            auto k = i + mask.obj_max_mask;
-                                                            auto v01 = a * ket[j] + b * ket[k];
-                                                            auto v10 = a * ket[k] + b * ket[j];
-                                                            auto this_res = std::conj(bra[j]) * v01;
-                                                            this_res += std::conj(bra[k]) * v10;
-                                                            res_real += this_res.real();
-                                                            res_imag += this_res.imag();
-                                                        }
-                                                    })
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:res_real, res_imag) schedule(static),
+            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+                index_t i;
+                SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask,
+                              mask.obj_high_mask, mask.obj_rev_high_mask, l, i);
+                if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
+                    auto j = i + mask.obj_min_mask;
+                    auto k = i + mask.obj_max_mask;
+                    auto v01 = a * ket[j] + b * ket[k];
+                    auto v10 = a * ket[k] + b * ket[j];
+                    auto this_res = std::conj(bra[j]) * v01;
+                    this_res += std::conj(bra[k]) * v10;
+                    res_real += this_res.real();
+                    res_imag += this_res.imag();
+                }
+            })
     }
     if (will_free_bra) {
         derived::FreeState(&bra);

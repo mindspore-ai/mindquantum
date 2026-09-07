@@ -202,16 +202,15 @@ auto PrepareMatrixGate(const qbits_t& objs, const qbits_t& ctrls,
 }
 
 template <size_t static_gate_dim, typename qs_data_t, typename block_func_t>
-void ForEachMatrixGateBlock(index_t dim, index_t dim_threshold, index_t block_count, size_t gate_dim,
-                            const block_func_t& block_func) {
+void ForEachMatrixGateBlock(index_t dim, index_t block_count, size_t gate_dim, const block_func_t& block_func) {
     if constexpr (static_gate_dim == 0) {
-        if (dim < dim_threshold) {
+        if (const int team = omp::TeamSize(dim); team == 1) {
             std::vector<qs_data_t> input(gate_dim);
             for (index_t block = 0; block < block_count; ++block) {
                 block_func(block, input.data());
             }
         } else {
-            MQ_DO_PRAGMA(omp parallel) {
+            MQ_DO_PRAGMA(omp parallel num_threads(team)) {
                 std::vector<qs_data_t> input(gate_dim);
                 MQ_DO_PRAGMA(omp for schedule(static))
                 for (omp::idx_t block = 0; block < static_cast<omp::idx_t>(block_count); ++block) {
@@ -220,8 +219,8 @@ void ForEachMatrixGateBlock(index_t dim, index_t dim_threshold, index_t block_co
             }
         }
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, dim_threshold, for (omp::idx_t block = 0; block < static_cast<omp::idx_t>(block_count); ++block) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t block = 0; block < static_cast<omp::idx_t>(block_count); ++block) {
                 std::array<qs_data_t, static_gate_dim> input;
                 block_func(static_cast<index_t>(block), input.data());
             })
@@ -229,12 +228,12 @@ void ForEachMatrixGateBlock(index_t dim, index_t dim_threshold, index_t block_co
 }
 
 template <size_t static_gate_dim, typename qs_data_t, typename calc_type, typename block_func_t>
-auto ReduceMatrixGateBlocks(index_t dim, index_t dim_threshold, index_t block_count, size_t gate_dim,
+auto ReduceMatrixGateBlocks(index_t dim, index_t block_count, size_t gate_dim,
                             const block_func_t& block_func) -> qs_data_t {
     calc_type res_real = 0;
     calc_type res_imag = 0;
     if constexpr (static_gate_dim == 0) {
-        if (dim < dim_threshold) {
+        if (const int team = omp::TeamSize(dim); team == 1) {
             std::vector<qs_data_t> input(gate_dim);
             for (index_t block = 0; block < block_count; ++block) {
                 const auto block_sum = block_func(block, input.data());
@@ -242,7 +241,7 @@ auto ReduceMatrixGateBlocks(index_t dim, index_t dim_threshold, index_t block_co
                 res_imag += block_sum.imag();
             }
         } else {
-            MQ_DO_PRAGMA(omp parallel reduction(+ : res_real, res_imag)) {
+            MQ_DO_PRAGMA(omp parallel num_threads(team) reduction(+ : res_real, res_imag)) {
                 std::vector<qs_data_t> input(gate_dim);
                 MQ_DO_PRAGMA(omp for schedule(static))
                 for (omp::idx_t block = 0; block < static_cast<omp::idx_t>(block_count); ++block) {
@@ -253,8 +252,8 @@ auto ReduceMatrixGateBlocks(index_t dim, index_t dim_threshold, index_t block_co
             }
         }
     } else {
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+ : res_real, res_imag) schedule(static)), dim, dim_threshold,
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+ : res_real, res_imag) schedule(static),
             for (omp::idx_t block = 0; block < static_cast<omp::idx_t>(block_count); ++block) {
                 std::array<qs_data_t, static_gate_dim> input;
                 const auto block_sum = block_func(static_cast<index_t>(block), input.data());

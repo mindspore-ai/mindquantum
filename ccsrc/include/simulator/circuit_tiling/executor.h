@@ -28,18 +28,18 @@
 // state is a flat array of complex amplitudes.  The best instruction set
 // available on the host is selected once at runtime.
 namespace mindquantum::sim::circuit_tiling {
-// Applies a prepared tile in place.  `parallel` selects an OpenMP team over
-// the tile traversal; small states run serially on the calling thread.
+// Applies a prepared tile in place on an OpenMP team of `threads` threads
+// over the tile traversal; a team of one runs on the calling thread.
 template <typename value_t>
-void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel);
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads);
 
-// Runs an adjoint program: evolves the shared bra and every batch ket while
-// accumulating the initial overlaps and the derivative contributions into
-// `output[batch][column]`.
+// Runs an adjoint program on an OpenMP team of `threads` threads: evolves the
+// shared bra and every batch ket while accumulating the initial overlaps and
+// the derivative contributions into `output[batch][column]`.
 template <typename value_t>
 void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
                          const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
-                         bool parallel);
+                         int threads);
 
 // The runtime selected for the value type: "scalar" or "arm-sve".
 template <typename value_t>
@@ -49,17 +49,17 @@ extern template auto ExecutionBackendName<std::complex<float>>() noexcept -> std
 extern template auto ExecutionBackendName<std::complex<double>>() noexcept -> std::string_view;
 
 extern template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&,
-                                                    bool);
+                                                    int);
 extern template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&,
-                                                     bool);
+                                                     int);
 extern template void ApplyAdjointProgram<std::complex<float>>(std::complex<float>*,
                                                               const std::vector<std::complex<float>*>&,
                                                               const AdjointProgram<std::complex<float>>&,
-                                                              VVT<std::complex<float>>*, bool, bool);
+                                                              VVT<std::complex<float>>*, bool, int);
 extern template void ApplyAdjointProgram<std::complex<double>>(std::complex<double>*,
                                                                const std::vector<std::complex<double>*>&,
                                                                const AdjointProgram<std::complex<double>>&,
-                                                               VVT<std::complex<double>>*, bool, bool);
+                                                               VVT<std::complex<double>>*, bool, int);
 }  // namespace mindquantum::sim::circuit_tiling
 
 #endif  // INCLUDE_SIMULATOR_CIRCUIT_TILING_EXECUTOR_H_

@@ -30,8 +30,7 @@ namespace mindquantum::sim::vector::detail {
 namespace {
 template <size_t static_gate_dim, typename qs_data_t, typename py_qs_data_t>
 void ApplyNQubitsMatrixKernel(const qs_data_t* src, qs_data_t* des, const qbits_t& objs, const qbits_t& ctrls,
-                              const std::vector<std::vector<py_qs_data_t>>& gate, index_t dim,
-                              index_t dim_threshold) {
+                              const std::vector<std::vector<py_qs_data_t>>& gate, index_t dim) {
     const auto prepared = matrix_gate::PrepareMatrixGate<static_gate_dim, qs_data_t>(objs, ctrls, gate, dim);
 
     const auto apply_block = [&](index_t block, qs_data_t* input) {
@@ -48,8 +47,8 @@ void ApplyNQubitsMatrixKernel(const qs_data_t* src, qs_data_t* des, const qbits_
             des[base | prepared.obj_masks[row]] = value;
         }
     };
-    matrix_gate::ForEachMatrixGateBlock<static_gate_dim, qs_data_t>(dim, dim_threshold, prepared.block_count,
-                                                                    prepared.gate_dim, apply_block);
+    matrix_gate::ForEachMatrixGateBlock<static_gate_dim, qs_data_t>(dim, prepared.block_count, prepared.gate_dim,
+                                                                    apply_block);
 }
 }  // namespace
 
@@ -73,7 +72,7 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data
         src = src_out;
     }
     auto apply_kernel = [&](auto static_gate_dim) {
-        ApplyNQubitsMatrixKernel<decltype(static_gate_dim)::value>(src, des, objs, ctrls, gate, dim, DimTh);
+        ApplyNQubitsMatrixKernel<decltype(static_gate_dim)::value>(src, des, objs, ctrls, gate, dim);
     };
     matrix_gate::DispatchStaticNQubits(n_qubit, apply_kernel);
     if (will_free) {
@@ -103,8 +102,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_da
     size_t mask2 = (static_cast<uint64_t>(1) << objs[1]);
     if (!mask.ctrl_mask) {
         // clang-format off
-        THRESHOLD_OMP_FOR(dim, DimTh,
-            for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -122,8 +121,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyTwoQubitsMatrix(const qs_da
             })
         // clang-format on
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -165,8 +164,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(const qs_
     }
     SingleQubitGateMask mask({obj_qubit}, ctrls);
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 auto j = i + mask.obj_mask;
                 auto t1 = m[0][0] * src[i] + m[0][1] * src[j];
@@ -175,8 +174,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySingleQubitMatrix(const qs_
                 des[j] = t2;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i + mask.obj_mask;

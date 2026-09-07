@@ -130,35 +130,35 @@ struct CIVectorGradPolicy {
         // with c'_1 = cos_th*c1 - phase*sin_th*c2
         // and  c'_2 = phase*sin_th*c1 + cos_th*c2
         // This can be parallelized with reduction.
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for reduction(+:real_part, imag_part) schedule(static)), dim, 1UL << 13,
-                for (omp::idx_t i = 0; i < dim; i++) {
-                    uint64_t mask_i = indexer->unrank(i);
-                    if ((mask_i & g->excit_mask_) == g->ket_bra_mask_) {
-                        uint64_t mask_j = mask_i ^ g->flip_mask_;
-                        size_t j = indexer->rank(mask_j);
+        MQ_OMP_PARALLEL_FOR_CLAUSES(
+            dim, reduction(+:real_part, imag_part) schedule(static),
+            for (omp::idx_t i = 0; i < dim; i++) {
+                uint64_t mask_i = indexer->unrank(i);
+                if ((mask_i & g->excit_mask_) == g->ket_bra_mask_) {
+                    uint64_t mask_j = mask_i ^ g->flip_mask_;
+                    size_t j = indexer->rank(mask_j);
 
-                        const auto c1 = data_r[i], c2 = data_r[j];
-                        const auto d1 = data_l[i], d2 = data_l[j];
-                        double phase_d = 1.0;
-                        uint64_t current_mask = mask_i;
-                        for (size_t k = 0; k < g->op_sequence_.size(); ++k) {
-                            const auto& [orb_idx, is_creation] = g->op_sequence_[k];
-                            const auto& parity_mask = g->op_parity_masks_[k];
-                            if (ci_basis::SlaterDeterminant::count_set_bits(current_mask & parity_mask) & 1) {
-                                phase_d = -phase_d;
-                            }
-                            current_mask ^= (1ULL << orb_idx);
+                    const auto c1 = data_r[i], c2 = data_r[j];
+                    const auto d1 = data_l[i], d2 = data_l[j];
+                    double phase_d = 1.0;
+                    uint64_t current_mask = mask_i;
+                    for (size_t k = 0; k < g->op_sequence_.size(); ++k) {
+                        const auto& [orb_idx, is_creation] = g->op_sequence_[k];
+                        const auto& parity_mask = g->op_parity_masks_[k];
+                        if (ci_basis::SlaterDeterminant::count_set_bits(current_mask & parity_mask) & 1) {
+                            phase_d = -phase_d;
                         }
-                        const auto phase = static_cast<calc_type>(phase_d);
-
-                        const auto c_prime_1 = cos_th * c1 - phase * sin_th * c2;
-                        const auto c_prime_2 = phase * sin_th * c1 + cos_th * c2;
-                        const auto term = phase * (std::conj(d2) * c_prime_1 - std::conj(d1) * c_prime_2);
-                        real_part += term.real();
-                        imag_part += term.imag();
+                        current_mask ^= (1ULL << orb_idx);
                     }
-                });
+                    const auto phase = static_cast<calc_type>(phase_d);
+
+                    const auto c_prime_1 = cos_th * c1 - phase * sin_th * c2;
+                    const auto c_prime_2 = phase * sin_th * c1 + cos_th * c2;
+                    const auto term = phase * (std::conj(d2) * c_prime_1 - std::conj(d1) * c_prime_2);
+                    real_part += term.real();
+                    imag_part += term.imag();
+                }
+            });
 
         py_qs_data_t total_val(real_part, imag_part);
         std::vector<std::vector<py_qs_data_t>> mdata{{total_val}};

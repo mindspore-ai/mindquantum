@@ -608,7 +608,7 @@ auto DensityMatrixState<qs_policy_t_>::GetExpectationWithGradMultiMulti(
     const auto batch_size = std::min(mea_threads, kMaxObservableBatch);
 
     VT<VVT<py_qs_data_t>> output(enc_data.size());
-    const auto threads = SelectGradientBatchThreads(qs_policy_t::Size(dim_), qs_policy_t::DimTh, batch_threads);
+    const auto threads = SelectGradientBatchThreads(qs_policy_t::Size(dim_), batch_threads);
     ParallelBatch(threads, enc_data.size(), [&](size_t batch) {
         parameter::ParameterResolver pr;
         pr.SetItems(enc_name, enc_data[batch]);

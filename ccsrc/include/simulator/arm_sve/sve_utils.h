@@ -391,11 +391,11 @@ void ForEachStateIndexBatchSerial(const state_index::StateIndexWindow& index_win
 }
 
 template <typename calc_type, typename kernel_t>
-void ParallelForEachStateIndexBatchWithScratch(const state_index::StateIndexWindow& index_window,
+void ParallelForEachStateIndexBatchWithScratch(int threads, const state_index::StateIndexWindow& index_window,
                                                index_t compressed_count, size_t scratch_vectors,
                                                const kernel_t& kernel) {
     const auto scratch_size = scratch_vectors * Traits<calc_type>::ScalarLanes();
-    MQ_DO_PRAGMA(omp parallel) {
+    MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
         auto* scratch = ThreadScratch<calc_type>(scratch_size);
         ForEachStateIndexBatchInParallel<calc_type>(
             index_window, compressed_count, [&](const state_index::StateIndexBatch& batch, index_t state_origin) {
@@ -405,11 +405,11 @@ void ParallelForEachStateIndexBatchWithScratch(const state_index::StateIndexWind
 }
 
 template <typename calc_type, typename kernel_t>
-void ForEachStateIndexBatchWithScratch(index_t dim, index_t dim_threshold,
-                                       const state_index::StateIndexWindow& index_window, index_t compressed_count,
-                                       size_t scratch_vectors, const kernel_t& kernel) {
-    if (dim >= dim_threshold) {
-        ParallelForEachStateIndexBatchWithScratch<calc_type>(index_window, compressed_count, scratch_vectors, kernel);
+void ForEachStateIndexBatchWithScratch(index_t dim, const state_index::StateIndexWindow& index_window,
+                                       index_t compressed_count, size_t scratch_vectors, const kernel_t& kernel) {
+    if (const int threads = omp::TeamSize(dim); threads != 1) {
+        ParallelForEachStateIndexBatchWithScratch<calc_type>(threads, index_window, compressed_count, scratch_vectors,
+                                                             kernel);
         return;
     }
 

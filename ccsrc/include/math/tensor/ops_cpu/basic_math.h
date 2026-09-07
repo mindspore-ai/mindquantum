@@ -591,9 +591,8 @@ Tensor MatMul(void* m1, size_t* indptr, size_t* indices, size_t n_row, size_t n_
     auto out = init(n_row, upper_dtype);
     auto c_out = reinterpret_cast<upper_t*>(out.data);
 
-    THRESHOLD_OMP_FOR(
-        len, static_cast<uint64_t>(1) << mindquantum::nQubitTh,
-        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(n_row); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        len, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(n_row); i++) {
             upper_t sum = 0.0;
             for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 if constexpr (m1_dtype == m2_dtype) {

@@ -253,13 +253,15 @@ Mac or Windows users can install MindQuantum through Docker. Please refer to [Do
 
 ## Note
 
-Please set the parallel core number before running MindQuantum scripts. For example, if you want to set the parallel core number to 4, please run the command below:
+The CPU simulators parallelize with OpenMP. The number of threads used for an operation grows with the size of the simulated state (one thread per 8192 amplitudes), up to the OpenMP thread limit, which defaults to the number of CPU cores. Small circuits therefore never fan out across a whole many-core server, and large ones use every core by default.
+
+To lower the limit, for example to 4 threads on a shared host, set `OMP_NUM_THREADS` before starting Python:
 
 ```bash
 export OMP_NUM_THREADS=4
 ```
 
-For large servers, please set the number of parallel kernels appropriately according to the size of the model to achieve optimal results.
+On servers with more than a few dozen cores, capping the limit around the number of cores of one CPU socket usually gives the best throughput unless you simulate more than about 24 qubits.
 
 ## Building binary wheels
 
