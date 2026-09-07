@@ -69,8 +69,8 @@ auto CPUDensityMatrixPolicy<calc_type_>::HamiltonianMatrix(const Hamiltonian<cal
             const PauliAction<calc_type> pauli(words);
             const auto flip = pauli.Flip();
             const auto weight = coefficient;
-            THRESHOLD_OMP_FOR(
-                Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            MQ_OMP_PARALLEL_FOR(
+                Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                     const auto column = static_cast<index_t>(i);
                     out[(column ^ flip) * dim + column] += weight * pauli.Phase(column);
                 })
@@ -78,8 +78,8 @@ auto CPUDensityMatrixPolicy<calc_type_>::HamiltonianMatrix(const Hamiltonian<cal
         return out;
     }
     const auto matrix = SparseMatrix(ham, dim);
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             const auto row = static_cast<index_t>(i);
             for (auto k = matrix->indptr_[row]; k < matrix->indptr_[row + 1]; k++) {
                 out[row * dim + matrix->indices_[k]] += matrix->data_[k];
@@ -99,30 +99,30 @@ auto CPUDensityMatrixPolicy<calc_type_>::Expectation(const qs_data_p_t& qs, cons
             const PauliAction<calc_type> pauli(words);
             const auto flip = pauli.Flip();
             const auto weight = coefficient;
-            THRESHOLD_OMP(
-                MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : real, imag)), Size(dim), DimTh,
-                             for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-                                 const auto row = static_cast<index_t>(i);
-                                 const auto term = weight * pauli.Phase(row) * qs[row * dim + (row ^ flip)];
-                                 real += term.real();
-                                 imag += term.imag();
-                             })
+            MQ_OMP_PARALLEL_FOR_CLAUSES(
+                Size(dim), schedule(static) reduction(+ : real, imag),
+                for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+                    const auto row = static_cast<index_t>(i);
+                    const auto term = weight * pauli.Phase(row) * qs[row * dim + (row ^ flip)];
+                    real += term.real();
+                    imag += term.imag();
+                })
         }
         return {real, imag};
     }
     // Tr(H rho) = sum_i sum_k H[i][k] rho[k][i]
     const auto matrix = SparseMatrix(ham, dim);
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : real, imag)), Size(dim), DimTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-                         const auto column = static_cast<index_t>(i);
-                         qs_data_t sum = 0;
-                         for (auto k = matrix->indptr_[column]; k < matrix->indptr_[column + 1]; k++) {
-                             sum += matrix->data_[k] * qs[matrix->indices_[k] * dim + column];
-                         }
-                         real += sum.real();
-                         imag += sum.imag();
-                     })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        Size(dim), schedule(static) reduction(+ : real, imag),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            const auto column = static_cast<index_t>(i);
+            qs_data_t sum = 0;
+            for (auto k = matrix->indptr_[column]; k < matrix->indptr_[column + 1]; k++) {
+                sum += matrix->data_[k] * qs[matrix->indices_[k] * dim + column];
+            }
+            real += sum.real();
+            imag += sum.imag();
+        })
     return {real, imag};
 }
 
@@ -136,8 +136,8 @@ void CPUDensityMatrixPolicy<calc_type_>::ApplyHamiltonian(qs_data_p_t qs, const 
             const PauliAction<calc_type> pauli(words);
             const auto flip = pauli.Flip();
             const auto weight = coefficient;
-            THRESHOLD_OMP_FOR(
-                Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            MQ_OMP_PARALLEL_FOR(
+                Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                     const auto source = static_cast<index_t>(i);
                     const auto factor = weight * pauli.Phase(source);
                     auto* target_row = left + (source ^ flip) * dim;
@@ -153,8 +153,8 @@ void CPUDensityMatrixPolicy<calc_type_>::ApplyHamiltonian(qs_data_p_t qs, const 
             const PauliAction<calc_type> pauli(words);
             const auto flip = pauli.Flip();
             const auto weight = coefficient;
-            THRESHOLD_OMP_FOR(
-                Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            MQ_OMP_PARALLEL_FOR(
+                Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                     auto* target_row = qs + static_cast<index_t>(i) * dim;
                     const auto* source_row = left + static_cast<index_t>(i) * dim;
                     for (index_t j = 0; j < dim; j++) {
@@ -168,8 +168,8 @@ void CPUDensityMatrixPolicy<calc_type_>::ApplyHamiltonian(qs_data_p_t qs, const 
     }
 
     const auto matrix = SparseMatrix(ham, dim);
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             const auto row = static_cast<index_t>(i);
             auto* target_row = left + row * dim;
             for (auto k = matrix->indptr_[row]; k < matrix->indptr_[row + 1]; k++) {
@@ -180,8 +180,8 @@ void CPUDensityMatrixPolicy<calc_type_>::ApplyHamiltonian(qs_data_p_t qs, const 
                 }
             }
         })
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             auto* target_row = qs + static_cast<index_t>(i) * dim;
             const auto* source_row = left + static_cast<index_t>(i) * dim;
             for (index_t j = 0; j < dim; j++) {

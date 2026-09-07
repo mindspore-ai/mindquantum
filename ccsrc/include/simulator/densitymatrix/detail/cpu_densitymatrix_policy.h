@@ -49,15 +49,10 @@ struct CPUDensityMatrixPolicy {
     using py_qs_datas_t = std::vector<py_qs_data_t>;
     using matrix_t = std::vector<py_qs_datas_t>;
     static constexpr tensor::TDtype dtype = tensor::to_dtype_v<py_qs_data_t>;
-    // OpenMP threshold on the number of stored amplitudes.
-    static constexpr index_t DimTh = static_cast<index_t>(1) << nQubitTh;
 
+    // Number of stored amplitudes of a `dim` x `dim` density matrix.
     [[nodiscard]] static constexpr auto Size(index_t dim) noexcept -> index_t {
         return dim * dim;
-    }
-
-    [[nodiscard]] static constexpr auto Parallel(index_t dim) noexcept -> bool {
-        return Size(dim) >= DimTh;
     }
 
     // Storage
@@ -124,8 +119,8 @@ struct CastTo {
             auto des = policy_des::InitState(dim, false);
             auto caster = tensor::cast_value<typename policy_src::calc_type, typename policy_des::calc_type>();
             const auto size = policy_des::Size(dim);
-            THRESHOLD_OMP_FOR(
-                size, policy_des::DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
+            MQ_OMP_PARALLEL_FOR(
+                size, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
                     des[i] = typename policy_des::qs_data_t{caster(std::real(qs[i])), caster(std::imag(qs[i]))};
                 })
             return des;

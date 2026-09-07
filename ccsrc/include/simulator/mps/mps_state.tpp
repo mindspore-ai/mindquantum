@@ -998,10 +998,12 @@ auto MPSState<qs_policy_t_>::ApplyCircuitCompiled_(const circuit_t& circ, const 
         for (const auto& op : stage.op1) {
             Apply1QOnPhysical_(op.pos, op.mat);
         }
-        // 2Q ops are disjoint in a stage; parallelize when it helps.
+        // 2Q ops are disjoint in a stage and each bond update (contraction plus
+        // SVD) is worth a thread of its own.
         const auto& ops2 = stage.op2;
-        THRESHOLD_OMP_FOR(
-            ops2.size(), 2, for (omp::idx_t idx = 0; idx < static_cast<omp::idx_t>(ops2.size()); ++idx) {
+        MQ_OMP_PARALLEL_FOR_TEAM(
+            omp::TeamSize(ops2.size(), omp::kMinWorkPerThread), schedule(static),
+            for (omp::idx_t idx = 0; idx < static_cast<omp::idx_t>(ops2.size()); ++idx) {
                 const auto& op = ops2.at(static_cast<size_t>(idx));
                 Apply2QOnBond_(op.bond, op.mat, !diff);
             })
@@ -1587,7 +1589,9 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
 
     Mat init_env(1, 1);
     init_env(0, 0) = complex_t{1, 0};
-#pragma omp parallel
+    // Each task contracts a whole subtree and is worth a thread of its own.
+    const int threads = omp::TeamSize(size_t{1} << (2 * parallel_depth), omp::kMinWorkPerThread);
+#pragma omp parallel num_threads(threads)
     {
 #pragma omp single
         {

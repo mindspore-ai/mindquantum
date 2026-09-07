@@ -123,10 +123,6 @@ class BackendBase:
         """Set quantum state of this backend."""
         raise NotImplementedError(f"set_qs not implemented for {self.device_name()}")
 
-    def set_threads_number(self, number):
-        """Set maximum number of threads."""
-        raise NotImplementedError(f"set_threads_number not implemented for {self.device_name()}")
-
     def get_partial_trace(self, obj_qubits):
         """Get partial trace of density matrix."""
         raise NotImplementedError(f"get_partial_trace not implemented for {self.device_name()}")

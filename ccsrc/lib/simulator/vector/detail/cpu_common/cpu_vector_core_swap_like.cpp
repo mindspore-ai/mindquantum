@@ -36,8 +36,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs_p, con
     }
     DoubleQubitGateMask mask(objs, ctrls);
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -48,8 +48,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAP(qs_data_p_t* qs_p, con
                 qs[k] = tmp;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -77,8 +77,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, co
         frac = -1.0;
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -87,8 +87,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyISWAP(qs_data_p_t* qs_p, co
                 qs[i + mask.obj_max_mask] = frac * tmp * IMAGE_I;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -115,8 +115,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
     auto b = (static_cast<calc_type_>(1) - e) / static_cast<calc_type_>(2);
     if (!diff) {
         if (!mask.ctrl_mask) {
-            THRESHOLD_OMP_FOR(
-                dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+            MQ_OMP_PARALLEL_FOR(
+                dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                     omp::idx_t i;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, i);
@@ -129,8 +129,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
                     qs[k] = b * tmp_j + a * tmp_k;
                 })
         } else {
-            THRESHOLD_OMP_FOR(
-                dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+            MQ_OMP_PARALLEL_FOR(
+                dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                     omp::idx_t i;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, i);
@@ -149,8 +149,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
         a = IMAGE_I * static_cast<calc_type_>(M_PI_2) * e;
         b = IMAGE_MI * static_cast<calc_type_>(M_PI_2) * e;
         if (!mask.ctrl_mask) {
-            THRESHOLD_OMP_FOR(
-                dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+            MQ_OMP_PARALLEL_FOR(
+                dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                     omp::idx_t i;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, i);
@@ -165,8 +165,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplySWAPalpha(qs_data_p_t* qs_p
                     qs[k] = b * tmp_j + a * tmp_k;
                 })
         } else {
-            THRESHOLD_OMP_FOR(
-                dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+            MQ_OMP_PARALLEL_FOR(
+                dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                     omp::idx_t i;
                     SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask,
                                   l, i);

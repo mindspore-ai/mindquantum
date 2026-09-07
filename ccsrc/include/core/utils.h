@@ -36,19 +36,6 @@
 #include "core/mq_base_types.h"
 
 namespace mindquantum {
-#ifndef MQ_DO_PRAGMA
-#    define MQ_DO_PRAGMA(x) _Pragma(#    x)
-#endif  // !MQ_DO_PRAGMA
-
-#define THRESHOLD_OMP(omp_pragma, n, n_th, ...)                                                                        \
-    if ((n) < (n_th)) {                                                                                                \
-        __VA_ARGS__                                                                                                    \
-    } else {                                                                                                           \
-        omp_pragma __VA_ARGS__                                                                                         \
-    }
-#define THRESHOLD_OMP_FOR(n, n_th, ...)                                                                                \
-    THRESHOLD_OMP(MQ_DO_PRAGMA(omp parallel for schedule(static)), n, n_th, __VA_ARGS__)
-
 extern const VT<CT<double>> POLAR;
 template <typename T, typename ST>
 CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
@@ -56,12 +43,12 @@ CT<T> ComplexInnerProduct(const ST *v1, const ST *v2, Index len) {
     ST real_part = 0;
     ST imag_part = 0;
     auto size = len / 2;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, static_cast<uint64_t>(2) << nQubitTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
-                         real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
-                         imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
-                     })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        size, schedule(static) reduction(+ : real_part, imag_part),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
+            real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
+            imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
+        })
     CT<T> result = {static_cast<T>(real_part), static_cast<T>(imag_part)};
     return result;
 }
@@ -72,14 +59,14 @@ CT<T> ComplexInnerProductWithControl(const ST *v1, const ST *v2, Index len, Inde
     ST real_part = 0;
     ST imag_part = 0;
     auto size = len / 2;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+ : real_part, imag_part)), len, static_cast<uint64_t>(2) << nQubitTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
-                         if ((i & ctrl_mask) == ctrl_mask) {
-                             real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
-                             imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
-                         }
-                     })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        size, schedule(static) reduction(+ : real_part, imag_part),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
+            if ((i & ctrl_mask) == ctrl_mask) {
+                real_part += v1[2 * i] * v2[2 * i] + v1[2 * i + 1] * v2[2 * i + 1];
+                imag_part += v1[2 * i] * v2[2 * i + 1] - v1[2 * i + 1] * v2[2 * i];
+            }
+        })
     CT<T> result = {static_cast<T>(real_part), static_cast<T>(imag_part)};
     return result;
 }

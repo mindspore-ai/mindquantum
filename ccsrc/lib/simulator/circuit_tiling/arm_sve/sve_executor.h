@@ -27,25 +27,25 @@
 // Only the runtime dispatcher may call them, after confirming host support.
 namespace mindquantum::sim::circuit_tiling::arm_sve {
 template <typename value_t>
-void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel);
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads);
 
 template <typename value_t>
 void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
                          const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
-                         bool parallel);
+                         int threads);
 
 extern template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&,
-                                                    bool);
+                                                    int);
 extern template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&,
-                                                     bool);
+                                                     int);
 extern template void ApplyAdjointProgram<std::complex<float>>(std::complex<float>*,
                                                               const std::vector<std::complex<float>*>&,
                                                               const AdjointProgram<std::complex<float>>&,
-                                                              VVT<std::complex<float>>*, bool, bool);
+                                                              VVT<std::complex<float>>*, bool, int);
 extern template void ApplyAdjointProgram<std::complex<double>>(std::complex<double>*,
                                                                const std::vector<std::complex<double>*>&,
                                                                const AdjointProgram<std::complex<double>>&,
-                                                               VVT<std::complex<double>>*, bool, bool);
+                                                               VVT<std::complex<double>>*, bool, int);
 }  // namespace mindquantum::sim::circuit_tiling::arm_sve
 
 #endif  // LIB_SIMULATOR_CIRCUIT_TILING_ARM_SVE_SVE_EXECUTOR_H_

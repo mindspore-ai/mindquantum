@@ -45,28 +45,28 @@ template <typename value_t>
 }  // namespace
 
 template <typename value_t>
-void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel) {
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {
 #if MQ_HAS_ARM_SVE_BACKEND
     if (UseArmSve<value_t>()) {
-        arm_sve::ApplyTile(state, tile, parallel);
+        arm_sve::ApplyTile(state, tile, threads);
         return;
     }
 #endif
-    detail::ApplyTile<detail::ScalarTileRuntime<value_t>>(state, tile, parallel);
+    detail::ApplyTile<detail::ScalarTileRuntime<value_t>>(state, tile, threads);
 }
 
 template <typename value_t>
 void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
                          const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
-                         bool parallel) {
+                         int threads) {
 #if MQ_HAS_ARM_SVE_BACKEND
     if (UseArmSve<value_t>()) {
-        arm_sve::ApplyAdjointProgram(shared_state, batch_states, program, output, conjugate_output, parallel);
+        arm_sve::ApplyAdjointProgram(shared_state, batch_states, program, output, conjugate_output, threads);
         return;
     }
 #endif
     detail::ApplyAdjointProgram<detail::ScalarTileRuntime<value_t>>(shared_state, batch_states, program, output,
-                                                                    conjugate_output, parallel);
+                                                                    conjugate_output, threads);
 }
 
 template <typename value_t>
@@ -76,13 +76,13 @@ auto ExecutionBackendName() noexcept -> std::string_view {
 
 template auto ExecutionBackendName<std::complex<float>>() noexcept -> std::string_view;
 template auto ExecutionBackendName<std::complex<double>>() noexcept -> std::string_view;
-template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&, bool);
-template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&, bool);
+template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&, int);
+template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&, int);
 template void ApplyAdjointProgram<std::complex<float>>(std::complex<float>*, const std::vector<std::complex<float>*>&,
                                                        const AdjointProgram<std::complex<float>>&,
-                                                       VVT<std::complex<float>>*, bool, bool);
+                                                       VVT<std::complex<float>>*, bool, int);
 template void ApplyAdjointProgram<std::complex<double>>(std::complex<double>*,
                                                         const std::vector<std::complex<double>*>&,
                                                         const AdjointProgram<std::complex<double>>&,
-                                                        VVT<std::complex<double>>*, bool, bool);
+                                                        VVT<std::complex<double>>*, bool, int);
 }  // namespace mindquantum::sim::circuit_tiling

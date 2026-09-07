@@ -93,7 +93,7 @@ auto GateMatrix(const gate_t& gate, const parameter::ParameterResolver& pr) -> s
         std::vector<value_t> state(kDim, 0);
         state[column] = 1;
         if (!prepared.operations.empty()) {
-            mqt::detail::ApplyTile<runtime_t>(state.data(), prepared, false);
+            mqt::detail::ApplyTile<runtime_t>(state.data(), prepared, 1);
         }
         for (size_t row = 0; row < kDim; ++row) {
             matrix[row * kDim + column] = state[row];
@@ -137,7 +137,7 @@ auto ApplyOnDensityMatrix(const gate_t& gate, const parameter::ParameterResolver
     const mqt::CircuitTile tile{mqt::QubitsFromMask(mask), {gate}};
     const auto prepared = builder_t::Build(tile, pr, space);
     if (!prepared.operations.empty()) {
-        mqt::detail::ApplyTile<runtime_t>(rho.data(), prepared, false);
+        mqt::detail::ApplyTile<runtime_t>(rho.data(), prepared, 1);
     }
     return rho;
 }
@@ -260,7 +260,7 @@ TEST_CASE("Derivative tiles realise dU rho dU^dagger, which vanishes outside the
         const mqt::CircuitTile tile{
             mqt::QubitsFromMask(access->mixing_mask | access->object_mask | access->control_mask), {gate}};
         auto state = rho;
-        mqt::detail::ApplyTile<runtime_t>(state.data(), builder_t::BuildDerivative(tile, pr, space), false);
+        mqt::detail::ApplyTile<runtime_t>(state.data(), builder_t::BuildDerivative(tile, pr, space), 1);
         return state;
     };
     const auto embed_single = [](const std::array<value_t, 4>& local, size_t qubit, size_t control) {
@@ -330,7 +330,7 @@ TEST_CASE("Dephasing channels lower to diagonal kernels") {
         }
     }
     auto state = rho;
-    mqt::detail::ApplyTile<runtime_t>(state.data(), prepared, false);
+    mqt::detail::ApplyTile<runtime_t>(state.data(), prepared, 1);
     CheckClose(state, expected);
 }
 
@@ -375,13 +375,13 @@ TEST_CASE("Adjoint lowering inverts unitary evolution") {
          std::make_shared<mq::ISWAPGate>(true, mq::qbits_t{0, 2}),
          std::make_shared<mq::RotPauliString>("XYZ", parameter::ParameterResolver{0.6}, mq::qbits_t{0, 1, 2})}};
     auto evolved = rho;
-    mqt::detail::ApplyTile<runtime_t>(evolved.data(), builder_t::Build(tile, pr, space), false);
+    mqt::detail::ApplyTile<runtime_t>(evolved.data(), builder_t::Build(tile, pr, space), 1);
 
     mqt::CircuitTile reversed = tile;
     std::reverse(reversed.gates.begin(), reversed.gates.end());
     const auto adjoint = builder_t::EvolutionOnly(
         builder_t::BuildAdjoint(reversed, pr, {}, space, builder_t::AdjointGates::Reversed));
-    mqt::detail::ApplyTile<runtime_t>(evolved.data(), adjoint, false);
+    mqt::detail::ApplyTile<runtime_t>(evolved.data(), adjoint, 1);
     CheckClose(evolved, rho);
 }
 
@@ -402,8 +402,8 @@ TEST_CASE("Hermitian mirroring evolves half of the blocks with identical results
 
     auto mirrored_state = rho;
     auto full_state = rho;
-    mqt::detail::ApplyTile<runtime_t>(mirrored_state.data(), mirrored, false);
-    mqt::detail::ApplyTile<runtime_t>(full_state.data(), full, false);
+    mqt::detail::ApplyTile<runtime_t>(mirrored_state.data(), mirrored, 1);
+    mqt::detail::ApplyTile<runtime_t>(full_state.data(), full, 1);
     CheckClose(mirrored_state, full_state);
 
     // Adjoint programs also mirror: overlaps and derivatives of the mirror
@@ -437,9 +437,9 @@ TEST_CASE("Hermitian mirroring evolves half of the blocks with identical results
     mq::VVT<value_t> mirrored_output(1, mq::VT<value_t>(2, 0));
     mq::VVT<value_t> full_output(1, mq::VT<value_t>(2, 0));
     mqt::detail::ApplyAdjointProgram<runtime_t>(mirrored_shared.data(), {mirrored_observable.data()}, program,
-                                                &mirrored_output, false, false);
+                                                &mirrored_output, false, 1);
     mqt::detail::ApplyAdjointProgram<runtime_t>(full_shared.data(), {full_observable.data()}, full_program,
-                                                &full_output, false, false);
+                                                &full_output, false, 1);
     CheckClose(mirrored_shared, full_shared);
     CheckClose(mirrored_observable, full_observable);
     CheckClose(mirrored_output.front(), full_output.front());

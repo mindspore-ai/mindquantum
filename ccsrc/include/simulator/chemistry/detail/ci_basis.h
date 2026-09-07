@@ -97,8 +97,8 @@ class Indexing {
         size_t dim = Combinatorics::get(n_qubits_, n_electrons_);
         index_to_mask_.resize(dim);
         mask_to_index_.resize(1ULL << n_qubits_);
-        THRESHOLD_OMP_FOR(
-            dim, 1UL << 13, for (omp::idx_t i = 0; i < dim; ++i) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t i = 0; i < dim; ++i) {
                 uint64_t mask = unrank_lexicographical(i, n_qubits_, n_electrons_);
                 index_to_mask_[i] = mask;
                 mask_to_index_[mask] = i;

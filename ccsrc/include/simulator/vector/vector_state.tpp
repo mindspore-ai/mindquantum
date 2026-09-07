@@ -93,7 +93,7 @@ auto VectorStateAdjoint<sim_t_>::PrepareAdjointCircuit(const sim_t* sim, const c
     }
     const circuit_t active_circuit(circuit.begin(), last_gradient_gate.base());
     circuit_tiling::Schedule plan;
-    if (sim->dim < policy_t::DimTh) {
+    if (sim->dim < policy_t::kTilingThreshold) {
         plan.reserve(active_circuit.size());
         for (const auto& gate : active_circuit) {
             if (gate->GetID() != GateID::I) {
@@ -1107,7 +1107,7 @@ std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit
     };
 
     if constexpr (HasCircuitTileExecutor<qs_policy_t, py_qs_data_t>::value) {
-        if (dim >= qs_policy_t::DimTh && circ.size() > 1) {
+        if (dim >= qs_policy_t::kTilingThreshold && circ.size() > 1) {
             const auto space = circuit_tiling::StateSpace::Vector(n_qubits);
             const auto plan = circuit_tiling::Planner(space).Plan(circ);
             for (const auto& planned : plan) {

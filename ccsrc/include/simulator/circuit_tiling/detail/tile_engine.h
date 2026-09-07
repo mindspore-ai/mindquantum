@@ -54,7 +54,7 @@
 //   };
 namespace mindquantum::sim::circuit_tiling::detail {
 template <typename runtime_t, typename value_t>
-void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel) {
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {
     using kernels_t = Kernels<typename runtime_t::algebra_t>;
     assert(state != nullptr);
     assert(tile.layout.dimension != 0 && tile.layout.state_offsets.size() == tile.layout.dimension);
@@ -73,12 +73,12 @@ void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel)
             runtime_t::Scatter(state, tile.layout, active, state_base, index_context, local_state);
         });
     };
-    if (!parallel) {
+    if (threads == 1) {
         run(runtime_t::ThreadScratch(scratch_size),
             [](const auto& traversal, const auto& body) { runtime_t::ForEach(traversal, body); });
         return;
     }
-    MQ_DO_PRAGMA(omp parallel) {
+    MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
         run(runtime_t::ThreadScratch(scratch_size),
             [](const auto& traversal, const auto& body) { runtime_t::ForEachInParallel(traversal, body); });
     }
@@ -87,7 +87,7 @@ void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, bool parallel)
 template <typename runtime_t, typename value_t>
 void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
                          const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
-                         bool parallel) {
+                         int threads) {
     using kernels_t = Kernels<typename runtime_t::algebra_t>;
     assert(shared_state != nullptr && output != nullptr);
     assert(!batch_states.empty() && !program.tiles.empty() && program.output_size != 0);
@@ -214,13 +214,13 @@ void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& bat
             }
         }
     };
-    if (!parallel) {
+    if (threads == 1) {
         sweep([](const auto& traversal, const auto& body) { runtime_t::ForEach(traversal, body); });
         return;
     }
     // A single OpenMP region spans the whole adjoint program.  Each omp-for's
     // implicit barrier orders consecutive tiles without rebuilding the team.
-    MQ_DO_PRAGMA(omp parallel) {
+    MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
         sweep([](const auto& traversal, const auto& body) { runtime_t::ForEachInParallel(traversal, body); });
     }
 }

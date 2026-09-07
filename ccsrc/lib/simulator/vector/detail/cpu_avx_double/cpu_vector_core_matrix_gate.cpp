@@ -43,8 +43,8 @@ void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(const qs_data_p_t& src_out
     __m256d mmt[LEN];
     INTRIN_gene_2d_mm_and_mmt(gate, mm, LEN, mmt, LEN, neg);
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 auto j = i + mask.obj_mask;
                 __m256d mul_res;
@@ -52,8 +52,8 @@ void CPUVectorPolicyAvxDouble::ApplySingleQubitMatrix(const qs_data_p_t& src_out
                 INTRIN_m256_to_host2(mul_res, des + i, des + j);
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 2); l++) {
                 auto i = ((l & mask.obj_high_mask) << 1) + (l & mask.obj_low_mask);
                 if ((i & mask.ctrl_mask) == mask.ctrl_mask) {
                     auto j = i + mask.obj_mask;

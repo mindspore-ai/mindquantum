@@ -89,8 +89,8 @@ struct cpu_ci_vector_policy_base {
         auto indexer = ci_basis::IndexingManager::GetIndexer(n_qubits, n_electrons);
         const size_t dim = qs->dimension();
 
-        THRESHOLD_OMP_FOR(
-            dim, 1UL << 13, for (omp::idx_t i = 0; i < dim; i++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t i = 0; i < dim; i++) {
                 uint64_t mask_i = indexer->unrank(i);
                 if ((mask_i & op.excit_mask_) == op.ket_bra_mask_) {
                     uint64_t mask_j = mask_i ^ op.flip_mask_;

@@ -28,6 +28,11 @@ mindquantum.simulator.Simulator
 
     使用 :func:`mindquantum.simulator.get_supported_simulator` 查看当前环境中可用的后端。
 
+    .. note::
+        CPU 后端使用 OpenMP 并行。每个操作使用的线程数随模拟的量子态规模增长（每 8192 个振幅一个线程），
+        上限为 OpenMP 线程数限制，该限制默认为 CPU 核数。若需降低该上限（例如在共享主机或核数超过
+        内存带宽所能支撑的大型服务器上），请在启动 Python 之前设置环境变量 ``OMP_NUM_THREADS``。
+
     参数：
         - **backend** (str) - 想要的后端。通过调用 `get_supported_simulator()` 可以返回支持的后端。
         - **n_qubits** (int) - 量子模拟器的量子比特数量。默认值： ``None``。
@@ -292,10 +297,3 @@ mindquantum.simulator.Simulator
 
         参数：
             - **quantum_state** (numpy.ndarray) - 想设置的量子态。
-
-    .. py:method:: set_threads_number(number)
-
-        设置最大线程数。
-
-        参数：
-            - **number** (int) - 设置模拟器中线程池所使用的线程数。

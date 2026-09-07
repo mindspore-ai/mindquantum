@@ -71,13 +71,13 @@ std::shared_ptr<CsrHdMatrix<T>> PauliMatToCsrHdMatrix(std::shared_ptr<PauliMat<T
     auto &dim = a->dim_;
     auto &coeff = a->coeff_;
     auto &p = a->p_;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : nnz)), dim, static_cast<uint64_t>(1) << nQubitTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-                         if (i <= col[i]) {
-                             nnz++;
-                         }
-                     })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        dim, schedule(static) reduction(+ : nnz),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            if (i <= col[i]) {
+                nnz++;
+            }
+        })
     Index *indptr = reinterpret_cast<Index *>(malloc(sizeof(Index) * (dim + 1)));
     Index *indices = reinterpret_cast<Index *>(malloc(sizeof(Index) * nnz));
     CTP<T> data = reinterpret_cast<CTP<T>>(malloc(sizeof(CT<T>) * nnz));
@@ -125,9 +125,13 @@ std::shared_ptr<CsrHdMatrix<T>> Csr_Plus_Csr(std::shared_ptr<CsrHdMatrix<T>> a, 
 template <typename T>
 std::shared_ptr<CsrHdMatrix<T>> SparseHamiltonian(const VT<PauliTerm<T>> &hams, Index n_qubits) {
     VT<std::shared_ptr<CsrHdMatrix<T>>> sp_hams(hams.size());
+    const auto dim = static_cast<uint64_t>(1) << n_qubits;
 
-    THRESHOLD_OMP_FOR(
-        n_qubits, nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(hams.size()); i++) {
+    // Every term costs a sweep over the state; on a single-thread team the
+    // sweeps inside each term parallelize instead.
+    MQ_OMP_PARALLEL_FOR_TEAM(
+        omp::TeamSize(hams.size(), dim), schedule(static),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(hams.size()); i++) {
             auto pm = GetPauliMat(hams[i], n_qubits);
             sp_hams[i] = PauliMatToCsrHdMatrix(pm);
             pm->Reset();
@@ -135,12 +139,12 @@ std::shared_ptr<CsrHdMatrix<T>> SparseHamiltonian(const VT<PauliTerm<T>> &hams, 
     Index tot = static_cast<Index>(hams.size());
     while (tot > 1) {
         Index half = tot / 2 + tot % 2;
-        THRESHOLD_OMP(
-            MQ_DO_PRAGMA(omp parallel for schedule(static) num_threads(half)), n_qubits, nQubitTh,
-                         for (omp::idx_t i = static_cast<omp::idx_t>(half); i < tot; i++) {
-                             sp_hams[i - half] = Csr_Plus_Csr(sp_hams[i - half], sp_hams[i]);
-                             sp_hams[i]->Reset();
-                         })
+        MQ_OMP_PARALLEL_FOR_TEAM(
+            omp::TeamSize(tot - half, dim), schedule(static),
+            for (omp::idx_t i = static_cast<omp::idx_t>(half); i < static_cast<omp::idx_t>(tot); i++) {
+                sp_hams[i - half] = Csr_Plus_Csr(sp_hams[i - half], sp_hams[i]);
+                sp_hams[i]->Reset();
+            })
         tot = half;
     }
     return sp_hams[0];
@@ -154,8 +158,8 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, T2 *vec) {
     auto data = a->data_;
     auto indptr = a->indptr_;
     auto indices = a->indices_;
-    THRESHOLD_OMP_FOR(
-        dim, static_cast<uint64_t>(1) << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        dim, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             CT<T2> sum = {0.0, 0.0};
             for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 sum += data[j] * c_vec[indices[j]];
@@ -174,18 +178,17 @@ CT<T2> ExpectationOfCsr(std::shared_ptr<CsrHdMatrix<T>> a, T2 *bra, T2 *ket) {
     auto indptr = a->indptr_;
     auto indices = a->indices_;
     T2 res_real = 0, res_imag = 0;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim,
-                                                static_cast<uint64_t>(1) << nQubitTh,
-                                                for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-                                                    CT<T2> sum = {0.0, 0.0};
-                                                    for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
-                                                        sum += data[j] * c_ket[indices[j]];
-                                                    }
-                                                    auto tmp = std::conj(c_bra[i]) * sum;
-                                                    res_real += std::real(tmp);
-                                                    res_imag += std::imag(tmp);
-                                                })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        dim, reduction(+:res_real, res_imag) schedule(static),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            CT<T2> sum = {0.0, 0.0};
+            for (Index j = indptr[i]; j < indptr[i + 1]; j++) {
+                sum += data[j] * c_ket[indices[j]];
+            }
+            auto tmp = std::conj(c_bra[i]) * sum;
+            res_real += std::real(tmp);
+            res_imag += std::imag(tmp);
+        })
     return {res_real, res_imag};
 }
 
@@ -201,8 +204,8 @@ T2 *Csr_Dot_Vec(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHdMatrix<T
     auto indptr_b = b->indptr_;
     auto indices_b = b->indices_;
 
-    THRESHOLD_OMP_FOR(
-        dim, static_cast<uint64_t>(1) << nQubitTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        dim, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             CT<T2> sum = {0.0, 0.0};
             for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
                 sum += data[j] * c_vec[indices[j]];
@@ -229,21 +232,20 @@ CT<T2> ExpectationOfCsr(std::shared_ptr<CsrHdMatrix<T>> a, std::shared_ptr<CsrHd
     T2 res_real = 0, res_imag = 0;
 
     // clang-format off
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for reduction(+:res_real, res_imag) schedule(static)), dim,
-            static_cast<uint64_t>(1) << nQubitTh,
-            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
-                CT<T2> sum = {0.0, 0.0};
-                for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
-                    sum += data[j] * c_ket[indices[j]];
-                }
-                for (omp::idx_t j = indptr_b[i]; j < static_cast<omp::idx_t>(indptr_b[i + 1]); j++) {
-                    sum += data_b[j] * c_ket[indices_b[j]];
-                }
-                auto tmp = std::conj(c_bra[i]) * sum;
-                res_real += std::real(tmp);
-                res_imag += std::imag(tmp);
-            })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        dim, reduction(+:res_real, res_imag) schedule(static),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            CT<T2> sum = {0.0, 0.0};
+            for (omp::idx_t j = indptr[i]; j < static_cast<omp::idx_t>(indptr[i + 1]); j++) {
+                sum += data[j] * c_ket[indices[j]];
+            }
+            for (omp::idx_t j = indptr_b[i]; j < static_cast<omp::idx_t>(indptr_b[i + 1]); j++) {
+                sum += data_b[j] * c_ket[indices_b[j]];
+            }
+            auto tmp = std::conj(c_bra[i]) * sum;
+            res_real += std::real(tmp);
+            res_imag += std::imag(tmp);
+        })
     // clang-format on
     return {res_real, res_imag};
 }

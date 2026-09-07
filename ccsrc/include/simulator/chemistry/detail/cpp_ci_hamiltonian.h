@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "config/openmp.h"
 #include "core/mq_base_types.h"
 #include "simulator/chemistry/detail/ci_basis.h"
 #include "simulator/chemistry/detail/cpp_excitation_operator.h"  // For FermionOpData types
@@ -79,34 +80,35 @@ class CppCIHamiltonian {
         const auto& data_in = civec.data();
         auto& data_out = result.data();
         const size_t dim = data_in.size();
-#pragma omp parallel for schedule(dynamic)
-        for (omp::idx_t i = 0; i < dim; ++i) {
-            const auto amp_in = data_in[i];
-            if (amp_in == calc_t(0)) {
-                continue;
-            }
-            uint64_t mask_in = indexer->unrank(i);
-            for (const auto& term : hamiltonian_terms_) {
-                if ((mask_in & term.annihilation_mask) != term.annihilation_mask) {
+        MQ_OMP_PARALLEL_FOR_TEAM(
+            omp::TeamSize(dim, hamiltonian_terms_.size()), schedule(dynamic),
+            for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); ++i) {
+                const auto amp_in = data_in[i];
+                if (amp_in == calc_t(0)) {
                     continue;
                 }
-                if (((mask_in ^ term.annihilation_mask) & term.creation_mask) != 0) {
-                    continue;
-                }
-                uint64_t current_mask = mask_in;
-                int sign = 1;
-                for (const auto& parity_mask : term.parity_masks) {
-                    if (ci_basis::SlaterDeterminant::count_set_bits(current_mask & parity_mask) & 1) {
-                        sign = -sign;
+                uint64_t mask_in = indexer->unrank(i);
+                for (const auto& term : hamiltonian_terms_) {
+                    if ((mask_in & term.annihilation_mask) != term.annihilation_mask) {
+                        continue;
                     }
-                    current_mask ^= (parity_mask + 1) & ~parity_mask;
+                    if (((mask_in ^ term.annihilation_mask) & term.creation_mask) != 0) {
+                        continue;
+                    }
+                    uint64_t current_mask = mask_in;
+                    int sign = 1;
+                    for (const auto& parity_mask : term.parity_masks) {
+                        if (ci_basis::SlaterDeterminant::count_set_bits(current_mask & parity_mask) & 1) {
+                            sign = -sign;
+                        }
+                        current_mask ^= (parity_mask + 1) & ~parity_mask;
+                    }
+                    uint64_t mask_out = mask_in ^ term.flip_mask;
+                    size_t idx_out = indexer->rank(mask_out);
+                    MQ_DO_PRAGMA(omp atomic)
+                    data_out[idx_out] += static_cast<calc_t>(sign) * term.coeff * amp_in;
                 }
-                uint64_t mask_out = mask_in ^ term.flip_mask;
-                size_t idx_out = indexer->rank(mask_out);
-#pragma omp atomic
-                data_out[idx_out] += static_cast<calc_t>(sign) * term.coeff * amp_in;
-            }
-        }
+            })
         return result;
     }
 

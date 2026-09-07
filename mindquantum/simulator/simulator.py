@@ -78,6 +78,14 @@ class Simulator:
     Use :func:`mindquantum.simulator.get_supported_simulator` to list backends
     available in your current environment.
 
+    Note:
+        The CPU backends parallelize with OpenMP. The number of threads used for an
+        operation grows with the size of the simulated state (one thread per 8192
+        amplitudes), up to the OpenMP thread limit, which defaults to the number of
+        CPU cores. Set the environment variable ``OMP_NUM_THREADS`` before starting
+        Python to lower that limit, for example on a shared host or on a many-core
+        server where the default is more than the memory bandwidth can feed.
+
     Args:
         backend (str): which backend you want. The supported backend can be found
             in :data:`SUPPORTED_SIMULATOR`.
@@ -539,15 +547,6 @@ class Simulator:
             array([0.70710678+0.j, 0.70710678+0.j])
         """
         self.backend.set_qs(quantum_state)
-
-    def set_threads_number(self, number):
-        """
-        Set maximum number of threads.
-
-        Args:
-            number (int): The thread number the simulator will use for thread pool.
-        """
-        return self.backend.set_threads_number(number)
 
     def get_partial_trace(self, qubits_to_trace):
         """

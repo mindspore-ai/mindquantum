@@ -75,13 +75,13 @@ auto CPUDensityMatrixPolicy<calc_type_>::Copy(const qs_data_p_t& qs, index_t dim
 template <typename calc_type_>
 void CPUDensityMatrixPolicy<calc_type_>::CopyInto(qs_data_p_t des, const qs_data_p_t& src, index_t dim) {
     const auto size = Size(dim);
-    THRESHOLD_OMP_FOR(size, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) { des[i] = src[i]; })
+    MQ_OMP_PARALLEL_FOR(size, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) { des[i] = src[i]; })
 }
 
 template <typename calc_type_>
 void CPUDensityMatrixPolicy<calc_type_>::SetZeroState(qs_data_p_t qs, index_t dim) {
     const auto size = Size(dim);
-    THRESHOLD_OMP_FOR(size, DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) { qs[i] = 0; })
+    MQ_OMP_PARALLEL_FOR(size, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) { qs[i] = 0; })
     qs[0] = 1;
 }
 
@@ -102,8 +102,8 @@ void CPUDensityMatrixPolicy<calc_type_>::Display(const qs_data_p_t& qs, qbit_t n
 template <typename calc_type_>
 auto CPUDensityMatrixPolicy<calc_type_>::GetQS(const qs_data_p_t& qs, index_t dim) -> matrix_t {
     matrix_t out(dim, py_qs_datas_t(dim));
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             std::copy_n(qs + static_cast<index_t>(i) * dim, dim, out[i].begin());
         })
     return out;
@@ -115,8 +115,8 @@ void CPUDensityMatrixPolicy<calc_type_>::SetQS(qs_data_p_t qs, const py_qs_datas
         throw std::invalid_argument(
             fmt::format("State vector size {} does not match the simulator dimension {}.", state_vector.size(), dim));
     }
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             auto* row = qs + static_cast<index_t>(i) * dim;
             const auto amplitude = state_vector[i];
             for (index_t j = 0; j < dim; j++) {
@@ -133,8 +133,8 @@ void CPUDensityMatrixPolicy<calc_type_>::SetDM(qs_data_p_t qs, const matrix_t& d
         throw std::invalid_argument(
             fmt::format("Density matrix shape does not match the simulator dimension {}.", dim));
     }
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             std::copy_n(density_matrix[i].begin(), dim, qs + static_cast<index_t>(i) * dim);
         })
 }
@@ -143,9 +143,9 @@ template <typename calc_type_>
 auto CPUDensityMatrixPolicy<calc_type_>::Purity(const qs_data_p_t& qs, index_t dim) -> calc_type {
     const auto size = Size(dim);
     calc_type purity = 0;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : purity)), size, DimTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) { purity += std::norm(qs[i]); })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        size, schedule(static) reduction(+ : purity),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) { purity += std::norm(qs[i]); })
     return purity;
 }
 
@@ -175,8 +175,8 @@ auto CPUDensityMatrixPolicy<calc_type_>::ReducedDensityMatrix(const qs_data_p_t&
     const auto kept_dim = index_t{1} << kept_qubits.size();
     const auto traced_dim = index_t{1} << traced_qubits.size();
     matrix_t out(kept_dim, py_qs_datas_t(kept_dim));
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(kept_dim); a++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t a = 0; a < static_cast<omp::idx_t>(kept_dim); a++) {
             const auto row_base = place_kept.Expand(static_cast<index_t>(a));
             for (index_t b = 0; b < kept_dim; b++) {
                 const auto column_base = place_kept.Expand(b);
@@ -206,8 +206,8 @@ auto CPUDensityMatrixPolicy<calc_type_>::PureStateVector(const qs_data_p_t& qs, 
     // Every column of |psi><psi| is a multiple of |psi>.
     const auto base_amplitude = std::sqrt(qs[base * dim + base].real());
     py_qs_datas_t state_vector(dim);
-    THRESHOLD_OMP_FOR(
-        Size(dim), DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+    MQ_OMP_PARALLEL_FOR(
+        Size(dim), for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
             state_vector[i] = qs[static_cast<index_t>(i) * dim + base] / base_amplitude;
         })
     return state_vector;
@@ -219,13 +219,13 @@ auto CPUDensityMatrixPolicy<calc_type_>::InnerProduct(const qs_data_p_t& bra, co
     const auto size = Size(dim);
     calc_type real = 0;
     calc_type imag = 0;
-    THRESHOLD_OMP(
-        MQ_DO_PRAGMA(omp parallel for schedule(static) reduction(+ : real, imag)), size, DimTh,
-                     for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
-                         const auto product = std::conj(bra[i]) * ket[i];
-                         real += product.real();
-                         imag += product.imag();
-                     })
+    MQ_OMP_PARALLEL_FOR_CLAUSES(
+        size, schedule(static) reduction(+ : real, imag),
+        for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(size); i++) {
+            const auto product = std::conj(bra[i]) * ket[i];
+            real += product.real();
+            imag += product.imag();
+        })
     return {real, imag};
 }
 

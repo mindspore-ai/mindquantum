@@ -47,13 +47,16 @@ struct CPUVectorPolicyBase {
     using qs_data_p_t = qs_data_t*;
     using py_qs_data_t = std::complex<calc_type>;
     static constexpr tensor::TDtype dtype = tensor::to_dtype_v<py_qs_data_t>;
-    static constexpr index_t DimTh = static_cast<index_t>(1) << mindquantum::nQubitTh;
+    // Dimension from which circuits are executed through circuit tiles instead
+    // of gate by gate.  Smaller states are cache resident, where the per-gate
+    // kernels beat tile planning.
+    static constexpr index_t kTilingThreshold = index_t{1} << 13;
 
     static constexpr qs_data_t IMAGE_MI = {0, -1};
     static constexpr qs_data_t IMAGE_I = {0, 1};
 
     static auto SelectGradientBatchThreads(index_t dim, size_t requested_threads) -> size_t {
-        return sim::SelectGradientBatchThreads(dim, DimTh, requested_threads);
+        return sim::SelectGradientBatchThreads(dim, requested_threads);
     }
 
     // basic
@@ -233,8 +236,8 @@ struct CastTo {
         } else {
             auto caster = tensor::cast_value<typename policy_src::calc_type, typename policy_des::calc_type>();
             auto des = policy_des::InitState(dim, false);
-            THRESHOLD_OMP_FOR(
-                dim, policy_des::DimTh, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
+            MQ_OMP_PARALLEL_FOR(
+                dim, for (omp::idx_t i = 0; i < static_cast<omp::idx_t>(dim); i++) {
                     des[i] = typename policy_des::qs_data_t{caster(std::real(qs[i])), caster(std::imag(qs[i]))};
                 })
             return des;

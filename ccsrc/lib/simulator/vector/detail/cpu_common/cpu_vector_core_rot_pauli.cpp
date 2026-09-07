@@ -42,8 +42,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t* qs_p, cons
         s = static_cast<calc_type_>(std::cos(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR) * IMAGE_MI;
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -60,8 +60,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxx(qs_data_p_t* qs_p, cons
                 qs[m] = v11;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -100,8 +100,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxy(qs_data_p_t* qs_p, cons
         s = static_cast<calc_type_>(std::cos(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR);
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -118,8 +118,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxy(qs_data_p_t* qs_p, cons
                 qs[m] = v11;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -158,8 +158,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxz(qs_data_p_t* qs_p, cons
         s = static_cast<calc_type_>(std::cos(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR) * IMAGE_MI;
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -176,8 +176,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRxz(qs_data_p_t* qs_p, cons
                 qs[m] = v11;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -217,8 +217,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyGivens(qs_data_p_t* qs_p, c
         s = std::cos(val);
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -235,8 +235,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyGivens(qs_data_p_t* qs_p, c
                 }
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -275,8 +275,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyz(qs_data_p_t* qs_p, cons
         s = static_cast<calc_type_>(std::cos(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR);
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -293,8 +293,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyz(qs_data_p_t* qs_p, cons
                 qs[m] = v11;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -333,8 +333,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t* qs_p, cons
         s = static_cast<calc_type_>(std::cos(val / ROT_PAULI_FACTOR) / ROT_PAULI_FACTOR) * IMAGE_I;
     }
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -351,8 +351,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRyy(qs_data_p_t* qs_p, cons
                 qs[m] = v11;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 omp::idx_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -393,8 +393,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t* qs_p, cons
     auto e = c + IMAGE_I * s;
     auto me = c + IMAGE_MI * s;
     if (!mask.ctrl_mask) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 index_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -407,8 +407,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRzz(qs_data_p_t* qs_p, cons
                 qs[m] *= me;
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t l = 0; l < static_cast<omp::idx_t>(dim / 4); l++) {
                 index_t i;
                 SHIFT_BIT_TWO(mask.obj_low_mask, mask.obj_rev_low_mask, mask.obj_high_mask, mask.obj_rev_high_mask, l,
                               i);
@@ -477,8 +477,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRPS(qs_data_p_t* qs_p, cons
     }
     auto mask_f = mask.mask_x | mask.mask_y;
     if (ctrl_mask == 0) {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t i = 0; i < dim; i++) {
                 auto j = i ^ mask_f;
                 if (i <= j) {
                     auto axis2power = CountOne(i & mask.mask_z);  // -1
@@ -496,8 +496,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyRPS(qs_data_p_t* qs_p, cons
                 }
             })
     } else {
-        THRESHOLD_OMP_FOR(
-            dim, DimTh, for (omp::idx_t i = 0; i < dim; i++) {
+        MQ_OMP_PARALLEL_FOR(
+            dim, for (omp::idx_t i = 0; i < dim; i++) {
                 if ((i & ctrl_mask) == ctrl_mask) {
                     auto j = i ^ mask_f;
                     if (i <= j) {
