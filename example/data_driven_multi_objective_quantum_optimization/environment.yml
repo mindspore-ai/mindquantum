@@ -1,0 +1,21 @@
+name: mindquantum-cgfm-example
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pytorch=1.9.1
+  - cudatoolkit=11.1
+  - numpy=1.26.4
+  - scipy=1.10.1
+  - scikit-learn=1.6.1
+  - matplotlib=3.5.1
+  - ipykernel
+  - jupyterlab
+  - nbconvert
+  - pip:
+      - optuna==4.8.0
+      - dimod==0.12.21
+      - dwave-neal==0.6.0
