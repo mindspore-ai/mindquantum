@@ -1,0 +1,13 @@
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.tmp_test/
+outputs/
+*.log
+*.png
+*checkpoint*.json
+*manifest*.json
+*summary*.json
+*validation*.json
