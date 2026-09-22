@@ -74,6 +74,12 @@ class Simulator:
       SDK. Same capabilities as ``mqvector_gpu`` but leverages cuQuantum
       for optimized performance. Requires a CUDA build with
       ``ENABLE_CUQUANTUM=ON`` and the cuQuantum SDK.
+    - **mqvector_npu** -- Device-resident Ascend state vector simulator.
+      Supports ``complex64`` only, with no CPU fallback or implicit precision
+      conversion. Supports measurement/reset, noise trajectories, observables,
+      adjoint gradients and exact parameter-shift rules for supported gates.
+      Requires an Ascend-enabled build and runtime; importing MindQuantum does
+      not initialize an NPU. Density-matrix-only operations are unsupported.
 
     Use :func:`mindquantum.simulator.get_supported_simulator` to list backends
     available in your current environment.
@@ -94,7 +100,10 @@ class Simulator:
             by `numpy.random.randint`. Default: ``None``.
         dtype (mindquantum.dtype): the data type of simulator. Supports
             ``mindquantum.complex64`` and ``mindquantum.complex128``.
-            Default: ``None`` (uses ``complex128``).
+            Default: ``None`` (uses ``complex128``, except ``mqvector_npu``
+            which defaults to and only supports ``complex64``).
+        device_id (int): Logical device ordinal for ``mqvector_npu``, passed
+            as a keyword argument. Default: ``0``.
 
     Raises:
         TypeError: if `backend` is not str.
@@ -378,6 +387,10 @@ class Simulator:
         Note:
             The input circuits only participate in the expectation and gradient calculation and will not change
             the current quantum state of this simulator.
+            The ``mqvector_npu`` backend snapshots circuits and Hamiltonians when creating this operator.
+            Its adjoint method requires unitary deterministic gates. Noisy gradients are single-trajectory
+            estimates of exact parameter-shift derivatives; average independent evaluations to reduce variance.
+            NPU batches execute sequentially because individual device kernels already use the available cores.
 
         Args:
             hams (Union[:class:`~.core.operators.Hamiltonian`, List[:class:`~.core.operators.Hamiltonian`]]):
@@ -391,11 +404,14 @@ class Simulator:
                 contains :math:`\left|\varphi\right>`. If ``None``, then :math:`\left|\varphi\right>` is
                 assumed to be equals to :math:`\left|\psi\right>`. Default: ``None``.
             parallel_worker (int): The parallel worker numbers. The parallel workers can handle
-                batch in parallel threads. Default: ``None``.
-            pr_shift (bool): Whether or not to use parameter-shift rule. Only available in "mqvector" simulator.
+                batch in parallel threads. For ``mqvector_npu`` this must be positive when set, but does not
+                create CPU thread pools. Default: ``None``.
+            pr_shift (bool): Whether or not to use parameter-shift rule. Available in state vector simulators.
                 It will be enabled automatically when circuit contains noise channel. Noted that not every gate
                 uses the same shift value π/2, so the gradient of FSim gate and parameterized custom gate will be
-                calculated by finite difference method with gap 0.001. Default: ``False``.
+                calculated by finite difference method with gap 0.001 on CPU/GPU. ``mqvector_npu`` instead uses
+                exact gate-local rules (including controlled rotations, U3, FSim, and Givens), and rejects
+                parameterized custom gates and Rn rather than substituting finite differences. Default: ``False``.
 
         Returns:
             GradOpsWrapper, a grad ops wrapper than contains information to generate this grad ops.
@@ -754,6 +770,8 @@ def inner_product(bra_simulator: Simulator, ket_simulator: Simulator):
         )
     if isinstance(bra_simulator.backend, MQSim):
         return MQBlas.inner_product(bra_simulator.backend, ket_simulator.backend)
+    if bra_simulator.backend.name == 'mqvector_npu':
+        return bra_simulator.backend.inner_product(ket_simulator.backend)
     raise NotImplementedError(f"inner_product for backend {bra_simulator.backend} not implement.")
 
 

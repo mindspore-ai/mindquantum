@@ -101,6 +101,7 @@ Here is an exhaustive list of all CMake options available for customization
 | DISABLE_FORTRAN_COMPILER        | Forcefully disable the Fortran compiler for some 3rd party libraries  | ON                  |
 | ENABLE_CMAKE_DEBUG              | Enable verbose output to debug CMake issues                           | OFF                 |
 | ENABLE_CUDA                     | Enable the use of CUDA code                                           | OFF                 |
+| ENABLE_ASCEND                   | Build the Ascend 910B `mqvector_npu` backend (requires CANN)           | OFF                 |
 | ENABLE_GITEE                    | Use Gitee instead of GitHub for (some) third-party dependencies       | OFF                 |
 | ENABLE_MD                       | Use /MD, /MDd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_MT                       | Use /MT, /MTd flags when compiling (MSVC only)                        | OFF                 |
@@ -117,6 +118,9 @@ Here is an exhaustive list of all CMake options available for customization
 | USE_OPENMP                      | Use the OpenMP library for parallelisation                            | ON                  |
 | USE_PARALLEL_STL                | Use the parallel STL for parallelisation (using TBB or else)          | OFF                 |
 | USE_VERBOSE_MAKEFILE            | Generate verbose Makefiles (if supported)                             | ON                  |
+
+For Ascend build instructions, supported operations, memory costs and reproducible
+hardware benchmarks, see [the mqvector_npu guide](docs/mqvector_npu.md).
 
 Here are some more precisions on some of the above options:
 

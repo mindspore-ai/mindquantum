@@ -730,7 +730,14 @@ def test_noise_simulator(config):
     )
     sim = Simulator(NoiseBackend(virtual_qc, 2, adder=adder, dtype=dtype))
     res = sim.sampling(circ, seed=42, shots=5000)
-    if virtual_qc.startswith('mqvector'):
+    if virtual_qc == 'mqvector_npu':
+        # Seeds reproduce a backend's stream, not a shared CPU/NPU RNG
+        # implementation. Independent bit flips of a Bell pair give these
+        # exact probabilities, irrespective of the random-number generator.
+        for outcome, probability in {'00': 0.34, '11': 0.34, '01': 0.16, '10': 0.16}.items():
+            assert abs(res.data.get(outcome, 0) / res.shots - probability) < 0.035
+        assert np.array_equal(res.samples, sim.sampling(circ, seed=42, shots=5000).samples)
+    elif virtual_qc.startswith('mqvector'):
         assert res.data['00'] == 1701
     elif virtual_qc.startswith('mqmatrix'):
         assert res.data['00'] == 1662

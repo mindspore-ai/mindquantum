@@ -1,0 +1,194 @@
+# Ascend state-vector simulator
+
+`mqvector_npu` keeps a full complex64 state vector on a single Ascend 910B NPU.
+It uses Vector cores for structured operators and reductions and Cube cores for
+sufficiently large fused dense operators. It never substitutes CPU simulation,
+complex128 emulation, FP16, BF16 or HF32 arithmetic.
+
+## Build and select the device
+
+The implemented toolchain is Linux, CANN 8.5 and the Ascend C compiler. The exact
+SoC must be specified at build time and must match the device at runtime.
+Hardware verification uses Ascend910B2; other 910B variants require their own
+build and hardware qualification. CPU-only builds remain the default and do not
+discover or link CANN.
+
+After installing MindQuantum's normal development dependencies and sourcing
+your CANN installation's `set_env.sh`:
+
+```bash
+cmake -S . -B build-npu -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DIN_PLACE_BUILD=ON \
+  -DPython_EXECUTABLE="$(command -v python3)" \
+  -DMQ_PYTHON_PACKAGE_NAME=mindquantum \
+  -DENABLE_ASCEND=ON -DMQ_ASCEND_SOC=Ascend910B2 \
+  -DASCEND_CANN_PACKAGE_PATH="$ASCEND_HOME_PATH"
+cmake --build build-npu --target python -j8
+```
+
+For a Python wheel, use the repository's normal build frontend with the same
+explicit target selection:
+
+```bash
+MQ_CIBW_BUILD_ARGS='--set,ENABLE_ASCEND,--var,MQ_ASCEND_SOC,Ascend910B2' \
+  python3 -m build .
+```
+
+On AArch64 hosts without SVE, also set `-DMQ_ARM_SVE=OFF`. CANN and the driver
+must remain available at runtime; they are not vendored into MindQuantum. For
+the wheel command, append `,--unset,MQ_ARM_SVE` to `MQ_CIBW_BUILD_ARGS` on such hosts.
+`device_id` is the **logical ACL ordinal** after container/device visibility
+mapping, not a physical host card identifier. Do not change visibility merely
+because a container lacks a working `npu-smi` command.
+
+```python
+import mindquantum as mq
+from mindquantum.core.circuit import Circuit
+from mindquantum.core.operators import Hamiltonian, QubitOperator
+from mindquantum.simulator import Simulator
+
+sim = Simulator('mqvector_npu', 20, device_id=0, seed=831)
+circuit = Circuit().h(0).ry('theta', 1).x(2, 1)
+ham = Hamiltonian(QubitOperator('Z1') + QubitOperator('X0', 0.3), mq.float32)
+operator = sim.get_expectation_with_grad(ham, circuit)
+expectation, gradient = operator([0.37])
+sim.apply_circuit(circuit, {'theta': 0.37})
+value = sim.get_expectation(ham)
+samples = sim.sampling(Circuit().measure_all(up_to=20), shots=1000, seed=9)
+```
+
+Import and backend discovery do not initialize ACL. Construction defaults to
+`mq.complex64`; explicitly requesting another dtype fails. Hamiltonians must
+have matching single precision, for example `ham.astype(mq.float32)` for a
+Pauli Hamiltonian. Device, allocation, compilation and execution errors
+propagate; there is no retry or simulator fallback.
+
+## Supported contracts
+
+- Built-in deterministic gates, controls, dagger gates, Pauli strings and dense
+  custom matrices on up to six targets. A gate's mixing support plus the three
+  aligned low index bits must fit the selected Vector tile. Large Pauli strings
+  can retain external Z parity and controls instead of expanding a dense matrix.
+- `apply_circuit`, `apply_gate` (including intrinsic `diff=True`), `set_qs`,
+  `get_qs`, reset, independent copies, same-precision `astype` and circuit matrices.
+- Pauli and full complex CSR Hamiltonians, including non-Hermitian CSR and
+  distinct left/right circuits and states; `apply_hamiltonian` and inner products.
+- Adjoint gradients, shared parameters, `no_grad`, encoder/ansatz batches and
+  multiple observables. Plans snapshot circuits and Hamiltonians, while each
+  invocation reads the simulator's current input state without changing it.
+  Custom gates must be unitary for adjoint reconstruction; nonunitary evolution
+  and non-Hermitian observables are separate, supported operations.
+- Exact, **gate-local** parameter-shift gradients. Controlled rotations use
+  their full frequency spectrum; U3, FSim, Givens and SWAPalpha have their own
+  exact rules. Shared input parameters are differentiated through every gate's
+  intrinsic-angle Jacobian, not by shifting the shared parameter globally.
+  Parameterized custom gates and Rn have adjoint support but no parameter-shift
+  rule; the backend rejects them instead of using finite differences.
+- Measurement/reset, terminal and mid-circuit sampling, Pauli/grouped Pauli,
+  multi-qubit depolarizing, amplitude/phase damping, single-qubit Kraus and
+  thermal-relaxation channels. Noise uses normalized pure-state trajectories.
+  Noisy gradients automatically use exact parameter-shift and return stochastic
+  estimates: average independent evaluations to estimate the channel derivative.
+  As with the CPU trajectory API, noisy gradients do not accept a distinct bra.
+- Reduced density matrices and `get_qs_of_qubits`, contracted directly from the
+  device state. Only the requested matrix is downloaded. A pure reduced matrix
+  is diagonalized on the host to return its state vector. Pure-state entropy,
+  purity and `get_pure_state_vector` follow the other vector backends.
+
+Seeds reproduce results within this backend, not CPU/CUDA random-number streams.
+Sampling and expectation/gradient circuit arguments do not mutate the input
+state. Invalid circuit structure is checked before evolution. A device failure
+after an in-place launch does not promise rollback; discard the failed state.
+Density-matrix-only methods such as `partial_trace` are not implemented.
+
+## Execution architecture
+
+The shared `circuit_tiling::Builder` is the single source of quantum gate and
+derivative arithmetic. The NPU compiler lowers its semantic operators into a
+small device instruction set, rather than reimplementing each gate formula.
+`Planner::Capacity::FullSupport` includes every operand/control when selecting
+dense operators; the CPU planner's default mixing-only policy is unchanged.
+
+`ForwardPlan` and `AdjointPlan` own gate snapshots and plan topology once.
+Binding evaluates coefficients in host double precision and produces immutable
+device metadata. Forward execution combines:
+
+1. FP32 real/imaginary planes, aligned packet DMA and double-buffered Vector
+   tiles; diagonal folding, coalesced pair strides and indexed gathers.
+2. Complex operators of at most 64 by 64, realified into strict FP32 Cube
+   matrix products, with eight-packet batches and bounded two-slot staging.
+3. Internal qubit-layout changes retained between fused operators. The final
+   executable restores canonical little-endian order, so observables, sampling
+   and gradients share one public state representation.
+
+The fused adjoint kernel keeps the reconstructed state, costate and reusable
+derivative scratch in UB. It reconstructs with the gate dagger, contracts each
+zero-extended derivative, and propagates the costate before writing the tile.
+There are no per-gate or per-parameter full-state checkpoints. Complex two-sided
+gradients use a left sweep with H and a conjugated right sweep with H dagger;
+only identical sides with known Hermitian observables use twice the real part.
+Device partials use balanced reductions and compensated accumulation, followed
+by a small host double-precision reduction.
+
+Pauli observables group terms by flip mask to share state reads. Expectation-only
+execution never allocates a full H|psi> state. Sampling builds a device probability
+tree and transfers only bin masses and sampled indices. Reduced-state contraction
+pairs only matching traced indices, without constructing a full density matrix.
+
+ACL contexts are shared by device with explicit ownership. Executables and
+observables are immutable; streams and mutable scratch belong to states or
+individual gradient evaluations. Aliased state pairs are locked once. Exception
+paths drain outstanding work before freeing its inputs. Destruction does not
+reset the device or finalize another library's ACL runtime.
+
+## Memory and performance boundaries
+
+A state requires `8 * 2**n` bytes (2 GiB at 28 qubits), plus bounded workspace.
+The index ABI supports 0–32 qubits, **subject to available device memory**.
+A Hermitian gradient requires two additional full states for one observable,
+three for multiple observables; a general two-sided gradient requires four.
+Scratch is reused within a batch, not multiplied by parameter count or depth.
+`apply_hamiltonian` requires a separate output state. State download and explicit
+circuit/reduced matrices require host memory proportional to their output.
+
+Small matrices synthesized on the host are compilation metadata, not host state
+evolution. Parameter batches currently execute sequentially on the NPU;
+`parallel_worker` does not create CPU worker pools. Noisy sampling executes
+individual trajectories and synchronizes at random branch decisions. These paths
+are correct but are not throughput-optimized for large batches of tiny circuits.
+Arbitrary CSR uses scalar indexed loads and is not expected to match grouped
+Pauli throughput. Adjoint sweeps use Vector cores; forward Cube performance must
+not be reported as gradient performance.
+
+The defaults (`tile_qubits=12`, `fusion_qubits=6`, `cube_min_gates=4`) target
+large deterministic states. The adjoint tile is capped at 11 bits to fit its
+additional live state. `cube_min_gates=0` selects Vector-only execution; it is an
+explicit execution policy, not a runtime recovery path. Defaults are not a claim
+of optimality for every circuit or every 910B model.
+
+## Hardware verification and benchmarking
+
+```bash
+python -m pytest -q tests/st/test_simulator/test_mqvector_npu.py \
+  tests/st/test_simulator/test_mqvector_npu_api.py
+OMP_NUM_THREADS=24 OPENBLAS_NUM_THREADS=1 \
+  python tests/benchmark_mqvector_npu.py --qubits 24 28 --gradient-qubits 20
+```
+
+The tests use independent NumPy embeddings and complex128 CPU references,
+asymmetric complex matrices, external controls/parities, sparse operators,
+measurement boundaries, trajectory averages and finite-difference checks of
+gradients. They also check no-state-download paths, source snapshots, independent
+contexts/states and invalid-input atomicity. Without the compiled extension,
+hardware tests skip; with it, device/runtime errors fail rather than skip.
+
+The benchmark emits JSON lines with every measured repeat, device/compiler
+context, full-state relative error, expectation error and gradient error. Its
+first `apply_circuit` includes conversion, planning, matrix synthesis, upload,
+launch and synchronization. Construction, download, explicit compiled replay,
+gradient-plan construction and gradient invocation are reported separately.
+There is no hidden warm-up or subtraction of compilation from first-call timing.
+CPU complex128 references are correctness references, not equal-precision
+hardware comparisons. Run without other tests/jobs on the device and retain the
+output with the build configuration; do not extrapolate one circuit's timing to
+all simulation workloads.

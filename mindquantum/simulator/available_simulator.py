@@ -14,6 +14,8 @@
 # ============================================================================
 """List available simulators."""
 
+import importlib
+import importlib.util
 import os
 import typing
 import warnings
@@ -27,6 +29,8 @@ GPU_DISABLED_REASON = None
 CUQUANTUM_DISABLED_REASON = None
 MQVECTOR_GPU_SUPPORTED = False
 MQVECTOR_CUQUANTUM_SUPPORTED = False
+# Discover the extension without importing it or initializing an NPU context.
+MQVECTOR_NPU_SUPPORTED = importlib.util.find_spec('mindquantum._mq_vector_npu') is not None
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -77,6 +81,10 @@ class _AvailableSimulator:
             },
             'stabilizer': _mq_stabilizer,
         }
+        if MQVECTOR_NPU_SUPPORTED:
+            # c_module resolves these lazy entries only on an explicit request.
+            self.base_module['mqvector_npu'] = None
+            self.sims['mqvector_npu'] = {complex64: None}
         if MQVECTOR_GPU_SUPPORTED:
             self.base_module['mqvector_gpu'] = _mq_vector_gpu
             self.sims['mqvector_gpu'] = {
@@ -107,6 +115,10 @@ class _AvailableSimulator:
         if sim == 'mqvector_cq' and not MQVECTOR_CUQUANTUM_SUPPORTED:
             warnings.warn(f"{CUQUANTUM_DISABLED_REASON}", stacklevel=3)
 
+        if sim == 'mqvector_npu' and MQVECTOR_NPU_SUPPORTED:
+            if dtype is not None and not self.is_available(sim, dtype):
+                raise SimNotAvailableError(sim, dtype)
+            return importlib.import_module('mindquantum._mq_vector_npu')
         if dtype is None:
             if sim not in self.base_module:
                 raise SimNotAvailableError(sim)
@@ -123,6 +135,11 @@ class _AvailableSimulator:
             raise ValueError(f"{CUQUANTUM_DISABLED_REASON}")
 
         if sim in self.sims:
+            if sim == 'mqvector_npu':
+                # pylint: disable=import-outside-toplevel
+                from mindquantum.simulator.mqvector_npu import MQVectorNPU
+
+                return MQVectorNPU
             if sim in ['mqvector', 'mqvector_gpu', 'mqmatrix', 'mqvector_cq', 'mqmps']:
                 # pylint: disable=import-outside-toplevel
                 from mindquantum.simulator.mqsim import MQSim

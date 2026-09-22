@@ -45,6 +45,11 @@ namespace mindquantum::sim::circuit_tiling {
 // planner reasons purely about state accesses, so a density matrix circuit
 // is planned exactly like a state vector circuit on twice the index bits.
 class Planner {
+ public:
+    // Vector execution may leave controls/diagonals outside the tile. A fixed
+    // dense operator instead needs its entire support inside the capacity.
+    enum class Capacity { Mixing, FullSupport };
+
  private:
     // A calibrated, bounded frontier prevents locally attractive masks from
     // fragmenting later tiles.  One ordering keeps the policy deterministic
@@ -69,8 +74,9 @@ class Planner {
  public:
     using circuit_t = std::vector<std::shared_ptr<BasicGate>>;
 
-    explicit Planner(const StateSpace& space, size_t max_tile_qubits = kMaxTileQubits)
-        : space_(space), n_qubits_(space.state_qubits()), max_tile_qubits_(max_tile_qubits) {
+    explicit Planner(const StateSpace& space, size_t max_tile_qubits = kMaxTileQubits,
+                     Capacity capacity = Capacity::Mixing)
+        : space_(space), n_qubits_(space.state_qubits()), max_tile_qubits_(max_tile_qubits), capacity_(capacity) {
         if (max_tile_qubits_ == 0 || max_tile_qubits_ >= std::numeric_limits<index_t>::digits) {
             throw std::invalid_argument("Circuit tile qubit count is outside the local index range.");
         }
@@ -90,6 +96,11 @@ class Planner {
     StateSpace space_;
     qbit_t n_qubits_;
     size_t max_tile_qubits_;
+    Capacity capacity_;
+
+    [[nodiscard]] static auto RequiredMask(const GateAccess& access, Capacity capacity) noexcept -> index_t {
+        return capacity == Capacity::FullSupport ? access.object_mask | access.control_mask : access.mixing_mask;
+    }
 
     [[nodiscard]] auto PlanImpl(const circuit_t& circuit, bool keep_single_gate_tiles) const -> Schedule {
         Schedule schedule;
@@ -105,7 +116,7 @@ class Planner {
                 continue;
             }
             if (auto access = DescribeGateAccess(gate, space_);
-                access.has_value() && PopCount(access->mixing_mask) <= max_tile_qubits_) {
+                access.has_value() && PopCount(RequiredMask(*access, capacity_)) <= max_tile_qubits_) {
                 segment.push_back(std::move(*access));
                 continue;
             }
@@ -233,8 +244,12 @@ class Planner {
     class ClosureEvaluator {
      public:
         ClosureEvaluator(const DependencyGraph& graph, const std::vector<size_t>& indegree,
-                         const std::set<size_t>& ready)
-            : graph_(graph), ready_(ready), working_indegree_(indegree), locally_executed_(graph.gates.size(), 0) {
+                         const std::set<size_t>& ready, Capacity capacity)
+            : graph_(graph)
+            , ready_(ready)
+            , capacity_(capacity)
+            , working_indegree_(indegree)
+            , locally_executed_(graph.gates.size(), 0) {
             assert(graph_.gates.size() == graph_.successors.size());
             assert(graph_.gates.size() == indegree.size());
             assert(graph_.gates.empty() || !ready_.empty());
@@ -297,14 +312,15 @@ class Planner {
      private:
         const DependencyGraph& graph_;
         const std::set<size_t>& ready_;
+        Capacity capacity_;
         std::vector<size_t> working_indegree_;
         std::vector<uint8_t> locally_executed_;
         std::vector<size_t> executable_;
         std::vector<size_t> newly_ready_;
         std::vector<size_t> decremented_successors_;
 
-        [[nodiscard]] static auto IsCompatible(const GateAccess& gate, index_t qubit_mask) -> bool {
-            return (gate.mixing_mask & ~qubit_mask) == 0;
+        [[nodiscard]] auto IsCompatible(const GateAccess& gate, index_t qubit_mask) const -> bool {
+            return (RequiredMask(gate, capacity_) & ~qubit_mask) == 0;
         }
 
         void Rollback(const std::vector<size_t>& executed) {
@@ -339,7 +355,7 @@ class Planner {
 
     [[nodiscard]] auto ChooseTile(const DependencyGraph& graph, const std::vector<size_t>& indegree,
                                   const std::set<size_t>& ready) const -> TileEvaluation {
-        ClosureEvaluator evaluator(graph, indegree, ready);
+        ClosureEvaluator evaluator(graph, indegree, ready, capacity_);
 
         const auto expected_candidates = ready.size() + kCandidateWidth * max_tile_qubits_;
         std::vector<TileEvaluation> evaluated;
@@ -355,7 +371,7 @@ class Planner {
         std::vector<index_t> seed_masks;
         seed_masks.reserve(ready.size());
         for (auto gate_index : ready) {
-            seed_masks.push_back(graph.gates[gate_index].mixing_mask);
+            seed_masks.push_back(RequiredMask(graph.gates[gate_index], capacity_));
         }
         std::sort(seed_masks.begin(), seed_masks.end());
         seed_masks.erase(std::unique(seed_masks.begin(), seed_masks.end()), seed_masks.end());
@@ -381,7 +397,7 @@ class Planner {
             for (auto candidate_index : candidates) {
                 const auto& candidate = evaluated[candidate_index];
                 for (auto gate_index : candidate.frontier) {
-                    const auto expanded = candidate.qubit_mask | graph.gates[gate_index].mixing_mask;
+                    const auto expanded = candidate.qubit_mask | RequiredMask(graph.gates[gate_index], capacity_);
                     if (expanded != candidate.qubit_mask && PopCount(expanded) <= max_tile_qubits_) {
                         expansions.push_back(expanded);
                     }
