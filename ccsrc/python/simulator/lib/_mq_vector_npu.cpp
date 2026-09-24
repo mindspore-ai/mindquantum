@@ -30,8 +30,9 @@ PYBIND11_MODULE(_mq_vector_npu, module) {
     py::class_<AdjointProgram>(module, "AdjointProgram")
         .def_property_readonly("tile_count", [](const AdjointProgram& program) { return program.tiles.size(); })
         .def_property_readonly("cube_tile_count", [](const AdjointProgram& program) {
-            return std::count_if(program.tiles.begin(), program.tiles.end(),
-                                 [](const auto& tile) { return std::holds_alternative<DenseAdjointProgram>(tile); });
+            return std::count_if(program.tiles.begin(), program.tiles.end(), [](const auto& tile) {
+                return std::holds_alternative<std::shared_ptr<const DenseAdjointProgram>>(tile);
+            });
         });
     py::class_<ForwardPlan>(module, "ForwardPlan")
         .def(py::init<const std::vector<std::shared_ptr<mindquantum::BasicGate>>&, mindquantum::qbit_t, unsigned,

@@ -243,8 +243,8 @@ class Planner {
     // linear in the touched subgraph without obscuring the scheduling policy.
     class ClosureEvaluator {
      public:
-        ClosureEvaluator(const DependencyGraph& graph, const std::vector<size_t>& indegree,
-                         const std::set<size_t>& ready, Capacity capacity)
+        ClosureEvaluator(const DependencyGraph& graph, std::vector<size_t>& indegree, const std::set<size_t>& ready,
+                         Capacity capacity)
             : graph_(graph)
             , ready_(ready)
             , capacity_(capacity)
@@ -313,7 +313,10 @@ class Planner {
         const DependencyGraph& graph_;
         const std::set<size_t>& ready_;
         Capacity capacity_;
-        std::vector<size_t> working_indegree_;
+        // Every candidate rolls back its edits before the scheduler commits a
+        // tile. Share that live degree array and allocate scratch once per
+        // segment, not once per tile (which costs O(gates * tiles)).
+        std::vector<size_t>& working_indegree_;
         std::vector<uint8_t> locally_executed_;
         std::vector<size_t> executable_;
         std::vector<size_t> newly_ready_;
@@ -324,6 +327,9 @@ class Planner {
         }
 
         void Rollback(const std::vector<size_t>& executed) {
+            // Restore the degrees seen on entry, not the original graph's
+            // degrees: earlier tiles have already committed. Keep repeated
+            // successors in the log to undo every edge of a fan-in.
             for (auto successor : decremented_successors_) {
                 ++working_indegree_[successor];
             }
@@ -353,10 +359,8 @@ class Planner {
         return lhs.qubit_mask < rhs.qubit_mask;
     }
 
-    [[nodiscard]] auto ChooseTile(const DependencyGraph& graph, const std::vector<size_t>& indegree,
-                                  const std::set<size_t>& ready) const -> TileEvaluation {
-        ClosureEvaluator evaluator(graph, indegree, ready, capacity_);
-
+    [[nodiscard]] auto ChooseTile(const DependencyGraph& graph, const std::set<size_t>& ready,
+                                  ClosureEvaluator& evaluator) const -> TileEvaluation {
         const auto expected_candidates = ready.size() + kCandidateWidth * max_tile_qubits_;
         std::vector<TileEvaluation> evaluated;
         evaluated.reserve(expected_candidates);
@@ -438,9 +442,10 @@ class Planner {
 
         Schedule schedule;
         schedule.reserve(graph.gates.size());
+        ClosureEvaluator evaluator(graph, indegree, ready, capacity_);
         size_t remaining = graph.gates.size();
         while (remaining != 0) {
-            const auto selected = ChooseTile(graph, indegree, ready);
+            const auto selected = ChooseTile(graph, ready, evaluator);
             CircuitTile tile;
             index_t mixing_mask = 0;
             tile.gates.reserve(selected.executed.size());

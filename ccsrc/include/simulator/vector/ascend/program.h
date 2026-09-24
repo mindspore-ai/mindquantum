@@ -30,22 +30,28 @@ struct TileProgram {
     uint32_t run;
     std::vector<uint64_t> offsets;
     std::vector<Instruction> instructions;
+    // Instruction offsets address this immutable pool. Static and bound tiles
+    // may share different pools without relocating their instructions.
+    std::shared_ptr<const std::vector<uint32_t>> data;
 };
 
-struct DenseProgram {
+struct DenseLayout {
     uint32_t dimension;
-    // Row-major realification [[Re(U), -Im(U)], [Im(U), Re(U)]].
-    std::vector<float> coefficients;
     DensePacket packet;
     std::vector<uint64_t> offsets;
     std::vector<uint32_t> indices;
+    std::vector<uint32_t> inverse_indices;
+};
+
+struct DenseProgram {
+    std::shared_ptr<const DenseLayout> layout;
+    // Row-major realification [[Re(U), -Im(U)], [Im(U), Re(U)]].
+    std::vector<float> coefficients;
 };
 
 struct Program {
     qbit_t n_qubits;
-    std::vector<std::variant<TileProgram, DenseProgram>> tiles;
-    // All Vector tiles address one immutable, program-owned constant pool.
-    std::vector<uint32_t> data;
+    std::vector<std::variant<std::shared_ptr<const TileProgram>, std::shared_ptr<const DenseProgram>>> tiles;
 };
 
 struct AdjointTileProgram : TileProgram {
@@ -59,8 +65,6 @@ struct DenseAdjointProgram {
     // One realified dB^dagger per active parameter, already Jacobian-weighted.
     std::vector<float> derivatives;
     std::vector<uint32_t> outputs;
-    // Restore canonical layout before crossing an adjoint block boundary.
-    std::vector<uint32_t> inverse_indices;
 };
 
 struct AdjointProgram {
@@ -69,22 +73,27 @@ struct AdjointProgram {
     // Name -> zero-based parameter column. Device output 0 is the overlap;
     // a parameter's device output is 1 + parameter_map.at(name).
     MST<size_t> parameter_map;
-    std::vector<std::variant<AdjointTileProgram, DenseAdjointProgram>> tiles;
-    std::vector<uint32_t> data;
+    std::vector<std::variant<std::shared_ptr<const AdjointTileProgram>, std::shared_ptr<const DenseAdjointProgram>>>
+        tiles;
 };
 
 // Shared validation for gate expressions, binding inputs and complete gradient
 // batches. Never let a native entry point silently discard imaginary values.
 void ValidateResolver(const parameter::ParameterResolver& resolver);
 
-// Own deep snapshots of the gates/PRs/matrices, and plan topology only once.
+// Own deep snapshots of the gates/PRs/matrices. Compile topology, layout and
+// pure constant blocks once. Binding owns only parameter-dependent payloads;
+// all other storage is shared and immutable, including across evaluations.
 // Custom callback code must outlive the plan (as for the source CustomGate).
-// Bind re-synthesizes coefficients in double, but never calls Planner.
+// Constants exposes only compile-time data for device placement: dynamic
+// Vector slots are null, dynamic Cube slots have a layout but no coefficients.
+// It is NOT an executable and never evaluates gates with dummy parameters.
 class ForwardPlan {
  public:
     ForwardPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits, unsigned tile_qubits,
                 unsigned fusion_qubits, unsigned cube_min_gates);
     Program Bind(const parameter::ParameterResolver& parameters) const;
+    const Program& Constants() const;
 
  private:
     struct Impl;
@@ -100,6 +109,7 @@ class AdjointPlan {
     AdjointPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, const MST<size_t>& parameter_map,
                 qbit_t n_qubits, unsigned tile_qubits = 11, unsigned fusion_qubits = 8, unsigned cube_min_gates = 4);
     AdjointProgram Bind(const parameter::ParameterResolver& parameters) const;
+    const AdjointProgram& Constants() const;
 
  private:
     struct Impl;

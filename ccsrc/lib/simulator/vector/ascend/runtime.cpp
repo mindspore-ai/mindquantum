@@ -233,24 +233,164 @@ uint64_t Dimension(qbit_t qubits) {
     return uint64_t{1} << qubits;
 }
 
-// Build one aligned host image, then allocate/upload it once. Tile descriptors
-// hold offsets only; the Executable owns the entire immutable device image.
-struct Metadata {
-    std::vector<uint8_t> data;
+struct CubeGeometry {
+    AscendC::tiling::TCubeTiling tiling{};
+    uint32_t workspace_bytes;
 
-    size_t Append(const void* source, size_t bytes) {
-        const auto offset = data.size();
-        data.resize((offset + bytes + 31) & ~size_t{31});
-        if (bytes) {
-            std::memcpy(data.data() + offset, source, bytes);
+    CubeGeometry(const std::shared_ptr<Context>& context, uint32_t dimension, bool adjoint) {
+        auto* platform = platform_ascendc::PlatformAscendCManager::GetInstance(context->soc.c_str());
+        if (!platform) {
+            throw std::runtime_error("Ascend Cube tiling platform metadata is unavailable.");
         }
-        return offset;
+        const auto columns = kDenseTileSize / dimension;
+        using namespace matmul_tiling;  // NOLINT
+        MatmulApiTiling builder(*platform);
+        builder.SetAType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
+        builder.SetBType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
+        builder.SetCType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT);
+        const auto states = adjoint ? 2U : 1U;
+        builder.SetOrgShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
+        builder.SetShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
+        builder.SetFixSplit(2 * dimension, columns, std::min(2 * dimension, uint32_t{64}));
+        builder.EnableBias(false);
+        builder.SetBufferSpace(-1, -1, -1);
+        if (builder.GetTiling(tiling) != 0 || tiling.baseM != 2 * dimension || tiling.baseN != columns) {
+            throw std::runtime_error("Ascend contraction requires one packet per FP32 output tile.");
+        }
+        workspace_bytes = platform->GetLibApiWorkSpaceSize();
+        if (!workspace_bytes) {
+            throw std::runtime_error("No mixed Matmul workspace size.");
+        }
+        const auto planes = adjoint ? 10U : 4 * kDensePipelineSlots;
+        workspace_bytes += context->cores * planes * kDenseTileSize * kDenseBatchPackets * sizeof(float);
+    }
+};
+
+class PinnedBuffer {
+ public:
+    explicit PinnedBuffer(size_t bytes) {
+        Check(aclrtMallocHost(&data_, bytes), "aclrtMallocHost");
+    }
+    ~PinnedBuffer() {
+        Cleanup(aclrtFreeHost(data_), "aclrtFreeHost");
+    }
+    PinnedBuffer(const PinnedBuffer&) = delete;
+    PinnedBuffer& operator=(const PinnedBuffer&) = delete;
+    void* Data() const {
+        return data_;
+    }
+
+ private:
+    void* data_ = nullptr;
+};
+
+struct Address {
+    size_t offset = 0;
+    // Null means the current image, otherwise immutable plan-owned storage.
+    const Buffer* resident = nullptr;
+};
+
+struct DeviceImage {
+    using Key = std::pair<uintptr_t, size_t>;
+    using Shape = std::pair<uint32_t, bool>;
+    std::map<Key, size_t> locations;
+    std::map<Shape, CubeGeometry> geometries;
+    std::unique_ptr<Buffer> device;
+    std::unique_ptr<PinnedBuffer> host;
+
+    void* At(Address address) const {
+        const auto* storage = address.resident ? address.resident : device.get();
+        return storage ? static_cast<uint8_t*>(storage->Data()) + address.offset : nullptr;
+    }
+    size_t Size() const {
+        return device ? device->Size() : 0;
+    }
+    void Upload(aclrtStream stream = nullptr) {
+        if (!host) {
+            return;
+        }
+        if (stream) {
+            // The enclosing transaction must drain before host/device storage
+            // is freed, including if a later upload or launch throws.
+            Check(aclrtMemcpyAsync(device->Data(), Size(), host->Data(), Size(), ACL_MEMCPY_HOST_TO_DEVICE, stream),
+                  "upload bound metadata");
+        } else {
+            device->Upload(host->Data());
+            host.reset();
+        }
+    }
+};
+
+// Placement, not a growing byte vector. Borrow fragments until Finish, then
+// copy directly to one exact-size pinned image. Identity is safe because the
+// compiler's immutable constants outlive the resident image and every binding.
+// No hash of numeric values, dummy binding, or cross-plan cache is involved.
+class Metadata {
+ public:
+    explicit Metadata(const DeviceImage* resident = nullptr) : resident_(resident) {
+    }
+
+    Address Append(const void* source, size_t bytes) {
+        if (!bytes) {
+            return {};
+        }
+        const DeviceImage::Key key{reinterpret_cast<uintptr_t>(source), bytes};
+        if (resident_) {
+            if (const auto found = resident_->locations.find(key); found != resident_->locations.end()) {
+                return {found->second, resident_->device.get()};
+            }
+        }
+        const auto [found, inserted] = locations_.emplace(key, size_);
+        if (inserted) {
+            fragments_.push_back({source, bytes, size_});
+            size_ = (size_ + bytes + 31) & ~size_t{31};
+        }
+        return {found->second, nullptr};
     }
 
     template <typename value_t>
-    size_t Append(const std::vector<value_t>& values) {
+    Address Append(const std::vector<value_t>& values) {
         return Append(values.data(), values.size() * sizeof(value_t));
     }
+
+    const CubeGeometry& Geometry(const std::shared_ptr<Context>& context, uint32_t dimension, bool adjoint) {
+        const DeviceImage::Shape shape{dimension, adjoint};
+        if (resident_) {
+            if (const auto found = resident_->geometries.find(shape); found != resident_->geometries.end()) {
+                return found->second;
+            }
+        }
+        return geometries_.try_emplace(shape, context, dimension, adjoint).first->second;
+    }
+
+    std::unique_ptr<DeviceImage> Finish(const std::shared_ptr<Context>& context) {
+        const ContextScope scope(context->handle);
+        auto image = std::make_unique<DeviceImage>();
+        if (size_) {
+            image->device = std::make_unique<Buffer>(context, size_);
+            image->host = std::make_unique<PinnedBuffer>(size_);
+            auto* destination = static_cast<uint8_t*>(image->host->Data());
+            for (const auto& fragment : fragments_) {
+                std::memcpy(destination + fragment.offset, fragment.source, fragment.bytes);
+                const auto end = fragment.offset + fragment.bytes;
+                std::memset(destination + end, 0, ((end + 31) & ~size_t{31}) - end);
+            }
+        }
+        image->locations = std::move(locations_);
+        image->geometries = std::move(geometries_);
+        return image;
+    }
+
+ private:
+    struct Fragment {
+        const void* source;
+        size_t bytes, offset;
+    };
+    const DeviceImage* resident_;
+    size_t size_ = 0;
+    std::vector<Fragment> fragments_;
+    std::map<DeviceImage::Key, size_t> locations_;
+    std::map<DeviceImage::Shape, CubeGeometry> geometries_;
 };
 
 uint32_t ReductionBlocks(const Context& context, uint64_t plane) {
@@ -275,55 +415,28 @@ void ValidateMass(double mass) {
 
 struct CubeTile {
     DensePacket packet;
-    size_t matrix, config, offsets, indices;
+    Address matrix, config, offsets, indices;
     uint32_t workspace_bytes;
     CubeTile(const std::shared_ptr<Context>& context, const DenseProgram& source, Metadata& metadata,
              bool adjoint = false)
-        : packet(source.packet)
+        : packet(source.layout->packet)
         , matrix(metadata.Append(source.coefficients))
-        , offsets(metadata.Append(source.offsets))
-        , indices(metadata.Append(source.indices)) {
-        auto* platform = platform_ascendc::PlatformAscendCManager::GetInstance(context->soc.c_str());
-        if (!platform) {
-            throw std::runtime_error("Ascend Cube tiling platform metadata is unavailable.");
-        }
-        const auto dimension = source.dimension;
-        const auto columns = packet.size / dimension;
-        using namespace matmul_tiling;  // NOLINT
-        MatmulApiTiling builder(*platform);
-        builder.SetAType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
-        builder.SetBType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
-        builder.SetCType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT);
-        const auto states = adjoint ? 2U : 1U;
-        builder.SetOrgShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
-        builder.SetShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
-        builder.SetFixSplit(2 * dimension, columns, std::min(2 * dimension, uint32_t{64}));
-        builder.EnableBias(false);
-        builder.SetBufferSpace(-1, -1, -1);
-        AscendC::tiling::TCubeTiling tiling{};
-        if (builder.GetTiling(tiling) != 0 || tiling.baseM != 2 * dimension || tiling.baseN != columns) {
-            throw std::runtime_error("Ascend contraction requires one packet per FP32 output tile.");
-        }
-        workspace_bytes = platform->GetLibApiWorkSpaceSize();
-        if (!workspace_bytes) {
-            throw std::runtime_error("No mixed Matmul workspace size.");
-        }
-        // Bounded input/output staging per AIV, independent of state size.
-        // The compiler reserves the library slice before this user slice.
-        const auto planes = adjoint ? 10U : 4 * kDensePipelineSlots;
-        workspace_bytes += context->cores * planes * packet.size * kDenseBatchPackets * sizeof(float);
-        config = metadata.Append(&tiling, sizeof(tiling));
+        , offsets(metadata.Append(source.layout->offsets))
+        , indices(metadata.Append(source.layout->indices)) {
+        const auto& geometry = metadata.Geometry(context, source.layout->dimension, adjoint);
+        workspace_bytes = geometry.workspace_bytes;
+        config = metadata.Append(&geometry.tiling, sizeof(geometry.tiling));
     }
     size_t InstructionCount() const {
         return 1;
     }
-    aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane, uint8_t* metadata,
-                    void* workspace) const {
+    aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane,
+                    const DeviceImage& metadata, void* workspace) const {
         constexpr uint32_t packets_per_block = 2 * kDenseBatchPackets;
         const auto blocks = static_cast<uint32_t>(
             std::min<uint64_t>(context.cube_cores, (plane / packet.size + packets_per_block - 1) / packets_per_block));
-        return LaunchDense(blocks, stream, state, metadata + matrix, metadata + offsets, metadata + indices,
-                           metadata + config, workspace, packet);
+        return LaunchDense(blocks, stream, state, metadata.At(matrix), metadata.At(offsets), metadata.At(indices),
+                           metadata.At(config), workspace, packet);
     }
 };
 }  // namespace
@@ -333,7 +446,7 @@ struct Executable::Impl {
         uint64_t external_mask;
         uint64_t tile_count;
         uint32_t size, run, count;
-        size_t instructions, offsets;
+        Address instructions, offsets, pool;
         Tile(const std::shared_ptr<Context>&, const TileProgram& source, Metadata& metadata)
             : external_mask(source.external_mask)
             , tile_count(source.tile_count)
@@ -341,55 +454,55 @@ struct Executable::Impl {
             , run(source.run)
             , count(source.instructions.size())
             , instructions(metadata.Append(source.instructions))
-            , offsets(metadata.Append(source.offsets)) {
+            , offsets(metadata.Append(source.offsets))
+            , pool(metadata.Append(*source.data)) {
         }
         size_t InstructionCount() const {
             return count;
         }
-        aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane, uint8_t* metadata,
-                        void*) const {
+        aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane,
+                        const DeviceImage& metadata, void*) const {
+            if (!count) {
+                return ACL_SUCCESS;
+            }
             const auto blocks = static_cast<uint32_t>(std::min<uint64_t>(context.cores, tile_count));
-            return LaunchTile(blocks, stream, state, metadata + instructions, metadata, metadata + offsets, plane,
-                              external_mask, tile_count, size, run, count);
+            return LaunchTile(blocks, stream, state, metadata.At(instructions), metadata.At(pool), metadata.At(offsets),
+                              plane, external_mask, tile_count, size, run, count);
         }
     };
     using Dense = CubeTile;
     std::shared_ptr<Context> context;
     qbit_t n_qubits;
-    std::unique_ptr<Buffer> metadata;
+    std::unique_ptr<DeviceImage> metadata;
     std::vector<std::variant<Tile, Dense>> tiles;
     uint32_t workspace_bytes = 0;
 
-    Impl(std::shared_ptr<Context> owner, const Program& program)
+    Impl(std::shared_ptr<Context> owner, const Program& program, const DeviceImage* resident = nullptr)
         : context(std::move(owner)), n_qubits(program.n_qubits) {
-        Metadata image;
-        // All Vector instruction offsets are relative to the pool at byte zero.
-        image.Append(program.data);
+        Metadata image(resident);
         for (const auto& tile : program.tiles) {
             std::visit(
                 [&](const auto& source) {
+                    if (!source) {
+                        return;  // parameter-dependent Vector slot in Constants()
+                    }
                     using operation_t
-                        = std::conditional_t<std::is_same_v<std::decay_t<decltype(source)>, TileProgram>, Tile, Dense>;
-                    tiles.emplace_back(std::in_place_type<operation_t>, context, source, image);
+                        = std::conditional_t<std::is_same_v<std::decay_t<decltype(*source)>, TileProgram>, Tile, Dense>;
+                    tiles.emplace_back(std::in_place_type<operation_t>, context, *source, image);
                     if constexpr (std::is_same_v<operation_t, Dense>) {
                         workspace_bytes = std::max(workspace_bytes, std::get<Dense>(tiles.back()).workspace_bytes);
                     }
                 },
                 tile);
         }
-        if (!image.data.empty()) {
-            metadata = std::make_unique<Buffer>(context, image.data.size());
-            metadata->Upload(image.data.data());
-        }
+        metadata = image.Finish(context);
     }
 
     void Launch(aclrtStream stream, void* state, uint64_t plane, void* workspace) const {
         for (const auto& tile : tiles) {
             std::visit(
                 [&](const auto& operation) {
-                    Check(operation.Launch(*context, stream, state, plane, static_cast<uint8_t*>(metadata->Data()),
-                                           workspace),
-                          "launch tile");
+                    Check(operation.Launch(*context, stream, state, plane, *metadata, workspace), "launch tile");
                 },
                 tile);
         }
@@ -399,10 +512,10 @@ struct Executable::Impl {
 struct Observable::Impl {
     std::shared_ptr<Context> context;
     ObservableLayout layout;
-    std::unique_ptr<Buffer> metadata;
+    std::unique_ptr<DeviceImage> metadata;
     std::unique_ptr<Buffer> diagonal;
     uint64_t diagonal_terms = 0;
-    size_t groups, terms, indices, signs, rows, columns, values;
+    Address groups, terms, indices, signs, rows, columns, values;
 
     Impl(std::shared_ptr<Context> owner, const ObservableProgram& program)
         : context(std::move(owner)), layout(program.layout()) {
@@ -426,10 +539,8 @@ struct Observable::Impl {
         rows = image.Append(program.row_offsets());
         columns = image.Append(program.columns());
         values = image.Append(program.values());
-        if (!image.data.empty()) {
-            metadata = std::make_unique<Buffer>(context, image.data.size());
-            metadata->Upload(image.data.data());
-        }
+        metadata = image.Finish(context);
+        metadata->Upload();
     }
 
     // Called only before publishing a gradient plan. The resulting cache is
@@ -438,10 +549,9 @@ struct Observable::Impl {
         const ContextScope scope(context->handle);
         auto cache = std::make_unique<Buffer>(context, layout.plane * sizeof(float));
         Stream stream(context);
-        auto* data = static_cast<uint8_t*>(metadata->Data());
         Transaction transaction(stream.handle);
-        Check(LaunchCompileDiagonal(ReductionBlocks(*context, layout.plane), stream.handle, data + terms, data + signs,
-                                    cache->Data(), diagonal_terms, layout),
+        Check(LaunchCompileDiagonal(ReductionBlocks(*context, layout.plane), stream.handle, metadata->At(terms),
+                                    metadata->At(signs), cache->Data(), diagonal_terms, layout),
               "compile diagonal observable");
         transaction.Finish("cache diagonal observable");
         diagonal = std::move(cache);
@@ -455,12 +565,10 @@ struct Observable::Impl {
     }
 
     void Launch(aclrtStream stream, void* ket, void* bra, void* output, void* partials) const {
-        auto pointer = [&](size_t offset) -> void* {
-            return metadata ? static_cast<uint8_t*>(metadata->Data()) + offset : nullptr;
-        };
-        Check(LaunchObservable(ReductionBlocks(*context, layout.plane), stream, ket, bra, output, pointer(groups),
-                               pointer(terms), pointer(indices), pointer(signs), pointer(rows), pointer(columns),
-                               diagonal ? diagonal->Data() : pointer(values), partials, layout),
+        Check(LaunchObservable(ReductionBlocks(*context, layout.plane), stream, ket, bra, output, metadata->At(groups),
+                               metadata->At(terms), metadata->At(indices), metadata->At(signs), metadata->At(rows),
+                               metadata->At(columns), diagonal ? diagonal->Data() : metadata->At(values), partials,
+                               layout),
               "launch observable");
     }
 };
@@ -471,28 +579,28 @@ struct AdjointExecutable {
     struct Tile {
         uint64_t external_mask, tile_count;
         uint32_t size, run, count;
-        size_t instructions, offsets, steps, derivatives, targets;
+        Address instructions, offsets, steps, derivatives, targets, pool;
     };
     struct Dense {
         CubeTile cube;
-        size_t derivatives, outputs, inverse;
+        Address derivatives, outputs, inverse;
         uint32_t count;
         Dense(const std::shared_ptr<Context>& context, const DenseAdjointProgram& source, Metadata& metadata)
             : cube(context, source.evolution, metadata, true)
             , derivatives(metadata.Append(source.derivatives))
             , outputs(metadata.Append(source.outputs))
-            , inverse(metadata.Append(source.inverse_indices))
+            , inverse(metadata.Append(source.evolution.layout->inverse_indices))
             , count(source.outputs.size()) {
         }
     };
-    std::unique_ptr<Buffer> metadata;
+    std::unique_ptr<DeviceImage> metadata;
     std::vector<std::variant<Tile, Dense>> tiles;
     uint32_t blocks, cube_blocks, output_size;
     uint32_t workspace_bytes = 0;
     uint64_t plane;
 
     AdjointExecutable(const std::shared_ptr<Context>& context, const AdjointProgram& program, qbit_t qubits,
-                      const MST<size_t>& parameter_map)
+                      const MST<size_t>& parameter_map, const DeviceImage* resident = nullptr)
         : blocks(context->cores)
         , cube_blocks(context->cube_cores)
         , output_size(program.output_size)
@@ -501,17 +609,20 @@ struct AdjointExecutable {
             || program.parameter_map != parameter_map || program.tiles.empty()) {
             throw std::invalid_argument("Incompatible Ascend adjoint program.");
         }
-        Metadata image;
-        image.Append(program.data);
+        Metadata image(resident);
         for (const auto& entry : program.tiles) {
             std::visit(
-                [&](const auto& source) {
+                [&](const auto& pointer) {
+                    if (!pointer) {
+                        return;
+                    }
+                    const auto& source = *pointer;
                     if constexpr (std::is_same_v<std::decay_t<decltype(source)>, AdjointTileProgram>) {
                         tiles.emplace_back(Tile{source.external_mask, source.tile_count, source.size, source.run,
                                                 static_cast<uint32_t>(source.steps.size()),
                                                 image.Append(source.instructions), image.Append(source.offsets),
                                                 image.Append(source.steps), image.Append(source.derivatives),
-                                                image.Append(source.targets)});
+                                                image.Append(source.targets), image.Append(*source.data)});
                     } else {
                         tiles.emplace_back(std::in_place_type<Dense>, context, source, image);
                         workspace_bytes = std::max(workspace_bytes, std::get<Dense>(tiles.back()).cube.workspace_bytes);
@@ -519,14 +630,12 @@ struct AdjointExecutable {
                 },
                 entry);
         }
-        metadata = std::make_unique<Buffer>(context, image.data.size());
-        metadata->Upload(image.data.data());
+        metadata = image.Finish(context);
     }
 
     void Launch(aclrtStream stream, void* shared, void* costate, const Buffer& partials, void* workspace) const {
         Check(aclrtMemsetAsync(partials.Data(), partials.Size(), 0, AdjointPartialBytes(blocks, output_size), stream),
               "zero adjoint partials");
-        auto* data = static_cast<uint8_t*>(metadata->Data());
         bool overlap = true;
         for (const auto& entry : tiles) {
             // DO NOT reduce the block count for smaller tiles: accumulated slots
@@ -534,19 +643,20 @@ struct AdjointExecutable {
             std::visit(
                 [&](const auto& tile) {
                     if constexpr (std::is_same_v<std::decay_t<decltype(tile)>, Tile>) {
-                        Check(LaunchAdjointTile(blocks, stream, shared, costate, data + tile.instructions, data,
-                                                data + tile.offsets, data + tile.steps, data + tile.derivatives,
-                                                data + tile.targets, partials.Data(), plane, tile.external_mask,
+                        Check(LaunchAdjointTile(blocks, stream, shared, costate, metadata->At(tile.instructions),
+                                                metadata->At(tile.pool), metadata->At(tile.offsets),
+                                                metadata->At(tile.steps), metadata->At(tile.derivatives),
+                                                metadata->At(tile.targets), partials.Data(), plane, tile.external_mask,
                                                 tile.tile_count, tile.size, tile.run, tile.count, output_size, overlap),
                               "launch adjoint tile");
                     } else {
                         const auto& cube = tile.cube;
-                        Check(
-                            LaunchDenseAdjoint(cube_blocks, stream, shared, costate, data + cube.matrix,
-                                               data + tile.derivatives, data + tile.outputs, data + cube.offsets,
-                                               data + cube.indices, data + tile.inverse, data + cube.config, workspace,
-                                               partials.Data(), cube.packet, tile.count, output_size, overlap),
-                            "launch dense adjoint");
+                        Check(LaunchDenseAdjoint(cube_blocks, stream, shared, costate, metadata->At(cube.matrix),
+                                                 metadata->At(tile.derivatives), metadata->At(tile.outputs),
+                                                 metadata->At(cube.offsets), metadata->At(cube.indices),
+                                                 metadata->At(tile.inverse), metadata->At(cube.config), workspace,
+                                                 partials.Data(), cube.packet, tile.count, output_size, overlap),
+                              "launch dense adjoint");
                     }
                 },
                 entry);
@@ -648,7 +758,9 @@ std::shared_ptr<Executable> State::Prepare(const Program& program) const {
     }
     const std::lock_guard<std::mutex> lock(impl_->mutex);
     const ContextScope scope(impl_->context->handle);
-    return std::shared_ptr<Executable>(new Executable(std::make_unique<Executable::Impl>(impl_->context, program)));
+    auto executable = std::make_unique<Executable::Impl>(impl_->context, program);
+    executable->metadata->Upload();
+    return std::shared_ptr<Executable>(new Executable(std::move(executable)));
 }
 
 void State::Apply(const Executable& executable, unsigned repetitions) {
@@ -804,14 +916,13 @@ std::vector<std::vector<std::complex<double>>> State::ReducedDensity(const qbits
     Metadata image;
     const auto offsets = image.Append(program.offsets);
     const auto indices = image.Append(program.indices);
-    Buffer metadata(impl_->context, image.data.size());
-    metadata.Upload(image.data.data());
+    auto metadata = image.Finish(impl_->context);
     Buffer partials(impl_->context, records * sizeof(ReductionPartial));
     std::vector<ReductionPartial> host(records);
     Transaction transaction(impl_->stream.handle);
-    auto* data = static_cast<uint8_t*>(metadata.Data());
+    metadata->Upload(impl_->stream.handle);
     Check(LaunchDensity(static_cast<uint32_t>(std::min<uint64_t>(records, impl_->context->cores)), impl_->stream.handle,
-                        impl_->state.Data(), data + offsets, data + indices, partials.Data(), layout),
+                        impl_->state.Data(), metadata->At(offsets), metadata->At(indices), partials.Data(), layout),
           "launch reduced density matrix");
     transaction.Finish("reduce density matrix");
     partials.Download(host.data());
@@ -964,6 +1075,8 @@ struct GradientPlan::Impl {
     std::set<std::string> required_parameters;
     std::unique_ptr<ForwardPlan> right_forward, left_forward;
     std::unique_ptr<AdjointPlan> right_adjoint, left_adjoint;
+    // Destroy device placement before its immutable host source programs.
+    std::unique_ptr<DeviceImage> right_forward_data, left_forward_data, right_adjoint_data, left_adjoint_data;
     std::vector<std::shared_ptr<Observable>> observables, daggers;
 };
 
@@ -1021,6 +1134,20 @@ GradientPlan::GradientPlan(const State& owner, const std::vector<Hamiltonian<flo
                                                            cube_min_gates);
         plan->left_adjoint = std::make_unique<AdjointPlan>(left_gates, plan->parameter_map, plan->n_qubits, tile_qubits,
                                                            fusion_qubits, cube_min_gates);
+    }
+    // Place compile-time data once. The same lowering handles constant and
+    // bound programs, but no parameter-dependent gate is evaluated here.
+    const ContextScope scope(plan->context->handle);
+    auto place = [&](const auto& forward, const auto& adjoint, auto& forward_data, auto& adjoint_data) {
+        forward_data = Executable::Impl(plan->context, forward->Constants()).metadata;
+        forward_data->Upload();
+        adjoint_data
+            = AdjointExecutable(plan->context, adjoint->Constants(), plan->n_qubits, plan->parameter_map).metadata;
+        adjoint_data->Upload();
+    };
+    place(plan->right_forward, plan->right_adjoint, plan->right_forward_data, plan->right_adjoint_data);
+    if (!hermitian) {
+        place(plan->left_forward, plan->left_adjoint, plan->left_forward_data, plan->left_adjoint_data);
     }
     // Upload immutable observable snapshots once, never during evaluate().
     for (const auto& ham : hams) {
@@ -1097,15 +1224,17 @@ GradientPlan::Result GradientPlan::Evaluate(const State& right_state, const Stat
     };
     for (size_t sample = 0; sample < parameters.size(); ++sample) {
         const auto& resolver = parameters[sample];
-        Executable::Impl forward_right(plan.context, plan.right_forward->Bind(resolver));
+        Executable::Impl forward_right(plan.context, plan.right_forward->Bind(resolver), plan.right_forward_data.get());
         AdjointExecutable adjoint_right(plan.context, plan.right_adjoint->Bind(resolver), plan.n_qubits,
-                                        plan.parameter_map);
+                                        plan.parameter_map, plan.right_adjoint_data.get());
         std::unique_ptr<Executable::Impl> forward_left;
         std::unique_ptr<AdjointExecutable> adjoint_left;
         if (!plan.hermitian) {
-            forward_left = std::make_unique<Executable::Impl>(plan.context, plan.left_forward->Bind(resolver));
+            forward_left = std::make_unique<Executable::Impl>(plan.context, plan.left_forward->Bind(resolver),
+                                                              plan.left_forward_data.get());
             adjoint_left = std::make_unique<AdjointExecutable>(plan.context, plan.left_adjoint->Bind(resolver),
-                                                               plan.n_qubits, plan.parameter_map);
+                                                               plan.n_qubits, plan.parameter_map,
+                                                               plan.left_adjoint_data.get());
         }
         const auto workspace_bytes = std::max({forward_right.workspace_bytes, adjoint_right.workspace_bytes,
                                                forward_left ? forward_left->workspace_bytes : 0U,
@@ -1114,6 +1243,12 @@ GradientPlan::Result GradientPlan::Evaluate(const State& right_state, const Stat
             workspace = std::make_unique<Buffer>(plan.context, workspace_bytes);
         }
         Transaction transaction(stream.handle);  // before bound metadata can unwind
+        forward_right.metadata->Upload(stream.handle);
+        adjoint_right.metadata->Upload(stream.handle);
+        if (forward_left) {
+            forward_left->metadata->Upload(stream.handle);
+            adjoint_left->metadata->Upload(stream.handle);
+        }
         copy(right.Data(), right_state.impl_->state.Data());
         forward_right.Launch(stream.handle, right.Data(), plane, workspace ? workspace->Data() : nullptr);
         if (forward_left) {

@@ -76,6 +76,9 @@ propagate; there is no retry or simulator fallback.
 - Adjoint gradients, shared parameters, `no_grad`, encoder/ansatz batches and
   multiple observables. Plans snapshot circuits and Hamiltonians, while each
   invocation reads the simulator's current input state without changing it.
+  The wrapper's circuit/Hamiltonian attributes are informational references,
+  as on the other backends; mutating them cannot change the native execution
+  snapshot, captured parameter order or privately retained custom callbacks.
   Custom gates must be unitary for adjoint reconstruction. Constant matrices
   are checked when creating the plan; parameter-dependent custom matrices are
   checked at every binding. Nonunitary evolution and non-Hermitian observables
@@ -111,9 +114,28 @@ small device instruction set, rather than reimplementing each gate formula.
 `Planner::Capacity::FullSupport` includes every operand/control when selecting
 dense operators; the CPU planner's default mixing-only policy is unchanged.
 
-`ForwardPlan` and `AdjointPlan` own gate snapshots and plan topology once.
-Binding evaluates coefficients in host double precision and produces immutable
-device metadata. Forward execution combines:
+Compilation, placement, binding and execution have separate lifetimes:
+
+1. `ForwardPlan` and `AdjointPlan` snapshot gates and plan topology once. Pure
+   constant blocks are compiled immediately. Ordered physical support determines
+   shared packet-routing tables; sharing a table still updates each block's own
+   physical layout. The scheduler reuses a segment's dependency workspace across
+   candidate evaluations and tile commits instead of copying the entire graph
+   for every tile.
+2. A gradient plan places immutable routing, constant operators and Matmul
+   geometry on the device once. Matmul tiling is computed per distinct shape,
+   not per block or per evaluation.
+3. Binding synthesizes parameter-dependent operators/derivatives in host double
+   precision. It shares all other program storage. Symbolic `no_grad` expressions
+   remain dynamic, and custom callbacks are never constant-folded. Dynamic
+   Vector instructions may change shape at zero angles, so they are encoded from
+   the actual parameters, never from a dummy-zero template.
+4. Placement resolves already-resident fragments and assembles only new payloads
+   into an exact-size pinned buffer. Uploads and kernels share one stream;
+   transaction guards drain it before releasing any call-local storage, even
+   when a later upload or launch fails.
+
+Forward execution combines:
 
 1. FP32 real/imaginary planes, aligned packet DMA and double-buffered Vector
    tiles; diagonal folding, coalesced pair strides and indexed gathers.
@@ -164,6 +186,10 @@ The optional diagonal cache adds at most `4 * max(8, 2**n)` bytes per gradient p
 (64 MiB at 24 qubits), independent of the number of observables. Dense adjoint
 staging is also independent of state size and parameter count: 60 MiB on a
 48-Vector-core 910B2, plus CANN's mixed-core workspace.
+Compiled operator metadata is separate from state scratch: the plan retains
+immutable host/device data proportional to circuit depth and distinct routing
+tables. Each concurrent evaluation owns its parameter-dependent metadata and
+staging; repeated evaluations do not grow a cache of parameter values/results.
 `apply_hamiltonian` requires a separate output state. State download and explicit
 circuit/reduced matrices require host memory proportional to their output.
 
@@ -192,6 +218,8 @@ OMP_NUM_THREADS=24 OPENBLAS_NUM_THREADS=1 \
   python tests/benchmark_mqvector_npu.py --qubits 24 28 --gradient-qubits 20
 OMP_NUM_THREADS=24 OPENBLAS_NUM_THREADS=1 \
   python tests/benchmark_mqvector_npu.py --maxcut 24 --seed 42 --repeats 20 --optimize
+OMP_NUM_THREADS=24 OPENBLAS_NUM_THREADS=1 \
+  python tests/benchmark_mqvector_npu.py --uccsd path/to/h10_sto3g.hdf5 --seed 7281 --repeats 4
 ```
 
 The tests use independent NumPy embeddings and complex128 CPU references,
@@ -219,3 +247,11 @@ status and a complex128 check at the final point. FP32 loss of precision can mak
 line searches repeatedly evaluate candidates without accepting another iteration;
 iteration count alone is not a measure of total gradient work. `--parameters`
 can replay a saved point without changing the workload.
+
+The UCCSD command requires OpenFermion and a saved `MolecularData` file containing
+the chemistry calculation. It loads that file rather than rerunning CCSD/FCI,
+prepends the Hartree–Fock X gates, and reports circuit generation and gradient
+construction separately. It evaluates the returned `x0` directly, followed by
+seeded perturbations, and checks the first result against CPU complex128. It
+does not run BFGS. Both generated and circuit parameter orders are recorded:
+they can differ, and silently reordering `x0` would change the benchmark point.

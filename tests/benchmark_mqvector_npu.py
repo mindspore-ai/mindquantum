@@ -251,6 +251,55 @@ def _maxcut(n_qubits, options):
     )
 
 
+def _uccsd(filename, options):
+    """Load saved chemistry; time planning separately and change inputs on every call."""
+    from openfermion.chem import MolecularData
+
+    molecule = MolecularData(filename=filename)
+    molecule.load()
+    (ansatz, initial, generated_names, operator, n_qubits, n_electrons), generation_ms = _timed(
+        mq.generate_uccsd, molecule
+    )
+    circuit = Circuit([mq.X.on(i) for i in range(n_electrons)]) + ansatz
+    ham = Hamiltonian(operator, mq.complex64)
+    sim = Simulator('mqvector_npu', n_qubits, device_id=options.device)
+    op, plan_ms = _timed(sim.get_expectation_with_grad, ham, circuit)
+    # Preserve the user's direct x0 convention. generate_uccsd's returned name
+    # order may differ from circuit.params_name; never silently reorder x0 in a
+    # performance comparison. Report both orders for reproducibility.
+    initial = np.asarray(initial)
+    rng = np.random.default_rng(options.seed)
+    inputs = [initial] + [initial + rng.normal(0, 0.01, initial.shape) for _ in range(options.repeats - 1)]
+    results, times = [], []
+    for parameters in inputs:
+        result, elapsed = _timed(op, parameters)
+        results.append(result)
+        times.append(elapsed)
+    _emit(
+        'uccsd_gradient',
+        molecule=filename,
+        qubits=n_qubits,
+        gates=len(circuit),
+        soc=sim.backend.sim.soc_name,
+        generated_names=generated_names,
+        circuit_names=circuit.params_name,
+        generation_ms=generation_ms,
+        plan_ms=plan_ms,
+        invocation_ms=times,
+        mean_ms=float(np.mean(times)),
+        parameters=[parameters.tolist() for parameters in inputs],
+        expectations=[value.real.tolist() for value, _ in results],
+        gradients=[gradient.real.tolist() for _, gradient in results],
+    )
+    cpu = Simulator('mqvector', n_qubits, dtype=mq.complex128)
+    reference = cpu.get_expectation_with_grad(ham.astype(mq.complex128), circuit)
+    expected, reference_ms = _timed(reference, initial)
+    errors = [float(np.max(np.abs(got - want))) for got, want in zip(results[0], expected)]
+    for got, want in zip(results[0], expected):
+        np.testing.assert_allclose(got, want, atol=3e-4, rtol=3e-5)
+    _emit('uccsd_accuracy', cpu_ms=reference_ms, expectation_error=errors[0], gradient_error=errors[1])
+
+
 def main():
     """Benchmark the public API, then independently check its outputs."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -259,7 +308,9 @@ def main():
     parser.add_argument('--device', type=int, default=0)
     parser.add_argument('--seed', type=int, default=831)
     parser.add_argument('--repeats', type=int, default=3)
-    parser.add_argument('--maxcut', type=int, metavar='QUBITS', help='Benchmark four-layer 4-regular MaxCut instead.')
+    workload = parser.add_mutually_exclusive_group()
+    workload.add_argument('--maxcut', type=int, metavar='QUBITS', help='Benchmark four-layer 4-regular MaxCut instead.')
+    workload.add_argument('--uccsd', metavar='MOLECULE', help='Benchmark UCCSD from a saved MolecularData HDF5 file.')
     parser.add_argument('--parameters', nargs='+', type=float, help='MaxCut evaluation point; otherwise use the seed.')
     parser.add_argument('--optimize', action='store_true', help='Also run unmodified default BFGS for MaxCut.')
     options = parser.parse_args()
@@ -283,6 +334,9 @@ def main():
     )
     if options.maxcut is not None:
         _maxcut(options.maxcut, options)
+        return
+    if options.uccsd is not None:
+        _uccsd(options.uccsd, options)
         return
     for n_qubits in options.qubits:
         _evolution(n_qubits, options)

@@ -20,8 +20,7 @@ import numpy as np
 
 from mindquantum.core import gates as G  # noqa: N812
 from mindquantum.core.circuit import Circuit
-from mindquantum.core.gates.basic import MatrixGate, NoiseGate, ParameterGate, ParamNonHerm
-from mindquantum.core.gates.basicgate import MultiParamsGate
+from mindquantum.core.gates.basic import NoiseGate, ParameterGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.operators.hamiltonian import HowTo
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -40,6 +39,43 @@ from mindquantum.utils.type_value_check import (
 
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper
+
+# These exact classes export native unitary semantics, not their Python matrix
+# attributes. Subclasses may override those semantics and must still be checked.
+_NATIVE_UNITARY_GATES = frozenset(
+    (
+        G.BarrierGate,
+        G.HGate,
+        G.IGate,
+        G.XGate,
+        G.YGate,
+        G.ZGate,
+        G.SGate,
+        G.TGate,
+        G.SXGate,
+        G.CNOTGate,
+        G.SWAPGate,
+        G.ISWAPGate,
+        G.GroupedPauli,
+        G.RX,
+        G.RY,
+        G.RZ,
+        G.Rxx,
+        G.Ryy,
+        G.Rzz,
+        G.Rxy,
+        G.Rxz,
+        G.Ryz,
+        G.Givens,
+        G.SWAPalpha,
+        G.GlobalPhase,
+        G.PhaseShift,
+        G.RotPauliString,
+        G.U3,
+        G.FSim,
+        G.Rn,
+    )
+)
 
 
 def _real_finite(values, name):
@@ -60,14 +96,12 @@ def _parameters(gate):
     return gate.get_parameters() if isinstance(gate, ParameterGate) else []
 
 
-def _snapshot_hamiltonian(ham):
-    """Copy Python data without retaining the mutable, cached C++ Hamiltonian."""
-    if ham.how_to == HowTo.FRONTEND:
-        return Hamiltonian(ham.sparse_matrix.copy(), ham.dtype)
-    result = Hamiltonian(copy.deepcopy(ham.hamiltonian), ham.dtype)
-    result._ham_termlist = copy.deepcopy(ham.ham_termlist)  # pylint: disable=protected-access
-    if ham.how_to == HowTo.BACKEND:
-        result.sparse(ham.n_qubits)
+def _uncached_hamiltonian(ham):
+    """Borrow current Python data for immediate export into native-owned snapshots."""
+    result = copy.copy(ham)
+    # Source data may have changed since either native cache was populated.
+    # Clear only this lightweight wrapper's caches, never the caller's object.
+    result.ham_cpp = result.herm_ham_cpp = None
     return result
 
 
@@ -594,14 +628,12 @@ class MQVectorNPU(BackendBase):
         dynamic = []
         for circuit in circuits:
             for gate in circuit:
-                custom = isinstance(gate, (MatrixGate, ParamNonHerm)) or (
-                    isinstance(gate, MultiParamsGate) and not isinstance(gate, (G.U3, G.FSim, G.Rn))
-                )
-                if custom:
-                    if gate.parameterized:
-                        dynamic.append(gate)
-                    else:
-                        check(gate, {})
+                if type(gate) in _NATIVE_UNITARY_GATES:
+                    continue
+                if gate.parameterized:
+                    dynamic.append(gate)
+                else:
+                    check(gate, {})
 
         def validate(pr):
             for gate in dynamic:
@@ -624,12 +656,17 @@ class MQVectorNPU(BackendBase):
                             shifted = copy.deepcopy(circuit)
                             # Change only this intrinsic angle's constant. Parameter metadata is retained.
                             _parameters(shifted[index])[intrinsic].const += sign * shift
-                            variations.append((side, self._operations(shifted, planning=True), sign * weight, jacobian))
+                            # Keep callback owners, not another entire circuit,
+                            # alongside the native plans that use them.
+                            keepalive = tuple(gate for gate in shifted if type(gate) not in _NATIVE_UNITARY_GATES)
+                            variations.append(
+                                (side, self._operations(shifted, planning=True), sign * weight, jacobian, keepalive)
+                            )
         return variations
 
     def _shift_evaluator(self, hams, right, left, left_backend, same, names):
         right_plan = self._operations(right, planning=True)
-        left_plan = right_plan if same else self._operations(left, planning=True)
+        left_plan = right_plan if left is right else self._operations(left, planning=True)
         variations = self._shift_variations(right, left, same, names)
         observables = [self.sim.prepare_observable(ham.get_cpp_obj()) for ham in hams]
 
@@ -639,13 +676,13 @@ class MQVectorNPU(BackendBase):
             self._run(state, operations, self._rng)
             return state
 
-        def evaluate(parameters):
-            result = np.zeros((len(parameters), len(hams), 1 + len(names)), dtype=np.complex128)
+        def evaluate(parameters, _keepalive=(right, left)):
+            result = np.zeros((len(parameters), len(observables), 1 + len(names)), dtype=np.complex128)
             for batch, pr in enumerate(parameters):
                 ket = evolve(self.sim, right_plan, pr)
                 bra = ket if same else evolve(left_backend.sim, left_plan, pr)
                 result[batch, :, 0] = [ket.expectation(obs, bra) for obs in observables]
-                for side, plan, weight, jacobian in variations:
+                for side, plan, weight, jacobian, _ in variations:
                     source = left_backend.sim if side == 'left' else self.sim
                     shifted = evolve(source, plan, pr)
                     shifted_ket = ket if side == 'left' else shifted
@@ -675,7 +712,8 @@ class MQVectorNPU(BackendBase):
         same = circ_left is None and simulator_left is None
         left_backend = self if simulator_left is None else self._compatible(simulator_left)
         circ_left = circ_right if circ_left is None else circ_left
-        for circuit in (circ_right, circ_left):
+        circuits = (circ_right,) if circ_left is circ_right else (circ_right, circ_left)
+        for circuit in circuits:
             self._check_circuit(circuit)
             if circuit.has_measure_gate:
                 raise ValueError('Gradient circuits cannot contain measurement gates.')
@@ -683,62 +721,82 @@ class MQVectorNPU(BackendBase):
         if noisy and not same:
             raise ValueError('Noisy gradients do not support circ_left or simulator_left.')
         pr_shift = pr_shift or noisy
-        # These private snapshots are never exposed through the wrapper's mutable metadata.
-        right, left = copy.deepcopy(circ_right), copy.deepcopy(circ_left)
-        hams = [_snapshot_hamiltonian(ham) for ham in hams]
-        encoders = list(dict.fromkeys(right.all_encoder.keys() + left.all_encoder.keys()))
-        ansatz = list(dict.fromkeys(right.all_ansatz.keys() + left.all_ansatz.keys()))
+        encoders = tuple(dict.fromkeys(name for circuit in circuits for name in circuit.all_encoder.keys()))
+        ansatz = tuple(dict.fromkeys(name for circuit in circuits for name in circuit.all_ansatz.keys()))
         if set(encoders) & set(ansatz):
             raise ValueError('A parameter cannot be both encoder and ansatz.')
         names = encoders + ansatz
+        n_encoders, n_ansatz, n_hams = len(encoders), len(ansatz), len(hams)
+        uncached_hams = [_uncached_hamiltonian(ham) for ham in hams]
         if pr_shift:
-            evaluate = self._shift_evaluator(hams, right, left, left_backend, same, names)
+            # Shifts/trajectories still need private Python gate data. Do not
+            # duplicate an identical side or expose these snapshots as metadata.
+            right = copy.deepcopy(circ_right)
+            left = right if circ_left is circ_right else copy.deepcopy(circ_left)
+            evaluate = self._shift_evaluator(uncached_hams, right, left, left_backend, same, names)
         else:
-            validate_unitary = self._unitary_validator((right,) if same else (right, left))
             # Arbitrary complex CSR observables take the general two-sweep path, even for U_l == U_r.
             hermitian = same and all(ham.how_to != HowTo.FRONTEND for ham in hams)
+            custom_gates = []
+
+            def snapshot_custom(circuit):
+                for gate in circuit:
+                    if type(gate) not in _NATIVE_UNITARY_GATES:
+                        # Native plans own gates/PRs/matrices, but not Python
+                        # callbacks. Validation must also use private gate data.
+                        gate = copy.deepcopy(gate)
+                        custom_gates.append(gate)
+                    yield gate
+
+            right_cpp = self._cpp_gates(snapshot_custom(circ_right))
+            left_cpp = []
+            if not hermitian:
+                left_cpp = right_cpp if circ_left is circ_right else self._cpp_gates(snapshot_custom(circ_left))
+            validate_unitary = self._unitary_validator((custom_gates,))
             plan = self._native.make_gradient(
                 self.sim,
-                [ham.get_cpp_obj() for ham in hams],
-                [ham.get_cpp_obj(hermitian=True) for ham in hams],
-                self._cpp_gates(right),
-                self._cpp_gates(left),
+                [ham.get_cpp_obj() for ham in uncached_hams],
+                [] if hermitian else [ham.get_cpp_obj(hermitian=True) for ham in uncached_hams],
+                right_cpp,
+                left_cpp,
                 names,
                 hermitian,
                 *self._policy,
             )
 
-            def evaluate(parameters):
+            def evaluate(parameters, _keepalive=tuple(custom_gates)):
                 for pr in parameters:
                     validate_unitary(pr)
                 return np.asarray(plan.evaluate(self.sim, left_backend.sim, parameters))
 
         def grad_ops(*inputs):
-            both = bool(encoders and ansatz)
+            both = bool(n_encoders and n_ansatz)
             if len(inputs) != (2 if both else 1):
                 raise ValueError(f'Need {2 if both else 1} input arrays.')
             arrays = [_real_finite(value, 'Gradient inputs') for value in inputs]
-            encoder = arrays[0] if encoders else np.empty((1, 0))
+            encoder = arrays[0] if n_encoders else np.empty((1, 0))
             if encoder.ndim == 1:
                 encoder = encoder[None, :]
-            weights = arrays[-1] if ansatz or not encoders else np.empty(0)
-            _check_encoder(encoder, len(encoders))
-            _check_ansatz(weights, len(ansatz))
+            weights = arrays[-1] if n_ansatz or not n_encoders else np.empty(0)
+            _check_encoder(encoder, n_encoders)
+            _check_ansatz(weights, n_ansatz)
             if encoder.shape[0] == 0:
                 raise ValueError('Encoder batch cannot be empty.')
-            parameters = [self._resolver([right, left], dict(zip(names, [*row, *weights]))) for row in encoder]
-            result = np.asarray(evaluate(parameters)).reshape((len(parameters), len(hams), 1 + len(names)))
+            parameters = [ParameterResolver(dict(zip(names, [*row, *weights]))) for row in encoder]
+            result = np.asarray(evaluate(parameters)).reshape((len(parameters), n_hams, 1 + len(names)))
             if both:
-                return result[:, :, 0], result[:, :, 1 : 1 + len(encoders)], result[:, :, 1 + len(encoders) :]
+                return result[:, :, 0], result[:, :, 1 : 1 + n_encoders], result[:, :, 1 + n_encoders :]
             return result[:, :, 0], result[:, :, 1:]
 
+        # Public metadata is informational, as on the other backends. Execution
+        # uses only native snapshots, private callback owners and frozen names.
         wrapper = GradOpsWrapper(
             grad_ops,
-            [_snapshot_hamiltonian(ham) for ham in hams],
-            copy.deepcopy(right),
-            copy.deepcopy(left),
-            encoders.copy(),
-            ansatz.copy(),
+            hams,
+            circ_right,
+            circ_left,
+            list(encoders),
+            list(ansatz),
             parallel_worker,
             self,
         )

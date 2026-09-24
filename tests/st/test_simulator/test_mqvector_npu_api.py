@@ -15,8 +15,10 @@
 """Public mqvector_npu contracts, checked against complex128 CPU/NumPy references."""
 
 import copy
+import gc
 import subprocess
 import sys
+import weakref
 
 import numpy as np
 import pytest
@@ -28,6 +30,7 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.simulator import Simulator, get_supported_simulator, inner_product
+from mindquantum.simulator import mqvector_npu as npu_backend
 from mindquantum.simulator.available_simulator import MQVECTOR_NPU_SUPPORTED
 from mindquantum.simulator.mqvector_npu import MQVectorNPU
 
@@ -60,6 +63,10 @@ def _cpu_state(state, circuit, pr=None):
 
 def _no_download(*_args, **_kwargs):
     raise AssertionError('Operation must not download the state vector.')
+
+
+def _unexpected_gradient_work(*_args, **_kwargs):
+    raise AssertionError('Redundant Python gradient construction or mutable metadata access.')
 
 
 def test_import_registration_does_not_load_npu():
@@ -308,6 +315,186 @@ def test_grouped_and_multiqubit_depolarizing_do_not_expand_kraus(monkeypatch):
         assert result.data.get(bitstring, 0) / 512 == pytest.approx(probability, abs=0.075)
 
 
+@pytest.mark.parametrize('side', ['implicit', 'identical', 'distinct'])
+@pytest.mark.parametrize('csr', [False, True])
+def test_adjoint_construction_has_no_python_circuit_copies_or_unused_exports(side, csr, monkeypatch):
+    from mindquantum import _mq_vector_npu as native
+
+    sim = _sim(2)
+    right = Circuit().h(0).x(1, 0).ry('a', 0)
+    # Equal contents are not sufficient for deduplication: use object identity.
+    left = Circuit(right) if side == 'distinct' else right
+    kwargs = {} if side == 'implicit' else {'circ_left': left}
+    ham = Hamiltonian(csr_matrix(np.diag([1, 0.3j, -0.5, 0.2j])), mq.complex64) if csr else _ham()
+    hams = [ham]
+    checked, exported, ham_exports, plans = [], [], [], []
+    check_circuit, cpp_gates = MQVectorNPU._check_circuit, MQVectorNPU._cpp_gates
+    get_ham, make_gradient = Hamiltonian.get_cpp_obj, native.make_gradient
+
+    def check(backend, circuit):
+        checked.append(id(circuit))
+        return check_circuit(backend, circuit)
+
+    def export(circuit):
+        gates = cpp_gates(circuit)
+        exported.append(gates)
+        return gates
+
+    def export_ham(observable, hermitian=False):
+        ham_exports.append(hermitian)
+        return get_ham(observable, hermitian=hermitian)
+
+    def make_plan(*args):
+        plans.append(args)
+        return make_gradient(*args)
+
+    monkeypatch.setattr(Circuit, '__deepcopy__', _unexpected_gradient_work)
+    monkeypatch.setattr(MQVectorNPU, '_check_circuit', check)
+    monkeypatch.setattr(MQVectorNPU, '_cpp_gates', staticmethod(export))
+    monkeypatch.setattr(MQVectorNPU, '_resolver', _unexpected_gradient_work)
+    monkeypatch.setattr(G.HGate, 'matrix', _unexpected_gradient_work)
+    monkeypatch.setattr(G.XGate, 'matrix', _unexpected_gradient_work)
+    monkeypatch.setattr(Hamiltonian, 'get_cpp_obj', export_ham)
+    monkeypatch.setattr(native, 'make_gradient', make_plan)
+    operator = sim.get_expectation_with_grad(hams, right, **kwargs)
+    assert checked == ([id(right), id(left)] if side == 'distinct' else [id(right)])
+    assert len(exported) == (2 if side == 'distinct' else 1)
+    assert len(plans) == 1
+    _, _, daggers, right_cpp, left_cpp, names, hermitian, *_ = plans[0]
+    assert tuple(names) == ('a',)
+    assert right_cpp is exported[0]
+    assert hermitian == (side == 'implicit' and not csr)
+    assert sum(ham_exports) == (0 if hermitian else 1)
+    if hermitian:
+        assert not daggers and not left_cpp
+    else:
+        assert len(daggers) == 1
+        assert left_cpp is exported[-1]
+    assert operator.hams is hams
+    assert operator.circ_right is right and operator.circ_left is left
+    first = operator([0.3])
+    right.ry('later_right', 0)
+    left.rz('later_left', 1)
+    if csr:
+        ham.sparse_matrix.data[:] = 0
+    else:
+        ham.ham_termlist.clear()
+    hams.clear()
+    operator.ansatz_params_name[:] = ['mutable', 'metadata']
+    for got, want in zip(operator([0.3]), first):
+        np.testing.assert_array_equal(got, want)
+    assert len(plans) == 1
+
+
+@pytest.mark.parametrize('pr_shift', [False, True])
+@pytest.mark.parametrize('representation', ['pauli', 'sparse_pauli', 'csr'])
+def test_gradient_snapshots_current_hamiltonian_data_not_old_native_caches(pr_shift, representation):
+    if representation == 'csr':
+        ham = Hamiltonian(csr_matrix(np.diag([0.7 + 0.4j, -0.3 + 0.8j])), mq.complex64)
+    else:
+        ham = Hamiltonian(QubitOperator('Z0', 0.7), mq.float32)
+        if representation == 'sparse_pauli':
+            ham.sparse(1)
+    # Warm both caches, then edit the source BEFORE creating the new plan.
+    # A plan must snapshot the edited data, not those stale native objects.
+    ham.get_cpp_obj()
+    ham.get_cpp_obj(hermitian=True)
+    if representation == 'csr':
+        ham.sparse_matrix.data[:] = [0.2 - 0.9j, 0.6 + 0.3j]
+        diagonal = np.asarray([0.2 - 0.9j, 0.6 + 0.3j])
+    else:
+        ham.ham_termlist[:] = [(((0, 'Z'),), -0.4)]
+        diagonal = np.asarray([-0.4, 0.4])
+    operator = _sim(1).get_expectation_with_grad(ham, Circuit().ry('a', 0), pr_shift=pr_shift)
+    # Subsequent edits must not change the already-owned native snapshot.
+    if representation == 'csr':
+        ham.sparse_matrix.data[:] = 0
+    else:
+        ham.ham_termlist.clear()
+    angle = 0.37
+    value, gradient = operator([angle])
+    expected_value = diagonal[0] * np.cos(angle / 2) ** 2 + diagonal[1] * np.sin(angle / 2) ** 2
+    expected_gradient = (diagonal[1] - diagonal[0]) * np.sin(angle) / 2
+    np.testing.assert_allclose(value, [[expected_value]], atol=3e-7)
+    np.testing.assert_allclose(gradient, [[[expected_gradient]]], atol=3e-7)
+
+
+def test_unitarity_validator_skips_exact_native_builtin_matrices(monkeypatch):
+    fixed = [G.I, G.X, G.Y, G.Z, G.H, G.S, G.T, G.SX, G.CNOT, G.SWAP, G.ISWAP, G.GroupedPauli('XYZ')]
+    rotations = [G.RX, G.RY, G.RZ, G.Rxx, G.Ryy, G.Rzz, G.Rxy, G.Rxz, G.Ryz, G.Givens, G.SWAPalpha]
+    gates = fixed + [rotation('a') for rotation in rotations]
+    gates += [G.GlobalPhase('a'), G.PhaseShift('a'), G.RotPauliString('XYZ', 'a')]
+    gates += [G.U3('a', 0.2, 0.3), G.FSim('a', 0.2), G.Rn('a', 0.2, 0.3), G.BarrierGate()]
+    for gate in gates:
+        monkeypatch.setattr(type(gate), 'matrix', _unexpected_gradient_work)
+    validate = MQVectorNPU._unitary_validator((gates,))
+    validate(ParameterResolver({'a': 0.4}))
+
+
+@pytest.mark.parametrize(
+    'base,args', [(G.XGate, ()), (G.RY, ('a',)), (G.U3, ('a', 0.2, 0.3)), (G.FSim, ('a', 0.2)), (G.Rn, ('a', 0.2, 0.3))]
+)
+def test_unitarity_validator_does_not_trust_builtin_subclasses(base, args):
+    class CustomGate(base):
+        def matrix(self, *_args):
+            return np.diag([1.0, 0.5])
+
+    gate = CustomGate(*args)
+    with pytest.raises(ValueError, match='unitary'):
+        validate = MQVectorNPU._unitary_validator(([gate],))
+        validate(ParameterResolver({'a': 0.2}))
+
+
+@pytest.mark.parametrize('mode', ['shift', 'noise', 'identical', 'distinct'])
+def test_shift_construction_keeps_only_needed_private_circuit_copies(mode, monkeypatch):
+    sim = _sim(1)
+    right = Circuit().ry('a', 0)
+    if mode == 'noise':
+        right += G.BitFlipChannel(1).on(0)
+    left = Circuit(right) if mode == 'distinct' else right
+    kwargs = {'circ_left': left} if mode in ('identical', 'distinct') else {}
+    ham = Hamiltonian(QubitOperator('Z0'), mq.float32)
+    copies, checked, hams = [], [], []
+    deepcopy, check_circuit = Circuit.__deepcopy__, MQVectorNPU._check_circuit
+    uncached_ham = npu_backend._uncached_hamiltonian
+
+    def snapshot(circuit, memo):
+        copies.append(id(circuit))
+        return deepcopy(circuit, memo)
+
+    def check(backend, circuit):
+        checked.append(id(circuit))
+        return check_circuit(backend, circuit)
+
+    def snapshot_observable(observable):
+        hams.append(observable)
+        return uncached_ham(observable)
+
+    monkeypatch.setattr(Circuit, '__deepcopy__', snapshot)
+    monkeypatch.setattr(MQVectorNPU, '_check_circuit', check)
+    monkeypatch.setattr(npu_backend, '_uncached_hamiltonian', snapshot_observable)
+    operator = sim.get_expectation_with_grad(ham, right, pr_shift=mode != 'noise', **kwargs)
+    assert checked == ([id(right), id(left)] if mode == 'distinct' else [id(right)])
+    assert copies.count(id(right)) == 1
+    if mode == 'distinct':
+        assert copies.count(id(left)) == 1
+    # One snapshot per unique side, plus the two shifts for each differentiated side.
+    assert len(copies) == {'shift': 3, 'noise': 3, 'identical': 5, 'distinct': 6}[mode]
+    assert hams == [ham]
+    assert operator.hams[0] is ham
+    assert operator.circ_right is right and operator.circ_left is left
+    right[0].coeff['a'] = 7
+    right.ry('later', 0)
+    if mode == 'noise':
+        right[1].px = 0
+    operator.hams.clear()
+    monkeypatch.setattr(MQVectorNPU, '_resolver', _unexpected_gradient_work)
+    value, gradient = operator([0.3])
+    sign = -1 if mode == 'noise' else 1
+    np.testing.assert_allclose(value, [[sign * np.cos(0.3)]], atol=4e-7)
+    np.testing.assert_allclose(gradient, [[[-sign * np.sin(0.3)]]], atol=4e-7)
+
+
 @pytest.mark.parametrize('pr_shift', [False, True])
 def test_batched_shared_parameters_no_grad_and_snapshots(pr_shift, monkeypatch):
     from mindquantum import _mq_vector_npu as native
@@ -333,10 +520,19 @@ def test_batched_shared_parameters_no_grad_and_snapshots(pr_shift, monkeypatch):
     expected = reference(data, weights)
     circuit[2].coeff.const = 7
     ham.ham_termlist.clear()
-    operator.circ_right.x(0)
+    assert operator.circ_right is circuit
+    assert operator.hams[0] is ham
+    operator.circ_right.x(0).ry('later', 0)
     operator.hams[0].ham_termlist.clear()
+    operator.hams.clear()
+    operator.encoder_params_name.clear()
+    operator.ansatz_params_name[:] = ['mutable', 'metadata', 'only']
+    operator.circ_right = operator.circ_left = None
+    operator.sim = None
     with monkeypatch.context() as patch:
         patch.setattr(native.State, 'get_qs', _no_download)
+        patch.setattr(MQVectorNPU, '_resolver', _unexpected_gradient_work)
+        patch.setattr(Circuit, 'params_name', property(_unexpected_gradient_work))
         actual = operator(data, weights)
     assert [value.shape for value in actual] == [(3, 1), (3, 1, 1), (3, 1, 2)]
     for got, want in zip(actual, expected):
@@ -474,6 +670,103 @@ def test_unitarity_validation_stages_constants_but_rechecks_parameterized_matric
     with pytest.raises(ValueError, match='unitary'):
         op(values)
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
+
+
+@pytest.mark.parametrize('explicit_left', [False, True])
+def test_custom_gradient_snapshots_own_callbacks_and_stage_validation(explicit_left, monkeypatch):
+    pytest.importorskip('numba')
+
+    def matrix(angle):
+        scale = 1 if angle < 0.5 else 0.5
+        return np.array([[1 + 0j, 0j], [0j, scale * np.exp(1j * angle)]])
+
+    def derivative(angle):
+        scale = 1 if angle < 0.5 else 0.5
+        return np.array([[0j, 0j], [0j, 1j * scale * np.exp(1j * angle)]])
+
+    custom = G.gene_univ_parameterized_gate('private_callbacks', matrix, derivative)
+    circuit = Circuit().h(0)
+    circuit += G.UnivMathGate('fixed', np.diag([1, 1j])).on(0)
+    circuit += custom(ParameterResolver({'a': 0.5}, const=0.1)).on(0)
+    circuit += custom(0.1).on(0)
+    sources = [weakref.ref(gate) for gate in circuit[1:]]
+    fixed_export, custom_export = G.UnivMathGate.get_cpp_obj, custom.get_cpp_obj
+    fixed_matrix, custom_matrix = G.UnivMathGate.matrix, custom.matrix
+    exported, checks = [], []
+
+    def export_fixed(gate):
+        exported.append(weakref.ref(gate))
+        return fixed_export(gate)
+
+    def export_custom(gate):
+        exported.append(weakref.ref(gate))
+        return custom_export(gate)
+
+    def check_fixed(gate):
+        checks.append(id(gate))
+        return fixed_matrix(gate)
+
+    def check_custom(gate, pr):
+        checks.append(id(gate))
+        return custom_matrix(gate, pr)
+
+    monkeypatch.setattr(G.UnivMathGate, 'get_cpp_obj', export_fixed)
+    monkeypatch.setattr(custom, 'get_cpp_obj', export_custom)
+    monkeypatch.setattr(G.UnivMathGate, 'matrix', check_fixed)
+    monkeypatch.setattr(custom, 'matrix', check_custom)
+    sim = _sim(1)
+    kwargs = {'circ_left': circuit} if explicit_left else {}
+    operator = sim.get_expectation_with_grad(Hamiltonian(QubitOperator('X0'), mq.float32), circuit, **kwargs)
+    assert len(exported) == 3
+    assert all(snapshot() is not source() for snapshot, source in zip(exported, sources))
+    fixed_id, dynamic_id, constant_id = [id(snapshot()) for snapshot in exported]
+    # The fixed matrix is exported once and validated once. Constant callbacks
+    # are validated once; parameter-dependent callbacks wait until evaluation.
+    assert checks.count(fixed_id) == 2
+    assert checks.count(constant_id) == 1
+    assert checks.count(dynamic_id) == 0
+    circuit[1].matrix_value[:] = 0
+    circuit[2].coeff['a'] = 7
+    circuit[2].coeff.const = 0.8
+    circuit[2].matrix_generator = _unexpected_gradient_work
+    circuit[3].coeff.const = 0.9
+    operator.circ_right = operator.circ_left = None
+    operator.hams.clear()
+    operator.ansatz_params_name.clear()
+    kwargs.clear()
+    del circuit
+    gc.collect()
+    assert all(source() is None for source in sources)
+    assert all(snapshot() is not None for snapshot in exported)
+    for _ in range(2):
+        value, gradient = operator([0.3])
+        np.testing.assert_allclose(value, [[-np.sin(0.35)]], atol=3e-7)
+        np.testing.assert_allclose(gradient, [[[-0.5 * np.cos(0.35)]]], atol=3e-7)
+    with pytest.raises(ValueError, match='unitary'):
+        operator([0.9])
+    assert checks.count(fixed_id) == 2
+    assert checks.count(constant_id) == 1
+    assert checks.count(dynamic_id) == 3
+    np.testing.assert_array_equal(sim.get_qs(), [1, 0])
+
+
+def test_custom_dynamic_validation_deepcopies_numeric_data_and_coefficients():
+    class CustomRY(G.RY):
+        def __init__(self, pr):
+            super().__init__(pr)
+            self.scale = np.ones(2)
+
+        def matrix(self, pr):
+            return self.scale[:, None] * super().matrix(pr)
+
+    circuit = Circuit([CustomRY('a').on(0)])
+    operator = _sim(1).get_expectation_with_grad(Hamiltonian(QubitOperator('Z0'), mq.float32), circuit)
+    circuit[0].scale[:] = 0.5
+    circuit[0].coeff['a'] = 7
+    circuit[0].coeff.const = 0.9
+    value, gradient = operator([0.3])
+    np.testing.assert_allclose(value, [[np.cos(0.3)]], atol=3e-7)
+    np.testing.assert_allclose(gradient, [[[-np.sin(0.3)]]], atol=3e-7)
 
 
 @pytest.mark.parametrize('t2', [70, 150])
@@ -778,3 +1071,63 @@ def test_native_parameter_validation_and_late_expression_errors():
             plan.bind(ParameterResolver({'a': 0.2, 'unused': value}))
     np.testing.assert_array_equal(sim.get_qs(), before)
     assert sim.backend._rng.bit_generator.state == random_state
+
+
+@pytest.mark.parametrize('cube', [0, 4])
+def test_native_resident_plan_zero_crossings_batches_and_independent_concurrent_states(cube):
+    from concurrent.futures import ThreadPoolExecutor
+
+    from mindquantum import _mq_vector_npu as native
+
+    n = 13
+    circuit = Circuit([G.H.on(q) for q in (0, 3, 8, 12)])
+    for q in (1, 9, 2, 11):
+        circuit += G.U3({'a': 0.37}, {'b': -0.71}, 'a').on(q, 4)
+        circuit += G.FSim('b', {'a': -0.53}).on([q, 7], 4)
+    circuit += G.RotPauliString('YZXZZZ', 'a').on([0, 3, 5, 8, 10, 12], 6)
+    # no_grad is an input dependency, not a compile-time constant. Deliberately
+    # omit it from the native output map while changing its value between calls.
+    circuit += G.RY(ParameterResolver('frozen').no_grad()).on(10, 12)
+    hams = [_ham(), Hamiltonian(QubitOperator('Y7 Z12', 0.43) + QubitOperator('Z4', -0.29), mq.float32)]
+    states = [_state(n, 919), _state(n, 923)]
+    sims = [_sim(n, state) for state in states]
+    owner = _sim(n)
+    plan = native.make_gradient(
+        owner.backend.sim,
+        [ham.get_cpp_obj() for ham in hams],
+        [],
+        circuit.get_cpp_obj(),
+        [],
+        ['a', 'b'],
+        True,
+        12,
+        6,
+        cube,
+    )
+    points = [{'a': 0.0, 'b': 0.0, 'frozen': 0.0}, {'a': 0.47, 'b': -0.83, 'frozen': 0.62}]
+    parameters = [ParameterResolver(point) for point in (*points, points[0])]
+    expected = []
+    for state in states:
+        cpu = Simulator('mqvector', n, dtype=mq.complex128)
+        cpu.set_qs(state)
+        reference = cpu.get_expectation_with_grad([ham.astype(mq.float64) for ham in hams], circuit)
+        batch = []
+        for point in (*points, points[0]):
+            value, gradient = reference([point[name] for name in circuit.params_name])
+            batch.append(np.concatenate([value[..., None], gradient[..., :2]], axis=-1)[0])
+        expected.append(batch)
+    # The native program owns its snapshot/context independently of its creator.
+    circuit[4].get_parameters()[0].const = 2.1
+    del owner, circuit, hams
+    gc.collect()
+
+    def evaluate(sim):
+        state = sim.backend.sim
+        return np.asarray(plan.evaluate(state, state, parameters))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        actual = list(pool.map(evaluate, sims))
+    for sim, initial, got, want in zip(sims, states, actual, expected):
+        np.testing.assert_allclose(got, want, atol=4e-6, rtol=2e-5)
+        np.testing.assert_array_equal(got[0], got[2])
+        np.testing.assert_allclose(sim.get_qs(), initial, atol=2e-7)
