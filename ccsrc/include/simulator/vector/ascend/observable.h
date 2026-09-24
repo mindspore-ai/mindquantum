@@ -32,6 +32,7 @@ constexpr uint32_t kObservableTileSize = 1024;
 constexpr uint32_t kObservableMaxBlocks = 48;
 constexpr uint32_t kObservablePauli = 0;
 constexpr uint32_t kObservableCsr = 1;
+constexpr uint32_t kObservableDiagonal = 2;  // execution-only, real FP32 diagonal cache
 constexpr uint64_t kInvalidSampleIndex = UINT64_MAX;
 
 struct ObservableValue {
@@ -194,13 +195,36 @@ DensityProgram CompileDensity(int64_t n_qubits, uint64_t kept_mask, uint32_t cor
 // Unused/empty metadata pointers may be null. layout is passed BY VALUE, not
 // uploaded. In Pauli mode groups/terms/gather_indices/signs are used; in CSR
 // mode row_offsets[dimension+1], columns[nnz], values[nnz] are used.
+// In kObservableDiagonal mode values is layout.plane FLOATS, NOT ObservableValue
+// entries: values[i] = H[i,i] is real. All other metadata pointers and group_count
+// are ignored. The caller owns this immutable cache (e.g. LaunchCompileDiagonal's
+// result); output and partials must be disjoint from it. Padding is ignored.
 // output, if nonnull, is a SEPARATE state, disjoint from ket, bra and metadata.
 // partials, if nonnull, requires bra and has blocks*sizeof(ReductionPartial)
 // bytes. Either/both output and partials may be requested. Expectation-only
 // needs no device H|ket> state; H|ket> exists only one tile at a time in UB.
+// In every representation partials reduce conj(bra[i])*(H|ket>)[i], including
+// arbitrary complex bra != ket; a real diagonal does NOT imply a real result.
 aclError LaunchObservable(uint32_t blocks, aclrtStream stream, void* ket, void* bra, void* output, void* groups,
                           void* terms, void* gather_indices, void* signs, void* row_offsets, void* columns,
                           void* values, void* partials, ObservableLayout layout);
+
+// Build a reusable real diagonal from term_count contiguous ObservableTerm
+// records and their existing float sign pool. The caller validates eligibility:
+// ONLY I/Z Pauli terms (zero flip mask), finite real coefficients, imag == 0,
+// valid parity masks/sign offsets, and representable FP32 coefficient sums.
+// layout has the usual dimension/plane/tile_size; kind may be kObservablePauli
+// or kObservableDiagonal, and group_count is ignored. For i < dimension, write
+// diagonal[i] = sum_t coefficient[t].real * (-1)^popcount(i & parity_mask[t]),
+// using compensated FP32 accumulation; diagonal[dimension:plane] is zero.
+// diagonal owns plane*sizeof(float) bytes, is disjoint from terms/signs, and is
+// completely overwritten. term_count == 0 writes zeros and allows null inputs.
+// No state is read. All buffers are caller-owned device storage under the above
+// alignment/lifetime/error contract. Keep inputs alive through completion and
+// synchronize/check the stream once after construction before reusing diagonal
+// as LaunchObservable's immutable values with layout.kind=kObservableDiagonal.
+aclError LaunchCompileDiagonal(uint32_t blocks, aclrtStream stream, void* terms, void* signs, void* diagonal,
+                               uint64_t term_count, ObservableLayout layout);
 
 // sum_{(i & mask)==value} conj(bra[i])*ket[i]. A null bra means norm/probability
 // sum |ket[i]|^2 (imaginary partials are exactly zero). mask=value=0 is the full

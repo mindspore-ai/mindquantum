@@ -54,13 +54,22 @@ struct AdjointTileProgram : TileProgram {
     std::vector<GradientTarget> targets;
 };
 
+struct DenseAdjointProgram {
+    DenseProgram evolution;
+    // One realified dB^dagger per active parameter, already Jacobian-weighted.
+    std::vector<float> derivatives;
+    std::vector<uint32_t> outputs;
+    // Restore canonical layout before crossing an adjoint block boundary.
+    std::vector<uint32_t> inverse_indices;
+};
+
 struct AdjointProgram {
     qbit_t n_qubits;
     uint32_t output_size;
     // Name -> zero-based parameter column. Device output 0 is the overlap;
     // a parameter's device output is 1 + parameter_map.at(name).
     MST<size_t> parameter_map;
-    std::vector<AdjointTileProgram> tiles;
+    std::vector<std::variant<AdjointTileProgram, DenseAdjointProgram>> tiles;
     std::vector<uint32_t> data;
 };
 
@@ -89,7 +98,7 @@ class AdjointPlan {
     // Requests up to 12 tile bits are accepted; adjoint UB width is capped at
     // 11 bits and fusion capacity at width-3 for aligned low-bit DMA.
     AdjointPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, const MST<size_t>& parameter_map,
-                qbit_t n_qubits, unsigned tile_qubits = 11, unsigned fusion_qubits = 8);
+                qbit_t n_qubits, unsigned tile_qubits = 11, unsigned fusion_qubits = 8, unsigned cube_min_gates = 4);
     AdjointProgram Bind(const parameter::ParameterResolver& parameters) const;
 
  private:

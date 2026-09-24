@@ -28,6 +28,8 @@
 
 #include "qubit_layout.h"
 #include "simulator/circuit_tiling/builder.h"
+#include "simulator/circuit_tiling/detail/kernels.h"
+#include "simulator/circuit_tiling/detail/scalar_runtime.h"
 #include "simulator/circuit_tiling/executor.h"
 #include "simulator/circuit_tiling/planner.h"
 
@@ -107,8 +109,8 @@ uint64_t Project(uint64_t basis, uint64_t mask) {
     return result;
 }
 
-std::optional<DenseProgram> DenseFusion(const ct::CircuitTile& source, const parameter::ParameterResolver& parameters,
-                                        const ct::StateSpace& space, unsigned minimum_gates, QubitLayout& layout) {
+std::optional<uint64_t> DenseSupport(const ct::CircuitTile& source, const ct::StateSpace& space,
+                                     unsigned minimum_gates) {
     // Selection depends on operator support and work, never absolute qubit
     // positions or circuit identities. Short/diagonal regions stay on Vector.
     if (!minimum_gates || source.gates.size() < minimum_gates || space.dimension() < kDenseTileSize) {
@@ -128,38 +130,12 @@ std::optional<DenseProgram> DenseFusion(const ct::CircuitTile& source, const par
     for (qbit_t bit = 0; CountOne(mask) < 4; ++bit) {
         mask |= uint64_t{1} << bit;
     }
-    const auto dimension = uint32_t{1} << CountOne(mask);
-    auto tile = source;
-    tile.qubits = ct::QubitsFromMask(mask);
-    auto prepared = ct::Builder<complex_t>::Build(tile, parameters, space);
-    // Builder projects operations to compact indices. Replace only traversal
-    // to synthesize the small operator using the shared quantum arithmetic.
-    prepared.layout.qubits = ct::QubitsFromMask(dimension - 1);
-    prepared.layout.tile_count = 1;
-    std::iota(prepared.layout.state_offsets.begin(), prepared.layout.state_offsets.end(), 0);
-    for (const auto& operation : prepared.operations) {
-        if (operation.external_control_mask != 0) {
-            throw std::logic_error("A fixed dense operator cannot omit an external control.");
-        }
-    }
+    return mask;
+}
+
+DenseProgram DenseRouting(uint64_t mask, const ct::StateSpace& space, QubitLayout& layout) {
     DenseProgram result{};
-    result.dimension = dimension;
-    result.coefficients.resize(4 * dimension * dimension);
-    std::vector<complex_t> column(dimension);
-    // Synthesize a <=64x64 operator in double precision. This is compilation,
-    // never CPU execution of the user's device-resident quantum state.
-    for (uint32_t basis = 0; basis < dimension; ++basis) {
-        std::fill(column.begin(), column.end(), complex_t{});
-        column[basis] = 1;
-        ct::ApplyTile(column.data(), prepared, 1);
-        for (uint32_t row = 0; row < dimension; ++row) {
-            const auto offset = row * 2 * dimension + basis;
-            result.coefficients[offset] = Coefficient(column[row].real());
-            result.coefficients[offset + dimension] = -Coefficient(column[row].imag());
-            result.coefficients[offset + 2 * dimension * dimension] = Coefficient(column[row].imag());
-            result.coefficients[offset + 2 * dimension * dimension + dimension] = Coefficient(column[row].real());
-        }
-    }
+    result.dimension = uint32_t{1} << CountOne(mask);
     const auto physical_support = layout.Physical(mask);
     auto tile_mask = physical_support | 7;
     for (qbit_t bit = 0; (uint64_t{1} << CountOne(tile_mask)) < kDenseTileSize; ++bit) {
@@ -172,7 +148,7 @@ std::optional<DenseProgram> DenseFusion(const ct::CircuitTile& source, const par
     result.packet = {space.dimension(), (space.dimension() - 1) & ~tile_mask, kDenseTileSize, run};
     result.offsets = Offsets(tile_mask & ~(uint64_t{run} - 1));
     const auto local_offsets = Offsets(tile_mask);
-    const auto columns = kDenseTileSize / dimension;
+    const auto columns = kDenseTileSize / result.dimension;
     result.indices.resize(kDenseTileSize);
     for (uint32_t local = 0; local < kDenseTileSize; ++local) {
         const auto physical = local_offsets[local];
@@ -181,6 +157,122 @@ std::optional<DenseProgram> DenseFusion(const ct::CircuitTile& source, const par
         result.indices[packed] = local * sizeof(float);
     }
     layout.AdoptPacked(tile_mask, mask);
+    return result;
+}
+
+void RealifyColumn(float* matrix, const std::vector<complex_t>& column, uint32_t basis) {
+    const auto dimension = column.size();
+    for (size_t row = 0; row < dimension; ++row) {
+        const auto offset = row * 2 * dimension + basis;
+        matrix[offset] = Coefficient(column[row].real());
+        matrix[offset + dimension] = -Coefficient(column[row].imag());
+        matrix[offset + 2 * dimension * dimension] = Coefficient(column[row].imag());
+        matrix[offset + 2 * dimension * dimension + dimension] = Coefficient(column[row].real());
+    }
+}
+
+std::optional<DenseProgram> DenseFusion(const ct::CircuitTile& source, const parameter::ParameterResolver& parameters,
+                                        const ct::StateSpace& space, unsigned minimum_gates, QubitLayout& layout) {
+    const auto mask = DenseSupport(source, space, minimum_gates);
+    if (!mask) {
+        return std::nullopt;
+    }
+    auto tile = source;
+    tile.qubits = ct::QubitsFromMask(*mask);
+    auto prepared = ct::Builder<complex_t>::Build(tile, parameters, space);
+    auto result = DenseRouting(*mask, space, layout);
+    const auto dimension = result.dimension;
+    // Builder projects operations to compact indices. Replace only traversal
+    // to synthesize the small operator using the shared quantum arithmetic.
+    prepared.layout.qubits = ct::QubitsFromMask(dimension - 1);
+    prepared.layout.tile_count = 1;
+    std::iota(prepared.layout.state_offsets.begin(), prepared.layout.state_offsets.end(), 0);
+    for (const auto& operation : prepared.operations) {
+        if (operation.external_control_mask != 0) {
+            throw std::logic_error("A fixed dense operator cannot omit an external control.");
+        }
+    }
+    result.coefficients.resize(4 * dimension * dimension);
+    std::vector<complex_t> column(dimension);
+    // Synthesize a <=64x64 operator in double precision. This is compilation,
+    // never CPU execution of the user's device-resident quantum state.
+    for (uint32_t basis = 0; basis < dimension; ++basis) {
+        std::fill(column.begin(), column.end(), complex_t{});
+        column[basis] = 1;
+        ct::ApplyTile(column.data(), prepared, 1);
+        RealifyColumn(result.coefficients.data(), column, basis);
+    }
+    return result;
+}
+
+DenseAdjointProgram BindDenseAdjoint(const ct::CircuitTile& source, const DenseAdjointProgram& topology,
+                                     const parameter::ParameterResolver& parameters, const MST<size_t>& parameter_map,
+                                     const ct::StateSpace& space) {
+    const auto prepared = ct::Builder<complex_t>::BuildAdjoint(source, parameters, parameter_map, space,
+                                                               ct::Builder<complex_t>::AdjointGates::Reversed);
+    auto result = topology;
+    std::map<size_t, size_t> active;
+    std::vector<std::vector<ct::PreparedTile<complex_t>>> images;
+    for (const auto& operation : prepared.operations) {
+        if (operation.evolution.size() != 1 || operation.derivative_position != 0
+            || operation.evolution.front().external_control_mask != 0) {
+            throw std::logic_error("A dense adjoint must contain complete state-vector gate images.");
+        }
+        images.emplace_back();
+        for (const auto& derivative : operation.derivatives) {
+            images.back().push_back(ct::Builder<complex_t>::DerivativeOnly(prepared.layout, derivative));
+            for (const auto& target : derivative.targets) {
+                active.emplace(target.output_index, 0);
+            }
+        }
+    }
+    for (auto& [output, slot] : active) {
+        slot = result.outputs.size();
+        result.outputs.push_back(static_cast<uint32_t>(output));
+    }
+    const auto dimension = result.evolution.dimension;
+    const auto matrix_size = 4 * dimension * dimension;
+    result.evolution.coefficients.resize(matrix_size);
+    result.derivatives.resize(active.size() * matrix_size);
+    std::vector<complex_t> column(dimension), intrinsic(dimension), workspace(prepared.layout.workspace_size);
+    std::vector<std::vector<complex_t>> tangents(active.size(), std::vector<complex_t>(dimension));
+    using Arithmetic = ct::detail::Kernels<ct::detail::ScalarTileAlgebra<complex_t>>;
+    auto apply = [&](const auto& operation, auto& vector) {
+        Arithmetic::Apply(operation, true, 0, ct::detail::ScalarBlockContext{}, vector.data(), workspace.data());
+    };
+    // Forward differentiation of the SMALL operator product, in complex128.
+    // t' = A*t + dA*v; v' = A*v. Shared symbols combine before the device
+    // contraction. There is no parameter-shift circuit or derivative state.
+    for (uint32_t basis = 0; basis < dimension; ++basis) {
+        std::fill(column.begin(), column.end(), complex_t{});
+        column[basis] = 1;
+        for (auto& tangent : tangents) {
+            std::fill(tangent.begin(), tangent.end(), complex_t{});
+        }
+        for (size_t gate = 0; gate < prepared.operations.size(); ++gate) {
+            const auto& operation = prepared.operations[gate];
+            for (auto& tangent : tangents) {
+                apply(operation.evolution.front(), tangent);
+            }
+            for (size_t d = 0; d < operation.derivatives.size(); ++d) {
+                intrinsic = column;
+                for (const auto& image : images[gate][d].operations) {
+                    apply(image, intrinsic);
+                }
+                for (const auto& target : operation.derivatives[d].targets) {
+                    auto& tangent = tangents[active.at(target.output_index)];
+                    for (uint32_t row = 0; row < dimension; ++row) {
+                        tangent[row] += target.coefficient * intrinsic[row];
+                    }
+                }
+            }
+            apply(operation.evolution.front(), column);
+        }
+        RealifyColumn(result.evolution.coefficients.data(), column, basis);
+        for (size_t slot = 0; slot < tangents.size(); ++slot) {
+            RealifyColumn(result.derivatives.data() + slot * matrix_size, tangents[slot], basis);
+        }
+    }
     return result;
 }
 
@@ -895,13 +987,17 @@ Program ForwardPlan::Bind(const parameter::ParameterResolver& parameters) const 
 }
 
 struct AdjointPlan::Impl {
+    struct Tile {
+        ct::CircuitTile source;
+        std::optional<DenseAdjointProgram> dense;
+    };
     qbit_t n_qubits;
     MST<size_t> parameter_map;
-    std::vector<ct::CircuitTile> tiles;
+    std::vector<Tile> tiles;
 };
 
 AdjointPlan::AdjointPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, const MST<size_t>& parameter_map,
-                         qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits) {
+                         qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates) {
     ValidateCircuit(circuit, n_qubits);
     if (tile_qubits < 3 || tile_qubits > 12 || fusion_qubits < 1 || fusion_qubits > 9) {
         throw std::invalid_argument("Require 3 <= adjoint tile_qubits <= 12 and 1 <= fusion_qubits <= 9.");
@@ -918,17 +1014,31 @@ AdjointPlan::AdjointPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit,
     const auto space = ct::StateSpace::Vector(n_qubits);
     const auto width = std::min({tile_qubits, static_cast<unsigned>(CountOne(kMaxAdjointTileSize - 1)),
                                  static_cast<unsigned>(std::max(n_qubits, qbit_t{3}))});
-    const auto budget = std::min(fusion_qubits, std::max(1U, width - 3));
+    const auto use_cube = cube_min_gates && space.dimension() >= kDenseTileSize;
+    const auto capacity = use_cube ? ct::Planner::Capacity::FullSupport : ct::Planner::Capacity::Mixing;
+    const auto budget = std::min({fusion_qubits, std::max(1U, width - 3), use_cube ? kMaxDenseQubits : width});
     auto reversed = Snapshot(circuit);
     std::reverse(reversed.begin(), reversed.end());
-    for (const auto& entry : ct::Planner(space, budget).PlanAdjoint(reversed)) {
+    for (const auto& entry : ct::Planner(space, budget, capacity).PlanAdjoint(reversed)) {
         auto tile = AsTile(entry, space);
-        tile.qubits = ct::QubitsFromMask(AlignedTileMask(ct::MaskFromQubits(tile.qubits), width));
-        impl->tiles.push_back(std::move(tile));
+        if (const auto mask = DenseSupport(tile, space, cube_min_gates)) {
+            tile.qubits = ct::QubitsFromMask(*mask);
+            QubitLayout layout(space.state_qubits());
+            DenseAdjointProgram topology;
+            topology.evolution = DenseRouting(*mask, space, layout);
+            topology.inverse_indices.resize(kDenseTileSize);
+            for (uint32_t packed = 0; packed < kDenseTileSize; ++packed) {
+                topology.inverse_indices[topology.evolution.indices[packed] / sizeof(float)] = packed * sizeof(float);
+            }
+            impl->tiles.push_back({std::move(tile), std::move(topology)});
+        } else {
+            tile.qubits = ct::QubitsFromMask(AlignedTileMask(ct::MaskFromQubits(tile.qubits), width));
+            impl->tiles.push_back({std::move(tile), std::nullopt});
+        }
     }
     // Even the empty circuit has an overlap, including for zero qubits.
     if (impl->tiles.empty()) {
-        impl->tiles.push_back({ct::QubitsFromMask(AlignedTileMask(0, width)), {}});
+        impl->tiles.push_back({{ct::QubitsFromMask(AlignedTileMask(0, width)), {}}, std::nullopt});
     }
     impl_ = std::move(impl);
 }
@@ -939,7 +1049,12 @@ AdjointProgram AdjointPlan::Bind(const parameter::ParameterResolver& parameters)
     const auto space = ct::StateSpace::Vector(std::max(impl_->n_qubits, qbit_t{3}));
     const QubitLayout layout(space.state_qubits());  // Adjoint boundaries always use canonical layout.
     Constants constants(result.data);
-    for (const auto& tile : impl_->tiles) {
+    for (const auto& entry : impl_->tiles) {
+        const auto& tile = entry.source;
+        if (entry.dense) {
+            result.tiles.emplace_back(BindDenseAdjoint(tile, *entry.dense, parameters, impl_->parameter_map, space));
+            continue;
+        }
         Encoder encoder(ct::MaskFromQubits(tile.qubits), space.dimension(), constants, layout);
         AdjointTileProgram encoded;
         for (const auto& gate : tile.gates) {

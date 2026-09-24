@@ -272,6 +272,60 @@ void ValidateMass(double mass) {
         throw std::invalid_argument("Ascend measurement/sampling requires a positive finite probability mass.");
     }
 }
+
+struct CubeTile {
+    DensePacket packet;
+    size_t matrix, config, offsets, indices;
+    uint32_t workspace_bytes;
+    CubeTile(const std::shared_ptr<Context>& context, const DenseProgram& source, Metadata& metadata,
+             bool adjoint = false)
+        : packet(source.packet)
+        , matrix(metadata.Append(source.coefficients))
+        , offsets(metadata.Append(source.offsets))
+        , indices(metadata.Append(source.indices)) {
+        auto* platform = platform_ascendc::PlatformAscendCManager::GetInstance(context->soc.c_str());
+        if (!platform) {
+            throw std::runtime_error("Ascend Cube tiling platform metadata is unavailable.");
+        }
+        const auto dimension = source.dimension;
+        const auto columns = packet.size / dimension;
+        using namespace matmul_tiling;  // NOLINT
+        MatmulApiTiling builder(*platform);
+        builder.SetAType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
+        builder.SetBType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
+        builder.SetCType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT);
+        const auto states = adjoint ? 2U : 1U;
+        builder.SetOrgShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
+        builder.SetShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
+        builder.SetFixSplit(2 * dimension, columns, std::min(2 * dimension, uint32_t{64}));
+        builder.EnableBias(false);
+        builder.SetBufferSpace(-1, -1, -1);
+        AscendC::tiling::TCubeTiling tiling{};
+        if (builder.GetTiling(tiling) != 0 || tiling.baseM != 2 * dimension || tiling.baseN != columns) {
+            throw std::runtime_error("Ascend contraction requires one packet per FP32 output tile.");
+        }
+        workspace_bytes = platform->GetLibApiWorkSpaceSize();
+        if (!workspace_bytes) {
+            throw std::runtime_error("No mixed Matmul workspace size.");
+        }
+        // Bounded input/output staging per AIV, independent of state size.
+        // The compiler reserves the library slice before this user slice.
+        const auto planes = adjoint ? 10U : 4 * kDensePipelineSlots;
+        workspace_bytes += context->cores * planes * packet.size * kDenseBatchPackets * sizeof(float);
+        config = metadata.Append(&tiling, sizeof(tiling));
+    }
+    size_t InstructionCount() const {
+        return 1;
+    }
+    aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane, uint8_t* metadata,
+                    void* workspace) const {
+        constexpr uint32_t packets_per_block = 2 * kDenseBatchPackets;
+        const auto blocks = static_cast<uint32_t>(
+            std::min<uint64_t>(context.cube_cores, (plane / packet.size + packets_per_block - 1) / packets_per_block));
+        return LaunchDense(blocks, stream, state, metadata + matrix, metadata + offsets, metadata + indices,
+                           metadata + config, workspace, packet);
+    }
+};
 }  // namespace
 
 struct Executable::Impl {
@@ -299,57 +353,7 @@ struct Executable::Impl {
                               external_mask, tile_count, size, run, count);
         }
     };
-    struct Dense {
-        DensePacket packet;
-        size_t matrix, config, offsets, indices;
-        uint32_t workspace_bytes;
-        Dense(const std::shared_ptr<Context>& context, const DenseProgram& source, Metadata& metadata)
-            : packet(source.packet)
-            , matrix(metadata.Append(source.coefficients))
-            , offsets(metadata.Append(source.offsets))
-            , indices(metadata.Append(source.indices)) {
-            auto* platform = platform_ascendc::PlatformAscendCManager::GetInstance(context->soc.c_str());
-            if (!platform) {
-                throw std::runtime_error("Ascend Cube tiling platform metadata is unavailable.");
-            }
-            const auto dimension = source.dimension;
-            const auto columns = packet.size / dimension;
-            using namespace matmul_tiling;  // NOLINT
-            MatmulApiTiling builder(*platform);
-            builder.SetAType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
-            builder.SetBType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
-            builder.SetCType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT);
-            builder.SetOrgShape(2 * dimension, columns * kDenseBatchPackets, 2 * dimension);
-            builder.SetShape(2 * dimension, columns * kDenseBatchPackets, 2 * dimension);
-            builder.SetFixSplit(2 * dimension, columns, std::min(2 * dimension, uint32_t{64}));
-            builder.EnableBias(false);
-            builder.SetBufferSpace(-1, -1, -1);
-            AscendC::tiling::TCubeTiling tiling{};
-            if (builder.GetTiling(tiling) != 0 || tiling.baseM != 2 * dimension || tiling.baseN != columns) {
-                throw std::runtime_error("Ascend contraction requires one packet per FP32 output tile.");
-            }
-            workspace_bytes = platform->GetLibApiWorkSpaceSize();
-            if (!workspace_bytes) {
-                throw std::runtime_error("No mixed Matmul workspace size.");
-            }
-            // Bounded input/output staging per AIV, independent of state size.
-            // The compiler reserves the library slice before this user slice.
-            workspace_bytes += context->cores * 4 * packet.size * kDenseBatchPackets * kDensePipelineSlots
-                               * sizeof(float);
-            config = metadata.Append(&tiling, sizeof(tiling));
-        }
-        size_t InstructionCount() const {
-            return 1;
-        }
-        aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane, uint8_t* metadata,
-                        void* workspace) const {
-            constexpr uint32_t packets_per_block = 2 * kDenseBatchPackets;
-            const auto blocks = static_cast<uint32_t>(std::min<uint64_t>(
-                context.cube_cores, (plane / packet.size + packets_per_block - 1) / packets_per_block));
-            return LaunchDense(blocks, stream, state, metadata + matrix, metadata + offsets, metadata + indices,
-                               metadata + config, workspace, packet);
-        }
-    };
+    using Dense = CubeTile;
     std::shared_ptr<Context> context;
     qbit_t n_qubits;
     std::unique_ptr<Buffer> metadata;
@@ -396,10 +400,24 @@ struct Observable::Impl {
     std::shared_ptr<Context> context;
     ObservableLayout layout;
     std::unique_ptr<Buffer> metadata;
+    std::unique_ptr<Buffer> diagonal;
+    uint64_t diagonal_terms = 0;
     size_t groups, terms, indices, signs, rows, columns, values;
 
     Impl(std::shared_ptr<Context> owner, const ObservableProgram& program)
         : context(std::move(owner)), layout(program.layout()) {
+        if (layout.kind == kObservablePauli && program.groups().size() == 1 && program.groups().front().flip_mask == 0
+            && program.terms().size() > 1) {
+            double magnitude = 0;
+            bool real = true;
+            for (const auto& term : program.terms()) {
+                magnitude += std::abs(static_cast<double>(term.coefficient.real));
+                real = real && term.coefficient.imag == 0;
+            }
+            if (real && magnitude <= std::numeric_limits<float>::max()) {
+                diagonal_terms = program.terms().size();
+            }
+        }
         Metadata image;
         groups = image.Append(program.groups());
         terms = image.Append(program.terms());
@@ -414,6 +432,22 @@ struct Observable::Impl {
         }
     }
 
+    // Called only before publishing a gradient plan. The resulting cache is
+    // immutable, so independent evaluations can safely share it.
+    void CacheDiagonal() {
+        const ContextScope scope(context->handle);
+        auto cache = std::make_unique<Buffer>(context, layout.plane * sizeof(float));
+        Stream stream(context);
+        auto* data = static_cast<uint8_t*>(metadata->Data());
+        Transaction transaction(stream.handle);
+        Check(LaunchCompileDiagonal(ReductionBlocks(*context, layout.plane), stream.handle, data + terms, data + signs,
+                                    cache->Data(), diagonal_terms, layout),
+              "compile diagonal observable");
+        transaction.Finish("cache diagonal observable");
+        diagonal = std::move(cache);
+        layout.kind = kObservableDiagonal;
+    }
+
     void Validate(const std::shared_ptr<Context>& owner, uint64_t dimension) const {
         if (context != owner || layout.dimension != dimension) {
             throw std::invalid_argument("Observable requires the same Ascend device and qubit count.");
@@ -426,7 +460,7 @@ struct Observable::Impl {
         };
         Check(LaunchObservable(ReductionBlocks(*context, layout.plane), stream, ket, bra, output, pointer(groups),
                                pointer(terms), pointer(indices), pointer(signs), pointer(rows), pointer(columns),
-                               pointer(values), partials, layout),
+                               diagonal ? diagonal->Data() : pointer(values), partials, layout),
               "launch observable");
     }
 };
@@ -439,43 +473,83 @@ struct AdjointExecutable {
         uint32_t size, run, count;
         size_t instructions, offsets, steps, derivatives, targets;
     };
+    struct Dense {
+        CubeTile cube;
+        size_t derivatives, outputs, inverse;
+        uint32_t count;
+        Dense(const std::shared_ptr<Context>& context, const DenseAdjointProgram& source, Metadata& metadata)
+            : cube(context, source.evolution, metadata, true)
+            , derivatives(metadata.Append(source.derivatives))
+            , outputs(metadata.Append(source.outputs))
+            , inverse(metadata.Append(source.inverse_indices))
+            , count(source.outputs.size()) {
+        }
+    };
     std::unique_ptr<Buffer> metadata;
-    std::vector<Tile> tiles;
-    uint32_t blocks, output_size;
+    std::vector<std::variant<Tile, Dense>> tiles;
+    uint32_t blocks, cube_blocks, output_size;
+    uint32_t workspace_bytes = 0;
     uint64_t plane;
 
     AdjointExecutable(const std::shared_ptr<Context>& context, const AdjointProgram& program, qbit_t qubits,
                       const MST<size_t>& parameter_map)
-        : blocks(context->cores), output_size(program.output_size), plane(std::max(Dimension(qubits), uint64_t{8})) {
+        : blocks(context->cores)
+        , cube_blocks(context->cube_cores)
+        , output_size(program.output_size)
+        , plane(std::max(Dimension(qubits), uint64_t{8})) {
         if (program.n_qubits != qubits || program.output_size != parameter_map.size() + 1
             || program.parameter_map != parameter_map || program.tiles.empty()) {
             throw std::invalid_argument("Incompatible Ascend adjoint program.");
         }
         Metadata image;
         image.Append(program.data);
-        for (const auto& source : program.tiles) {
-            tiles.push_back({source.external_mask, source.tile_count, source.size, source.run,
-                             static_cast<uint32_t>(source.steps.size()), image.Append(source.instructions),
-                             image.Append(source.offsets), image.Append(source.steps), image.Append(source.derivatives),
-                             image.Append(source.targets)});
+        for (const auto& entry : program.tiles) {
+            std::visit(
+                [&](const auto& source) {
+                    if constexpr (std::is_same_v<std::decay_t<decltype(source)>, AdjointTileProgram>) {
+                        tiles.emplace_back(Tile{source.external_mask, source.tile_count, source.size, source.run,
+                                                static_cast<uint32_t>(source.steps.size()),
+                                                image.Append(source.instructions), image.Append(source.offsets),
+                                                image.Append(source.steps), image.Append(source.derivatives),
+                                                image.Append(source.targets)});
+                    } else {
+                        tiles.emplace_back(std::in_place_type<Dense>, context, source, image);
+                        workspace_bytes = std::max(workspace_bytes, std::get<Dense>(tiles.back()).cube.workspace_bytes);
+                    }
+                },
+                entry);
         }
         metadata = std::make_unique<Buffer>(context, image.data.size());
         metadata->Upload(image.data.data());
     }
 
-    void Launch(aclrtStream stream, void* shared, void* costate, const Buffer& partials) const {
+    void Launch(aclrtStream stream, void* shared, void* costate, const Buffer& partials, void* workspace) const {
         Check(aclrtMemsetAsync(partials.Data(), partials.Size(), 0, AdjointPartialBytes(blocks, output_size), stream),
               "zero adjoint partials");
         auto* data = static_cast<uint8_t*>(metadata->Data());
         bool overlap = true;
-        for (const auto& tile : tiles) {
+        for (const auto& entry : tiles) {
             // DO NOT reduce the block count for smaller tiles: accumulated slots
             // retain their block ownership throughout the complete sweep.
-            Check(LaunchAdjointTile(blocks, stream, shared, costate, data + tile.instructions, data,
-                                    data + tile.offsets, data + tile.steps, data + tile.derivatives,
-                                    data + tile.targets, partials.Data(), plane, tile.external_mask, tile.tile_count,
-                                    tile.size, tile.run, tile.count, output_size, overlap ? 1 : 0),
-                  "launch adjoint tile");
+            std::visit(
+                [&](const auto& tile) {
+                    if constexpr (std::is_same_v<std::decay_t<decltype(tile)>, Tile>) {
+                        Check(LaunchAdjointTile(blocks, stream, shared, costate, data + tile.instructions, data,
+                                                data + tile.offsets, data + tile.steps, data + tile.derivatives,
+                                                data + tile.targets, partials.Data(), plane, tile.external_mask,
+                                                tile.tile_count, tile.size, tile.run, tile.count, output_size, overlap),
+                              "launch adjoint tile");
+                    } else {
+                        const auto& cube = tile.cube;
+                        Check(
+                            LaunchDenseAdjoint(cube_blocks, stream, shared, costate, data + cube.matrix,
+                                               data + tile.derivatives, data + tile.outputs, data + cube.offsets,
+                                               data + cube.indices, data + tile.inverse, data + cube.config, workspace,
+                                               partials.Data(), cube.packet, tile.count, output_size, overlap),
+                            "launch dense adjoint");
+                    }
+                },
+                entry);
             overlap = false;
         }
     }
@@ -941,12 +1015,12 @@ GradientPlan::GradientPlan(const State& owner, const std::vector<Hamiltonian<flo
     plan->right_forward = std::make_unique<ForwardPlan>(right_gates, plan->n_qubits, tile_qubits, fusion_qubits,
                                                         cube_min_gates);
     plan->right_adjoint = std::make_unique<AdjointPlan>(right_gates, plan->parameter_map, plan->n_qubits, tile_qubits,
-                                                        fusion_qubits);
+                                                        fusion_qubits, cube_min_gates);
     if (!hermitian) {
         plan->left_forward = std::make_unique<ForwardPlan>(left_gates, plan->n_qubits, tile_qubits, fusion_qubits,
                                                            cube_min_gates);
         plan->left_adjoint = std::make_unique<AdjointPlan>(left_gates, plan->parameter_map, plan->n_qubits, tile_qubits,
-                                                           fusion_qubits);
+                                                           fusion_qubits, cube_min_gates);
     }
     // Upload immutable observable snapshots once, never during evaluate().
     for (const auto& ham : hams) {
@@ -956,6 +1030,18 @@ GradientPlan::GradientPlan(const State& owner, const std::vector<Hamiltonian<flo
         for (const auto& ham : hams_dagger) {
             plan->daggers.push_back(owner.PrepareObservable(ham));
         }
+    }
+    // Bound retained memory to one real state, not one per Hamiltonian. Cache
+    // the most expensive eligible sum; single-term operators need no expansion.
+    Observable::Impl* cached = nullptr;
+    for (const auto& observable : plan->observables) {
+        auto* candidate = observable->impl_.get();
+        if (candidate->diagonal_terms && (!cached || candidate->diagonal_terms > cached->diagonal_terms)) {
+            cached = candidate;
+        }
+    }
+    if (cached) {
+        cached->CacheDiagonal();
     }
     impl_ = std::move(plan);
 }
@@ -1021,8 +1107,9 @@ GradientPlan::Result GradientPlan::Evaluate(const State& right_state, const Stat
             adjoint_left = std::make_unique<AdjointExecutable>(plan.context, plan.left_adjoint->Bind(resolver),
                                                                plan.n_qubits, plan.parameter_map);
         }
-        const auto workspace_bytes = std::max(forward_right.workspace_bytes,
-                                              forward_left ? forward_left->workspace_bytes : 0U);
+        const auto workspace_bytes = std::max({forward_right.workspace_bytes, adjoint_right.workspace_bytes,
+                                               forward_left ? forward_left->workspace_bytes : 0U,
+                                               adjoint_left ? adjoint_left->workspace_bytes : 0U});
         if (workspace_bytes && (!workspace || workspace->Size() < workspace_bytes)) {
             workspace = std::make_unique<Buffer>(plan.context, workspace_bytes);
         }
@@ -1044,7 +1131,8 @@ GradientPlan::Result GradientPlan::Evaluate(const State& right_state, const Stat
             }
             plan.observables[h]->impl_->Launch(stream.handle, right.Data(), nullptr, costate.Data(), nullptr);
             const auto& left_sweep = plan.hermitian ? adjoint_right : *adjoint_left;
-            left_sweep.Launch(stream.handle, sweep_state, costate.Data(), partials);
+            left_sweep.Launch(stream.handle, sweep_state, costate.Data(), partials,
+                              workspace ? workspace->Data() : nullptr);
             Check(aclrtSynchronizeStream(stream.handle), "left adjoint sweep");
             auto row = left_sweep.Read(partials);
             if (plan.hermitian) {
@@ -1054,7 +1142,8 @@ GradientPlan::Result GradientPlan::Evaluate(const State& right_state, const Stat
             } else {
                 copy(sweep_state, right.Data());
                 plan.daggers[h]->impl_->Launch(stream.handle, left_data, nullptr, costate.Data(), nullptr);
-                adjoint_right.Launch(stream.handle, sweep_state, costate.Data(), partials);
+                adjoint_right.Launch(stream.handle, sweep_state, costate.Data(), partials,
+                                     workspace ? workspace->Data() : nullptr);
                 Check(aclrtSynchronizeStream(stream.handle), "right adjoint sweep");
                 const auto right_row = adjoint_right.Read(partials);
                 for (size_t column = 1; column < row.size(); ++column) {

@@ -76,8 +76,10 @@ propagate; there is no retry or simulator fallback.
 - Adjoint gradients, shared parameters, `no_grad`, encoder/ansatz batches and
   multiple observables. Plans snapshot circuits and Hamiltonians, while each
   invocation reads the simulator's current input state without changing it.
-  Custom gates must be unitary for adjoint reconstruction; nonunitary evolution
-  and non-Hermitian observables are separate, supported operations.
+  Custom gates must be unitary for adjoint reconstruction. Constant matrices
+  are checked when creating the plan; parameter-dependent custom matrices are
+  checked at every binding. Nonunitary evolution and non-Hermitian observables
+  are separate, supported operations.
 - Exact, **gate-local** parameter-shift gradients. Controlled rotations use
   their full frequency spectrum; U3, FSim, Givens and SWAPalpha have their own
   exact rules. Shared input parameters are differentiated through every gate's
@@ -121,17 +123,27 @@ device metadata. Forward execution combines:
    executable restores canonical little-endian order, so observables, sampling
    and gradients share one public state representation.
 
-The fused adjoint kernel keeps the reconstructed state, costate and reusable
-derivative scratch in UB. It reconstructs with the gate dagger, contracts each
-zero-extended derivative, and propagates the costate before writing the tile.
-There are no per-gate or per-parameter full-state checkpoints. Complex two-sided
+Adjoint execution uses the same structured-Vector/dense-Cube split. For a dense
+block B, the compiler applies the product rule to Builder's gate/derivative
+images in complex128, combining all occurrences of a shared parameter into one
+dB-dagger matrix. Packet routing is planned once. Cube reconstructs both states
+with B-dagger and contracts each dB-dagger against the original costate and the
+reconstructed state. It restores canonical layout at every block boundary.
+The Vector path instead evolves and differentiates individual gate images in
+UB. Both paths zero-extend derivatives outside their controls/support.
+
+Cube staging is bounded per core and reused across parameters; Vector derivative
+scratch stays in UB. There are no per-gate or per-parameter full-state checkpoints. Complex two-sided
 gradients use a left sweep with H and a conjugated right sweep with H dagger;
 only identical sides with known Hermitian observables use twice the real part.
 Device partials use balanced reductions and compensated accumulation, followed
 by a small host double-precision reduction.
 
-Pauli observables group terms by flip mask to share state reads. Expectation-only
-execution never allocates a full H|psi> state. Sampling builds a device probability
+Pauli observables group terms by flip mask to share state reads. A gradient plan
+may precompute one real I/Z Hamiltonian diagonal on the device, choosing the
+eligible observable with the most terms. The immutable cache is shared across
+evaluations, so applying that Hamiltonian becomes a single elementwise product.
+Expectation-only execution never allocates a full H|psi> state. Sampling builds a device probability
 tree and transfers only bin masses and sampled indices. Reduced-state contraction
 pairs only matching traced indices, without constructing a full density matrix.
 
@@ -148,6 +160,10 @@ The index ABI supports 0–32 qubits, **subject to available device memory**.
 A Hermitian gradient requires two additional full states for one observable,
 three for multiple observables; a general two-sided gradient requires four.
 Scratch is reused within a batch, not multiplied by parameter count or depth.
+The optional diagonal cache adds at most `4 * max(8, 2**n)` bytes per gradient plan
+(64 MiB at 24 qubits), independent of the number of observables. Dense adjoint
+staging is also independent of state size and parameter count: 60 MiB on a
+48-Vector-core 910B2, plus CANN's mixed-core workspace.
 `apply_hamiltonian` requires a separate output state. State download and explicit
 circuit/reduced matrices require host memory proportional to their output.
 
@@ -157,11 +173,12 @@ evolution. Parameter batches currently execute sequentially on the NPU;
 individual trajectories and synchronizes at random branch decisions. These paths
 are correct but are not throughput-optimized for large batches of tiny circuits.
 Arbitrary CSR uses scalar indexed loads and is not expected to match grouped
-Pauli throughput. Adjoint sweeps use Vector cores; forward Cube performance must
+Pauli throughput. Gradient timings include coefficient/derivative synthesis,
+observable application and reverse contractions; forward Cube performance must
 not be reported as gradient performance.
 
 The defaults (`tile_qubits=12`, `fusion_qubits=6`, `cube_min_gates=4`) target
-large deterministic states. The adjoint tile is capped at 11 bits to fit its
+large deterministic states. The Vector adjoint tile is capped at 11 bits to fit its
 additional live state. `cube_min_gates=0` selects Vector-only execution; it is an
 explicit execution policy, not a runtime recovery path. Defaults are not a claim
 of optimality for every circuit or every 910B model.
@@ -173,6 +190,8 @@ python -m pytest -q tests/st/test_simulator/test_mqvector_npu.py \
   tests/st/test_simulator/test_mqvector_npu_api.py
 OMP_NUM_THREADS=24 OPENBLAS_NUM_THREADS=1 \
   python tests/benchmark_mqvector_npu.py --qubits 24 28 --gradient-qubits 20
+OMP_NUM_THREADS=24 OPENBLAS_NUM_THREADS=1 \
+  python tests/benchmark_mqvector_npu.py --maxcut 24 --seed 42 --repeats 20 --optimize
 ```
 
 The tests use independent NumPy embeddings and complex128 CPU references,
@@ -192,3 +211,11 @@ CPU complex128 references are correctness references, not equal-precision
 hardware comparisons. Run without other tests/jobs on the device and retain the
 output with the build configuration; do not extrapolate one circuit's timing to
 all simulation workloads.
+
+The MaxCut command above uses a seed-42 four-regular graph, four QAOA layers and
+the legacy NumPy seed-42 initial point. `--optimize` runs SciPy's unmodified default
+BFGS and records every gradient call, accepted-iteration call counts, termination
+status and a complex128 check at the final point. FP32 loss of precision can make
+line searches repeatedly evaluate candidates without accepting another iteration;
+iteration count alone is not a measure of total gradient work. `--parameters`
+can replay a saved point without changing the workload.

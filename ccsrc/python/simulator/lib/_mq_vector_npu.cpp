@@ -10,6 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <algorithm>
 #include <memory>
 
 #include <pybind11/complex.h>
@@ -26,7 +27,12 @@ PYBIND11_MODULE(_mq_vector_npu, module) {
     using namespace mindquantum::sim::ascend;  // NOLINT
     module.doc() = "Ascend 910B complex64 tiled statevector executor.";
     py::class_<Program>(module, "Program");
-    py::class_<AdjointProgram>(module, "AdjointProgram");
+    py::class_<AdjointProgram>(module, "AdjointProgram")
+        .def_property_readonly("tile_count", [](const AdjointProgram& program) { return program.tiles.size(); })
+        .def_property_readonly("cube_tile_count", [](const AdjointProgram& program) {
+            return std::count_if(program.tiles.begin(), program.tiles.end(),
+                                 [](const auto& tile) { return std::holds_alternative<DenseAdjointProgram>(tile); });
+        });
     py::class_<ForwardPlan>(module, "ForwardPlan")
         .def(py::init<const std::vector<std::shared_ptr<mindquantum::BasicGate>>&, mindquantum::qbit_t, unsigned,
                       unsigned, unsigned>(),
@@ -35,9 +41,9 @@ PYBIND11_MODULE(_mq_vector_npu, module) {
         .def("bind", &ForwardPlan::Bind, "pr"_a, py::call_guard<py::gil_scoped_release>());
     py::class_<AdjointPlan>(module, "AdjointPlan")
         .def(py::init<const std::vector<std::shared_ptr<mindquantum::BasicGate>>&, const mindquantum::MST<size_t>&,
-                      mindquantum::qbit_t, unsigned, unsigned>(),
+                      mindquantum::qbit_t, unsigned, unsigned, unsigned>(),
              "circuit"_a, "parameter_map"_a, "n_qubits"_a, "tile_qubits"_a = 11, "fusion_qubits"_a = 8,
-             py::call_guard<py::gil_scoped_release>())
+             "cube_min_gates"_a = 4, py::call_guard<py::gil_scoped_release>())
         .def("bind", &AdjointPlan::Bind, "pr"_a, py::call_guard<py::gil_scoped_release>());
     module.def("compile", &Compile, "circuit"_a, "parameters"_a, "n_qubits"_a, "tile_qubits"_a = 12,
                "fusion_qubits"_a = 6, "cube_min_gates"_a = 4, py::call_guard<py::gil_scoped_release>());

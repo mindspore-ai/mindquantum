@@ -218,6 +218,33 @@ class Builder {
         return prepared;
     }
 
+    // Compose intrinsic derivative images without duplicating gate formulas.
+    // Unlike gates, derivatives are zero outside their support. Jacobian
+    // targets are applied by the caller, not by this linear map.
+    [[nodiscard]] static auto DerivativeOnly(const TileLayout& layout, const Derivative<value_t>& derivative)
+        -> PreparedTile<value_t> {
+        if (derivative.external_control_mask != 0) {
+            throw std::invalid_argument("A derivative image must contain every control qubit.");
+        }
+        PreparedTile<value_t> prepared;
+        prepared.layout = layout;
+        Operation<value_t> operation;
+        operation.kernel = std::visit([](const auto& kernel) -> Kernel<value_t> { return kernel; }, derivative.kernel);
+        prepared.layout.workspace_size = WorkspaceSize(operation.kernel);
+        const auto touched = TouchedBases(operation.kernel, layout.dimension);
+        prepared.operations.push_back(std::move(operation));
+        DiagonalKernel<value_t> projection;
+        for (size_t basis = 0; basis < layout.dimension; ++basis) {
+            if (!touched[basis]) {
+                projection.scales.push_back({basis, value_t{0, 0}});
+            }
+        }
+        if (!projection.scales.empty()) {
+            prepared.operations.push_back({0, std::move(projection)});
+        }
+        return prepared;
+    }
+
     // Replaces a lowered linear map by its complex conjugate.
     static void Conjugate(Operation<value_t>* operation) {
         std::visit([](auto& kernel) { ConjugateKernel(&kernel); }, operation->kernel);

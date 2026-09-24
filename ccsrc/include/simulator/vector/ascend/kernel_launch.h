@@ -52,5 +52,16 @@ aclError LaunchAdjointTile(uint32_t blocks, aclrtStream stream, void* shared_sta
                            void* data, void* offsets, void* steps, void* derivatives, void* targets, void* partials,
                            uint64_t plane, uint64_t external_mask, uint64_t tiles, uint32_t size, uint32_t run,
                            uint32_t step_count, uint32_t output_size, uint32_t compute_overlap);
+
+// The same contraction for a fused block B. Cube evolves BOTH states by B^dagger,
+// then contracts <psi_before|dB^dagger|lambda_after> for each active parameter.
+// Derivatives are already Jacobian-weighted. Routing is restored before return.
+// blocks is the Cube count; its 2*blocks AIVs must match the Vector sweep's slot
+// ownership. Workspace is the library slice plus 10*packet.size*batch_packets
+// floats per AIV, independent of state size and the number of derivatives.
+aclError LaunchDenseAdjoint(uint32_t blocks, aclrtStream stream, void* shared_state, void* costate, void* matrix,
+                            void* derivatives, void* outputs, void* offsets, void* indices, void* inverse_indices,
+                            void* tiling, void* workspace, void* partials, DensePacket packet,
+                            uint32_t derivative_count, uint32_t output_size, uint32_t compute_overlap);
 }  // namespace mindquantum::sim::ascend
 #endif  // INCLUDE_SIMULATOR_VECTOR_ASCEND_KERNEL_LAUNCH_H_

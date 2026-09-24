@@ -580,19 +580,34 @@ class MQVectorNPU(BackendBase):
         return matrix
 
     @staticmethod
-    def _check_unitary(circuit, pr):
-        """Check custom matrices at each binding before reverse-state reconstruction."""
-        for gate in circuit:
-            custom = isinstance(gate, (MatrixGate, ParamNonHerm)) or (
-                isinstance(gate, MultiParamsGate) and not isinstance(gate, (G.U3, G.FSim, G.Rn))
-            )
-            if custom:
-                matrix = gate.matrix(pr) if isinstance(gate, ParameterGate) else gate.matrix()
-                matrix = np.asarray(matrix)
-                if not np.isfinite(matrix).all() or not np.allclose(
-                    matrix.conj().T @ matrix, np.eye(len(matrix)), atol=2e-6, rtol=2e-6
-                ):
-                    raise ValueError(f'Adjoint differentiation requires unitary gates; {gate.name} is not unitary.')
+    def _unitary_validator(circuits):
+        """Validate immutable constants once; check parameter-dependent custom matrices at every binding."""
+
+        def check(gate, pr):
+            matrix = gate.matrix(pr) if isinstance(gate, ParameterGate) else gate.matrix()
+            matrix = np.asarray(matrix)
+            if not np.isfinite(matrix).all() or not np.allclose(
+                matrix.conj().T @ matrix, np.eye(len(matrix)), atol=2e-6, rtol=2e-6
+            ):
+                raise ValueError(f'Adjoint differentiation requires unitary gates; {gate.name} is not unitary.')
+
+        dynamic = []
+        for circuit in circuits:
+            for gate in circuit:
+                custom = isinstance(gate, (MatrixGate, ParamNonHerm)) or (
+                    isinstance(gate, MultiParamsGate) and not isinstance(gate, (G.U3, G.FSim, G.Rn))
+                )
+                if custom:
+                    if gate.parameterized:
+                        dynamic.append(gate)
+                    else:
+                        check(gate, {})
+
+        def validate(pr):
+            for gate in dynamic:
+                check(gate, pr)
+
+        return validate
 
     def _shift_variations(self, right, left, same, names):
         """Snapshot gate-local shifts and their Jacobians once, never shift shared input parameters."""
@@ -679,6 +694,7 @@ class MQVectorNPU(BackendBase):
         if pr_shift:
             evaluate = self._shift_evaluator(hams, right, left, left_backend, same, names)
         else:
+            validate_unitary = self._unitary_validator((right,) if same else (right, left))
             # Arbitrary complex CSR observables take the general two-sweep path, even for U_l == U_r.
             hermitian = same and all(ham.how_to != HowTo.FRONTEND for ham in hams)
             plan = self._native.make_gradient(
@@ -694,8 +710,7 @@ class MQVectorNPU(BackendBase):
 
             def evaluate(parameters):
                 for pr in parameters:
-                    self._check_unitary(right, pr)
-                    self._check_unitary(left, pr)
+                    validate_unitary(pr)
                 return np.asarray(plan.evaluate(self.sim, left_backend.sim, parameters))
 
         def grad_ops(*inputs):

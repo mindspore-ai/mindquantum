@@ -172,6 +172,85 @@ def _gradient(n_qubits, options):
     )
 
 
+def _maxcut(n_qubits, options):
+    import networkx as nx
+    from scipy.optimize import minimize
+
+    from mindquantum.algorithm.nisq import MaxCutAnsatz
+
+    graph = nx.random_regular_graph(4, n_qubits, seed=options.seed)
+    ansatz = MaxCutAnsatz(list(graph.edges()), 4)
+    circuit = ansatz.circuit
+    ham = Hamiltonian(ansatz.hamiltonian, mq.float32)
+    sim = Simulator('mqvector_npu', n_qubits, device_id=options.device)
+    op, plan_ms = _timed(sim.get_expectation_with_grad, ham, circuit)
+    initial = (
+        np.asarray(options.parameters)
+        if options.parameters is not None
+        else np.random.RandomState(options.seed).uniform(0, np.pi, len(circuit.params_name))
+    )
+    times = []
+    for _ in range(options.repeats):
+        (f, g), elapsed = _timed(op, initial)
+        times.append(elapsed)
+    _emit(
+        'maxcut_gradient',
+        qubits=n_qubits,
+        soc=sim.backend.sim.soc_name,
+        gates=len(circuit),
+        parameter_names=circuit.params_name,
+        parameters=initial.tolist(),
+        plan_ms=plan_ms,
+        invocation_ms=times,
+        mean_ms=float(np.mean(times)),
+        median_ms=float(np.median(times)),
+        expectation=f.real.tolist(),
+        gradient=g.real.tolist(),
+    )
+    cpu = Simulator('mqvector', n_qubits, dtype=mq.complex128)
+    reference = cpu.get_expectation_with_grad(ham.astype(mq.float64), circuit)
+    expected, reference_ms = _timed(reference, initial)
+    errors = [float(np.max(np.abs(got - want))) for got, want in zip((f, g), expected)]
+    for got, want in zip((f, g), expected):
+        np.testing.assert_allclose(got, want, atol=3e-5, rtol=3e-5)
+    _emit('maxcut_accuracy', cpu_ms=reference_ms, expectation_error=errors[0], gradient_error=errors[1])
+    if not options.optimize:
+        return
+    calls, iterations = [], []
+
+    def fun_and_jac(parameters):
+        (value, gradient), elapsed = _timed(op, parameters)
+        calls.append(elapsed)
+        return -np.squeeze(value.real), -np.squeeze(gradient.real)
+
+    result, elapsed = _timed(
+        lambda: minimize(
+            fun_and_jac, initial, method='BFGS', jac=True, callback=lambda _: iterations.append(len(calls))
+        )
+    )
+    _emit(
+        'maxcut_bfgs',
+        elapsed_ms=elapsed,
+        success=bool(result.success),
+        message=str(result.message),
+        nit=int(result.nit),
+        nfev=int(result.nfev),
+        njev=int(result.njev),
+        objective=float(result.fun),
+        gradient_inf_norm=float(np.max(np.abs(result.jac))),
+        parameters=result.x.tolist(),
+        gradient_calls=len(calls),
+        invocation_ms=calls,
+        calls_at_accepted_iterations=iterations,
+    )
+    final, _ = _timed(reference, result.x)
+    _emit(
+        'maxcut_bfgs_reference',
+        objective=float(-final[0][0, 0].real),
+        gradient_inf_norm=float(np.max(np.abs(final[1]))),
+    )
+
+
 def main():
     """Benchmark the public API, then independently check its outputs."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -180,9 +259,16 @@ def main():
     parser.add_argument('--device', type=int, default=0)
     parser.add_argument('--seed', type=int, default=831)
     parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--maxcut', type=int, metavar='QUBITS', help='Benchmark four-layer 4-regular MaxCut instead.')
+    parser.add_argument('--parameters', nargs='+', type=float, help='MaxCut evaluation point; otherwise use the seed.')
+    parser.add_argument('--optimize', action='store_true', help='Also run unmodified default BFGS for MaxCut.')
     options = parser.parse_args()
     if options.repeats < 1 or min(*options.qubits, options.gradient_qubits) < 2:
         parser.error('Use positive repeats and at least two qubits.')
+    if options.maxcut is not None and options.maxcut < 5:
+        parser.error('A 4-regular MaxCut graph needs at least five qubits.')
+    if (options.optimize or options.parameters is not None) and options.maxcut is None:
+        parser.error('--optimize and --parameters require --maxcut.')
     _emit(
         'environment',
         python=platform.python_version(),
@@ -195,6 +281,9 @@ def main():
         omp_threads=os.getenv('OMP_NUM_THREADS'),
         openblas_threads=os.getenv('OPENBLAS_NUM_THREADS'),
     )
+    if options.maxcut is not None:
+        _maxcut(options.maxcut, options)
+        return
     for n_qubits in options.qubits:
         _evolution(n_qubits, options)
         gc.collect()

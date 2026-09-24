@@ -419,12 +419,61 @@ def test_gradient_validation_and_nonunitary_gate():
         sim.get_expectation_with_grad(ham, Circuit([G.Rn('a', 0.2, 0.1).on(0)]), pr_shift=True)
     matrix = np.diag([1, 0.5]).astype(complex)
     circuit = Circuit().ry('a', 0) + G.UnivMathGate('nonunitary', matrix).on(0)
-    operator = sim.get_expectation_with_grad(ham, circuit)
     with pytest.raises(ValueError, match='unitary'):
-        operator([0.3])
+        sim.get_expectation_with_grad(ham, circuit)
     np.testing.assert_array_equal(sim.get_qs(), [1, 0, 0, 0])
     sim.apply_circuit(circuit, {'a': 0.3})
     np.testing.assert_allclose(sim.get_qs(), [np.cos(0.15), 0.5 * np.sin(0.15), 0, 0], atol=3e-7)
+
+
+def test_unitarity_validation_stages_constants_but_rechecks_parameterized_matrices(monkeypatch):
+    pytest.importorskip('numba')
+
+    def matrix(angle):
+        scale = 1 if angle < 0.5 else 0.5
+        return np.array([[1 + 0j, 0j], [0j, scale * np.exp(1j * angle)]])
+
+    def derivative(angle):
+        scale = 1 if angle < 0.5 else 0.5
+        return np.array([[0j, 0j], [0j, 1j * scale * np.exp(1j * angle)]])
+
+    custom = G.gene_univ_parameterized_gate('staged_unitarity', matrix, derivative)
+    original_fixed, original_dynamic = G.UnivMathGate.matrix, custom.matrix
+    calls = []
+
+    def fixed_matrix(gate):
+        calls.append('fixed')
+        return original_fixed(gate)
+
+    def dynamic_matrix(gate, pr):
+        calls.append('dynamic')
+        return original_dynamic(gate, pr)
+
+    monkeypatch.setattr(G.UnivMathGate, 'matrix', fixed_matrix)
+    monkeypatch.setattr(custom, 'matrix', dynamic_matrix)
+    circuit = Circuit([G.UnivMathGate('fixed', np.diag([1, 1j])).on(0), custom('a').on(0)])
+    validate = MQVectorNPU._unitary_validator((circuit,))
+    assert calls == ['fixed']
+    validate({'a': 0.3})
+    with pytest.raises(ValueError, match='unitary'):
+        validate({'a': 0.7})
+    assert calls == ['fixed', 'dynamic', 'dynamic']
+    # Also exercise the dense custom-derivative image, including its control
+    # projection, on hardware. An invalid later binding must not poison state.
+    state = _state(12, 723)
+    sim, cpu = _sim(12, state), Simulator('mqvector', 12, dtype=mq.complex128)
+    cpu.set_qs(state)
+    circuit = Circuit([G.RY('b').on(11), custom('a').on(11, 1)]) * 5
+    ham = Hamiltonian(QubitOperator('Y11', 0.7) + QubitOperator('Z0', -0.2), mq.float32)
+    op = sim.get_expectation_with_grad(ham, circuit)
+    reference = cpu.get_expectation_with_grad(ham.astype(mq.float64), circuit)
+    values = [{'a': 0.3, 'b': -0.41}[name] for name in op.ansatz_params_name]
+    for got, want in zip(op(values), reference(values)):
+        np.testing.assert_allclose(got, want, atol=2e-6)
+    values[op.ansatz_params_name.index('a')] = 0.7
+    with pytest.raises(ValueError, match='unitary'):
+        op(values)
+    np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
 
 
 @pytest.mark.parametrize('t2', [70, 150])
@@ -553,6 +602,97 @@ def test_many_tiles_multiple_observables_and_shared_gradient_plan():
         for output, target in zip(got, want):
             np.testing.assert_allclose(output, target, atol=4e-6)
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
+
+
+@pytest.mark.parametrize('n,two_sided', [(12, False), (14, True), (21, False)])
+def test_fused_adjoint_shared_controlled_derivatives_and_packet_boundaries(n, two_sided, monkeypatch):
+    from mindquantum import _mq_vector_npu as native
+
+    # Noncontiguous support, two different packet permutations, partial batches
+    # at n=12/14 and multiple batches per AIV at n=21. Derivatives must be ZERO
+    # outside controls and phase/exchange support, not the gate's identity.
+    circuit = Circuit()
+    for target in (1, n - 2):
+        for _ in range(3):
+            circuit += G.U3({'a': 0.37, 'b': -0.2}, 'b', {'a': -0.71}).on(target, [0, 8])
+            circuit += G.FSim('a', {'b': -0.43}).on([4, n - 1], [0, 8])
+            circuit += G.RY(ParameterResolver({'a': 0.3, 'b': -0.4}).no_grad_part('b')).on(n - 3)
+            circuit += G.PhaseShift({'b': 0.59}).on(target, 8)
+            circuit += G.SWAPalpha({'a': -0.29}).on([target, n - 1], 0)
+    parameters = ParameterResolver({'a': 0.41, 'b': -0.67})
+    program = native.AdjointPlan(circuit.get_cpp_obj(), {'a': 0, 'b': 1}, n, fusion_qubits=6).bind(parameters)
+    assert program.cube_tile_count >= 2
+    assert (
+        native.AdjointPlan(circuit.get_cpp_obj(), {'a': 0, 'b': 1}, n, cube_min_gates=0)
+        .bind(parameters)
+        .cube_tile_count
+        == 0
+    )
+    state = _state(n, 607)
+    sim = _sim(n, state)
+    cpu = Simulator('mqvector', n, dtype=mq.complex128)
+    cpu.set_qs(state)
+    kwargs, cpu_kwargs = {}, {}
+    if two_sided:
+        bra = _state(n, 611)
+        left = Circuit().ry({'a': -0.31}, 0) + circuit.hermitian()
+        left_sim, left_cpu = _sim(n, bra), Simulator('mqvector', n, dtype=mq.complex128)
+        left_cpu.set_qs(bra)
+        kwargs = {'circ_left': left, 'simulator_left': left_sim}
+        cpu_kwargs = {'circ_left': left, 'simulator_left': left_cpu}
+    hams = [
+        Hamiltonian(QubitOperator(f'Y1 X{n - 1}', 0.71) + QubitOperator('Z4', -0.37), mq.float32),
+        Hamiltonian(QubitOperator('', 0.19) + QubitOperator(f'Z0 Z{n - 3}', -0.63), mq.float32),
+    ]
+    op = sim.get_expectation_with_grad(hams, circuit, **kwargs)
+    reference = cpu.get_expectation_with_grad([ham.astype(mq.float64) for ham in hams], circuit, **cpu_kwargs)
+    values = [parameters[name] for name in op.ansatz_params_name]
+    expected = reference(values)
+    if two_sided:
+        assert np.max(np.abs(expected[1].imag)) > 1e-4
+    with monkeypatch.context() as patch:
+        patch.setattr(native.State, 'get_qs', _no_download)
+        first, second = op(values), op(values)
+    for got, repeated, want in zip(first, second, expected):
+        np.testing.assert_array_equal(got, repeated)
+        np.testing.assert_allclose(got, want, atol=2e-6, rtol=2e-5)
+    np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
+
+
+@pytest.mark.parametrize('n', [1, 13])
+def test_cached_diagonal_complex_overlap_padding_high_parity_and_reuse(n, monkeypatch):
+    from mindquantum import _mq_vector_npu as native
+
+    state, bra = _state(n, 701), _state(n, 703)
+    sim, left = _sim(n, state), _sim(n, bra)
+    low = 1 - 2 * ((np.arange(1 << n) >> 0) & 1)
+    high = 1 - 2 * ((np.arange(1 << n) >> (n - 1)) & 1)
+    first = QubitOperator('', 0.25) - QubitOperator('Z0', 0.125)
+    operator = QubitOperator('', 0.5) - QubitOperator('Z0', 2.5)
+    operator += QubitOperator(f'Z{n - 1}', 0.75) + 0.375 * QubitOperator('Z0') * QubitOperator(f'Z{n - 1}')
+    hams = [Hamiltonian(first, mq.float32), Hamiltonian(operator, mq.float32)]
+    expected = [
+        np.vdot(bra, (0.25 - 0.125 * low) * state),
+        np.vdot(bra, (0.5 - 2.5 * low + 0.75 * high + 0.375 * low * high) * state),
+    ]
+    circuit = Circuit()
+    if n >= 12:
+        # A 16-dimensional Cube block with no derivatives must still compute
+        # the overlap. These gates commute with both observables, so the
+        # independent complex-overlap reference above is unchanged.
+        for qubit in (2, 3, 5, 7):
+            circuit.h(qubit)
+        program = native.AdjointPlan(circuit.get_cpp_obj(), {}, n).bind(ParameterResolver())
+        assert program.tile_count == program.cube_tile_count == 1
+    op = sim.get_expectation_with_grad(hams, circuit, simulator_left=left)
+    with monkeypatch.context() as patch:
+        patch.setattr(native.State, 'get_qs', _no_download)
+        f, g = op([])
+        sim.backend.sim.scale(0.25)
+        again, _ = op([])
+    np.testing.assert_allclose(f[0], expected, atol=3e-7)
+    np.testing.assert_allclose(again[0], np.asarray(expected) / 4, atol=1e-7)
+    assert g.shape == (1, 2, 0)
 
 
 def test_sampling_tree_many_tiles_empty_bins_and_unnormalized_state(monkeypatch):
