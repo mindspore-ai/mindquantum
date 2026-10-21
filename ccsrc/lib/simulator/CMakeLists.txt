@@ -83,6 +83,10 @@ endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail)
 
+if(ENABLE_ASCEND)
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/ascend)
+endif()
+
 # ==============================================================================
 
 add_library(mqsim_mps_cpu INTERFACE)

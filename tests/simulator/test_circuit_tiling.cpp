@@ -161,6 +161,78 @@ TEST_CASE("Bounded closure search is efficient and deterministic") {
     }
 }
 
+TEST_CASE("Candidate rollback follows live degrees across many tile commits") {
+    constexpr size_t rounds = 12;
+    circuit_t circuit;
+    mqt::Schedule expected;
+    std::vector<mq::index_t> mixing_masks;
+    std::vector<mq::index_t> support_masks;
+    for (size_t round = 0; round < rounds; ++round) {
+        const auto first = static_cast<mq::qbit_t>(2 + round % 3);
+        const auto second = static_cast<mq::qbit_t>(2 + (round + 1) % 3);
+        const auto third = static_cast<mq::qbit_t>(2 + (round + 2) % 3);
+        const auto base = circuit.size();
+        circuit.insert(
+            circuit.end(),
+            {std::make_shared<mq::SWAPGate>(mq::qbits_t{0, 1}),
+             std::make_shared<mq::XGate>(mq::qbits_t{first}, mq::qbits_t{0}),
+             std::make_shared<mq::ZGate>(mq::qbits_t{0}),
+             std::make_shared<mq::XGate>(mq::qbits_t{second}, mq::qbits_t{0}),
+             std::make_shared<mq::XGate>(mq::qbits_t{third}, mq::qbits_t{0}),
+             std::make_shared<mq::ZGate>(mq::qbits_t{first}), std::make_shared<mq::ZGate>(mq::qbits_t{second}),
+             std::make_shared<mq::ZGate>(mq::qbits_t{third}), std::make_shared<mq::SGate>(mq::qbits_t{third})});
+
+        // Independent access oracle: SWAP/X mix their targets; Z/S and controls
+        // only read. Do not reuse the planner's gate descriptions or graph.
+        const auto a = mq::index_t{1} << first;
+        const auto b = mq::index_t{1} << second;
+        const auto c = mq::index_t{1} << third;
+        mixing_masks.insert(mixing_masks.end(), {3, a, 0, b, c, 0, 0, 0, 0});
+        support_masks.insert(support_masks.end(), {3, a | 1, 1, b | 1, c | 1, a, b, c, c});
+
+        // Hand-derived boundaries with two mixing bits: SWAP(0,1) fills its
+        // tile and releases three branches plus the commuting Z(0). A pair
+        // containing the third branch wins (five gates versus four); the tie
+        // goes to the first branch's earlier gate, not the lower qubit mask.
+        // The remaining branch needs its own tile, with room to localize its
+        // control. All three controls and Z(0) feed the next SWAP, which cannot
+        // share a tile with any branch target. There are no segment barriers:
+        // the same evaluator must survive all 36 tile commits.
+        expected.emplace_back(mqt::CircuitTile{{0, 1}, {circuit[base], circuit[base + 2]}});
+        expected.emplace_back(mqt::CircuitTile{
+            {std::min(first, third), std::max(first, third)},
+            {circuit[base + 1], circuit[base + 4], circuit[base + 5], circuit[base + 7], circuit[base + 8]}});
+        expected.emplace_back(mqt::CircuitTile{{0, second}, {circuit[base + 3], circuit[base + 6]}});
+    }
+
+    const mqt::Planner planner(VectorSpace(5), 2);
+    const auto plan = planner.Plan(circuit);
+    REQUIRE(plan.size() == 3 * rounds);
+    CheckSamePlan(expected, plan);
+
+    const auto flattened = Flatten(plan);
+    REQUIRE(flattened.size() == circuit.size());
+    REQUIRE(std::is_permutation(flattened.begin(), flattened.end(), circuit.begin(), circuit.end()));
+    std::vector<size_t> positions;
+    for (const auto& gate : circuit) {
+        positions.push_back(Position(flattened, gate));
+    }
+    // Every pair with a mixing/read or mixing/mixing conflict must retain its
+    // input order, including dependencies spanning multiple rounds.
+    for (size_t before = 0; before < circuit.size(); ++before) {
+        for (size_t after = before + 1; after < circuit.size(); ++after) {
+            if ((mixing_masks[before] & support_masks[after]) != 0
+                || (support_masks[before] & mixing_masks[after]) != 0) {
+                CAPTURE(before, after);
+                CHECK(positions[before] < positions[after]);
+            }
+        }
+    }
+    for (size_t repeat = 0; repeat < 3; ++repeat) {
+        CheckSamePlan(expected, planner.Plan(circuit));
+    }
+}
+
 TEST_CASE("Bounded closure search preserves future tile choices") {
     enum class Kind : uint8_t { X, ControlledX, Z, ControlledZ, H, Swap };
     struct GateSpec {
