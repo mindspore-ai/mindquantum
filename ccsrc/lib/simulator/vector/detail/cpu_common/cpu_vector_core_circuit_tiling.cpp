@@ -16,14 +16,8 @@
 
 #include <vector>
 
-#ifdef __x86_64__
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
-#elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
-#endif
 #include "simulator/circuit_tiling/executor.h"
+#include "simulator/vector/detail/cpu_vector_arch_policy.h"
 #include "simulator/vector/detail/cpu_vector_policy.h"
 
 namespace mindquantum::sim::vector::detail {
@@ -57,11 +51,6 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyAdjointTileProgram(
     circuit_tiling::ApplyAdjointProgram(*shared_state, states, program, output, conjugate_output, omp::TeamSize(dim));
 }
 
-#ifdef __x86_64__
-template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
-template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
-#elif defined(__amd64)
-template struct CPUVectorPolicyBase<CPUVectorPolicyArmFloat, float>;
-template struct CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double>;
-#endif
+template struct CPUVectorPolicyBase<CPUVectorPolicyFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyDouble, double>;
 }  // namespace mindquantum::sim::vector::detail

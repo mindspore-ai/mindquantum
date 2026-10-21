@@ -41,26 +41,15 @@ add_library(mqsim_vector_cpu STATIC)
 target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_circuit_tiling)
 force_at_least_cxx17_workaround(mqsim_vector_cpu)
 append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
-if(X86_64)
-  add_executable(mqrt)
-  if(MINGW)
-    target_link_options(mqrt PRIVATE -Wl,--dynamicbase)
-  endif()
-  target_link_libraries(mqrt PUBLIC mqsim_vector_cpu)
-  force_at_least_cxx17_workaround(mqrt)
-  append_to_property(mq_install_targets GLOBAL mqrt)
-  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail/runtime)
+
+add_executable(mqrt)
+if(MINGW)
+  target_link_options(mqrt PRIVATE -Wl,--dynamicbase)
 endif()
-# ==============================================================================
-
-# add_library( mqsim_vector_cpu STATIC ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy.cpp
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy_zlike.cpp
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy_xlike.cpp
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy_single_ops.cpp
-# ${CMAKE_CURRENT_LIST_DIR}/vector/detail/cpu_vector_policy_gate_expec.cpp)
-
-# target_link_libraries(mqsim_vector_cpu PUBLIC mqsim_common intrin_flag_CXX)
-# force_at_least_cxx17_workaround(mqsim_vector_cpu) append_to_property(mq_install_targets GLOBAL mqsim_vector_cpu)
+target_link_libraries(mqrt PUBLIC mqsim_vector_cpu)
+force_at_least_cxx17_workaround(mqrt)
+append_to_property(mq_install_targets GLOBAL mqrt)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vector/detail/runtime)
 
 # ==============================================================================
 
@@ -89,13 +78,12 @@ endif()
 
 # ==============================================================================
 
-add_library(mqsim_mps_cpu INTERFACE)
-target_link_libraries(mqsim_mps_cpu INTERFACE mqsim_common mq_math intrin_flag_CXX LAPACK::LAPACK BLAS::BLAS)
-if(BLAS_SYMBOL_PREFIX)
-  target_compile_definitions(mqsim_mps_cpu INTERFACE BLAS_SYMBOL_PREFIX=${BLAS_SYMBOL_PREFIX})
+if(ENABLE_MPS)
+  add_library(mqsim_mps_cpu INTERFACE)
+  target_link_libraries(mqsim_mps_cpu INTERFACE mqsim_common mq_math intrin_flag_CXX OpenBLAS::OpenBLAS)
+  force_at_least_cxx17_workaround(mqsim_mps_cpu)
+  append_to_property(mq_install_targets GLOBAL mqsim_mps_cpu)
 endif()
-force_at_least_cxx17_workaround(mqsim_mps_cpu)
-append_to_property(mq_install_targets GLOBAL mqsim_mps_cpu)
 
 # ==============================================================================
 

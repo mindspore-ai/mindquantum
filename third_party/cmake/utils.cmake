@@ -1638,6 +1638,28 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
         endif()
       endif()
 
+      set(_cmake_args)
+      if(NOT _is_multi_config)
+        list(APPEND _cmake_args -DCMAKE_BUILD_TYPE=${_cmake_build_type})
+      endif()
+
+      # The nested build must target the same platform, and honour the same policy floor, as the host build.
+      foreach(
+        _var
+        CMAKE_TOOLCHAIN_FILE
+        CMAKE_SYSROOT
+        CMAKE_OSX_ARCHITECTURES
+        CMAKE_OSX_DEPLOYMENT_TARGET
+        CMAKE_OSX_SYSROOT
+        CMAKE_GENERATOR_PLATFORM
+        CMAKE_GENERATOR_TOOLSET
+        CMAKE_POLICY_VERSION_MINIMUM)
+        if(NOT "${${_var}}" STREQUAL "")
+          string(REPLACE ";" "\\;" _value "${${_var}}") # keep list values (e.g. universal binaries) as one argument
+          list(APPEND _cmake_args "-D${_var}=${_value}")
+        endif()
+      endforeach()
+
       if(${pkg_name}_LDFLAGS)
         if(${pkg_name}_USE_STATIC_LIBS)
           list(APPEND _cmake_args "-DBUILD_SHARED_LIBS=OFF")
@@ -1648,11 +1670,6 @@ Cannot specify either of <INSTALL_INCS> or <INSTALL_LIBS> with either of <INSTAL
       endif()
 
       string(REPLACE ";" "\\\\\;" _cmake_module_path "${CMAKE_MODULE_PATH}")
-
-      set(_cmake_args)
-      if(NOT _is_multi_config)
-        list(APPEND _cmake_args -DCMAKE_BUILD_TYPE=${_cmake_build_type})
-      endif()
 
       message(STATUS "Calling CMake configure for ${pkg_name}")
       __exec_cmd(

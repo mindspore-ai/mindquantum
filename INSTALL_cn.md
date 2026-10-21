@@ -96,7 +96,9 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 | DISABLE_FORTRAN_COMPILER        | 对于一些第三方库，强制禁止 Fortran 编译器                                    | ON                  |
 | ENABLE_CMAKE_DEBUG              | 启用详细输出来调试CMAKE                                                   | OFF                 |
 | ENABLE_CUDA                     | 启用使用CUDA代码                                                           | OFF                 |
+| ENABLE_ASCEND                   | 构建 Ascend 910B `mqvector_npu` 后端（需要 CANN）                          | OFF                 |
 | ENABLE_GITEE                    | 使用gitee代替github作为（某些）第三方依赖                                   | OFF                 |
+| ENABLE_MPS                      | 构建矩阵乘积态 `mqmps` 后端（需要 OpenBLAS）                                | ON                  |
 | ENABLE_MD                       | 编译时使用 /MD, /MDd 标志 (仅MSVC)                        | OFF                 |
 | ENABLE_MT                       | 编译时使用 /MT, /MTd 标志 (仅MSVC)                        | OFF                 |
 | ENABLE_PROFILING                | 启用编译分析标志                               | OFF                 |
@@ -123,6 +125,10 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 
 目前这仅在安装 Eigen3 时才有效果。
 
+#### `ENABLE_MPS`
+
+`mqmps` 后端链接 OpenBLAS（LP64，含 LAPACK）。构建脚本通过 `scipy-openblas32` wheel 提供它；直接使用 CMake 构建时，[`FindOpenBLAS`](cmake/Modules/FindOpenBLAS.cmake) 会查找系统安装（Homebrew、`libopenblas-dev`、Conda 等），并在配置阶段验证该库导出了所需的符号。传入 `-DENABLE_MPS=OFF` 可在没有 OpenBLAS 的环境中构建，此时 `mqmps` 不会出现在可用模拟器列表中。
+
 ### CMake 变量
 
 除上述CMAKE选项外，您还可以通过某些特殊的CMAKE变量来自定义构建。这些细节在下面描述。
@@ -133,6 +139,10 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 
 - 一个字符串（`all`）
 - 一个或多个Mindquantum的第三方依赖的CMAKE软件包名称，被逗号分隔的列表（例如 `gmp,eigen3`）
+
+#### `OpenBLAS_ROOT`、`OpenBLAS_LIBRARY`、`OpenBLAS_SYMBOL_PREFIX`
+
+控制 `ENABLE_MPS` 查找 OpenBLAS 的方式：`OpenBLAS_ROOT` 为要搜索的安装前缀，`OpenBLAS_LIBRARY` 为要链接的库文件，`OpenBLAS_SYMBOL_PREFIX` 为其导出符号的前缀（`scipy-openblas32` 为 `scipy_`，标准 OpenBLAS 为空）。构建脚本会通过环境变量 `MQ_OPENBLAS_LIB` 与 `MQ_OPENBLAS_SYMBOL_PREFIX` 从 `scipy-openblas32` wheel 设置后两者。
 
 列出的所有软件包将在CMAKE配置过程中本地编译。
 

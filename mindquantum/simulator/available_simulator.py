@@ -20,7 +20,7 @@ import os
 import typing
 import warnings
 
-from mindquantum import _mq_matrix, _mq_mps, _mq_stabilizer, _mq_vector, mqbackend
+from mindquantum import _mq_matrix, _mq_stabilizer, _mq_vector, mqbackend
 from mindquantum.dtype import complex64, complex128
 from mindquantum.simulator.backend_base import BackendBase
 from mindquantum.utils.error import SimNotAvailableError
@@ -29,8 +29,13 @@ GPU_DISABLED_REASON = None
 CUQUANTUM_DISABLED_REASON = None
 MQVECTOR_GPU_SUPPORTED = False
 MQVECTOR_CUQUANTUM_SUPPORTED = False
-# Discover the extension without importing it or initializing an NPU context.
+# Optional backends are build-time decisions (ENABLE_MPS, ENABLE_ASCEND): discover the extensions without importing
+# them, which for the NPU backend would also initialize a device context.
+MQMPS_SUPPORTED = importlib.util.find_spec('mindquantum._mq_mps') is not None
 MQVECTOR_NPU_SUPPORTED = importlib.util.find_spec('mindquantum._mq_vector_npu') is not None
+
+if MQMPS_SUPPORTED:
+    from mindquantum import _mq_mps  # pylint: disable=ungrouped-imports
 
 try:
     from mindquantum import _mq_vector_gpu
@@ -64,7 +69,6 @@ class _AvailableSimulator:
             'mqvector': _mq_vector,
             'mqmatrix': _mq_matrix,
             'stabilizer': _mq_stabilizer,
-            'mqmps': _mq_mps,
         }
         self.sims = {
             'mqvector': {
@@ -75,12 +79,14 @@ class _AvailableSimulator:
                 complex64: _mq_matrix.float,
                 complex128: _mq_matrix.double,
             },
-            'mqmps': {
-                complex64: _mq_mps.float,
-                complex128: _mq_mps.double,
-            },
             'stabilizer': _mq_stabilizer,
         }
+        if MQMPS_SUPPORTED:
+            self.base_module['mqmps'] = _mq_mps
+            self.sims['mqmps'] = {
+                complex64: _mq_mps.float,
+                complex128: _mq_mps.double,
+            }
         if MQVECTOR_NPU_SUPPORTED:
             # c_module resolves these lazy entries only on an explicit request.
             self.base_module['mqvector_npu'] = None

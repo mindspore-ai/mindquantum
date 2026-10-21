@@ -19,63 +19,29 @@
 
 #include <stdexcept>
 
-#if !defined(BLAS_SYMBOL_PREFIX)
-#define MQ_LINALG_THREADING_DEFINED_BLAS_SYMBOL_PREFIX
-#define BLAS_SYMBOL_PREFIX
-#endif
-
-#define MQ_LINALG_THREADING_CAT_IMPL(x, y) x##y
-#define MQ_LINALG_THREADING_CAT(x, y) MQ_LINALG_THREADING_CAT_IMPL(x, y)
-#define MQ_LINALG_THREADING_SYM(name) MQ_LINALG_THREADING_CAT(BLAS_SYMBOL_PREFIX, name)
+#include "simulator/mps/detail/linalg/symbol.h"
 
 namespace mindquantum::sim::mps::detail::linalg {
-namespace threading::detail {
-struct OpenBlasApi {
-    using get_fn = int (*)();
-    using set_fn = void (*)(int);
-
-    get_fn get;
-    set_fn set;
-};
-
 extern "C" {
-int MQ_LINALG_THREADING_SYM(openblas_get_num_threads)();
-void MQ_LINALG_THREADING_SYM(openblas_set_num_threads)(int);
+int MQ_LINALG_SYM(openblas_get_num_threads)();
+void MQ_LINALG_SYM(openblas_set_num_threads)(int);
 }  // extern "C"
 
-inline OpenBlasApi LoadOpenBlasApi() noexcept {
-    return OpenBlasApi{
-        &MQ_LINALG_THREADING_SYM(openblas_get_num_threads),
-        &MQ_LINALG_THREADING_SYM(openblas_set_num_threads),
-    };
-}
-
-inline const OpenBlasApi& OpenBlas() noexcept {
-    static const OpenBlasApi api = LoadOpenBlasApi();
-    return api;
-}
-}  // namespace threading::detail
-
+// Pins the OpenBLAS thread count for the lifetime of the object and restores the previous value afterwards. Used around
+// regions that already parallelise over independent BLAS calls, where OpenBLAS-internal threading would oversubscribe.
 class ScopedOpenBlasNumThreads {
  public:
-    explicit ScopedOpenBlasNumThreads(int num_threads) {
+    explicit ScopedOpenBlasNumThreads(int num_threads) : prev_threads_(MQ_LINALG_SYM(openblas_get_num_threads)()) {
         if (num_threads <= 0) {
             throw std::invalid_argument("mqmps: OpenBLAS thread count must be positive.");
         }
-        const auto& api = threading::detail::OpenBlas();
-        prev_threads_ = api.get();
-        restore_ = true;
         if (prev_threads_ != num_threads) {
-            api.set(num_threads);
+            MQ_LINALG_SYM(openblas_set_num_threads)(num_threads);
         }
     }
 
     ~ScopedOpenBlasNumThreads() {
-        if (!restore_) {
-            return;
-        }
-        const auto& api = threading::detail::OpenBlas();
-        api.set(prev_threads_);
+        MQ_LINALG_SYM(openblas_set_num_threads)(prev_threads_);
     }
 
     ScopedOpenBlasNumThreads(const ScopedOpenBlasNumThreads&) = delete;
@@ -84,17 +50,8 @@ class ScopedOpenBlasNumThreads {
     ScopedOpenBlasNumThreads& operator=(ScopedOpenBlasNumThreads&&) = delete;
 
  private:
-    int prev_threads_ = 1;
-    bool restore_ = false;
+    int prev_threads_;
 };
 }  // namespace mindquantum::sim::mps::detail::linalg
-
-#undef MQ_LINALG_THREADING_SYM
-#undef MQ_LINALG_THREADING_CAT
-#undef MQ_LINALG_THREADING_CAT_IMPL
-#ifdef MQ_LINALG_THREADING_DEFINED_BLAS_SYMBOL_PREFIX
-#undef MQ_LINALG_THREADING_DEFINED_BLAS_SYMBOL_PREFIX
-#undef BLAS_SYMBOL_PREFIX
-#endif
 
 #endif  // INCLUDE_SIMULATOR_MPS_DETAIL_LINALG_THREADING_HPP

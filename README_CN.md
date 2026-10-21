@@ -193,7 +193,7 @@ pip install mindquantum
 
 2. 编译MindQuantum
 
-    **Linux系统**下请确保安装好CMake >= 3.18.3，然后运行如下命令：
+    **Linux系统**下请确保安装好CMake >= 3.20，然后运行如下命令：
 
     ```bash
     cd ~/mindquantum
@@ -207,14 +207,14 @@ pip install mindquantum
     bash build.sh --gitee --gpu
     ```
 
-    **Windows系统**下请确保安装好MinGW-W64和CMake >= 3.18.3，然后运行如下命令：
+    **Windows系统**下请确保安装好MinGW-W64和CMake >= 3.20，然后运行如下命令：
 
     ```bash
     cd ~/mindquantum
     ./build.bat /Gitee
     ```
 
-    **Mac系统**下请确保安装好openmp和CMake >= 3.18.3，然后运行如下命令：
+    **Mac系统**下请确保安装好openmp和CMake >= 3.20，然后运行如下命令：
 
     ```bash
     cd ~/mindquantum

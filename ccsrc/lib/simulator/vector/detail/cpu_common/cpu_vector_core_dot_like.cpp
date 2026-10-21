@@ -19,13 +19,7 @@
 #include "core/sparse/algo.h"
 #include "math/pr/parameter_resolver.h"
 #include "simulator/utils.h"
-#ifdef __x86_64__
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
-#elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
-#endif
+#include "simulator/vector/detail/cpu_vector_arch_policy.h"
 #include "simulator/vector/detail/cpu_vector_policy.h"
 
 namespace mindquantum::sim::vector::detail {
@@ -224,11 +218,6 @@ auto CPUVectorPolicyBase<derived_, calc_type_>::ExpectationOfCsr(
     return res;
 }
 
-#ifdef __x86_64__
-template struct CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float>;
-template struct CPUVectorPolicyBase<CPUVectorPolicyAvxDouble, double>;
-#elif defined(__amd64)
-template struct CPUVectorPolicyBase<CPUVectorPolicyArmFloat, float>;
-template struct CPUVectorPolicyBase<CPUVectorPolicyArmDouble, double>;
-#endif
+template struct CPUVectorPolicyBase<CPUVectorPolicyFloat, float>;
+template struct CPUVectorPolicyBase<CPUVectorPolicyDouble, double>;
 }  // namespace mindquantum::sim::vector::detail

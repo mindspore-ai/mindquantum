@@ -72,7 +72,12 @@ option(ENABLE_CUDA "Enable building of CUDA libraries" _enable_cuda_init)
 cmake_dependent_option(ENABLE_CUQUANTUM "Enable the cuQuantum-backed CUDA simulator backend" OFF "ENABLE_CUDA" OFF)
 option(CUDA_ALLOW_UNSUPPORTED_COMPILER "Allow the use of an unsupported compiler version" OFF)
 option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (also applies to nvc++)" OFF)
+
+# ==============================================================================
+# Optional simulator backends
+
 option(ENABLE_ASCEND "Build the Ascend 910B statevector backend (requires CANN)" OFF)
+option(ENABLE_MPS "Build the matrix product state backend `mqmps` (requires OpenBLAS)" ON)
 
 # ==============================================================================
 # Compilation options

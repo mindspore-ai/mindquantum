@@ -16,17 +16,20 @@
 #
 # ==============================================================================
 
-set(VER 2.10.0)
+# Single source of truth for the pybind11 version: mindquantum_add_pkg() accepts an installed pybind11 only if it is at
+# least VER and otherwise builds VER itself, so VER is both the floor and the fallback. The pyproject.toml build
+# requirement mirrors it so that pip fails at resolution time instead of CMake rejecting what pip installed.
+set(VER 3.1.0)
 
 if(DEFINED ENV{CODEHUB_CI} AND "$ENV{CODEHUB_CI}" STREQUAL "1")
   set(REQ_URL "$ENV{CODEHUB_PKG_URL}/pybind11-${VER}.tar.gz")
-  set(MD5 "da561ebf81594930d368a9f9aae0d035")
+  set(MD5 "235664b4673257b80a9ab79f9b208e94")
 elseif(ENABLE_GITEE)
   set(REQ_URL "https://gitee.com/mirrors/pybind11/repository/archive/v${VER}.tar.gz")
-  set(MD5 "77c55946fb1faa1a3f038b02464b702d")
+  set(MD5 "6e44623bd16e8a2628f11c49943c0842")
 else()
   set(REQ_URL "https://github.com/pybind/pybind11/archive/v${VER}.tar.gz")
-  set(MD5 "da561ebf81594930d368a9f9aae0d035")
+  set(MD5 "235664b4673257b80a9ab79f9b208e94")
 endif()
 
 set(CMAKE_OPTION -DPYBIND11_TEST=OFF)

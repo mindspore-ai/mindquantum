@@ -205,112 +205,54 @@ find_package(Python 3.7.0 COMPONENTS Interpreter Development.Module)
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
-# BLAS/LAPACK (required for mqmps)
+# OpenBLAS (mqmps backend)
 
-# Enforce LP64 BLAS/LAPACK integers (32-bit Fortran INTEGER).
-set(BLA_SIZEOF_INTEGER 4)
-
-set(_mq_env_openblas_lib "$ENV{MQ_OPENBLAS_LIB}")
-set(_mq_env_openblas_symbol_prefix "$ENV{MQ_OPENBLAS_SYMBOL_PREFIX}")
-
-if(NOT MQ_BLAS_LIBRARIES AND NOT "${_mq_env_openblas_lib}" STREQUAL "")
-  set(MQ_BLAS_LIBRARIES "${_mq_env_openblas_lib}")
-endif()
-if(NOT MQ_LAPACK_LIBRARIES AND NOT "${_mq_env_openblas_lib}" STREQUAL "")
-  set(MQ_LAPACK_LIBRARIES "${_mq_env_openblas_lib}")
-endif()
-if(NOT BLAS_SYMBOL_PREFIX AND NOT "${_mq_env_openblas_symbol_prefix}" STREQUAL "")
-  set(BLAS_SYMBOL_PREFIX
-      "${_mq_env_openblas_symbol_prefix}"
-      CACHE STRING "Optional prefix for BLAS/LAPACK Fortran symbol names")
-endif()
-if(NOT BLAS_SYMBOL_PREFIX AND MQ_BLAS_LIBRARIES MATCHES "scipy_openblas32")
-  set(BLAS_SYMBOL_PREFIX
-      "scipy_"
-      CACHE STRING "Optional prefix for BLAS/LAPACK Fortran symbol names")
+if(ENABLE_MPS)
+  find_package(OpenBLAS REQUIRED)
 endif()
 
-set(MQ_BLAS_LIBRARIES
-    "${MQ_BLAS_LIBRARIES}"
-    CACHE STRING "Optional explicit BLAS library list used to bypass FindBLAS")
-set(MQ_LAPACK_LIBRARIES
-    "${MQ_LAPACK_LIBRARIES}"
-    CACHE STRING "Optional explicit LAPACK library list used to bypass FindLAPACK")
-
-if(MQ_BLAS_LIBRARIES)
-  set(BLAS_LIBRARIES "${MQ_BLAS_LIBRARIES}")
-  if(MQ_LAPACK_LIBRARIES)
-    set(LAPACK_LIBRARIES "${MQ_LAPACK_LIBRARIES}")
-  else()
-    set(LAPACK_LIBRARIES "${BLAS_LIBRARIES}")
-  endif()
-
-  if(NOT TARGET BLAS::BLAS)
-    add_library(BLAS::BLAS INTERFACE IMPORTED)
-  endif()
-  set_property(TARGET BLAS::BLAS PROPERTY INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
-
-  if(NOT TARGET LAPACK::LAPACK)
-    add_library(LAPACK::LAPACK INTERFACE IMPORTED)
-  endif()
-  set_property(TARGET LAPACK::LAPACK PROPERTY INTERFACE_LINK_LIBRARIES "${LAPACK_LIBRARIES}")
-
-  set(BLAS_FOUND TRUE)
-  set(LAPACK_FOUND TRUE)
-else()
-  find_package(BLAS REQUIRED)
-  find_package(LAPACK REQUIRED)
-endif()
+# ==============================================================================
+# Python package layout
 
 # Check if we are being used directly or via add_subdirectory()
 if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
-  if(NOT MQ_PYTHON_PACKAGE_NAME)
-    execute_process(
-      COMMAND "${Python_EXECUTABLE}" setup.py --name
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-      RESULT_VARIABLE result
-      OUTPUT_VARIABLE MQ_PYTHON_PACKAGE_NAME
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    if(NOT result EQUAL 0)
-      message(FATAL_ERROR "Unable to determine MindQuantum's Python package name")
-    endif()
-
-    set(MQ_PYTHON_PACKAGE_NAME
-        "${MQ_PYTHON_PACKAGE_NAME}"
-        CACHE STRING "MindQuantum's Python package name")
-    mark_as_advanced(MQ_PYTHON_PACKAGE_NAME)
-  endif()
+  # setup.py passes the name it was given; a direct CMake build uses the project's canonical package name.
+  set(MQ_PYTHON_PACKAGE_NAME
+      "mindquantum"
+      CACHE STRING "MindQuantum's Python package name")
+  mark_as_advanced(MQ_PYTHON_PACKAGE_NAME)
   debug_print(STATUS "Python package name: ${MQ_PYTHON_PACKAGE_NAME}")
 
   # ----------------------------------------------------------------------------
 
   if(NOT MQ_INSTALL_PYTHONDIR)
+    # Standard layout of a Python installation prefix (`lib/pythonX.Y/site-packages`, `Lib/site-packages`), relative to
+    # CMAKE_INSTALL_PREFIX. This is a property of the platform scheme, not of how the configuring interpreter happens to
+    # be laid out (framework builds, distribution-specific schemes, ...).
     execute_process(
       COMMAND
         "${Python_EXECUTABLE}" -c [=[
-import sys
+import os
 import sysconfig
-from pathlib import Path
 
-platlib = Path(sysconfig.get_path("platlib"))
-platbase = Path(sysconfig.get_config_var("platbase") or sysconfig.get_config_var("base"))
-
-sys.stdout.write(str(platlib.relative_to(platbase)))
+scheme = "nt" if os.name == "nt" else "posix_prefix"
+no_prefix = dict.fromkeys(("base", "platbase", "installed_base", "installed_platbase"), "")
+print(sysconfig.get_path("platlib", scheme, vars=no_prefix).lstrip("\\/"), end="")
 ]=]
       RESULT_VARIABLE result
       OUTPUT_VARIABLE MQ_INSTALL_PYTHONDIR)
 
     if(NOT result EQUAL 0)
-      message(FATAL_ERROR "Unable to determine Python path to site-packages sub-directory")
+      message(FATAL_ERROR "Unable to determine the site-packages directory relative to the installation prefix")
     endif()
 
+    file(TO_CMAKE_PATH "${MQ_INSTALL_PYTHONDIR}" MQ_INSTALL_PYTHONDIR)
     set(MQ_INSTALL_PYTHONDIR
         "${MQ_INSTALL_PYTHONDIR}"
-        CACHE FILEPATH "Python path to site-packages sub-directory")
+        CACHE FILEPATH "Python site-packages directory relative to the installation prefix")
     mark_as_advanced(MQ_INSTALL_PYTHONDIR)
   endif()
-  debug_print(STATUS "Python path to site-packages sub-directory: ${MQ_INSTALL_PYTHONDIR}")
+  debug_print(STATUS "Python site-packages directory: ${MQ_INSTALL_PYTHONDIR}")
 
   GNUInstallDirs_get_absolute_install_dir(MQ_INSTALL_FULL_PYTHONDIR MQ_INSTALL_PYTHONDIR PYTHONDIR)
 endif()

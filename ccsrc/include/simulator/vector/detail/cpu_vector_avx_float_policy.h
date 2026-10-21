@@ -15,9 +15,15 @@
  */
 #ifndef INCLUDE_VECTOR_DETAIL_CPU_VECTOR_AVX_FLOAT_POLICY_HPP
 #define INCLUDE_VECTOR_DETAIL_CPU_VECTOR_AVX_FLOAT_POLICY_HPP
+#include <string_view>
+
 #include "simulator/vector/detail/cpu_vector_policy.h"
 
 namespace mindquantum::sim::vector::detail {
-struct CPUVectorPolicyAvxFloat : public CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float> {};
+struct CPUVectorPolicyAvxFloat : public CPUVectorPolicyBase<CPUVectorPolicyAvxFloat, float> {
+    [[nodiscard]] static constexpr auto GetBackendName() noexcept -> std::string_view {
+        return "x86-avx2";
+    }
+};
 }  // namespace mindquantum::sim::vector::detail
 #endif

@@ -48,13 +48,14 @@ endif()
 
 # ------------------------------------------------------------------------------
 
-# lint_cmake: -whitespace/indent
+if(ENABLE_MPS)
+  pybind11_add_module(_mq_mps MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_mps.cpp
+                      OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
 
-pybind11_add_module(_mq_mps MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_mps.cpp OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
-
-target_include_directories(_mq_mps PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
-force_at_least_cxx17_workaround(_mq_mps)
-target_link_libraries(_mq_mps PUBLIC mq_python_core mqsim_mps_cpu)
+  target_include_directories(_mq_mps PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
+  force_at_least_cxx17_workaround(_mq_mps)
+  target_link_libraries(_mq_mps PUBLIC mq_python_core mqsim_mps_cpu)
+endif()
 
 # ------------------------------------------------------------------------------
 

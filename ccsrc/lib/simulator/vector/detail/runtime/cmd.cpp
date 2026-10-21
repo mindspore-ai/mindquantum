@@ -26,7 +26,7 @@
 #include "ops/basic_gate.h"
 #include "ops/gate_id.h"
 #include "ops/gates.h"
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
+#include "simulator/vector/detail/cpu_vector_arch_policy.h"
 #include "simulator/vector/runtime/rt_gate.h"
 #include "simulator/vector/runtime/utils.h"
 #include "simulator/vector/vector_state.h"
@@ -190,7 +190,7 @@ int cmd(const std::vector<std::string> &args) {
             continue;
         }
     }
-    auto sim = vector::detail::VectorState<vector::detail::CPUVectorPolicyAvxDouble>(n_qubits, seed);
+    auto sim = vector::detail::VectorState<vector::detail::CPUVectorPolicyDouble>(n_qubits, seed);
     if (key_map.size() == 0) {
         throw std::runtime_error("No measure gate implement.");
     }
