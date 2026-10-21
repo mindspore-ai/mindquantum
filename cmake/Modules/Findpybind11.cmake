@@ -110,6 +110,8 @@ if(NOT _pybind11_already_found)
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   if(_is_virtualenv)
+    # Candidates inside the virtualenv, each tried in turn: pybind11-global, then the pybind11 module. A candidate that
+    # exists but does not satisfy the requested version simply yields to the next one.
     _pybind11_message(CHECK_START "Looking for pybind11-global in virtualenv")
 
     execute_process(
@@ -119,6 +121,9 @@ if(NOT _pybind11_already_found)
     to_cmake_path(pybind11_DIR)
 
     if(EXISTS "${pybind11_DIR}")
+      find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG QUIET NO_DEFAULT_PATH)
+    endif()
+    if(pybind11_FOUND)
       _pybind11_message(CHECK_PASS "Found")
     else()
       _pybind11_message(CHECK_FAIL "Not-found")
@@ -132,12 +137,11 @@ if(NOT _pybind11_already_found)
           OUTPUT_VARIABLE pybind11_DIR
           OUTPUT_STRIP_TRAILING_WHITESPACE)
         to_cmake_path(pybind11_DIR)
+        find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG QUIET NO_DEFAULT_PATH)
       else()
         _pybind11_message(CHECK_FAIL "Not-found")
       endif()
     endif()
-
-    find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG QUIET NO_DEFAULT_PATH)
   endif()
 
   # ------------------------------------------------------------------------------
@@ -274,9 +278,13 @@ endif()
 
 # ==============================================================================
 
-set(_pybind11_already_found
-    ON
-    CACHE INTERNAL "Findpybind11 was already run once" FORCE)
+# Remember a successful lookup only: after a failure every configure run must probe again, since the environment may
+# have gained a pybind11 in the meantime.
+if(pybind11_FOUND)
+  set(_pybind11_already_found
+      ON
+      CACHE INTERNAL "Findpybind11 located pybind11 in a previous configure run" FORCE)
+endif()
 set(pybind11_DIR
     "${pybind11_DIR}"
     CACHE INTERNAL "" FORCE)

@@ -137,6 +137,8 @@ This currently only has an effect when installing Eigen3.
 
 The `mqmps` backend links against OpenBLAS (LP64, with LAPACK). The build scripts provide it from the `scipy-openblas32` wheel; a direct CMake build locates a system installation (Homebrew, `libopenblas-dev`, Conda, ...) through [`FindOpenBLAS`](cmake/Modules/FindOpenBLAS.cmake), which also verifies at configure time that the library exports the required symbols. Pass `-DENABLE_MPS=OFF` to build without OpenBLAS; `mqmps` is then simply absent from the available simulators.
 
+The exported `mindquantum::mqsim_mps_cpu` target is header-only, so a downstream project consuming it through `find_package(mindquantum)` compiles the MPS kernels against *its own* OpenBLAS: the same lookup (and the same `OpenBLAS_*` variables below) applies in that project.
+
 ### CMake variables
 
 In addition to the above CMake options, you may pass certain special CMake variables in order to customize your build. These are described below in more details.

@@ -523,7 +523,7 @@ ext_modules = [
     CMakeExtension(pymod='mindquantum._qaia_sb', optional=True),
     CMakeExtension(pymod='mindquantum._mq_stabilizer'),
     CMakeExtension(pymod='mindquantum._mq_chem'),
-    CMakeExtension(pymod='mindquantum._mq_mps'),
+    CMakeExtension(pymod='mindquantum._mq_mps', optional=True),  # built only when ENABLE_MPS=ON
 ]
 
 

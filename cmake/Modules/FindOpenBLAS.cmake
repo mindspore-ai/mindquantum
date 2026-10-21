@@ -62,19 +62,28 @@ include(FindPackageHandleStandardArgs)
 # ------------------------------------------------------------------------------
 # Library and symbol prefix
 
-if(DEFINED ENV{MQ_OPENBLAS_LIB})
+set(_OpenBLAS_prefix_doc "Prefix of the symbols exported by the OpenBLAS build (e.g. scipy_)")
+
+# A library that was not found, or an explicitly empty value, leaves nothing to reuse: drop it so that the lookup below
+# runs again instead of being short-circuited by the stale entry.
+if(NOT OpenBLAS_LIBRARY)
+  unset(OpenBLAS_LIBRARY CACHE)
+endif()
+
+# The build scripts hand over the scipy-openblas32 artifact through MQ_OPENBLAS_LIB / MQ_OPENBLAS_SYMBOL_PREFIX. The
+# environment describes one artifact, so both values are taken together, and only while no library is set: an explicit
+# OpenBLAS_LIBRARY is never overridden. An empty variable counts as unset.
+if(NOT OpenBLAS_LIBRARY AND NOT "$ENV{MQ_OPENBLAS_LIB}" STREQUAL "")
   set(OpenBLAS_LIBRARY
       "$ENV{MQ_OPENBLAS_LIB}"
       CACHE FILEPATH "OpenBLAS library")
-endif()
-
-set(_OpenBLAS_default_prefix "")
-if(DEFINED ENV{MQ_OPENBLAS_SYMBOL_PREFIX})
-  set(_OpenBLAS_default_prefix "$ENV{MQ_OPENBLAS_SYMBOL_PREFIX}")
+  set(OpenBLAS_SYMBOL_PREFIX
+      "$ENV{MQ_OPENBLAS_SYMBOL_PREFIX}"
+      CACHE STRING "${_OpenBLAS_prefix_doc}" FORCE)
 endif()
 set(OpenBLAS_SYMBOL_PREFIX
-    "${_OpenBLAS_default_prefix}"
-    CACHE STRING "Prefix of the symbols exported by the OpenBLAS build (e.g. scipy_)")
+    ""
+    CACHE STRING "${_OpenBLAS_prefix_doc}")
 
 # Homebrew installs OpenBLAS keg-only, so it never appears on the default search path.
 set(_OpenBLAS_hints)
@@ -106,11 +115,18 @@ mark_as_advanced(OpenBLAS_LIBRARY OpenBLAS_SYMBOL_PREFIX)
 # declared with a dummy signature (the same technique as CMake's own CheckLibraryExists).
 
 set(_OpenBLAS_required_symbols openblas_get_num_threads openblas_set_num_threads cgemm_ zgemm_ cgesvd_ zgesvd_)
-set(_OpenBLAS_required_vars OpenBLAS_LIBRARY)
+set(_OpenBLAS_vars OpenBLAS_LIBRARY)
 set(_OpenBLAS_reason "Set OpenBLAS_ROOT to an OpenBLAS installation prefix or OpenBLAS_LIBRARY to the library file, \
 or configure with -DENABLE_MPS=OFF to skip the mqmps backend.")
 
-if(OpenBLAS_LIBRARY)
+if(OpenBLAS_LIBRARY AND NOT EXISTS "${OpenBLAS_LIBRARY}")
+  # A path that no longer exists (typically a recreated virtualenv) or a typo: report that rather than a failed link
+  # test.
+  set(OpenBLAS_HAS_REQUIRED_API FALSE)
+  list(APPEND _OpenBLAS_vars OpenBLAS_HAS_REQUIRED_API)
+  set(_OpenBLAS_reason "${OpenBLAS_LIBRARY} does not exist. Point OpenBLAS_LIBRARY at the library file, or unset it \
+to search again.")
+elseif(OpenBLAS_LIBRARY)
   # Re-run the check whenever its inputs change instead of trusting a stale cached result.
   set(_OpenBLAS_check_inputs "${OpenBLAS_LIBRARY};${OpenBLAS_SYMBOL_PREFIX}")
   if(NOT "${OpenBLAS_API_CHECK_INPUTS}" STREQUAL "${_OpenBLAS_check_inputs}")
@@ -133,7 +149,7 @@ if(OpenBLAS_LIBRARY)
                             OpenBLAS_HAS_REQUIRED_API)
   cmake_pop_check_state()
 
-  list(APPEND _OpenBLAS_required_vars OpenBLAS_HAS_REQUIRED_API)
+  list(APPEND _OpenBLAS_vars OpenBLAS_HAS_REQUIRED_API)
   if(NOT OpenBLAS_HAS_REQUIRED_API)
     string(REPLACE ";" ", " _OpenBLAS_symbol_list "${_OpenBLAS_required_symbols}")
     set(_OpenBLAS_reason
@@ -144,8 +160,7 @@ OpenBLAS_SYMBOL_PREFIX if its symbols are prefixed (scipy-openblas32 uses 'scipy
   endif()
 endif()
 
-find_package_handle_standard_args(OpenBLAS REQUIRED_VARS ${_OpenBLAS_required_vars} REASON_FAILURE_MESSAGE
-                                                         "${_OpenBLAS_reason}")
+find_package_handle_standard_args(OpenBLAS REQUIRED_VARS ${_OpenBLAS_vars} REASON_FAILURE_MESSAGE "${_OpenBLAS_reason}")
 
 # ------------------------------------------------------------------------------
 # Imported target
@@ -159,12 +174,12 @@ if(OpenBLAS_FOUND AND NOT TARGET OpenBLAS::OpenBLAS)
   endif()
 endif()
 
-unset(_OpenBLAS_default_prefix)
+unset(_OpenBLAS_prefix_doc)
 unset(_OpenBLAS_hints)
 unset(_OpenBLAS_brew_result)
 unset(_OpenBLAS_brew_prefix)
 unset(_OpenBLAS_required_symbols)
-unset(_OpenBLAS_required_vars)
+unset(_OpenBLAS_vars)
 unset(_OpenBLAS_reason)
 unset(_OpenBLAS_check_inputs)
 unset(_OpenBLAS_decls)

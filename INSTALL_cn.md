@@ -129,6 +129,8 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 
 `mqmps` 后端链接 OpenBLAS（LP64，含 LAPACK）。构建脚本通过 `scipy-openblas32` wheel 提供它；直接使用 CMake 构建时，[`FindOpenBLAS`](cmake/Modules/FindOpenBLAS.cmake) 会查找系统安装（Homebrew、`libopenblas-dev`、Conda 等），并在配置阶段验证该库导出了所需的符号。传入 `-DENABLE_MPS=OFF` 可在没有 OpenBLAS 的环境中构建，此时 `mqmps` 不会出现在可用模拟器列表中。
 
+导出的 `mindquantum::mqsim_mps_cpu` 目标是纯头文件库：下游项目通过 `find_package(mindquantum)` 使用它时，MPS 内核会针对下游自己找到的 OpenBLAS 编译，因此同样的查找过程（及下文的 `OpenBLAS_*` 变量）在该项目中同样适用。
+
 ### CMake 变量
 
 除上述CMAKE选项外，您还可以通过某些特殊的CMAKE变量来自定义构建。这些细节在下面描述。

@@ -31,17 +31,20 @@ void MQ_LINALG_SYM(openblas_set_num_threads)(int);
 // regions that already parallelise over independent BLAS calls, where OpenBLAS-internal threading would oversubscribe.
 class ScopedOpenBlasNumThreads {
  public:
-    explicit ScopedOpenBlasNumThreads(int num_threads) : prev_threads_(MQ_LINALG_SYM(openblas_get_num_threads)()) {
+    explicit ScopedOpenBlasNumThreads(int num_threads)
+        : prev_threads_(MQ_LINALG_SYM(openblas_get_num_threads)()), changed_(prev_threads_ != num_threads) {
         if (num_threads <= 0) {
             throw std::invalid_argument("mqmps: OpenBLAS thread count must be positive.");
         }
-        if (prev_threads_ != num_threads) {
+        if (changed_) {
             MQ_LINALG_SYM(openblas_set_num_threads)(num_threads);
         }
     }
 
     ~ScopedOpenBlasNumThreads() {
-        MQ_LINALG_SYM(openblas_set_num_threads)(prev_threads_);
+        if (changed_) {
+            MQ_LINALG_SYM(openblas_set_num_threads)(prev_threads_);
+        }
     }
 
     ScopedOpenBlasNumThreads(const ScopedOpenBlasNumThreads&) = delete;
@@ -51,6 +54,7 @@ class ScopedOpenBlasNumThreads {
 
  private:
     int prev_threads_;
+    bool changed_;
 };
 }  // namespace mindquantum::sim::mps::detail::linalg
 

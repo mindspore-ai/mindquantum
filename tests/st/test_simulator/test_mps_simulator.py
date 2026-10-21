@@ -23,6 +23,10 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import Givens, H, Measure, RX, Rxx, Rxy, Rxz, Ryy, Ryz, RY, RZ, Rzz, SWAPalpha, X
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
+from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
+
+if "mqmps" not in SUPPORTED_SIMULATOR.sims:
+    pytest.skip("mqmps backend is not available in this build.", allow_module_level=True)
 
 
 def _assert_statevector_close_up_to_global_phase(a: np.ndarray, b: np.ndarray, *, atol: float = 1e-8):
