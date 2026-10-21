@@ -89,7 +89,6 @@ class GradientPlan {
  public:
     using Result = std::vector<std::vector<std::vector<std::complex<double>>>>;
     GradientPlan(const State& owner, const std::vector<Hamiltonian<float>>& hams,
-                 const std::vector<Hamiltonian<float>>& hams_dagger,
                  const std::vector<std::shared_ptr<BasicGate>>& right_gates,
                  const std::vector<std::shared_ptr<BasicGate>>& left_gates,
                  const std::vector<std::string>& parameter_names, bool hermitian, unsigned tile_qubits = 12,

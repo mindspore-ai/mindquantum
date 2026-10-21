@@ -128,6 +128,7 @@ static_assert(sizeof(DensityLayout) == 64, "Ascend reduced-density layout ABI mi
 class ObservableProgram {
  public:
     static ObservableProgram Compile(const Hamiltonian<float>& hamiltonian, int64_t n_qubits);
+    ObservableProgram Dagger() const;
 
     const ObservableLayout& layout() const {
         return layout_;
@@ -155,6 +156,8 @@ class ObservableProgram {
     }
 
  private:
+    static ObservableProgram CompileCsr(const Hamiltonian<float>& hamiltonian, ObservableLayout layout);
+    static ObservableProgram CompilePauli(const Hamiltonian<float>& hamiltonian, ObservableLayout layout);
     ObservableProgram(ObservableLayout layout, std::vector<ObservableGroup> groups, std::vector<ObservableTerm> terms,
                       std::vector<uint32_t> gather_indices, std::vector<float> signs, std::vector<uint64_t> row_offsets,
                       std::vector<uint64_t> columns, std::vector<ObservableValue> values);

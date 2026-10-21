@@ -15,6 +15,8 @@
 
 #include <cstdint>
 #include <memory>
+#include <set>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -36,11 +38,12 @@ struct TileProgram {
 };
 
 struct DenseLayout {
+    // Read through shared layouts by operator synthesis and Cube placement.
+    // Cppcheck 1.90 cannot follow those cross-translation-unit accesses.
     uint32_t dimension;
     DensePacket packet;
     std::vector<uint64_t> offsets;
     std::vector<uint32_t> indices;
-    std::vector<uint32_t> inverse_indices;
 };
 
 struct DenseProgram {
@@ -69,7 +72,6 @@ struct DenseAdjointProgram {
 
 struct AdjointProgram {
     qbit_t n_qubits;
-    uint32_t output_size;
     // Name -> zero-based parameter column. Device output 0 is the overlap;
     // a parameter's device output is 1 + parameter_map.at(name).
     MST<size_t> parameter_map;
@@ -80,49 +82,39 @@ struct AdjointProgram {
 // Shared validation for gate expressions, binding inputs and complete gradient
 // batches. Never let a native entry point silently discard imaginary values.
 void ValidateResolver(const parameter::ParameterResolver& resolver);
+void ValidateConfiguration(qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits);
 
-// Own deep snapshots of the gates/PRs/matrices. Compile topology, layout and
-// pure constant blocks once. Binding owns only parameter-dependent payloads;
-// all other storage is shared and immutable, including across evaluations.
+// One scheduling/binding implementation for both directions. Plans own their
+// gate snapshots and fold constant blocks once; Bind returns a complete program.
+// An adjoint can share a forward plan's validated input without copying gates.
 // Custom callback code must outlive the plan (as for the source CustomGate).
-// Constants exposes only compile-time data for device placement: dynamic
-// Vector slots are null, dynamic Cube slots have a layout but no coefficients.
-// It is NOT an executable and never evaluates gates with dummy parameters.
-class ForwardPlan {
+template <typename program_t>
+class CircuitPlan {
  public:
-    ForwardPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits, unsigned tile_qubits,
+    // Always pass the original forward circuit. Adjoint scheduling reverses
+    // it internally, caps UB width at 11, and preserves layout across blocks.
+    CircuitPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits, unsigned tile_qubits,
+                unsigned fusion_qubits, unsigned cube_min_gates, const MST<size_t>& parameter_map = {});
+    CircuitPlan(const CircuitPlan<Program>& forward, const MST<size_t>& parameter_map, unsigned tile_qubits,
                 unsigned fusion_qubits, unsigned cube_min_gates);
-    Program Bind(const parameter::ParameterResolver& parameters) const;
-    const Program& Constants() const;
+    program_t Bind(const parameter::ParameterResolver& parameters) const;
+    const std::set<std::string>& Parameters() const;
+    const std::set<std::string>& GradientParameters() const;
 
  private:
+    template <typename>
+    friend class CircuitPlan;
     struct Impl;
     std::shared_ptr<const Impl> impl_;
 };
 
-class AdjointPlan {
- public:
-    // Pass the ORIGINAL FORWARD circuit, not its dagger/reversal. Internally
-    // it is reversed and lowered using Builder::AdjointGates::Reversed.
-    // Requests up to 12 tile bits are accepted; adjoint UB width is capped at
-    // 11 bits and fusion capacity at width-3 for aligned low-bit DMA.
-    AdjointPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, const MST<size_t>& parameter_map,
-                qbit_t n_qubits, unsigned tile_qubits = 11, unsigned fusion_qubits = 8, unsigned cube_min_gates = 4);
-    AdjointProgram Bind(const parameter::ParameterResolver& parameters) const;
-    const AdjointProgram& Constants() const;
-
- private:
-    struct Impl;
-    std::shared_ptr<const Impl> impl_;
-};
+using ForwardPlan = CircuitPlan<Program>;
+using AdjointPlan = CircuitPlan<AdjointProgram>;
 
 // Pure compilation: validate the entire circuit and snapshot all parameters
 // before any device allocation or state mutation. No backend-specific gate math.
 Program Compile(const std::vector<std::shared_ptr<BasicGate>>& circuit, const parameter::ParameterResolver& parameters,
                 qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates);
-AdjointProgram CompileAdjoint(const std::vector<std::shared_ptr<BasicGate>>& circuit,
-                              const parameter::ParameterResolver& parameters, const MST<size_t>& parameter_map,
-                              qbit_t n_qubits, unsigned tile_qubits = 11, unsigned fusion_qubits = 8);
 
 // Direct apply_gate(diff=True): dU/d(intrinsic angle), NOT a Jacobian-weighted
 // parameter gradient. Builder validates exactly one intrinsic parameter, even

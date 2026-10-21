@@ -108,13 +108,14 @@ def _uncached_hamiltonian(ham):
 def _shift_rule(gate, intrinsic, two_sided):
     """Exact Fourier shift rules, including the extra controlled-rotation frequency."""
     rotations = (G.RX, G.RY, G.RZ, G.Rxx, G.Ryy, G.Rzz, G.Rxy, G.Rxz, G.Ryz, G.RotPauliString)
-    if type(gate) in rotations or (type(gate) is G.U3 and intrinsic == 0):
+    gate_type = type(gate)  # A subclass may implement a different Fourier spectrum.
+    if gate_type in rotations or (gate_type is G.U3 and intrinsic == 0):
         frequencies = [0.5, 1.0] if two_sided and gate.ctrl_qubits else [1.0 if two_sided else 0.5]
-    elif type(gate) is G.Givens or (type(gate) is G.FSim and intrinsic == 0):
+    elif gate_type is G.Givens or (gate_type is G.FSim and intrinsic == 0):
         frequencies = [1.0, 2.0] if two_sided else [1.0]
-    elif type(gate) is G.SWAPalpha:
+    elif gate_type is G.SWAPalpha:
         frequencies = [np.pi]
-    elif type(gate) in (G.PhaseShift, G.GlobalPhase, G.U3, G.FSim):
+    elif gate_type in (G.PhaseShift, G.GlobalPhase, G.U3, G.FSim):
         frequencies = [1.0]
     else:
         raise NotImplementedError(
@@ -125,6 +126,32 @@ def _shift_rule(gate, intrinsic, two_sided):
     shifts = (2 * np.arange(len(frequencies)) + 1) * np.pi / (2 * frequencies[-1])
     weights = np.linalg.solve(2 * np.sin(frequencies[:, None] * shifts), frequencies)
     return list(zip(shifts, weights))
+
+
+def _gradient_parameters(inputs, encoders, ansatz):
+    """Validate the complete batch before binding any circuit or launching device work."""
+    both = bool(encoders and ansatz)
+    if len(inputs) != (2 if both else 1):
+        raise ValueError(f'Need {2 if both else 1} input arrays.')
+    arrays = [_real_finite(value, 'Gradient inputs') for value in inputs]
+    encoder = arrays[0] if encoders else np.empty((1, 0))
+    if encoder.ndim == 1:
+        encoder = encoder[None, :]
+    weights = arrays[-1] if ansatz or not encoders else np.empty(0)
+    _check_encoder(encoder, len(encoders))
+    _check_ansatz(weights, len(ansatz))
+    if encoder.shape[0] == 0:
+        raise ValueError('Encoder batch cannot be empty.')
+    return [ParameterResolver(dict(zip(encoders + ansatz, [*row, *weights]))) for row in encoder]
+
+
+def _gradient_parameter_names(circuits):
+    """Preserve each side's parameter order and reject contradictory roles."""
+    encoders = tuple(dict.fromkeys(name for circuit in circuits for name in circuit.all_encoder.keys()))
+    ansatz = tuple(dict.fromkeys(name for circuit in circuits for name in circuit.all_ansatz.keys()))
+    if set(encoders) & set(ansatz):
+        raise ValueError('A parameter cannot be both encoder and ansatz.')
+    return encoders, ansatz
 
 
 class MQVectorNPU(BackendBase):
@@ -149,8 +176,9 @@ class MQVectorNPU(BackendBase):
         seed (int): Seed for independent measurement and trajectory randomness.
         dtype: Only ``mindquantum.complex64`` is supported; ``None`` selects it.
         device_id (int): Logical ACL device ordinal. Default: ``0``.
-        tile_qubits (int): Vector tile width, at most 12. Default: ``12``.
-        fusion_qubits (int): Planner support budget. Default: ``6``.
+        tile_qubits (int): Maximum Vector tile width, between 4 and 12. Adjoint tiles are capped at 11. Default: ``12``.
+        fusion_qubits (int): Planner support budget, at most ``tile_qubits - 3``. The adjoint and Cube engines cap
+            their effective support at eight and six qubits respectively. Default: ``6``.
         cube_min_gates (int): Minimum gates per Cube region; zero disables Cube. Default: ``4``.
     """
 
@@ -193,7 +221,7 @@ class MQVectorNPU(BackendBase):
         self.tile_qubits = tile_qubits
         self.fusion_qubits = fusion_qubits
         self.cube_min_gates = cube_min_gates
-        self._native.compile([], ParameterResolver(), n_qubits, *self._policy)
+        self._native.validate_configuration(n_qubits, tile_qubits, fusion_qubits)
         self._rng = np.random.default_rng(self.seed)
         self.sim = self._native.State(n_qubits, device_id)
 
@@ -213,6 +241,7 @@ class MQVectorNPU(BackendBase):
     __str__ = __repr__
 
     def _check_circuit(self, circuit):
+        """Validate Python placement and stochastic operations before exporting deterministic regions."""
         _check_input_type('circuit', Circuit, circuit)
         if circuit.n_qubits > self.n_qubits:
             raise ValueError('Circuit has more qubits than the simulator.')
@@ -237,6 +266,7 @@ class MQVectorNPU(BackendBase):
 
     @staticmethod
     def _resolver(circuits, pr):
+        """Resolve Python input types and names; native compilation validates gate expressions."""
         names = list(dict.fromkeys(name for circuit in circuits for name in circuit.params_name))
         if pr is None:
             if names:
@@ -362,6 +392,7 @@ class MQVectorNPU(BackendBase):
     def _run(self, state, operations, rng):
         """Execute already prepared operations; only scalars/results leave the device."""
         measured = {}
+        candidate = None
         for kind, data in operations:
             if kind == 'apply':
                 state.apply(data)
@@ -385,17 +416,17 @@ class MQVectorNPU(BackendBase):
                         if chosen is not None:
                             state.apply(chosen)
             elif kind == 'kraus':
-                candidate = state.copy()
                 masses = []
                 for executable in data:
-                    candidate.copy_from(state)
+                    if candidate is None:
+                        candidate = state.copy()
+                    else:
+                        candidate.copy_from(state)
                     candidate.apply(executable)
                     masses.append(candidate.norm())
                 selected = self._choice(masses, rng)
-                candidate.copy_from(state)
-                candidate.apply(data[selected])
-                candidate.scale(1 / np.sqrt(masses[selected]))
-                state.copy_from(candidate)
+                state.apply(data[selected])
+                state.scale(1 / np.sqrt(masses[selected]))
         return measured
 
     @staticmethod
@@ -484,6 +515,10 @@ class MQVectorNPU(BackendBase):
         if len(kept_qubits) >= self.n_qubits:
             raise ValueError('Number of kept qubits must be less than total number of qubits.')
         return np.asarray(self.sim.reduced_density(kept_qubits))
+
+    def get_partial_trace(self, traced_qubits):
+        """Partial-trace simulator objects require a density-matrix backend."""
+        raise NotImplementedError('Use get_reduced_density_matrix to obtain a reduced matrix from mqvector_npu.')
 
     def get_qs_of_qubits(self, qubits, ket=False):
         _check_input_type('ket', bool, ket)
@@ -665,26 +700,32 @@ class MQVectorNPU(BackendBase):
         return variations
 
     def _shift_evaluator(self, hams, right, left, left_backend, same, names):
+        """Prepare exact gate-local shifts and reuse call-local state buffers."""
         right_plan = self._operations(right, planning=True)
         left_plan = right_plan if left is right else self._operations(left, planning=True)
         variations = self._shift_variations(right, left, same, names)
         observables = [self.sim.prepare_observable(ham.get_cpp_obj()) for ham in hams]
 
-        def evolve(source, plan, pr):
+        def evolve(source, plan, pr, state):
             operations = self._bind(plan, pr)
-            state = source.copy()
+            if state is None:
+                state = source.copy()
+            else:
+                state.copy_from(source)
             self._run(state, operations, self._rng)
             return state
 
-        def evaluate(parameters, _keepalive=(right, left)):
+        def evaluate(parameters):
             result = np.zeros((len(parameters), len(observables), 1 + len(names)), dtype=np.complex128)
+            # Call-local ownership keeps independent invocations isolated.
+            ket = bra = shifted = None
             for batch, pr in enumerate(parameters):
-                ket = evolve(self.sim, right_plan, pr)
-                bra = ket if same else evolve(left_backend.sim, left_plan, pr)
+                ket = evolve(self.sim, right_plan, pr, ket)
+                bra = ket if same else evolve(left_backend.sim, left_plan, pr, bra)
                 result[batch, :, 0] = [ket.expectation(obs, bra) for obs in observables]
                 for side, plan, weight, jacobian, _ in variations:
                     source = left_backend.sim if side == 'left' else self.sim
-                    shifted = evolve(source, plan, pr)
+                    shifted = evolve(source, plan, pr, shifted)
                     shifted_ket = ket if side == 'left' else shifted
                     shifted_bra = bra if side == 'right' else shifted
                     values = np.asarray([shifted_ket.expectation(obs, shifted_bra) for obs in observables])
@@ -692,6 +733,37 @@ class MQVectorNPU(BackendBase):
                         result[batch, :, 1 + parameter] += weight * coefficient * values
             return result
 
+        evaluate.keepalive = (right, left)
+        return evaluate
+
+    def _adjoint_evaluator(self, hams, right, left, left_backend, same, names):
+        """Own native plans and private Python callbacks independently of public metadata."""
+        # Complex CSR operators need two sweeps even when the circuits coincide.
+        hermitian = same and all(ham.how_to != HowTo.FRONTEND for ham in hams)
+        custom_gates = []
+
+        def snapshot_custom(circuit):
+            for gate in circuit:
+                if type(gate) not in _NATIVE_UNITARY_GATES:
+                    gate = copy.deepcopy(gate)
+                    custom_gates.append(gate)
+                yield gate
+
+        right_cpp = self._cpp_gates(snapshot_custom(right))
+        left_cpp = []
+        if not hermitian:
+            left_cpp = right_cpp if left is right else self._cpp_gates(snapshot_custom(left))
+        validate_unitary = self._unitary_validator((custom_gates,))
+        plan = self._native.make_gradient(
+            self.sim, [ham.get_cpp_obj() for ham in hams], right_cpp, left_cpp, names, hermitian, *self._policy
+        )
+
+        def evaluate(parameters):
+            for pr in parameters:
+                validate_unitary(pr)
+            return np.asarray(plan.evaluate(self.sim, left_backend.sim, parameters))
+
+        evaluate.keepalive = tuple(custom_gates)
         return evaluate
 
     def get_expectation_with_grad(
@@ -721,12 +793,9 @@ class MQVectorNPU(BackendBase):
         if noisy and not same:
             raise ValueError('Noisy gradients do not support circ_left or simulator_left.')
         pr_shift = pr_shift or noisy
-        encoders = tuple(dict.fromkeys(name for circuit in circuits for name in circuit.all_encoder.keys()))
-        ansatz = tuple(dict.fromkeys(name for circuit in circuits for name in circuit.all_ansatz.keys()))
-        if set(encoders) & set(ansatz):
-            raise ValueError('A parameter cannot be both encoder and ansatz.')
+        encoders, ansatz = _gradient_parameter_names(circuits)
         names = encoders + ansatz
-        n_encoders, n_ansatz, n_hams = len(encoders), len(ansatz), len(hams)
+        n_encoders, n_hams = len(encoders), len(hams)
         uncached_hams = [_uncached_hamiltonian(ham) for ham in hams]
         if pr_shift:
             # Shifts/trajectories still need private Python gate data. Do not
@@ -735,56 +804,12 @@ class MQVectorNPU(BackendBase):
             left = right if circ_left is circ_right else copy.deepcopy(circ_left)
             evaluate = self._shift_evaluator(uncached_hams, right, left, left_backend, same, names)
         else:
-            # Arbitrary complex CSR observables take the general two-sweep path, even for U_l == U_r.
-            hermitian = same and all(ham.how_to != HowTo.FRONTEND for ham in hams)
-            custom_gates = []
-
-            def snapshot_custom(circuit):
-                for gate in circuit:
-                    if type(gate) not in _NATIVE_UNITARY_GATES:
-                        # Native plans own gates/PRs/matrices, but not Python
-                        # callbacks. Validation must also use private gate data.
-                        gate = copy.deepcopy(gate)
-                        custom_gates.append(gate)
-                    yield gate
-
-            right_cpp = self._cpp_gates(snapshot_custom(circ_right))
-            left_cpp = []
-            if not hermitian:
-                left_cpp = right_cpp if circ_left is circ_right else self._cpp_gates(snapshot_custom(circ_left))
-            validate_unitary = self._unitary_validator((custom_gates,))
-            plan = self._native.make_gradient(
-                self.sim,
-                [ham.get_cpp_obj() for ham in uncached_hams],
-                [] if hermitian else [ham.get_cpp_obj(hermitian=True) for ham in uncached_hams],
-                right_cpp,
-                left_cpp,
-                names,
-                hermitian,
-                *self._policy,
-            )
-
-            def evaluate(parameters, _keepalive=tuple(custom_gates)):
-                for pr in parameters:
-                    validate_unitary(pr)
-                return np.asarray(plan.evaluate(self.sim, left_backend.sim, parameters))
+            evaluate = self._adjoint_evaluator(uncached_hams, circ_right, circ_left, left_backend, same, names)
 
         def grad_ops(*inputs):
-            both = bool(n_encoders and n_ansatz)
-            if len(inputs) != (2 if both else 1):
-                raise ValueError(f'Need {2 if both else 1} input arrays.')
-            arrays = [_real_finite(value, 'Gradient inputs') for value in inputs]
-            encoder = arrays[0] if n_encoders else np.empty((1, 0))
-            if encoder.ndim == 1:
-                encoder = encoder[None, :]
-            weights = arrays[-1] if n_ansatz or not n_encoders else np.empty(0)
-            _check_encoder(encoder, n_encoders)
-            _check_ansatz(weights, n_ansatz)
-            if encoder.shape[0] == 0:
-                raise ValueError('Encoder batch cannot be empty.')
-            parameters = [ParameterResolver(dict(zip(names, [*row, *weights]))) for row in encoder]
+            parameters = _gradient_parameters(inputs, encoders, ansatz)
             result = np.asarray(evaluate(parameters)).reshape((len(parameters), n_hams, 1 + len(names)))
-            if both:
+            if encoders and ansatz:
                 return result[:, :, 0], result[:, :, 1 : 1 + n_encoders], result[:, :, 1 + n_encoders :]
             return result[:, :, 0], result[:, :, 1:]
 

@@ -152,11 +152,12 @@ class Builder {
     // unchanged, which is right for a gate but not for its derivative: dU is
     // zero there (outside a control subspace, on the |0> of a phase shift, on
     // the |00> and |11> of an exchange).  The tile therefore ends with the
-    // projection onto the support of the derivative, which requires every
-    // control of the gate to be a tile qubit.
+    // projection onto the support of the derivative. Every control must be a
+    // tile qubit unless the caller projects it separately using projected_controls.
     [[nodiscard]] static auto BuildDerivative(const CircuitTile& tile,
                                               const parameter::ParameterResolver& parameter_resolver,
-                                              const StateSpace& space) -> PreparedTile<value_t> {
+                                              const StateSpace& space,
+                                              index_t projected_controls = 0) -> PreparedTile<value_t> {
         ValidateTile(tile, space);
         if (tile.gates.size() != 1) {
             throw std::invalid_argument("A derivative tile must hold exactly one gate.");
@@ -179,6 +180,7 @@ class Builder {
                                 gate.GetID(), derivatives.size()));
             }
             auto operation = PrepareOperation(std::move(derivatives.front()), tile_dim);
+            operation.external_control_mask &= ~projected_controls;
             if (operation.external_control_mask != 0) {
                 throw std::invalid_argument("A derivative tile must contain every control qubit of its gate.");
             }
@@ -221,8 +223,8 @@ class Builder {
     // Compose intrinsic derivative images without duplicating gate formulas.
     // Unlike gates, derivatives are zero outside their support. Jacobian
     // targets are applied by the caller, not by this linear map.
-    [[nodiscard]] static auto DerivativeOnly(const TileLayout& layout, const Derivative<value_t>& derivative)
-        -> PreparedTile<value_t> {
+    [[nodiscard]] static auto DerivativeOnly(const TileLayout& layout,
+                                             const Derivative<value_t>& derivative) -> PreparedTile<value_t> {
         if (derivative.external_control_mask != 0) {
             throw std::invalid_argument("A derivative image must contain every control qubit.");
         }
@@ -355,8 +357,8 @@ class Builder {
     }
 
     [[nodiscard]] static auto LowerGate(const BasicGate& gate, const qbits_t& tile_qubits,
-                                        const parameter::ParameterResolver& parameter_resolver, const StateSpace& space)
-        -> std::vector<Operation<value_t>> {
+                                        const parameter::ParameterResolver& parameter_resolver,
+                                        const StateSpace& space) -> std::vector<Operation<value_t>> {
         const auto tile_dim = size_t{1} << tile_qubits.size();
         if (IsNoiseChannel(gate.GetID())) {
             return {PrepareOperation(BuildChannel(gate, tile_qubits, space), tile_dim)};
@@ -457,8 +459,8 @@ class Builder {
         }
     }
 
-    [[nodiscard]] static auto MatrixFromTensor(const tensor::Matrix& matrix, size_t expected_dim)
-        -> std::vector<value_t> {
+    [[nodiscard]] static auto MatrixFromTensor(const tensor::Matrix& matrix,
+                                               size_t expected_dim) -> std::vector<value_t> {
         if (matrix.n_row != expected_dim || matrix.n_col != expected_dim) {
             throw std::invalid_argument(fmt::format("Gate matrix expects shape {}x{}, but got {}x{}.", expected_dim,
                                                     expected_dim, matrix.n_row, matrix.n_col));
@@ -475,9 +477,8 @@ class Builder {
         return flat;
     }
 
-    [[nodiscard]] static auto CustomMatrix(const BasicGate& gate,
-                                           const parameter::ParameterResolver& parameter_resolver)
-        -> std::vector<value_t> {
+    [[nodiscard]] static auto CustomMatrix(
+        const BasicGate& gate, const parameter::ParameterResolver& parameter_resolver) -> std::vector<value_t> {
         const auto expected_dim = size_t{1} << gate.GetObjQubits().size();
         if (gate.GetID() == GateID::CUSTOM) {
             const auto* custom = static_cast<const CustomGate*>(&gate);
@@ -498,8 +499,8 @@ class Builder {
     }
 
     // Local offsets of every basis state of `objects` placed in `image`.
-    [[nodiscard]] static auto ObjectOffsets(const qbits_t& objects, const qbits_t& tile_qubits, const QubitImage& image)
-        -> std::vector<index_t> {
+    [[nodiscard]] static auto ObjectOffsets(const qbits_t& objects, const qbits_t& tile_qubits,
+                                            const QubitImage& image) -> std::vector<index_t> {
         std::vector<index_t> offsets(size_t{1} << objects.size(), 0);
         for (size_t basis = 0; basis < offsets.size(); ++basis) {
             for (size_t bit = 0; bit < objects.size(); ++bit) {
@@ -782,8 +783,8 @@ class Builder {
 
     [[nodiscard]] static auto BuildIntrinsicDerivatives(const BasicGate& gate, const qbits_t& tile_qubits,
                                                         const parameter::ParameterResolver& parameter_resolver,
-                                                        const RawOperation& evolution, const QubitImage& image)
-        -> std::vector<RawOperation> {
+                                                        const RawOperation& evolution,
+                                                        const QubitImage& image) -> std::vector<RawOperation> {
         const auto objects = gate.GetObjQubits();
         switch (gate.GetID()) {
             case GateID::RX:
@@ -948,14 +949,14 @@ class Builder {
         }
     }
 
-    [[nodiscard]] static auto RequireUnitInterval(double value, const BasicGate& gate, const char* requirement)
-        -> calc_type {
+    [[nodiscard]] static auto RequireUnitInterval(double value, const BasicGate& gate,
+                                                  const char* requirement) -> calc_type {
         RequireChannel(IsFinite(value) && value >= 0 && value <= 1, gate, requirement);
         return static_cast<calc_type>(value);
     }
 
-    [[nodiscard]] static auto ConjugateTranspose(const std::vector<value_t>& matrix, size_t dim)
-        -> std::vector<value_t> {
+    [[nodiscard]] static auto ConjugateTranspose(const std::vector<value_t>& matrix,
+                                                 size_t dim) -> std::vector<value_t> {
         std::vector<value_t> result(matrix.size());
         for (size_t row = 0; row < dim; ++row) {
             for (size_t column = 0; column < dim; ++column) {
@@ -987,8 +988,8 @@ class Builder {
     // Kraus operators of a user-defined channel, validated as a complete set:
     // sum_k K_k^dagger K_k = I.  The check runs in double precision so that
     // it does not depend on the simulator's value type.
-    [[nodiscard]] static auto ValidatedKrausOperators(const KrausChannel& gate, size_t dim)
-        -> std::vector<std::vector<value_t>> {
+    [[nodiscard]] static auto ValidatedKrausOperators(const KrausChannel& gate,
+                                                      size_t dim) -> std::vector<std::vector<value_t>> {
         const auto& operators = gate.GetKrausOperatorSet();
         RequireChannel(!operators.empty(), gate, "at least one Kraus operator");
         std::vector<std::complex<double>> completeness(dim * dim, 0);
@@ -1130,8 +1131,8 @@ class Builder {
         return offsets;
     }
 
-    [[nodiscard]] static auto BuildChannel(const BasicGate& gate, const qbits_t& tile_qubits, const StateSpace& space)
-        -> RawOperation {
+    [[nodiscard]] static auto BuildChannel(const BasicGate& gate, const qbits_t& tile_qubits,
+                                           const StateSpace& space) -> RawOperation {
         if (space.kind() != StateSpace::Kind::DensityMatrix) {
             throw std::invalid_argument(
                 fmt::format("Noise channel {} can only be lowered onto a density matrix.", gate.GetID()));
@@ -1324,8 +1325,8 @@ class Builder {
         return kernel;
     }
 
-    [[nodiscard]] static auto PrepareDiagonalTable(const RawOperation& raw, size_t tile_dim)
-        -> DiagonalKernel<value_t> {
+    [[nodiscard]] static auto PrepareDiagonalTable(const RawOperation& raw,
+                                                   size_t tile_dim) -> DiagonalKernel<value_t> {
         assert(raw.matrix.size() == raw.target_offsets.size());
         DiagonalKernel<value_t> kernel;
         ForEachOperandBlock(raw, tile_dim, [&raw, &kernel](size_t index, size_t entry) {
@@ -1403,8 +1404,8 @@ class Builder {
         return derivative;
     }
 
-    [[nodiscard]] static auto FoldDiagonalRuns(std::vector<Operation<value_t>> operations, size_t tile_dim)
-        -> std::vector<Operation<value_t>> {
+    [[nodiscard]] static auto FoldDiagonalRuns(std::vector<Operation<value_t>> operations,
+                                               size_t tile_dim) -> std::vector<Operation<value_t>> {
         std::vector<Operation<value_t>> folded;
         folded.reserve(operations.size());
         for (size_t operation_index = 0; operation_index < operations.size();) {

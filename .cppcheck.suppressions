@@ -22,6 +22,7 @@ noValidConfiguration:ccsrc/include/config/type_traits.h
 
 preprocessorErrorDirective:ccsrc/include/config/details/cxx20_compatibility.h
 unusedStructMember:ccsrc/include/math/tensor/ops_cpu/utils.h
+unusedStructMember:ccsrc/include/simulator/vector/ascend/program.h
 
 syntaxError:ccsrc/include/config/config.h
 syntaxError:ccsrc/include/core/sparse/algo.h

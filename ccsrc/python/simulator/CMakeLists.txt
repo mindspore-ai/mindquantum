@@ -41,7 +41,7 @@ endif()
 
 if(ENABLE_ASCEND)
   pybind11_add_module(_mq_vector_npu MODULE ${CMAKE_CURRENT_SOURCE_DIR}/lib/_mq_vector_npu.cpp
-                     OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
+                      OUTPUT_HINT "${MQ_PYTHON_PACKAGE_NAME}")
   force_at_least_cxx17_workaround(_mq_vector_npu)
   target_link_libraries(_mq_vector_npu PRIVATE mq_python_core mqsim_vector_npu)
 endif()

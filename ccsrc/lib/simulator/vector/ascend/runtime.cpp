@@ -15,6 +15,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <limits>
@@ -101,7 +102,8 @@ struct Context {
             }
             soc = name;
             if (soc != MQ_ASCEND_SOC) {
-                throw std::runtime_error("Ascend kernel target " MQ_ASCEND_SOC " does not match device " + soc);
+                throw std::runtime_error("Ascend kernel target " + std::string(MQ_ASCEND_SOC)
+                                         + " does not match device " + soc);
             }
             int64_t value = 0;
             Check(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_VECTOR_CORE_NUM, &value), "aclrtGetDeviceInfo");
@@ -221,6 +223,7 @@ class PairLock {
             std::lock(first_, second_);
         }
     }
+    ~PairLock() = default;
 
  private:
     std::unique_lock<std::mutex> first_, second_;
@@ -249,8 +252,9 @@ struct CubeGeometry {
         builder.SetBType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT, false);
         builder.SetCType(TPosition::GM, CubeFormat::ND, DataType::DT_FLOAT);
         const auto states = adjoint ? 2U : 1U;
-        builder.SetOrgShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
-        builder.SetShape(2 * dimension, states * columns * kDenseBatchPackets, 2 * dimension);
+        const auto rows = 2 * dimension;
+        builder.SetOrgShape(rows, states * columns * kDenseBatchPackets, 2 * dimension);
+        builder.SetShape(rows, states * columns * kDenseBatchPackets, 2 * dimension);
         builder.SetFixSplit(2 * dimension, columns, std::min(2 * dimension, uint32_t{64}));
         builder.EnableBias(false);
         builder.SetBufferSpace(-1, -1, -1);
@@ -261,14 +265,14 @@ struct CubeGeometry {
         if (!workspace_bytes) {
             throw std::runtime_error("No mixed Matmul workspace size.");
         }
-        const auto planes = adjoint ? 10U : 4 * kDensePipelineSlots;
+        const auto planes = adjoint ? kDenseAdjointPlanes : 4 * kDensePipelineSlots;
         workspace_bytes += context->cores * planes * kDenseTileSize * kDenseBatchPackets * sizeof(float);
     }
 };
 
 class PinnedBuffer {
  public:
-    explicit PinnedBuffer(size_t bytes) {
+    explicit PinnedBuffer(size_t bytes) : bytes_(bytes) {
         Check(aclrtMallocHost(&data_, bytes), "aclrtMallocHost");
     }
     ~PinnedBuffer() {
@@ -279,73 +283,61 @@ class PinnedBuffer {
     void* Data() const {
         return data_;
     }
+    size_t Size() const {
+        return bytes_;
+    }
 
  private:
     void* data_ = nullptr;
+    size_t bytes_;
 };
 
-struct Address {
-    size_t offset = 0;
-    // Null means the current image, otherwise immutable plan-owned storage.
-    const Buffer* resident = nullptr;
-};
+using Address = size_t;
 
 struct DeviceImage {
-    using Key = std::pair<uintptr_t, size_t>;
-    using Shape = std::pair<uint32_t, bool>;
-    std::map<Key, size_t> locations;
-    std::map<Shape, CubeGeometry> geometries;
     std::unique_ptr<Buffer> device;
     std::unique_ptr<PinnedBuffer> host;
+    size_t bytes = 0;
 
     void* At(Address address) const {
-        const auto* storage = address.resident ? address.resident : device.get();
-        return storage ? static_cast<uint8_t*>(storage->Data()) + address.offset : nullptr;
+        return device ? static_cast<uint8_t*>(device->Data()) + address : nullptr;
     }
     size_t Size() const {
-        return device ? device->Size() : 0;
+        return bytes;
     }
     void Upload(aclrtStream stream = nullptr) {
-        if (!host) {
+        if (!bytes || !host) {
             return;
         }
         if (stream) {
             // The enclosing transaction must drain before host/device storage
             // is freed, including if a later upload or launch throws.
             Check(aclrtMemcpyAsync(device->Data(), Size(), host->Data(), Size(), ACL_MEMCPY_HOST_TO_DEVICE, stream),
-                  "upload bound metadata");
+                  "upload metadata");
         } else {
-            device->Upload(host->Data());
+            Check(aclrtMemcpy(device->Data(), device->Size(), host->Data(), bytes, ACL_MEMCPY_HOST_TO_DEVICE),
+                  "upload metadata");
             host.reset();
         }
     }
 };
 
-// Placement, not a growing byte vector. Borrow fragments until Finish, then
-// copy directly to one exact-size pinned image. Identity is safe because the
-// compiler's immutable constants outlive the resident image and every binding.
-// No hash of numeric values, dummy binding, or cross-plan cache is involved.
+// Build one self-contained image per bound program. Deduplicate shared pools
+// within this assembly only; no addresses or identities escape into another
+// image. Reusing pinned/device capacity avoids allocation in steady state.
 class Metadata {
  public:
-    explicit Metadata(const DeviceImage* resident = nullptr) : resident_(resident) {
-    }
-
     Address Append(const void* source, size_t bytes) {
         if (!bytes) {
             return {};
         }
-        const DeviceImage::Key key{reinterpret_cast<uintptr_t>(source), bytes};
-        if (resident_) {
-            if (const auto found = resident_->locations.find(key); found != resident_->locations.end()) {
-                return {found->second, resident_->device.get()};
-            }
-        }
+        const auto key = std::make_pair(reinterpret_cast<uintptr_t>(source), bytes);
         const auto [found, inserted] = locations_.emplace(key, size_);
         if (inserted) {
             fragments_.push_back({source, bytes, size_});
             size_ = (size_ + bytes + 31) & ~size_t{31};
         }
-        return {found->second, nullptr};
+        return found->second;
     }
 
     template <typename value_t>
@@ -354,21 +346,23 @@ class Metadata {
     }
 
     const CubeGeometry& Geometry(const std::shared_ptr<Context>& context, uint32_t dimension, bool adjoint) {
-        const DeviceImage::Shape shape{dimension, adjoint};
-        if (resident_) {
-            if (const auto found = resident_->geometries.find(shape); found != resident_->geometries.end()) {
-                return found->second;
-            }
-        }
+        const auto shape = std::make_pair(dimension, adjoint);
         return geometries_.try_emplace(shape, context, dimension, adjoint).first->second;
     }
 
-    std::unique_ptr<DeviceImage> Finish(const std::shared_ptr<Context>& context) {
+    std::unique_ptr<DeviceImage> Finish(const std::shared_ptr<Context>& context,
+                                        std::unique_ptr<DeviceImage> image = nullptr) {
         const ContextScope scope(context->handle);
-        auto image = std::make_unique<DeviceImage>();
+        if (!image) {
+            image = std::make_unique<DeviceImage>();
+        }
         if (size_) {
-            image->device = std::make_unique<Buffer>(context, size_);
-            image->host = std::make_unique<PinnedBuffer>(size_);
+            if (!image->device || image->device->Size() < size_) {
+                image->device = std::make_unique<Buffer>(context, size_);
+            }
+            if (!image->host || image->host->Size() < size_) {
+                image->host = std::make_unique<PinnedBuffer>(size_);
+            }
             auto* destination = static_cast<uint8_t*>(image->host->Data());
             for (const auto& fragment : fragments_) {
                 std::memcpy(destination + fragment.offset, fragment.source, fragment.bytes);
@@ -376,8 +370,7 @@ class Metadata {
                 std::memset(destination + end, 0, ((end + 31) & ~size_t{31}) - end);
             }
         }
-        image->locations = std::move(locations_);
-        image->geometries = std::move(geometries_);
+        image->bytes = size_;
         return image;
     }
 
@@ -386,11 +379,10 @@ class Metadata {
         const void* source;
         size_t bytes, offset;
     };
-    const DeviceImage* resident_;
     size_t size_ = 0;
     std::vector<Fragment> fragments_;
-    std::map<DeviceImage::Key, size_t> locations_;
-    std::map<DeviceImage::Shape, CubeGeometry> geometries_;
+    std::map<std::pair<uintptr_t, size_t>, size_t> locations_;
+    std::map<std::pair<uint32_t, bool>, CubeGeometry> geometries_;
 };
 
 uint32_t ReductionBlocks(const Context& context, uint64_t plane) {
@@ -439,37 +431,61 @@ struct CubeTile {
                            metadata.At(config), workspace, packet);
     }
 };
+
+struct VectorTile {
+    uint64_t external_mask, tile_count;
+    uint32_t size, run, count;
+    Address instructions, offsets, pool;
+    VectorTile(const std::shared_ptr<Context>&, const TileProgram& source, Metadata& metadata)
+        : external_mask(source.external_mask)
+        , tile_count(source.tile_count)
+        , size(source.size)
+        , run(source.run)
+        , count(source.instructions.size())
+        , instructions(metadata.Append(source.instructions))
+        , offsets(metadata.Append(source.offsets))
+        , pool(metadata.Append(*source.data)) {
+    }
+    size_t InstructionCount() const {
+        return count;
+    }
+    aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane,
+                    const DeviceImage& metadata, void*) const {
+        if (!count) {
+            return ACL_SUCCESS;
+        }
+        const auto blocks = static_cast<uint32_t>(std::min<uint64_t>(context.cores, tile_count));
+        return LaunchTile(blocks, stream, state, metadata.At(instructions), metadata.At(pool), metadata.At(offsets),
+                          plane, external_mask, tile_count, size, run, count);
+    }
+};
+
+// Placement is identical in both directions; only the descriptors and launch
+// signatures differ. All addresses refer to the one image assembled here.
+template <typename tile_t, typename dense_t, typename program_t>
+std::unique_ptr<DeviceImage> PlaceProgram(const std::shared_ptr<Context>& context, const program_t& program,
+                                          std::vector<std::variant<tile_t, dense_t>>& tiles, uint32_t& workspace_bytes,
+                                          std::unique_ptr<DeviceImage> storage) {
+    Metadata image;
+    tiles.reserve(program.tiles.size());
+    for (const auto& tile : program.tiles) {
+        std::visit(
+            [&](const auto& source) {
+                using operation_t = std::conditional_t<std::is_base_of_v<TileProgram, std::decay_t<decltype(*source)>>,
+                                                       tile_t, dense_t>;
+                tiles.emplace_back(std::in_place_type<operation_t>, context, *source, image);
+                if constexpr (std::is_same_v<operation_t, dense_t>) {
+                    workspace_bytes = std::max(workspace_bytes, std::get<dense_t>(tiles.back()).workspace_bytes);
+                }
+            },
+            tile);
+    }
+    return image.Finish(context, std::move(storage));
+}
 }  // namespace
 
 struct Executable::Impl {
-    struct Tile {
-        uint64_t external_mask;
-        uint64_t tile_count;
-        uint32_t size, run, count;
-        Address instructions, offsets, pool;
-        Tile(const std::shared_ptr<Context>&, const TileProgram& source, Metadata& metadata)
-            : external_mask(source.external_mask)
-            , tile_count(source.tile_count)
-            , size(source.size)
-            , run(source.run)
-            , count(source.instructions.size())
-            , instructions(metadata.Append(source.instructions))
-            , offsets(metadata.Append(source.offsets))
-            , pool(metadata.Append(*source.data)) {
-        }
-        size_t InstructionCount() const {
-            return count;
-        }
-        aclError Launch(const Context& context, aclrtStream stream, void* state, uint64_t plane,
-                        const DeviceImage& metadata, void*) const {
-            if (!count) {
-                return ACL_SUCCESS;
-            }
-            const auto blocks = static_cast<uint32_t>(std::min<uint64_t>(context.cores, tile_count));
-            return LaunchTile(blocks, stream, state, metadata.At(instructions), metadata.At(pool), metadata.At(offsets),
-                              plane, external_mask, tile_count, size, run, count);
-        }
-    };
+    using Tile = VectorTile;
     using Dense = CubeTile;
     std::shared_ptr<Context> context;
     qbit_t n_qubits;
@@ -477,25 +493,9 @@ struct Executable::Impl {
     std::vector<std::variant<Tile, Dense>> tiles;
     uint32_t workspace_bytes = 0;
 
-    Impl(std::shared_ptr<Context> owner, const Program& program, const DeviceImage* resident = nullptr)
+    Impl(std::shared_ptr<Context> owner, const Program& program, std::unique_ptr<DeviceImage> storage = nullptr)
         : context(std::move(owner)), n_qubits(program.n_qubits) {
-        Metadata image(resident);
-        for (const auto& tile : program.tiles) {
-            std::visit(
-                [&](const auto& source) {
-                    if (!source) {
-                        return;  // parameter-dependent Vector slot in Constants()
-                    }
-                    using operation_t
-                        = std::conditional_t<std::is_same_v<std::decay_t<decltype(*source)>, TileProgram>, Tile, Dense>;
-                    tiles.emplace_back(std::in_place_type<operation_t>, context, *source, image);
-                    if constexpr (std::is_same_v<operation_t, Dense>) {
-                        workspace_bytes = std::max(workspace_bytes, std::get<Dense>(tiles.back()).workspace_bytes);
-                    }
-                },
-                tile);
-        }
-        metadata = image.Finish(context);
+        metadata = PlaceProgram(context, program, tiles, workspace_bytes, std::move(storage));
     }
 
     void Launch(aclrtStream stream, void* state, uint64_t plane, void* workspace) const {
@@ -576,20 +576,24 @@ struct Observable::Impl {
 namespace {
 // A bound adjoint has one immutable metadata upload, reused for every Hamiltonian.
 struct AdjointExecutable {
-    struct Tile {
-        uint64_t external_mask, tile_count;
-        uint32_t size, run, count;
-        Address instructions, offsets, steps, derivatives, targets, pool;
+    struct Tile : VectorTile {
+        Address steps, derivatives, targets;
+        uint32_t step_count;
+        Tile(const std::shared_ptr<Context>& context, const AdjointTileProgram& source, Metadata& metadata)
+            : VectorTile(context, source, metadata)
+            , steps(metadata.Append(source.steps))
+            , derivatives(metadata.Append(source.derivatives))
+            , targets(metadata.Append(source.targets))
+            , step_count(source.steps.size()) {
+        }
     };
-    struct Dense {
-        CubeTile cube;
-        Address derivatives, outputs, inverse;
+    struct Dense : CubeTile {
+        Address derivatives, outputs;
         uint32_t count;
         Dense(const std::shared_ptr<Context>& context, const DenseAdjointProgram& source, Metadata& metadata)
-            : cube(context, source.evolution, metadata, true)
+            : CubeTile(context, source.evolution, metadata, true)
             , derivatives(metadata.Append(source.derivatives))
             , outputs(metadata.Append(source.outputs))
-            , inverse(metadata.Append(source.evolution.layout->inverse_indices))
             , count(source.outputs.size()) {
         }
     };
@@ -599,38 +603,13 @@ struct AdjointExecutable {
     uint32_t workspace_bytes = 0;
     uint64_t plane;
 
-    AdjointExecutable(const std::shared_ptr<Context>& context, const AdjointProgram& program, qbit_t qubits,
-                      const MST<size_t>& parameter_map, const DeviceImage* resident = nullptr)
+    AdjointExecutable(const std::shared_ptr<Context>& context, const AdjointProgram& program,
+                      std::unique_ptr<DeviceImage> storage = nullptr)
         : blocks(context->cores)
         , cube_blocks(context->cube_cores)
-        , output_size(program.output_size)
-        , plane(std::max(Dimension(qubits), uint64_t{8})) {
-        if (program.n_qubits != qubits || program.output_size != parameter_map.size() + 1
-            || program.parameter_map != parameter_map || program.tiles.empty()) {
-            throw std::invalid_argument("Incompatible Ascend adjoint program.");
-        }
-        Metadata image(resident);
-        for (const auto& entry : program.tiles) {
-            std::visit(
-                [&](const auto& pointer) {
-                    if (!pointer) {
-                        return;
-                    }
-                    const auto& source = *pointer;
-                    if constexpr (std::is_same_v<std::decay_t<decltype(source)>, AdjointTileProgram>) {
-                        tiles.emplace_back(Tile{source.external_mask, source.tile_count, source.size, source.run,
-                                                static_cast<uint32_t>(source.steps.size()),
-                                                image.Append(source.instructions), image.Append(source.offsets),
-                                                image.Append(source.steps), image.Append(source.derivatives),
-                                                image.Append(source.targets), image.Append(*source.data)});
-                    } else {
-                        tiles.emplace_back(std::in_place_type<Dense>, context, source, image);
-                        workspace_bytes = std::max(workspace_bytes, std::get<Dense>(tiles.back()).cube.workspace_bytes);
-                    }
-                },
-                entry);
-        }
-        metadata = image.Finish(context);
+        , output_size(program.parameter_map.size() + 1)
+        , plane(std::max(Dimension(program.n_qubits), uint64_t{8})) {
+        metadata = PlaceProgram(context, program, tiles, workspace_bytes, std::move(storage));
     }
 
     void Launch(aclrtStream stream, void* shared, void* costate, const Buffer& partials, void* workspace) const {
@@ -647,15 +626,15 @@ struct AdjointExecutable {
                                                 metadata->At(tile.pool), metadata->At(tile.offsets),
                                                 metadata->At(tile.steps), metadata->At(tile.derivatives),
                                                 metadata->At(tile.targets), partials.Data(), plane, tile.external_mask,
-                                                tile.tile_count, tile.size, tile.run, tile.count, output_size, overlap),
+                                                tile.tile_count, tile.size, tile.run, tile.step_count, output_size,
+                                                overlap),
                               "launch adjoint tile");
                     } else {
-                        const auto& cube = tile.cube;
-                        Check(LaunchDenseAdjoint(cube_blocks, stream, shared, costate, metadata->At(cube.matrix),
+                        Check(LaunchDenseAdjoint(cube_blocks, stream, shared, costate, metadata->At(tile.matrix),
                                                  metadata->At(tile.derivatives), metadata->At(tile.outputs),
-                                                 metadata->At(cube.offsets), metadata->At(cube.indices),
-                                                 metadata->At(tile.inverse), metadata->At(cube.config), workspace,
-                                                 partials.Data(), cube.packet, tile.count, output_size, overlap),
+                                                 metadata->At(tile.offsets), metadata->At(tile.indices),
+                                                 metadata->At(tile.config), workspace, partials.Data(), tile.packet,
+                                                 tile.count, output_size, overlap),
                               "launch dense adjoint");
                     }
                 },
@@ -1067,6 +1046,31 @@ unsigned State::VectorCores() const {
     return impl_->context->cores;
 }
 
+namespace {
+// One evaluation owns this workspace exclusively. Only a completed evaluation
+// may return it to its plan; exceptions destroy it after draining the stream.
+struct GradientWorkspace {
+    Buffer right, costate, partials;
+    std::unique_ptr<Buffer> left, shared, cube;
+    std::array<std::unique_ptr<DeviceImage>, 4> images;
+    Stream stream;  // drains before any of its buffers are freed
+
+    GradientWorkspace(const std::shared_ptr<Context>& context, size_t bytes, uint32_t outputs, bool hermitian,
+                      bool multiple_observables)
+        : right(context, bytes)
+        , costate(context, bytes)
+        , partials(context, AdjointPartialBytes(context->cores, outputs))
+        , stream(context) {
+        if (!hermitian || multiple_observables) {
+            shared = std::make_unique<Buffer>(context, bytes);
+        }
+        if (!hermitian) {
+            left = std::make_unique<Buffer>(context, bytes);
+        }
+    }
+};
+}  // namespace
+
 struct GradientPlan::Impl {
     std::shared_ptr<Context> context;
     qbit_t n_qubits;
@@ -1075,20 +1079,19 @@ struct GradientPlan::Impl {
     std::set<std::string> required_parameters;
     std::unique_ptr<ForwardPlan> right_forward, left_forward;
     std::unique_ptr<AdjointPlan> right_adjoint, left_adjoint;
-    // Destroy device placement before its immutable host source programs.
-    std::unique_ptr<DeviceImage> right_forward_data, left_forward_data, right_adjoint_data, left_adjoint_data;
     std::vector<std::shared_ptr<Observable>> observables, daggers;
+    mutable std::mutex workspace_mutex;
+    mutable std::unique_ptr<GradientWorkspace> idle_workspace;
+
+    Result::value_type EvaluateSample(const State& right_state, const State& left_state,
+                                      const parameter::ParameterResolver& resolver, GradientWorkspace& scratch) const;
 };
 
 GradientPlan::GradientPlan(const State& owner, const std::vector<Hamiltonian<float>>& hams,
-                           const std::vector<Hamiltonian<float>>& hams_dagger,
                            const std::vector<std::shared_ptr<BasicGate>>& right_gates,
                            const std::vector<std::shared_ptr<BasicGate>>& left_gates,
                            const std::vector<std::string>& parameter_names, bool hermitian, unsigned tile_qubits,
                            unsigned fusion_qubits, unsigned cube_min_gates) {
-    if ((!hermitian || !hams_dagger.empty()) && hams_dagger.size() != hams.size()) {
-        throw std::invalid_argument("Gradient requires one H-dagger for each Hamiltonian.");
-    }
     if (parameter_names.size() >= std::numeric_limits<uint32_t>::max()) {
         throw std::invalid_argument("Too many Ascend gradient parameters.");
     }
@@ -1102,60 +1105,41 @@ GradientPlan::GradientPlan(const State& owner, const std::vector<Hamiltonian<flo
         }
         plan->required_parameters.insert(parameter_names[column]);
     }
-    auto validate_gates = [&](const auto& gates) {
-        for (const auto& gate : gates) {
-            if (!gate) {
-                throw std::invalid_argument("Null gate in Ascend gradient circuit.");
-            }
-            if (const auto* parameterized = dynamic_cast<const Parameterizable*>(gate.get())) {
-                for (const auto& coefficient : parameterized->GetCoeffs()) {
-                    ValidateResolver(coefficient);
-                    for (const auto& [name, value] : coefficient.data_) {
-                        plan->required_parameters.insert(name);
-                        if (!coefficient.NoGradContains(name) && !plan->parameter_map.count(name)) {
-                            throw std::invalid_argument("Gradient parameter '" + name
-                                                        + "' is missing from the output map.");
-                        }
-                    }
-                }
+    ValidateConfiguration(plan->n_qubits, tile_qubits, fusion_qubits);
+    auto compile = [&](const auto& gates, auto& forward, auto& adjoint) {
+        forward = std::make_unique<ForwardPlan>(gates, plan->n_qubits, tile_qubits, fusion_qubits, cube_min_gates);
+        plan->required_parameters.insert(forward->Parameters().begin(), forward->Parameters().end());
+        for (const auto& name : forward->GradientParameters()) {
+            if (!plan->parameter_map.count(name)) {
+                throw std::invalid_argument("Gradient parameter '" + name + "' is missing from the output map.");
             }
         }
+        adjoint = std::make_unique<AdjointPlan>(*forward, plan->parameter_map, tile_qubits, fusion_qubits,
+                                                cube_min_gates);
     };
-    validate_gates(right_gates);
+    compile(right_gates, plan->right_forward, plan->right_adjoint);
     if (!hermitian) {
-        validate_gates(left_gates);
+        if (left_gates == right_gates) {
+            plan->left_forward = std::make_unique<ForwardPlan>(*plan->right_forward);
+            plan->left_adjoint = std::make_unique<AdjointPlan>(*plan->right_adjoint);
+        } else {
+            compile(left_gates, plan->left_forward, plan->left_adjoint);
+        }
     }
-    plan->right_forward = std::make_unique<ForwardPlan>(right_gates, plan->n_qubits, tile_qubits, fusion_qubits,
-                                                        cube_min_gates);
-    plan->right_adjoint = std::make_unique<AdjointPlan>(right_gates, plan->parameter_map, plan->n_qubits, tile_qubits,
-                                                        fusion_qubits, cube_min_gates);
-    if (!hermitian) {
-        plan->left_forward = std::make_unique<ForwardPlan>(left_gates, plan->n_qubits, tile_qubits, fusion_qubits,
-                                                           cube_min_gates);
-        plan->left_adjoint = std::make_unique<AdjointPlan>(left_gates, plan->parameter_map, plan->n_qubits, tile_qubits,
-                                                           fusion_qubits, cube_min_gates);
-    }
-    // Place compile-time data once. The same lowering handles constant and
-    // bound programs, but no parameter-dependent gate is evaluated here.
     const ContextScope scope(plan->context->handle);
-    auto place = [&](const auto& forward, const auto& adjoint, auto& forward_data, auto& adjoint_data) {
-        forward_data = Executable::Impl(plan->context, forward->Constants()).metadata;
-        forward_data->Upload();
-        adjoint_data
-            = AdjointExecutable(plan->context, adjoint->Constants(), plan->n_qubits, plan->parameter_map).metadata;
-        adjoint_data->Upload();
-    };
-    place(plan->right_forward, plan->right_adjoint, plan->right_forward_data, plan->right_adjoint_data);
-    if (!hermitian) {
-        place(plan->left_forward, plan->left_adjoint, plan->left_forward_data, plan->left_adjoint_data);
-    }
-    // Upload immutable observable snapshots once, never during evaluate().
+    // H is the only input. Real Pauli sums share H-dagger; CSR conjugate
+    // transposes are derived from the validated snapshot, never exported twice.
     for (const auto& ham : hams) {
-        plan->observables.push_back(owner.PrepareObservable(ham));
-    }
-    if (!hermitian) {
-        for (const auto& ham : hams_dagger) {
-            plan->daggers.push_back(owner.PrepareObservable(ham));
+        const auto program = ObservableProgram::Compile(ham, plan->n_qubits);
+        plan->observables.push_back(
+            std::shared_ptr<Observable>(new Observable(std::make_unique<Observable::Impl>(plan->context, program))));
+        if (!hermitian) {
+            if (program.layout().kind == kObservablePauli) {
+                plan->daggers.push_back(plan->observables.back());
+            } else {
+                plan->daggers.push_back(std::shared_ptr<Observable>(
+                    new Observable(std::make_unique<Observable::Impl>(plan->context, program.Dagger()))));
+            }
         }
     }
     // Bound retained memory to one real state, not one per Hamiltonian. Cache
@@ -1198,97 +1182,118 @@ GradientPlan::Result GradientPlan::Evaluate(const State& right_state, const Stat
         return result;
     }
     // Lock aliases once and distinct inputs without lock-order inversions. No
-    // mutable scratch belongs to the plan: independent evaluate calls can run
+    // workspace is shared by active evaluations. Independent calls can run
     // concurrently, while each call sees a stable pair of untouched inputs.
     const PairLock lock(right_state.impl_->mutex, left_state.impl_->mutex);
     const ContextScope scope(plan.context->handle);
+    const auto bytes = right_state.impl_->state.Size();
+    std::unique_ptr<GradientWorkspace> scratch;
+    {
+        const std::lock_guard<std::mutex> workspace_lock(plan.workspace_mutex);
+        scratch = std::move(plan.idle_workspace);
+    }
+    if (!scratch) {
+        scratch = std::make_unique<GradientWorkspace>(plan.context, bytes, plan.parameter_map.size() + 1,
+                                                      plan.hermitian, plan.observables.size() > 1);
+    }
+    for (size_t sample = 0; sample < parameters.size(); ++sample) {
+        result[sample] = plan.EvaluateSample(right_state, left_state, parameters[sample], *scratch);
+    }
+    // Bound retained memory to ONE working set, not peak call concurrency.
+    {
+        const std::lock_guard<std::mutex> workspace_lock(plan.workspace_mutex);
+        if (!plan.idle_workspace) {
+            plan.idle_workspace = std::move(scratch);
+        }
+    }
+    return result;
+}
+
+GradientPlan::Result::value_type GradientPlan::Impl::EvaluateSample(const State& right_state, const State& left_state,
+                                                                    const parameter::ParameterResolver& resolver,
+                                                                    GradientWorkspace& scratch) const {
+    const auto& plan = *this;
     const auto plane = right_state.impl_->plane;
     const auto bytes = right_state.impl_->state.Size();
-    Buffer right(plan.context, bytes), costate(plan.context, bytes);
-    std::unique_ptr<Buffer> left, shared;
-    // With one Hermitian observable, the final forward state can itself be
-    // reconstructed in reverse. Preserve it only if another sweep needs it.
-    if (!plan.hermitian || plan.observables.size() > 1) {
-        shared = std::make_unique<Buffer>(plan.context, bytes);
-    }
-    if (!plan.hermitian) {
-        left = std::make_unique<Buffer>(plan.context, bytes);
-    }
-    const auto output_size = static_cast<uint32_t>(plan.parameter_map.size() + 1);
-    Buffer partials(plan.context, AdjointPartialBytes(plan.context->cores, output_size));
-    std::unique_ptr<Buffer> workspace;
-    Stream stream(plan.context);  // drains before all evaluation scratch is freed
+    auto& right = scratch.right;
+    auto& costate = scratch.costate;
+    auto& left = scratch.left;
+    auto& shared = scratch.shared;
+    auto& partials = scratch.partials;
+    auto& workspace = scratch.cube;
+    auto& stream = scratch.stream;
     auto copy = [&](void* destination, void* source) {
         Check(aclrtMemcpyAsync(destination, bytes, source, bytes, ACL_MEMCPY_DEVICE_TO_DEVICE, stream.handle),
               "gradient copy D2D");
     };
-    for (size_t sample = 0; sample < parameters.size(); ++sample) {
-        const auto& resolver = parameters[sample];
-        Executable::Impl forward_right(plan.context, plan.right_forward->Bind(resolver), plan.right_forward_data.get());
-        AdjointExecutable adjoint_right(plan.context, plan.right_adjoint->Bind(resolver), plan.n_qubits,
-                                        plan.parameter_map, plan.right_adjoint_data.get());
-        std::unique_ptr<Executable::Impl> forward_left;
-        std::unique_ptr<AdjointExecutable> adjoint_left;
-        if (!plan.hermitian) {
-            forward_left = std::make_unique<Executable::Impl>(plan.context, plan.left_forward->Bind(resolver),
-                                                              plan.left_forward_data.get());
-            adjoint_left = std::make_unique<AdjointExecutable>(plan.context, plan.left_adjoint->Bind(resolver),
-                                                               plan.n_qubits, plan.parameter_map,
-                                                               plan.left_adjoint_data.get());
+    Executable::Impl forward_right(plan.context, plan.right_forward->Bind(resolver), std::move(scratch.images[0]));
+    AdjointExecutable adjoint_right(plan.context, plan.right_adjoint->Bind(resolver), std::move(scratch.images[1]));
+    std::unique_ptr<Executable::Impl> forward_left;
+    std::unique_ptr<AdjointExecutable> adjoint_left;
+    if (!plan.hermitian) {
+        forward_left = std::make_unique<Executable::Impl>(plan.context, plan.left_forward->Bind(resolver),
+                                                          std::move(scratch.images[2]));
+        adjoint_left = std::make_unique<AdjointExecutable>(plan.context, plan.left_adjoint->Bind(resolver),
+                                                           std::move(scratch.images[3]));
+    }
+    const auto workspace_bytes = std::max({forward_right.workspace_bytes, adjoint_right.workspace_bytes,
+                                           forward_left ? forward_left->workspace_bytes : 0U,
+                                           adjoint_left ? adjoint_left->workspace_bytes : 0U});
+    if (workspace_bytes && (!workspace || workspace->Size() < workspace_bytes)) {
+        workspace = std::make_unique<Buffer>(plan.context, workspace_bytes);
+    }
+    auto* cube = workspace ? workspace->Data() : nullptr;
+    Transaction transaction(stream.handle);  // before bound metadata can unwind
+    forward_right.metadata->Upload(stream.handle);
+    adjoint_right.metadata->Upload(stream.handle);
+    if (forward_left) {
+        forward_left->metadata->Upload(stream.handle);
+        adjoint_left->metadata->Upload(stream.handle);
+    }
+    copy(right.Data(), right_state.impl_->state.Data());
+    forward_right.Launch(stream.handle, right.Data(), plane, cube);
+    if (forward_left) {
+        copy(left->Data(), left_state.impl_->state.Data());
+        forward_left->Launch(stream.handle, left->Data(), plane, cube);
+    }
+    Result::value_type result;
+    result.reserve(plan.observables.size());
+    for (size_t h = 0; h < plan.observables.size(); ++h) {
+        // Two/three (Hermitian) or four (general) scratch states. At most
+        // one D2D shared-state copy per sweep, never per gate/derivative.
+        auto* left_data = plan.hermitian ? right.Data() : left->Data();
+        auto* sweep_state = shared ? shared->Data() : right.Data();
+        if (shared) {
+            copy(sweep_state, left_data);
         }
-        const auto workspace_bytes = std::max({forward_right.workspace_bytes, adjoint_right.workspace_bytes,
-                                               forward_left ? forward_left->workspace_bytes : 0U,
-                                               adjoint_left ? adjoint_left->workspace_bytes : 0U});
-        if (workspace_bytes && (!workspace || workspace->Size() < workspace_bytes)) {
-            workspace = std::make_unique<Buffer>(plan.context, workspace_bytes);
-        }
-        Transaction transaction(stream.handle);  // before bound metadata can unwind
-        forward_right.metadata->Upload(stream.handle);
-        adjoint_right.metadata->Upload(stream.handle);
-        if (forward_left) {
-            forward_left->metadata->Upload(stream.handle);
-            adjoint_left->metadata->Upload(stream.handle);
-        }
-        copy(right.Data(), right_state.impl_->state.Data());
-        forward_right.Launch(stream.handle, right.Data(), plane, workspace ? workspace->Data() : nullptr);
-        if (forward_left) {
-            copy(left->Data(), left_state.impl_->state.Data());
-            forward_left->Launch(stream.handle, left->Data(), plane, workspace ? workspace->Data() : nullptr);
-        }
-        result[sample].reserve(plan.observables.size());
-        for (size_t h = 0; h < plan.observables.size(); ++h) {
-            // Two/three (Hermitian) or four (general) scratch states. At most
-            // one D2D shared-state copy per sweep, never per gate/derivative.
-            auto* left_data = plan.hermitian ? right.Data() : left->Data();
-            auto* sweep_state = shared ? shared->Data() : right.Data();
-            if (shared) {
-                copy(sweep_state, left_data);
+        plan.observables[h]->impl_->Launch(stream.handle, right.Data(), nullptr, costate.Data(), nullptr);
+        const auto& left_sweep = plan.hermitian ? adjoint_right : *adjoint_left;
+        left_sweep.Launch(stream.handle, sweep_state, costate.Data(), partials, cube);
+        Check(aclrtSynchronizeStream(stream.handle), "left adjoint sweep");
+        auto row = left_sweep.Read(partials);
+        if (plan.hermitian) {
+            for (size_t column = 1; column < row.size(); ++column) {
+                row[column] = {2 * row[column].real(), 0};
             }
-            plan.observables[h]->impl_->Launch(stream.handle, right.Data(), nullptr, costate.Data(), nullptr);
-            const auto& left_sweep = plan.hermitian ? adjoint_right : *adjoint_left;
-            left_sweep.Launch(stream.handle, sweep_state, costate.Data(), partials,
-                              workspace ? workspace->Data() : nullptr);
-            Check(aclrtSynchronizeStream(stream.handle), "left adjoint sweep");
-            auto row = left_sweep.Read(partials);
-            if (plan.hermitian) {
-                for (size_t column = 1; column < row.size(); ++column) {
-                    row[column] = {2 * row[column].real(), 0};
-                }
-            } else {
-                copy(sweep_state, right.Data());
-                plan.daggers[h]->impl_->Launch(stream.handle, left_data, nullptr, costate.Data(), nullptr);
-                adjoint_right.Launch(stream.handle, sweep_state, costate.Data(), partials,
-                                     workspace ? workspace->Data() : nullptr);
-                Check(aclrtSynchronizeStream(stream.handle), "right adjoint sweep");
-                const auto right_row = adjoint_right.Read(partials);
-                for (size_t column = 1; column < row.size(); ++column) {
-                    row[column] += std::conj(right_row[column]);
-                }
+        } else {
+            copy(sweep_state, right.Data());
+            plan.daggers[h]->impl_->Launch(stream.handle, left_data, nullptr, costate.Data(), nullptr);
+            adjoint_right.Launch(stream.handle, sweep_state, costate.Data(), partials, cube);
+            Check(aclrtSynchronizeStream(stream.handle), "right adjoint sweep");
+            const auto right_row = adjoint_right.Read(partials);
+            for (size_t column = 1; column < row.size(); ++column) {
+                row[column] += std::conj(right_row[column]);
             }
-            // Keep the full complex overlap, including Hermitian FP32 diagnostics.
-            result[sample].push_back(std::move(row));
         }
-        transaction.Finish("evaluate gradient sample");
+        // Keep the full complex overlap, including Hermitian FP32 diagnostics.
+        result.push_back(std::move(row));
+    }
+    transaction.Finish("evaluate gradient sample");
+    scratch.images[0] = std::move(forward_right.metadata);
+    scratch.images[1] = std::move(adjoint_right.metadata);
+    if (forward_left) {
+        scratch.images[2] = std::move(forward_left->metadata);
+        scratch.images[3] = std::move(adjoint_left->metadata);
     }
     return result;
 }

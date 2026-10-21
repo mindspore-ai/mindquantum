@@ -17,10 +17,12 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <stdexcept>
 #include <utility>
 
 #include "ops/hamiltonian.h"
+#include "qubit_layout.h"
 
 namespace mindquantum::sim::ascend {
 namespace {
@@ -76,48 +78,55 @@ ObservableProgram ObservableProgram::Compile(const Hamiltonian<float>& hamiltoni
     if (hamiltonian.how_to_ != ORIGIN && hamiltonian.n_qubits_ != static_cast<Index>(n_qubits)) {
         throw std::invalid_argument("Ascend Hamiltonian qubit count does not match the state.");
     }
-    if (hamiltonian.how_to_ == FRONTEND) {
-        const auto& csr = hamiltonian.ham_sparse_main_;
-        if (!csr || csr->dim_ != dimension || !csr->indptr_ || (csr->nnz_ && (!csr->indices_ || !csr->data_))) {
-            throw std::invalid_argument("Invalid Ascend observable CSR shape or missing storage.");
-        }
-        if (csr->indptr_[0] != 0 || csr->indptr_[dimension] != csr->nnz_) {
-            throw std::invalid_argument("Ascend observable CSR row endpoints must be 0 and nnz.");
-        }
-        // Validate before copying/allocating any snapshot, including zero
-        // coefficients and empty rows. Unsorted/duplicate columns are valid.
-        for (uint64_t row = 0; row < dimension; ++row) {
-            if (csr->indptr_[row] > csr->indptr_[row + 1] || csr->indptr_[row + 1] > csr->nnz_) {
-                throw std::invalid_argument("Ascend observable CSR row offsets must be monotone and <= nnz.");
-            }
-        }
-        for (uint64_t i = 0; i < csr->nnz_; ++i) {
-            if (csr->indices_[i] >= dimension) {
-                throw std::invalid_argument("Ascend observable CSR column is outside the state.");
-            }
-            ValidateCoefficient(csr->data_[i].real());
-            ValidateCoefficient(csr->data_[i].imag());
-        }
-        std::vector<uint64_t> rows(csr->indptr_, csr->indptr_ + dimension + 1);
-        std::vector<uint64_t> columns;
-        std::vector<ObservableValue> values;
-        columns.reserve(csr->nnz_);
-        values.reserve(csr->nnz_);
-        for (uint64_t i = 0; i < csr->nnz_; ++i) {
-            columns.push_back(csr->indices_[i]);
-            values.push_back({csr->data_[i].real(), csr->data_[i].imag()});
-        }
-        layout.kind = kObservableCsr;
-        return ObservableProgram(layout, {}, {}, {}, {}, std::move(rows), std::move(columns), std::move(values));
-    }
+    return hamiltonian.how_to_ == FRONTEND ? CompileCsr(hamiltonian, layout) : CompilePauli(hamiltonian, layout);
+}
 
+ObservableProgram ObservableProgram::CompileCsr(const Hamiltonian<float>& hamiltonian, ObservableLayout layout) {
+    const auto dimension = layout.dimension;
+    const auto& csr = hamiltonian.ham_sparse_main_;
+    if (!csr || csr->dim_ != dimension || !csr->indptr_ || (csr->nnz_ && (!csr->indices_ || !csr->data_))) {
+        throw std::invalid_argument("Invalid Ascend observable CSR shape or missing storage.");
+    }
+    if (csr->indptr_[0] != 0 || csr->indptr_[dimension] != csr->nnz_) {
+        throw std::invalid_argument("Ascend observable CSR row endpoints must be 0 and nnz.");
+    }
+    // Validate before copying, including zero coefficients and empty rows.
+    // Unsorted/duplicate columns are valid and remain separate entries.
+    for (uint64_t row = 0; row < dimension; ++row) {
+        if (csr->indptr_[row] > csr->indptr_[row + 1] || csr->indptr_[row + 1] > csr->nnz_) {
+            throw std::invalid_argument("Ascend observable CSR row offsets must be monotone and <= nnz.");
+        }
+    }
+    for (uint64_t i = 0; i < csr->nnz_; ++i) {
+        if (csr->indices_[i] >= dimension) {
+            throw std::invalid_argument("Ascend observable CSR column is outside the state.");
+        }
+        ValidateCoefficient(csr->data_[i].real());
+        ValidateCoefficient(csr->data_[i].imag());
+    }
+    std::vector<uint64_t> rows(csr->indptr_, csr->indptr_ + dimension + 1);
+    std::vector<uint64_t> columns;
+    std::vector<ObservableValue> values;
+    columns.reserve(csr->nnz_);
+    values.reserve(csr->nnz_);
+    for (uint64_t i = 0; i < csr->nnz_; ++i) {
+        columns.push_back(csr->indices_[i]);
+        values.push_back({csr->data_[i].real(), csr->data_[i].imag()});
+    }
+    layout.kind = kObservableCsr;
+    return ObservableProgram(layout, {}, {}, {}, {}, std::move(rows), std::move(columns), std::move(values));
+}
+
+namespace {
+std::map<uint64_t, std::vector<ObservableTerm>> GroupPauliTerms(const Hamiltonian<float>& hamiltonian,
+                                                                uint64_t dimension) {
     std::map<uint64_t, std::vector<ObservableTerm>> grouped;
     for (const auto& [word, coefficient] : hamiltonian.ham_) {
         ValidateCoefficient(coefficient);
         uint64_t seen = 0, flip = 0, parity = 0;
         uint32_t ys = 0;
         for (const auto& [qubit, axis] : word) {
-            if (qubit >= static_cast<Index>(n_qubits)) {
+            if (qubit >= 32 || (uint64_t{1} << qubit) >= dimension) {
                 throw std::invalid_argument("Ascend observable Pauli qubit is outside the state.");
             }
             const auto bit = uint64_t{1} << qubit;
@@ -161,7 +170,12 @@ ObservableProgram ObservableProgram::Compile(const Hamiltonian<float>& hamiltoni
             grouped[flip].push_back(term);
         }
     }
+    return grouped;
+}
+}  // namespace
 
+ObservableProgram ObservableProgram::CompilePauli(const Hamiltonian<float>& hamiltonian, ObservableLayout layout) {
+    const auto tile = layout.tile_size;
     std::vector<ObservableGroup> groups;
     std::vector<ObservableTerm> terms;
     std::vector<uint32_t> indices;
@@ -169,7 +183,7 @@ ObservableProgram ObservableProgram::Compile(const Hamiltonian<float>& hamiltoni
     std::map<uint32_t, uint32_t> index_offsets, sign_offsets;
     // Pools contain at most tile distinct patterns of tile elements (<=4 MiB
     // each), irrespective of qubit count or number of terms. Offsets fit u32.
-    for (auto& [flip, group_terms] : grouped) {
+    for (const auto& [flip, group_terms] : GroupPauliTerms(hamiltonian, layout.dimension)) {
         const auto low_flip = static_cast<uint32_t>(flip & (tile - 1));
         auto [index_it, new_index] = index_offsets.emplace(low_flip, static_cast<uint32_t>(indices.size()));
         if (new_index) {
@@ -193,6 +207,27 @@ ObservableProgram ObservableProgram::Compile(const Hamiltonian<float>& hamiltoni
     layout.group_count = groups.size();
     return ObservableProgram(layout, std::move(groups), std::move(terms), std::move(indices), std::move(signs), {}, {},
                              {});
+}
+
+ObservableProgram ObservableProgram::Dagger() const {
+    if (layout_.kind == kObservablePauli) {
+        return *this;
+    }
+    std::vector<uint64_t> rows(row_offsets_.size(), 0), columns(columns_.size());
+    std::vector<ObservableValue> values(values_.size());
+    for (const auto column : columns_) {
+        ++rows[column + 1];
+    }
+    std::partial_sum(rows.begin(), rows.end(), rows.begin());
+    auto next = rows;
+    for (uint64_t row = 0; row < layout_.dimension; ++row) {
+        for (auto i = row_offsets_[row]; i < row_offsets_[row + 1]; ++i) {
+            const auto target = next[columns_[i]]++;
+            columns[target] = row;
+            values[target] = {values_[i].real, -values_[i].imag};
+        }
+    }
+    return ObservableProgram(layout_, {}, {}, {}, {}, std::move(rows), std::move(columns), std::move(values));
 }
 
 SamplingLayout MakeSamplingLayout(int64_t n_qubits, uint32_t bins) {
@@ -239,21 +274,9 @@ DensityProgram CompileDensity(int64_t n_qubits, uint64_t kept_mask, uint32_t cor
     while (packet & result.layout.run) {
         result.layout.run <<= 1;
     }
-    const auto expand = [](uint64_t mask) {
-        std::vector<uint64_t> offsets{0};
-        while (mask) {
-            const auto bit = mask & (~mask + 1);
-            const auto size = offsets.size();
-            for (size_t i = 0; i < size; ++i) {
-                offsets.push_back(offsets[i] | bit);
-            }
-            mask ^= bit;
-        }
-        return offsets;
-    };
-    result.offsets = expand(packet & ~(uint64_t{result.layout.run} - 1));
-    const auto physical = expand(packet);
-    const auto active = expand(environment & packet);
+    result.offsets = Offsets(packet & ~(static_cast<uint64_t>(result.layout.run) - 1));
+    const auto physical = Offsets(packet);
+    const auto active = Offsets(environment & packet);
     const auto stride = std::max(result.layout.environment_size, 8U);
     result.indices.resize(8 * stride);
     for (uint32_t low = 0; low < 8; ++low) {

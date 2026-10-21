@@ -13,8 +13,10 @@
 #ifndef MINDQUANTUM_ASCEND_QUBIT_LAYOUT_H_
 #define MINDQUANTUM_ASCEND_QUBIT_LAYOUT_H_
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -22,6 +24,22 @@
 #include "simulator/circuit_tiling/state_space.h"
 
 namespace mindquantum::sim::ascend {
+// Tensor-product embedding: selected bits retain their order; every omitted
+// bit labels an independent copy of the same small operation.
+inline std::vector<uint64_t> Offsets(uint64_t mask) {
+    std::vector<uint64_t> offsets{0};
+    while (mask) {
+        const auto bit = mask & (~mask + 1);
+        const auto count = offsets.size();
+        offsets.resize(2 * count);
+        for (size_t i = 0; i < count; ++i) {
+            offsets[count + i] = offsets[i] | bit;
+        }
+        mask ^= bit;
+    }
+    return offsets;
+}
+
 // Compile-time only: amplitudes remain in-place and no layout survives the
 // executable boundary. Both predicates and compact bases use this same map.
 class QubitLayout {
@@ -32,10 +50,10 @@ class QubitLayout {
 
     uint64_t Physical(uint64_t logical) const {
         uint64_t result = 0;
-        for (size_t qubit = 0; qubit < positions_.size(); ++qubit) {
-            if (logical & (uint64_t{1} << qubit)) {
-                result |= uint64_t{1} << positions_[qubit];
-            }
+        while (logical) {
+            const auto bit = logical & (~logical + 1);
+            result |= uint64_t{1} << positions_[CountOne(bit - 1)];
+            logical ^= bit;
         }
         return result;
     }
@@ -54,18 +72,17 @@ class QubitLayout {
         // Column bits are physical-order spectators; row bits retain the
         // Builder's logical target order. Both planes use the same bijection.
         auto source = circuit_tiling::QubitsFromMask(packet & ~Physical(logical_targets));
-        for (auto qubit : circuit_tiling::QubitsFromMask(logical_targets)) {
-            source.push_back(positions_[qubit]);
-        }
+        const auto targets = circuit_tiling::QubitsFromMask(logical_targets);
+        std::transform(targets.begin(), targets.end(), std::back_inserter(source),
+                       [&](auto qubit) { return positions_[qubit]; });
         const auto destination = circuit_tiling::QubitsFromMask(packet);
         auto permutation = positions_;
         std::iota(permutation.begin(), permutation.end(), 0);
         for (size_t i = 0; i < source.size(); ++i) {
             permutation[source[i]] = destination[i];
         }
-        for (auto& position : positions_) {
-            position = permutation[position];
-        }
+        std::transform(positions_.begin(), positions_.end(), positions_.begin(),
+                       [&](auto position) { return permutation[position]; });
     }
 
     std::vector<std::pair<qbit_t, qbit_t>> Restoration() const {

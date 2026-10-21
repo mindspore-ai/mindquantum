@@ -22,6 +22,7 @@
 
 "mindquantum/ccsrc/include/config/details/cxx20_compatibility.h"                            "preprocessorErrorDirective"
 "mindquantum/ccsrc/include/math/tensor/ops_cpu/utils.h"                                     "unusedStructMember"
+"mindquantum/ccsrc/include/simulator/vector/ascend/program.h"                               "unusedStructMember"
 
 "mindquantum/ccsrc/include/config/config.h"                                                 "syntaxError"
 "mindquantum/ccsrc/include/core/sparse/algo.h"                                              "syntaxError"

@@ -114,26 +114,31 @@ small device instruction set, rather than reimplementing each gate formula.
 `Planner::Capacity::FullSupport` includes every operand/control when selecting
 dense operators; the CPU planner's default mixing-only policy is unchanged.
 
-Compilation, placement, binding and execution have separate lifetimes:
+Compilation, binding, placement and execution have separate lifetimes:
 
-1. `ForwardPlan` and `AdjointPlan` snapshot gates and plan topology once. Pure
+1. A gradient plan validates and snapshots each input circuit once, sharing the
+   immutable semantic input between `ForwardPlan` and `AdjointPlan`. Pure
    constant blocks are compiled immediately. Ordered physical support determines
    shared packet-routing tables; sharing a table still updates each block's own
    physical layout. The scheduler reuses a segment's dependency workspace across
    candidate evaluations and tile commits instead of copying the entire graph
    for every tile.
-2. A gradient plan places immutable routing, constant operators and Matmul
-   geometry on the device once. Matmul tiling is computed per distinct shape,
-   not per block or per evaluation.
-3. Binding synthesizes parameter-dependent operators/derivatives in host double
+2. Binding synthesizes parameter-dependent operators/derivatives in host double
    precision. It shares all other program storage. Symbolic `no_grad` expressions
    remain dynamic, and custom callbacks are never constant-folded. Dynamic
    Vector instructions may change shape at zero angles, so they are encoded from
-   the actual parameters, never from a dummy-zero template.
-4. Placement resolves already-resident fragments and assembles only new payloads
-   into an exact-size pinned buffer. Uploads and kernels share one stream;
-   transaction guards drain it before releasing any call-local storage, even
-   when a later upload or launch fails.
+   the actual parameters, never from a dummy-zero template. Independent built-in
+   Cube blocks are synthesized in parallel within the `OMP_NUM_THREADS` budget;
+   custom callbacks retain serial execution. Dense tangents begin evolving only
+   after their parameter's first contribution to the block.
+3. Placement assembles each complete bound program into one self-contained
+   image, deduplicating shared routing and coefficient pools within that image.
+   Matmul tiling is computed once per distinct shape in the assembly. Pinned and
+   device buffers reuse their capacity, growing only when needed; no address
+   refers into another program's image and no dummy binding is needed.
+4. Execution uploads the complete image once per binding and reuses it across
+   observables. Uploads and kernels share one stream; transaction guards drain
+   it before releasing any call-local storage, including on exceptions.
 
 Forward execution combines:
 
@@ -150,30 +155,51 @@ block B, the compiler applies the product rule to Builder's gate/derivative
 images in complex128, combining all occurrences of a shared parameter into one
 dB-dagger matrix. Packet routing is planned once. Cube reconstructs both states
 with B-dagger and contracts each dB-dagger against the original costate and the
-reconstructed state. It restores canonical layout at every block boundary.
-The Vector path instead evolves and differentiates individual gate images in
-UB. Both paths zero-extend derivatives outside their controls/support.
+reconstructed state. Each derivative uses one Matmul over up to eight packets,
+followed by a compensated batch sum and one partial-record update. Staging is
+reused sequentially across derivatives, without grouped-M output decoding or a
+second derivative pipeline. Local MTE3-to-scalar fences obtain free TPipe event
+IDs rather than reusing the event reserved by Matmul's asynchronous message
+protocol. Other packet fences retain literal IDs for their paired local events.
+Both states retain the same physical layout across Cube and Vector blocks:
+their inner product is invariant under that common basis
+permutation. These disposable sweep states need no canonical restoration.
+The Vector path evolves two spatial tiles resident in UB together, combining
+each intrinsic derivative's contractions before applying its Jacobian targets
+and updating device partials. Scratch is independent of target count; a final
+single tile uses the same loop. Each AIV accumulates the initial overlap across
+all its tiles and writes that partial once. Evolution-only runs fold adjacent
+diagonals and load instruction metadata once for both states; derivative
+boundaries remain explicit. Both paths zero-extend derivatives outside their
+controls/support.
 
 Cube staging is bounded per core and reused across parameters; Vector derivative
 scratch stays in UB. There are no per-gate or per-parameter full-state checkpoints. Complex two-sided
 gradients use a left sweep with H and a conjugated right sweep with H dagger;
 only identical sides with known Hermitian observables use twice the real part.
 Device partials use balanced reductions and compensated accumulation, followed
-by a small host double-precision reduction.
+by a small host double-precision reduction. Each AIV owns its output records;
+updates preserve both the sum and its correction, without atomics, a UB hash
+table or a fixed parameter-count limit. The two complex components share a balanced
+reduction tree rather than separately synchronizing scalar `ReduceSum` results.
 
 Pauli observables group terms by flip mask to share state reads. A gradient plan
 may precompute one real I/Z Hamiltonian diagonal on the device, choosing the
 eligible observable with the most terms. The immutable cache is shared across
-evaluations, so applying that Hamiltonian becomes a single elementwise product.
+evaluations and both sweeps when H and H-dagger are the same Pauli operator, so
+applying that Hamiltonian becomes a single elementwise product.
 Expectation-only execution never allocates a full H|psi> state. Sampling builds a device probability
 tree and transfers only bin masses and sampled indices. Reduced-state contraction
 pairs only matching traced indices, without constructing a full density matrix.
 
 ACL contexts are shared by device with explicit ownership. Executables and
-observables are immutable; streams and mutable scratch belong to states or
-individual gradient evaluations. Aliased state pairs are locked once. Exception
-paths drain outstanding work before freeing its inputs. Destruction does not
-reset the device or finalize another library's ACL runtime.
+observables are immutable. Each active gradient evaluation exclusively owns its
+stream, state scratch and dynamic metadata. A plan retains at most one completed
+workspace for reuse; concurrent calls acquire separate workspaces, and excess
+workspaces are released on completion. Aliased state pairs are locked once.
+Exception paths drain outstanding work and discard the failed workspace instead
+of returning it to the plan. Destruction does not reset the device or finalize
+another library's ACL runtime.
 
 ## Memory and performance boundaries
 
@@ -181,14 +207,19 @@ A state requires `8 * 2**n` bytes (2 GiB at 28 qubits), plus bounded workspace.
 The index ABI supports 0–32 qubits, **subject to available device memory**.
 A Hermitian gradient requires two additional full states for one observable,
 three for multiple observables; a general two-sided gradient requires four.
-Scratch is reused within a batch, not multiplied by parameter count or depth.
+Scratch is reused across samples and calls, not multiplied by parameter count or
+depth. The one idle workspace remains allocated until its gradient plan is
+destroyed; retaining several gradient plans therefore retains several working
+sets. No allocation retry or memory-pressure fallback is performed.
 The optional diagonal cache adds at most `4 * max(8, 2**n)` bytes per gradient plan
 (64 MiB at 24 qubits), independent of the number of observables. Dense adjoint
-staging is also independent of state size and parameter count: 60 MiB on a
-48-Vector-core 910B2, plus CANN's mixed-core workspace.
+staging is bounded independently of state size and total parameter count:
+60 MiB on a 48-Vector-core 910B2, plus CANN's mixed-core workspace. It holds
+the input and reconstructed state pair and one derivative result for each
+eight-packet batch, not one buffer per circuit parameter.
 Compiled operator metadata is separate from state scratch: the plan retains
-immutable host/device data proportional to circuit depth and distinct routing
-tables. Each concurrent evaluation owns its parameter-dependent metadata and
+immutable host data proportional to circuit depth and distinct routing tables.
+Each concurrent evaluation owns its complete bound device metadata and
 staging; repeated evaluations do not grow a cache of parameter values/results.
 `apply_hamiltonian` requires a separate output state. State download and explicit
 circuit/reduced matrices require host memory proportional to their output.
@@ -198,14 +229,20 @@ evolution. Parameter batches currently execute sequentially on the NPU;
 `parallel_worker` does not create CPU worker pools. Noisy sampling executes
 individual trajectories and synchronizes at random branch decisions. These paths
 are correct but are not throughput-optimized for large batches of tiny circuits.
+One Kraus candidate is reused within a trajectory, and parameter-shift state
+buffers are reused within each invocation, never shared across active calls.
 Arbitrary CSR uses scalar indexed loads and is not expected to match grouped
 Pauli throughput. Gradient timings include coefficient/derivative synthesis,
 observable application and reverse contractions; forward Cube performance must
 not be reported as gradient performance.
 
 The defaults (`tile_qubits=12`, `fusion_qubits=6`, `cube_min_gates=4`) target
-large deterministic states. The Vector adjoint tile is capped at 11 bits to fit its
-additional live state. `cube_min_gates=0` selects Vector-only execution; it is an
+large deterministic states. Both directions require `4 <= tile_qubits <= 12` and
+`1 <= fusion_qubits <= tile_qubits - 3`, checked without compiling an empty
+circuit. These options are upper budgets, not exact tile sizes: the state size
+and execution engine can lower them. The Vector adjoint tile is capped at 11 bits
+and its fusion budget at eight to fit its additional live states and aligned DMA;
+Cube support remains capped at six. `cube_min_gates=0` selects Vector-only execution; it is an
 explicit execution policy, not a runtime recovery path. Defaults are not a claim
 of optimality for every circuit or every 910B model.
 

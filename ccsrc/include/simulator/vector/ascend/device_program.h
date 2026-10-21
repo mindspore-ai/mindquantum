@@ -27,6 +27,8 @@ constexpr uint32_t kMaxMatrixBlocks = 4;
 constexpr uint32_t kDenseTileSize = 4096;
 constexpr uint32_t kDenseBatchPackets = 8;
 constexpr uint32_t kDensePipelineSlots = 2;
+// One input pair, one evolved pair, one derivative result (complex SoA).
+constexpr uint32_t kDenseAdjointPlanes = 10;
 constexpr uint32_t kMaxDenseQubits = 6;
 constexpr uint32_t kMatrix = 0;
 constexpr uint32_t kDiagonal = 1;
@@ -35,7 +37,11 @@ constexpr uint32_t kPermutation = 3;
 // A derivative instruction is a linear map with ZERO, not identity, on
 // unmentioned bases. Its external predicate is still tested by the caller.
 constexpr uint32_t kZeroUnmentioned = 0x80000000U;
-// Three complex tiles plus executor/reduction scratch fit in the 910B UB.
+// Project all inactive external-control sectors with one zero diagonal.
+constexpr uint32_t kInvertPredicate = 0x40000000U;
+constexpr uint32_t kInstructionFlags = kZeroUnmentioned | kInvertPredicate;
+// Two resident state pairs, one derivative tile and executor/reduction scratch
+// fit in the 910B UB. The public tile width is an upper budget, not an exact size.
 constexpr uint32_t kMaxAdjointTileSize = 2048;
 // Each block owns output_size aligned slots; lanes 0/1 are real/imaginary,
 // lanes 2/3 their Kahan errors. Host double-sums (0-2) and (1-3).

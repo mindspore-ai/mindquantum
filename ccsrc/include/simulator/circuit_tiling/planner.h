@@ -374,9 +374,8 @@ class Planner {
 
         std::vector<index_t> seed_masks;
         seed_masks.reserve(ready.size());
-        for (auto gate_index : ready) {
-            seed_masks.push_back(RequiredMask(graph.gates[gate_index], capacity_));
-        }
+        std::transform(ready.begin(), ready.end(), std::back_inserter(seed_masks),
+                       [&](auto gate_index) { return RequiredMask(graph.gates[gate_index], capacity_); });
         std::sort(seed_masks.begin(), seed_masks.end());
         seed_masks.erase(std::unique(seed_masks.begin(), seed_masks.end()), seed_masks.end());
         for (auto mask : seed_masks) {

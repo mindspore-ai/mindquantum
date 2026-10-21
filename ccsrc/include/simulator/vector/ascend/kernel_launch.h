@@ -29,7 +29,8 @@ aclError LaunchDense(uint32_t blocks, aclrtStream stream, void* state, void* mat
 
 // Launch every AdjointProgram tile in order on the SAME stream and with the
 // SAME positive block count (idle blocks are allowed). Both states are distinct
-// canonical SoA FP32 buffers of 2*plane floats, plane=max(8,2^n_qubits).
+// SoA FP32 buffers of 2*plane floats in the SAME compiler-tracked layout,
+// plane=max(8,2^n_qubits). Only the sweep input must be canonical.
 // Upload tile.instructions/steps/derivatives/targets/offsets and program.data
 // unchanged. Empty metadata arrays may be null. No extra device workspace.
 // size<=kMaxAdjointTileSize, size/run powers of two, 8<=run<=size<=plane.
@@ -55,13 +56,15 @@ aclError LaunchAdjointTile(uint32_t blocks, aclrtStream stream, void* shared_sta
 
 // The same contraction for a fused block B. Cube evolves BOTH states by B^dagger,
 // then contracts <psi_before|dB^dagger|lambda_after> for each active parameter.
-// Derivatives are already Jacobian-weighted. Routing is restored before return.
+// Derivatives are already Jacobian-weighted. Both outputs retain packed layout;
+// no canonical restoration is needed for the discarded sweep work states.
 // blocks is the Cube count; its 2*blocks AIVs must match the Vector sweep's slot
-// ownership. Workspace is the library slice plus 10*packet.size*batch_packets
-// floats per AIV, independent of state size and the number of derivatives.
+// ownership. Workspace is the library slice plus kDenseAdjointPlanes per AIV,
+// independent of state size and parameter count. One matrix is contracted at a
+// time, with compensated accumulation across its packet batch.
 aclError LaunchDenseAdjoint(uint32_t blocks, aclrtStream stream, void* shared_state, void* costate, void* matrix,
-                            void* derivatives, void* outputs, void* offsets, void* indices, void* inverse_indices,
-                            void* tiling, void* workspace, void* partials, DensePacket packet,
-                            uint32_t derivative_count, uint32_t output_size, uint32_t compute_overlap);
+                            void* derivatives, void* outputs, void* offsets, void* indices, void* tiling,
+                            void* workspace, void* partials, DensePacket packet, uint32_t derivative_count,
+                            uint32_t output_size, uint32_t compute_overlap);
 }  // namespace mindquantum::sim::ascend
 #endif  // INCLUDE_SIMULATOR_VECTOR_ASCEND_KERNEL_LAUNCH_H_

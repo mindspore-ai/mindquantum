@@ -51,6 +51,7 @@ def _hamiltonian(n_qubits):
 
 
 def _state_error(actual, reference):
+    """Check full-state accuracy with bounded temporary memory and double accumulation."""
     error, norm, actual_norm, maximum = 0.0, 0.0, 0.0, 0.0
     # Full-state comparison, bounded host temporary storage, double accumulation.
     for start in range(0, len(actual), 1 << 20):
@@ -68,6 +69,7 @@ def _state_error(actual, reference):
 
 
 def _evolution(n_qubits, options):
+    """Measure first execution, prepared replay and observables against a CPU reference."""
     circuit = random_circuit(n_qubits, n_qubits * 100, seed=options.seed)
     sim, construction = _timed(lambda: Simulator('mqvector_npu', n_qubits, seed=options.seed, device_id=options.device))
     _, first = _timed(sim.apply_circuit, circuit)
@@ -124,6 +126,7 @@ def _evolution(n_qubits, options):
 
 
 def _gradient(n_qubits, options):
+    """Measure gradient construction and evaluations and compare every output on CPU."""
     circuit = Circuit().ry(ParameterResolver('encoder').as_encoder(), 0)
     for layer in range(2):
         for q in range(n_qubits):
@@ -173,6 +176,7 @@ def _gradient(n_qubits, options):
 
 
 def _maxcut(n_qubits, options):
+    """Measure a reproducible MaxCut gradient and optional optimization trace."""
     import networkx as nx
     from scipy.optimize import minimize
 

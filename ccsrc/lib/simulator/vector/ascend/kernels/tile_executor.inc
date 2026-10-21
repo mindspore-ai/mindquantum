@@ -10,43 +10,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INCLUDE_SIMULATOR_VECTOR_ASCEND_TILE_EXECUTOR_H_
-#define INCLUDE_SIMULATOR_VECTOR_ASCEND_TILE_EXECUTOR_H_
+#ifndef MINDQUANTUM_ASCEND_TILE_EXECUTOR_INC_
+#define MINDQUANTUM_ASCEND_TILE_EXECUTOR_INC_
 
-#include "kernel_operator.h"
-#include "simulator/vector/ascend/device_program.h"
+#include "common.inc"
 
 namespace mindquantum::sim::ascend::device {
 using namespace AscendC;  // NOLINT
 
-__aicore__ inline uint64_t Deposit(uint64_t value, uint64_t mask) {
-    uint64_t result = 0;
-    while (mask) {
-        const auto bit = mask & (~mask + 1);
-        if (value & 1) {
-            result |= bit;
-        }
-        value >>= 1;
-        mask ^= bit;
-    }
-    return result;
-}
-
-__aicore__ inline uint32_t Parity(uint64_t value) {
-    value ^= value >> 32;
-    value ^= value >> 16;
-    value ^= value >> 8;
-    value ^= value >> 4;
-    return (0x6996U >> (value & 15U)) & 1U;
-}
-
 __aicore__ inline bool Matches(const __gm__ Instruction& op, uint64_t base) {
-    return (base & op.controls) == op.controls && Parity(base & op.parity_mask) == op.parity;
+    const bool matches = (base & op.controls) == op.controls && Parity(base & op.parity_mask) == op.parity;
+    return matches != bool(op.kind & kInvertPredicate);
 }
 
 // Shared Vector quantum instruction executor. The caller owns the resident
 // SoA tile (plane stride Capacity); only bounded reusable scratch lives here.
-// Evolution retains the original Gather/strided math and synchronization.
 // Derivative pieces differ ONLY in their zero extension on untouched bases.
 template <uint32_t Capacity>
 class TileExecutor {
@@ -57,13 +35,25 @@ class TileExecutor {
         size_ = size;
         pipe.InitBuffer(input_buf_, 2 * Staging * sizeof(float));
         pipe.InitBuffer(output_buf_, 2 * Staging * sizeof(float));
-        pipe.InitBuffer(index_buf_, Staging * sizeof(uint32_t));
+        pipe.InitBuffer(index_buf_, (Staging + Capacity) * sizeof(uint32_t));
         pipe.InitBuffer(temp_buf_, Capacity * sizeof(float));
     }
 
-    __aicore__ inline void Apply(const __gm__ Instruction& op, LocalTensor<float> state) {
+    // Consecutive SoA states share the instruction's resident metadata. Keep
+    // one interpreter body instead of expanding a separate paired executor.
+    __aicore__ inline void Apply(const __gm__ Instruction& op, LocalTensor<float> state, uint32_t count = 1) {
+        Prepare(op);
+        for (uint32_t i = 0; i < count; ++i) {
+            ApplyLoaded(op, state[2 * Capacity * i]);
+        }
+    }
+
+ private:
+    static constexpr uint32_t Staging = Capacity + kMatrixPadding;
+
+    __aicore__ inline void ApplyLoaded(const __gm__ Instruction& op, LocalTensor<float> state) {
         state_ = state;
-        const auto kind = op.kind & ~kZeroUnmentioned;
+        const auto kind = op.kind & ~kInstructionFlags;
         if (kind == kMatrix) {
             Matrix(op);
         } else if (kind == kStridedMatrix) {
@@ -75,14 +65,24 @@ class TileExecutor {
         }
     }
 
- private:
-    static constexpr uint32_t Staging = Capacity + kMatrixPadding;
-
-    __aicore__ inline void ReadIndices(uint32_t offset, uint32_t count) {
-        // The previous Gather must have consumed the index buffer.
+    __aicore__ inline void Prepare(const __gm__ Instruction& op) {
+        const auto kind = op.kind & ~kInstructionFlags;
+        if (kind == kStridedMatrix) {
+            return;
+        }
+        // Neither state's arithmetic overwrites this instruction's metadata.
         SetFlag<HardEvent::V_MTE2>(EVENT_ID0);
         WaitFlag<HardEvent::V_MTE2>(EVENT_ID0);
-        DataCopy(index_buf_.Get<uint32_t>(), data_[offset], count);
+        if (kind == kMatrix) {
+            DataCopy(index_buf_.Get<uint32_t>(), data_[op.forward], op.staging_size);
+            DataCopy(index_buf_.Get<uint32_t>()[Staging], data_[op.inverse], size_);
+        } else if (kind == kPermutation) {
+            DataCopy(index_buf_.Get<uint32_t>(), data_[op.forward], size_);
+        } else {
+            auto factors = input_buf_.Get<float>();
+            DataCopy(factors, coefficients_[op.coefficients], size_);
+            DataCopy(factors[Staging], coefficients_[op.coefficients + size_], size_);
+        }
         SetFlag<HardEvent::MTE2_V>(EVENT_ID0);
         WaitFlag<HardEvent::MTE2_V>(EVENT_ID0);
     }
@@ -122,7 +122,6 @@ class TileExecutor {
         auto output = output_buf_.Get<float>();
         auto index = index_buf_.Get<uint32_t>();
         const uint32_t staging_size = op.staging_size;
-        ReadIndices(op.forward, staging_size);
         Gather(input, state, index, 0, staging_size);
         Gather(input[Staging], state[Capacity], index, 0, staging_size);
         PipeBarrier<PIPE_V>();
@@ -162,9 +161,8 @@ class TileExecutor {
             }
             start += op.dimension * groups;
         }
-        ReadIndices(op.inverse, size_);
-        Gather(state, output, index, 0, size_);
-        Gather(state[Capacity], output[Staging], index, 0, size_);
+        Gather(state, output, index[Staging], 0, size_);
+        Gather(state[Capacity], output[Staging], index[Staging], 0, size_);
         PipeBarrier<PIPE_V>();
     }
 
@@ -225,7 +223,6 @@ class TileExecutor {
         auto state = state_;
         auto input = input_buf_.Get<float>();
         auto index = index_buf_.Get<uint32_t>();
-        ReadIndices(op.forward, size_);
         DataCopy(input, state, size_);
         DataCopy(input[Staging], state[Capacity], size_);
         PipeBarrier<PIPE_V>();
@@ -239,12 +236,6 @@ class TileExecutor {
         auto factors = input_buf_.Get<float>();
         auto output = output_buf_.Get<float>();
         auto temp = temp_buf_.Get<float>();
-        SetFlag<HardEvent::V_MTE2>(EVENT_ID0);
-        WaitFlag<HardEvent::V_MTE2>(EVENT_ID0);
-        DataCopy(factors, coefficients_[op.coefficients], size_);
-        DataCopy(factors[Staging], coefficients_[op.coefficients + size_], size_);
-        SetFlag<HardEvent::MTE2_V>(EVENT_ID0);
-        WaitFlag<HardEvent::MTE2_V>(EVENT_ID0);
         // Derivative diagonals are already zero-extended by the compiler.
         Mul(temp, state[Capacity], factors[Staging], size_);
         Mul(output, state, factors[Staging], size_);
@@ -264,4 +255,4 @@ class TileExecutor {
     uint32_t size_;
 };
 }  // namespace mindquantum::sim::ascend::device
-#endif  // INCLUDE_SIMULATOR_VECTOR_ASCEND_TILE_EXECUTOR_H_
+#endif  // MINDQUANTUM_ASCEND_TILE_EXECUTOR_INC_

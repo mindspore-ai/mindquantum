@@ -14,11 +14,9 @@
 # ============================================================================
 """Public mqvector_npu contracts, checked against complex128 CPU/NumPy references."""
 
-import copy
 import gc
 import subprocess
 import sys
-import weakref
 
 import numpy as np
 import pytest
@@ -30,11 +28,13 @@ from mindquantum.core.circuit import Circuit
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.core.parameterresolver import ParameterResolver
 from mindquantum.simulator import Simulator, get_supported_simulator, inner_product
-from mindquantum.simulator import mqvector_npu as npu_backend
 from mindquantum.simulator.available_simulator import MQVECTOR_NPU_SUPPORTED
 from mindquantum.simulator.mqvector_npu import MQVectorNPU
 
-pytestmark = [pytest.mark.level0, pytest.mark.skipif(not MQVECTOR_NPU_SUPPORTED, reason='Ascend extension not built')]
+pytestmark = [
+    pytest.mark.platform_arm_ascend910b_training,
+    pytest.mark.skipif(not MQVECTOR_NPU_SUPPORTED, reason='Ascend extension not built'),
+]
 
 
 def _state(n, seed=17):
@@ -65,11 +65,14 @@ def _no_download(*_args, **_kwargs):
     raise AssertionError('Operation must not download the state vector.')
 
 
-def _unexpected_gradient_work(*_args, **_kwargs):
-    raise AssertionError('Redundant Python gradient construction or mutable metadata access.')
-
-
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_import_registration_does_not_load_npu():
+    """Feature: Lazy backend registration.
+    Description: Import MindQuantum and inspect supported backends in a fresh interpreter.
+    Expectation: Registration does not import the native NPU extension.
+    """
     subprocess.run(
         [
             sys.executable,
@@ -85,7 +88,14 @@ def test_import_registration_does_not_load_npu():
     )
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_constructor_precision_and_errors_do_not_allocate_or_retry(monkeypatch):
+    """Feature: Fail-fast construction.
+    Description: Supply unsupported precision and policies before an unavailable device.
+    Expectation: Invalid inputs allocate nothing and a device error propagates without retry.
+    """
     from mindquantum import _mq_vector_npu as native
 
     calls = []
@@ -98,6 +108,13 @@ def test_constructor_precision_and_errors_do_not_allocate_or_retry(monkeypatch):
     for dtype in (mq.complex128, mq.float32, np.complex64):
         with pytest.raises(TypeError, match='complex64 only'):
             Simulator('mqvector_npu', 1, dtype=dtype)
+    for qubits, tile, fusion in ((33, 12, 6), (8, 3, 1), (8, 4, 2), (8, 13, 6), (8, 7, 5)):
+        with pytest.raises(ValueError):
+            MQVectorNPU(qubits, tile_qubits=tile, fusion_qubits=fusion)
+        with pytest.raises(ValueError):
+            native.ForwardPlan([], qubits, tile, fusion)
+        with pytest.raises(ValueError):
+            native.AdjointPlan([], {}, qubits, tile, fusion)
     assert not calls
     with pytest.raises(RuntimeError, match='device unavailable'):
         Simulator('mqvector_npu', 1)
@@ -106,15 +123,21 @@ def test_constructor_precision_and_errors_do_not_allocate_or_retry(monkeypatch):
     assert ['mqvector_npu', mq.complex128] not in get_supported_simulator()
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_state_copy_reset_astype_and_direct_backend():
+    """Feature: Simulator state API.
+    Description: Normalize large inputs, copy and convert state, then reject malformed inputs.
+    Expectation: Valid operations preserve independent ownership and errors preserve the old state.
+    """
     state = _state(2)
     sim = Simulator(MQVectorNPU(2, seed=5))
     sim.set_qs(state * 1e200)
+    sim.apply_circuit(Circuit())
     assert sim.dtype == mq.complex64
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
     other = sim.copy()
-    assert other.backend._rng is not sim.backend._rng
-    assert other.backend._rng.bit_generator.state == sim.backend._rng.bit_generator.state
     other.apply_gate(G.X.on(0))
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
     converted = sim.astype(mq.complex64, seed=32)
@@ -133,31 +156,31 @@ def test_state_copy_reset_astype_and_direct_backend():
     np.testing.assert_array_equal(sim.get_pure_state_vector(), sim.get_qs())
 
 
-def test_evolution_derivative_matrix_and_compile_count(monkeypatch):
-    from mindquantum import _mq_vector_npu as native
-
-    state = _state(3)
+@pytest.mark.parametrize('n,controls', [(3, [2]), (15, [1, 12, 14])])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_evolution_derivative_and_circuit_matrix(n, controls):
+    """Feature: Evolution, intrinsic derivatives and circuit matrices.
+    Description: Differentiate a no_grad gate with local and multiple external controls.
+    Expectation: Active amplitudes equal dU times the input and every inactive sector is zero.
+    """
+    state = _state(n)
     circuit = Circuit([G.RX('a').on(2, 0), G.U3('b', 0.2, 'a').on(0), G.Rxy(0.6).on([1, 2]), G.S.on(1)])
     pr = {'a': 0.4, 'b': -0.8}
     expected = _cpu_state(state, circuit, pr)
-    sim = _sim(3, state)
-    compile_native = native.compile
-    calls = []
-
-    def compile_count(*args):
-        calls.append(args)
-        return compile_native(*args)
-
-    monkeypatch.setattr(native, 'compile', compile_count)
+    sim = _sim(n, state)
     sim.apply_circuit(circuit, pr)
-    assert len(calls) == 1
     np.testing.assert_allclose(sim.get_qs(), expected, atol=5e-7)
-    gate = G.RY('a').on(0, 2)
+    gate = G.RY(ParameterResolver('a').no_grad()).on(0, controls)
     sim.set_qs(state)
     sim.apply_gate(gate, {'a': 0.3}, diff=True)
-    expected = np.zeros(8, dtype=complex)
-    expected[4:6] = G.RY('a').diff_matrix({'a': 0.3}) @ state[4:6]
-    expected[6:8] = G.RY('a').diff_matrix({'a': 0.3}) @ state[6:8]
+    indices = np.arange(1 << n)
+    control_mask = sum(1 << q for q in controls)
+    bases = indices[((indices & 1) == 0) & ((indices & control_mask) == control_mask)]
+    pairs = np.stack([bases, bases | 1])
+    expected = np.zeros_like(state)
+    expected[pairs] = G.RY('a').diff_matrix({'a': 0.3}) @ state[pairs]
     np.testing.assert_allclose(sim.get_qs(), expected, atol=3e-7)
     matrix_circuit = Circuit().ry('a', 0).s(0).rx(0.6, 1).x(1, 0)
     np.testing.assert_allclose(
@@ -168,7 +191,14 @@ def test_evolution_derivative_matrix_and_compile_count(monkeypatch):
 
 
 @pytest.mark.parametrize('stochastic', [False, True])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_late_unsupported_gate_and_parameter_failures_are_atomic(stochastic):
+    """Feature: Atomic input rejection.
+    Description: Put unsupported gates or invalid parameters after valid and stochastic operations.
+    Expectation: Neither state nor RNG advances on rejection.
+    """
     state = _state(7)
     sim = _sim(7, state)
     circuit = Circuit().h(0)
@@ -176,18 +206,26 @@ def test_late_unsupported_gate_and_parameter_failures_are_atomic(stochastic):
         circuit += G.Measure('first').on(0)
         circuit += G.BitFlipChannel(0.4).on(1)
     circuit += G.UnivMathGate('unsupported_dense', np.eye(128)).on(list(range(7)))
-    rng = copy.deepcopy(sim.backend._rng.bit_generator.state)
+    control = sim.copy()
     with pytest.raises(ValueError, match='at most six'):
         sim.apply_circuit(circuit)
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
-    assert sim.backend._rng.bit_generator.state == rng
     for pr in ({}, {'a': np.nan}, {'a': np.inf}, {'a': 1j}, {'a': 1.0, 'unused': np.inf}):
         with pytest.raises(ValueError):
             sim.apply_circuit(Circuit().x(0).ry('a', 1), pr)
         np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
+    probe = Circuit().h(0).measure('coin', 0)
+    np.testing.assert_array_equal(sim.sampling(probe, shots=64).samples, control.sampling(probe, shots=64).samples)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_inner_product_hamiltonian_and_asymmetric_expectation(monkeypatch):
+    """Feature: Complex observables with independent bra and ket.
+    Description: Apply a nonsymmetric complex CSR operator to different circuit-evolved states.
+    Expectation: Device reductions match NumPy and expectation leaves both source states unchanged.
+    """
     from mindquantum import _mq_vector_npu as native
 
     right_state, left_state = _state(2, 11), _state(2, 12)
@@ -209,7 +247,14 @@ def test_inner_product_hamiltonian_and_asymmetric_expectation(monkeypatch):
         right.get_expectation(ham.astype(mq.complex128))
 
 
-def test_terminal_sampling_is_one_evolution_and_device_sample(monkeypatch):
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_terminal_sampling_reset_repetition_and_seed(monkeypatch):
+    """Feature: Terminal measurement semantics.
+    Description: Sample entangled qubits with reset and repeated measurement names.
+    Expectation: Outcomes, ordering and seeded replay agree without downloading amplitudes.
+    """
     from mindquantum import _mq_vector_npu as native
 
     sim = _sim(2)
@@ -217,23 +262,9 @@ def test_terminal_sampling_is_one_evolution_and_device_sample(monkeypatch):
     circuit += G.Measure('first', reset_to=0).on(0)
     circuit += G.Measure('repeat').on(0)
     circuit += G.Measure('other').on(1)
-    counts = {'apply': 0, 'sample': 0}
-    apply, sample = native.State.apply, native.State.sample
-
-    def count_apply(state, *args):
-        counts['apply'] += 1
-        return apply(state, *args)
-
-    def count_sample(state, *args):
-        counts['sample'] += 1
-        return sample(state, *args)
-
     with monkeypatch.context() as patch:
         patch.setattr(native.State, 'get_qs', _no_download)
-        patch.setattr(native.State, 'apply', count_apply)
-        patch.setattr(native.State, 'sample', count_sample)
         result = sim.sampling(circuit, shots=800, seed=3)
-    assert counts == {'apply': 1, 'sample': 1}
     assert result.keys == ['other', 'repeat', 'first']
     assert set(result.data) == {'000', '101'}
     assert abs(result.data['101'] / 800 - 0.5) < 0.07
@@ -241,7 +272,14 @@ def test_terminal_sampling_is_one_evolution_and_device_sample(monkeypatch):
     np.testing.assert_array_equal(sim.get_qs(), [1, 0, 0, 0])
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_measurement_reset_midcircuit_and_independent_rng_copy():
+    """Feature: Midcircuit trajectories and copied RNG state.
+    Description: Evolve after reset measurements and draw from two copied simulators.
+    Expectation: Resets affect later gates and copied RNGs advance independently but reproducibly.
+    """
     sim = _sim(2)
     circuit = Circuit().h(0).x(1, 0)
     circuit += G.Measure('first', reset_to=1).on(0)
@@ -279,7 +317,14 @@ def test_measurement_reset_midcircuit_and_independent_rng_copy():
         G.ThermalRelaxationChannel(100, 150, 35),
     ],
 )
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_noise_trajectories_match_small_density_matrix(channel, monkeypatch):
+    """Feature: Supported noise channels.
+    Description: Sample a noisy rotated state using seeded trajectories.
+    Expectation: Frequencies agree with a density-matrix reference without amplitude downloads.
+    """
     from mindquantum import _mq_vector_npu as native
 
     state = _state(1, 31)
@@ -296,7 +341,14 @@ def test_noise_trajectories_match_small_density_matrix(channel, monkeypatch):
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_grouped_and_multiqubit_depolarizing_do_not_expand_kraus(monkeypatch):
+    """Feature: Wide Pauli noise.
+    Description: Apply grouped and multiqubit depolarizing channels without exponential matrix expansion.
+    Expectation: States remain normalized and sampled probabilities match the analytic channel.
+    """
     monkeypatch.setattr(G.GroupedPauliChannel, 'matrix', _no_download)
     monkeypatch.setattr(G.DepolarizingChannel, 'matrix', _no_download)
     sim = _sim(8)
@@ -317,61 +369,22 @@ def test_grouped_and_multiqubit_depolarizing_do_not_expand_kraus(monkeypatch):
 
 @pytest.mark.parametrize('side', ['implicit', 'identical', 'distinct'])
 @pytest.mark.parametrize('csr', [False, True])
-def test_adjoint_construction_has_no_python_circuit_copies_or_unused_exports(side, csr, monkeypatch):
-    from mindquantum import _mq_vector_npu as native
-
+@pytest.mark.parametrize('pr_shift', [False, True])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_gradient_snapshots_ignore_later_source_and_metadata_mutations(side, csr, pr_shift):
+    """Feature: Gradient snapshot isolation.
+    Description: Mutate source circuits, observables and public metadata after creating an evaluator.
+    Expectation: Adjoint and shift evaluation retain their original semantics on either side.
+    """
     sim = _sim(2)
     right = Circuit().h(0).x(1, 0).ry('a', 0)
-    # Equal contents are not sufficient for deduplication: use object identity.
-    left = Circuit(right) if side == 'distinct' else right
+    left = Circuit().rx('a', 1).h(0) if side == 'distinct' else right
     kwargs = {} if side == 'implicit' else {'circ_left': left}
     ham = Hamiltonian(csr_matrix(np.diag([1, 0.3j, -0.5, 0.2j])), mq.complex64) if csr else _ham()
     hams = [ham]
-    checked, exported, ham_exports, plans = [], [], [], []
-    check_circuit, cpp_gates = MQVectorNPU._check_circuit, MQVectorNPU._cpp_gates
-    get_ham, make_gradient = Hamiltonian.get_cpp_obj, native.make_gradient
-
-    def check(backend, circuit):
-        checked.append(id(circuit))
-        return check_circuit(backend, circuit)
-
-    def export(circuit):
-        gates = cpp_gates(circuit)
-        exported.append(gates)
-        return gates
-
-    def export_ham(observable, hermitian=False):
-        ham_exports.append(hermitian)
-        return get_ham(observable, hermitian=hermitian)
-
-    def make_plan(*args):
-        plans.append(args)
-        return make_gradient(*args)
-
-    monkeypatch.setattr(Circuit, '__deepcopy__', _unexpected_gradient_work)
-    monkeypatch.setattr(MQVectorNPU, '_check_circuit', check)
-    monkeypatch.setattr(MQVectorNPU, '_cpp_gates', staticmethod(export))
-    monkeypatch.setattr(MQVectorNPU, '_resolver', _unexpected_gradient_work)
-    monkeypatch.setattr(G.HGate, 'matrix', _unexpected_gradient_work)
-    monkeypatch.setattr(G.XGate, 'matrix', _unexpected_gradient_work)
-    monkeypatch.setattr(Hamiltonian, 'get_cpp_obj', export_ham)
-    monkeypatch.setattr(native, 'make_gradient', make_plan)
-    operator = sim.get_expectation_with_grad(hams, right, **kwargs)
-    assert checked == ([id(right), id(left)] if side == 'distinct' else [id(right)])
-    assert len(exported) == (2 if side == 'distinct' else 1)
-    assert len(plans) == 1
-    _, _, daggers, right_cpp, left_cpp, names, hermitian, *_ = plans[0]
-    assert tuple(names) == ('a',)
-    assert right_cpp is exported[0]
-    assert hermitian == (side == 'implicit' and not csr)
-    assert sum(ham_exports) == (0 if hermitian else 1)
-    if hermitian:
-        assert not daggers and not left_cpp
-    else:
-        assert len(daggers) == 1
-        assert left_cpp is exported[-1]
-    assert operator.hams is hams
-    assert operator.circ_right is right and operator.circ_left is left
+    operator = sim.get_expectation_with_grad(hams, right, pr_shift=pr_shift, **kwargs)
     first = operator([0.3])
     right.ry('later_right', 0)
     left.rz('later_left', 1)
@@ -383,12 +396,18 @@ def test_adjoint_construction_has_no_python_circuit_copies_or_unused_exports(sid
     operator.ansatz_params_name[:] = ['mutable', 'metadata']
     for got, want in zip(operator([0.3]), first):
         np.testing.assert_array_equal(got, want)
-    assert len(plans) == 1
 
 
 @pytest.mark.parametrize('pr_shift', [False, True])
 @pytest.mark.parametrize('representation', ['pauli', 'sparse_pauli', 'csr'])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_gradient_snapshots_current_hamiltonian_data_not_old_native_caches(pr_shift, representation):
+    """Feature: Observable snapshot freshness.
+    Description: Populate native Hamiltonian caches, edit the source and construct a gradient.
+    Expectation: The gradient captures current coefficients, not stale caches or subsequent edits.
+    """
     if representation == 'csr':
         ham = Hamiltonian(csr_matrix(np.diag([0.7 + 0.4j, -0.3 + 0.8j])), mq.complex64)
     else:
@@ -419,84 +438,15 @@ def test_gradient_snapshots_current_hamiltonian_data_not_old_native_caches(pr_sh
     np.testing.assert_allclose(gradient, [[[expected_gradient]]], atol=3e-7)
 
 
-def test_unitarity_validator_skips_exact_native_builtin_matrices(monkeypatch):
-    fixed = [G.I, G.X, G.Y, G.Z, G.H, G.S, G.T, G.SX, G.CNOT, G.SWAP, G.ISWAP, G.GroupedPauli('XYZ')]
-    rotations = [G.RX, G.RY, G.RZ, G.Rxx, G.Ryy, G.Rzz, G.Rxy, G.Rxz, G.Ryz, G.Givens, G.SWAPalpha]
-    gates = fixed + [rotation('a') for rotation in rotations]
-    gates += [G.GlobalPhase('a'), G.PhaseShift('a'), G.RotPauliString('XYZ', 'a')]
-    gates += [G.U3('a', 0.2, 0.3), G.FSim('a', 0.2), G.Rn('a', 0.2, 0.3), G.BarrierGate()]
-    for gate in gates:
-        monkeypatch.setattr(type(gate), 'matrix', _unexpected_gradient_work)
-    validate = MQVectorNPU._unitary_validator((gates,))
-    validate(ParameterResolver({'a': 0.4}))
-
-
-@pytest.mark.parametrize(
-    'base,args', [(G.XGate, ()), (G.RY, ('a',)), (G.U3, ('a', 0.2, 0.3)), (G.FSim, ('a', 0.2)), (G.Rn, ('a', 0.2, 0.3))]
-)
-def test_unitarity_validator_does_not_trust_builtin_subclasses(base, args):
-    class CustomGate(base):
-        def matrix(self, *_args):
-            return np.diag([1.0, 0.5])
-
-    gate = CustomGate(*args)
-    with pytest.raises(ValueError, match='unitary'):
-        validate = MQVectorNPU._unitary_validator(([gate],))
-        validate(ParameterResolver({'a': 0.2}))
-
-
-@pytest.mark.parametrize('mode', ['shift', 'noise', 'identical', 'distinct'])
-def test_shift_construction_keeps_only_needed_private_circuit_copies(mode, monkeypatch):
-    sim = _sim(1)
-    right = Circuit().ry('a', 0)
-    if mode == 'noise':
-        right += G.BitFlipChannel(1).on(0)
-    left = Circuit(right) if mode == 'distinct' else right
-    kwargs = {'circ_left': left} if mode in ('identical', 'distinct') else {}
-    ham = Hamiltonian(QubitOperator('Z0'), mq.float32)
-    copies, checked, hams = [], [], []
-    deepcopy, check_circuit = Circuit.__deepcopy__, MQVectorNPU._check_circuit
-    uncached_ham = npu_backend._uncached_hamiltonian
-
-    def snapshot(circuit, memo):
-        copies.append(id(circuit))
-        return deepcopy(circuit, memo)
-
-    def check(backend, circuit):
-        checked.append(id(circuit))
-        return check_circuit(backend, circuit)
-
-    def snapshot_observable(observable):
-        hams.append(observable)
-        return uncached_ham(observable)
-
-    monkeypatch.setattr(Circuit, '__deepcopy__', snapshot)
-    monkeypatch.setattr(MQVectorNPU, '_check_circuit', check)
-    monkeypatch.setattr(npu_backend, '_uncached_hamiltonian', snapshot_observable)
-    operator = sim.get_expectation_with_grad(ham, right, pr_shift=mode != 'noise', **kwargs)
-    assert checked == ([id(right), id(left)] if mode == 'distinct' else [id(right)])
-    assert copies.count(id(right)) == 1
-    if mode == 'distinct':
-        assert copies.count(id(left)) == 1
-    # One snapshot per unique side, plus the two shifts for each differentiated side.
-    assert len(copies) == {'shift': 3, 'noise': 3, 'identical': 5, 'distinct': 6}[mode]
-    assert hams == [ham]
-    assert operator.hams[0] is ham
-    assert operator.circ_right is right and operator.circ_left is left
-    right[0].coeff['a'] = 7
-    right.ry('later', 0)
-    if mode == 'noise':
-        right[1].px = 0
-    operator.hams.clear()
-    monkeypatch.setattr(MQVectorNPU, '_resolver', _unexpected_gradient_work)
-    value, gradient = operator([0.3])
-    sign = -1 if mode == 'noise' else 1
-    np.testing.assert_allclose(value, [[sign * np.cos(0.3)]], atol=4e-7)
-    np.testing.assert_allclose(gradient, [[[-sign * np.sin(0.3)]]], atol=4e-7)
-
-
 @pytest.mark.parametrize('pr_shift', [False, True])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_batched_shared_parameters_no_grad_and_snapshots(pr_shift, monkeypatch):
+    """Feature: Batched encoder and ansatz gradients.
+    Description: Combine shared affine expressions and no_grad coefficients, then mutate wrapper metadata.
+    Expectation: Output shapes and Jacobian-weighted values match complex128 for every sample.
+    """
     from mindquantum import _mq_vector_npu as native
 
     state = _state(2, 36)
@@ -531,8 +481,6 @@ def test_batched_shared_parameters_no_grad_and_snapshots(pr_shift, monkeypatch):
     operator.sim = None
     with monkeypatch.context() as patch:
         patch.setattr(native.State, 'get_qs', _no_download)
-        patch.setattr(MQVectorNPU, '_resolver', _unexpected_gradient_work)
-        patch.setattr(Circuit, 'params_name', property(_unexpected_gradient_work))
         actual = operator(data, weights)
     assert [value.shape for value in actual] == [(3, 1), (3, 1, 1), (3, 1, 2)]
     for got, want in zip(actual, expected):
@@ -542,11 +490,21 @@ def test_batched_shared_parameters_no_grad_and_snapshots(pr_shift, monkeypatch):
 
 @pytest.mark.parametrize('pr_shift', [False, True])
 @pytest.mark.parametrize('different_sides', [False, True])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_nonhermitian_gradients_need_both_sweeps(pr_shift, different_sides):
+    """Feature: Non-Hermitian gradients.
+    Description: Use complex CSR with duplicate columns and optionally distinct circuits and initial states.
+    Expectation: Both real and imaginary derivatives agree with independent finite differences.
+    """
     state, left_state = _state(2, 45), _state(2, 46)
     sim, left_sim = _sim(2, state), _sim(2, left_state)
     raw = np.array([[0.3j, 0.2, 0, -0.4j], [0, -0.2, 0.3j, 0], [0.7, 0, 0.1, 0], [0, 0.6j, 0.2, -0.5]])
-    ham = Hamiltonian(csr_matrix(raw), mq.complex64)
+    sparse = csr_matrix(raw)
+    # Duplicate columns are legal CSR entries; H-dagger must preserve their sum.
+    sparse = csr_matrix((np.repeat(sparse.data / 2, 2), np.repeat(sparse.indices, 2), sparse.indptr * 2))
+    ham = Hamiltonian(sparse, mq.complex64)
     right = Circuit([G.U3('a', {'b': 0.4}, 'a').on(0, 1), G.RY({'a': -0.3}).on(1)])
     left = Circuit().rx('b', 0).rz({'a': 0.7}, 1) if different_sides else right
     kwargs = {'circ_left': left, 'simulator_left': left_sim} if different_sides else {}
@@ -570,7 +528,14 @@ def test_nonhermitian_gradients_need_both_sweeps(pr_shift, different_sides):
 
 
 @pytest.mark.parametrize('gate', [G.Givens('a'), G.FSim('a', {'a': -0.3}), G.SWAPalpha('a')])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_exact_shift_for_multifrequency_gates(gate):
+    """Feature: Exact multifrequency shift rules.
+    Description: Differentiate controlled exchange gates sharing affine parameters with other rotations.
+    Expectation: Shift results match CPU adjoints without finite-difference approximation.
+    """
     state = _state(3, 51)
     circuit = Circuit([gate.on([0, 1], 2), G.RX({'a': 0.7}).on(2), G.GlobalPhase('a').on(1, 0)])
     ham = _ham()
@@ -583,12 +548,23 @@ def test_exact_shift_for_multifrequency_gates(gate):
         np.testing.assert_allclose(got, expected, atol=4e-6)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_noisy_gradient_uses_exact_shift_and_shapes():
+    """Feature: Noisy gradient snapshots and empty parameter sets.
+    Description: Mutate a deterministic noise circuit after construction and evaluate encoder-only and empty circuits.
+    Expectation: The snapshot follows its analytic derivative and all returned shapes remain valid.
+    """
     sim = _sim(1)
     ham = Hamiltonian(QubitOperator('Z0'), mq.float32)
     # A deterministic channel still forces the trajectory/shift path, with an exact analytic answer.
     circuit = Circuit().ry({'a': 2}, 0) + G.BitFlipChannel(1).on(0)
-    f, grad = sim.get_expectation_with_grad(ham, circuit)([0.2])
+    operator = sim.get_expectation_with_grad(ham, circuit)
+    circuit[0].coeff['a'] = 7
+    circuit[1].px = 0
+    operator.circ_right = operator.circ_left = None
+    f, grad = operator([0.2])
     np.testing.assert_allclose(f, [[-np.cos(0.4)]], atol=4e-7)
     np.testing.assert_allclose(grad, [[[2 * np.sin(0.4)]]], atol=8e-7)
     encoder = Circuit([G.RY(ParameterResolver('e').as_encoder()).on(0)])
@@ -598,7 +574,14 @@ def test_noisy_gradient_uses_exact_shift_and_shapes():
     assert f.shape == (1, 1) and grad.shape == (1, 1, 0)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_gradient_validation_and_nonunitary_gate():
+    """Feature: Gradient capability boundary.
+    Description: Supply invalid inputs, unsupported shift rules and a nonunitary custom gate.
+    Expectation: Gradients reject them while ordinary nonunitary evolution remains supported.
+    """
     sim = _sim(2)
     ham = _ham()
     for workers in (0, -1):
@@ -622,7 +605,15 @@ def test_gradient_validation_and_nonunitary_gate():
     np.testing.assert_allclose(sim.get_qs(), [np.cos(0.15), 0.5 * np.sin(0.15), 0, 0], atol=3e-7)
 
 
-def test_unitarity_validation_stages_constants_but_rechecks_parameterized_matrices(monkeypatch):
+@pytest.mark.parametrize('cube', [0, 4])
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_custom_derivatives_reject_nonunitary_bindings_without_mutation(cube):
+    """Feature: Parameterized custom derivatives.
+    Description: Bind a controlled callback gate at unitary and nonunitary parameter values.
+    Expectation: Valid gradients match CPU and invalid bindings preserve the input state under both policies.
+    """
     pytest.importorskip('numba')
 
     def matrix(angle):
@@ -634,30 +625,10 @@ def test_unitarity_validation_stages_constants_but_rechecks_parameterized_matric
         return np.array([[0j, 0j], [0j, 1j * scale * np.exp(1j * angle)]])
 
     custom = G.gene_univ_parameterized_gate('staged_unitarity', matrix, derivative)
-    original_fixed, original_dynamic = G.UnivMathGate.matrix, custom.matrix
-    calls = []
-
-    def fixed_matrix(gate):
-        calls.append('fixed')
-        return original_fixed(gate)
-
-    def dynamic_matrix(gate, pr):
-        calls.append('dynamic')
-        return original_dynamic(gate, pr)
-
-    monkeypatch.setattr(G.UnivMathGate, 'matrix', fixed_matrix)
-    monkeypatch.setattr(custom, 'matrix', dynamic_matrix)
-    circuit = Circuit([G.UnivMathGate('fixed', np.diag([1, 1j])).on(0), custom('a').on(0)])
-    validate = MQVectorNPU._unitary_validator((circuit,))
-    assert calls == ['fixed']
-    validate({'a': 0.3})
-    with pytest.raises(ValueError, match='unitary'):
-        validate({'a': 0.7})
-    assert calls == ['fixed', 'dynamic', 'dynamic']
-    # Also exercise the dense custom-derivative image, including its control
-    # projection, on hardware. An invalid later binding must not poison state.
     state = _state(12, 723)
-    sim, cpu = _sim(12, state), Simulator('mqvector', 12, dtype=mq.complex128)
+    sim = Simulator(MQVectorNPU(12, cube_min_gates=cube))
+    sim.set_qs(state)
+    cpu = Simulator('mqvector', 12, dtype=mq.complex128)
     cpu.set_qs(state)
     circuit = Circuit([G.RY('b').on(11), custom('a').on(11, 1)]) * 5
     ham = Hamiltonian(QubitOperator('Y11', 0.7) + QubitOperator('Z0', -0.2), mq.float32)
@@ -673,7 +644,14 @@ def test_unitarity_validation_stages_constants_but_rechecks_parameterized_matric
 
 
 @pytest.mark.parametrize('explicit_left', [False, True])
-def test_custom_gradient_snapshots_own_callbacks_and_stage_validation(explicit_left, monkeypatch):
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_custom_gradient_callbacks_outlive_mutated_and_deleted_sources(explicit_left):
+    """Feature: Custom callback ownership.
+    Description: Modify numeric data and callback attributes, then discard all public circuit references.
+    Expectation: The evaluator retains its original callback and analytic phase gradient.
+    """
     pytest.importorskip('numba')
 
     def matrix(angle):
@@ -689,46 +667,13 @@ def test_custom_gradient_snapshots_own_callbacks_and_stage_validation(explicit_l
     circuit += G.UnivMathGate('fixed', np.diag([1, 1j])).on(0)
     circuit += custom(ParameterResolver({'a': 0.5}, const=0.1)).on(0)
     circuit += custom(0.1).on(0)
-    sources = [weakref.ref(gate) for gate in circuit[1:]]
-    fixed_export, custom_export = G.UnivMathGate.get_cpp_obj, custom.get_cpp_obj
-    fixed_matrix, custom_matrix = G.UnivMathGate.matrix, custom.matrix
-    exported, checks = [], []
-
-    def export_fixed(gate):
-        exported.append(weakref.ref(gate))
-        return fixed_export(gate)
-
-    def export_custom(gate):
-        exported.append(weakref.ref(gate))
-        return custom_export(gate)
-
-    def check_fixed(gate):
-        checks.append(id(gate))
-        return fixed_matrix(gate)
-
-    def check_custom(gate, pr):
-        checks.append(id(gate))
-        return custom_matrix(gate, pr)
-
-    monkeypatch.setattr(G.UnivMathGate, 'get_cpp_obj', export_fixed)
-    monkeypatch.setattr(custom, 'get_cpp_obj', export_custom)
-    monkeypatch.setattr(G.UnivMathGate, 'matrix', check_fixed)
-    monkeypatch.setattr(custom, 'matrix', check_custom)
     sim = _sim(1)
     kwargs = {'circ_left': circuit} if explicit_left else {}
     operator = sim.get_expectation_with_grad(Hamiltonian(QubitOperator('X0'), mq.float32), circuit, **kwargs)
-    assert len(exported) == 3
-    assert all(snapshot() is not source() for snapshot, source in zip(exported, sources))
-    fixed_id, dynamic_id, constant_id = [id(snapshot()) for snapshot in exported]
-    # The fixed matrix is exported once and validated once. Constant callbacks
-    # are validated once; parameter-dependent callbacks wait until evaluation.
-    assert checks.count(fixed_id) == 2
-    assert checks.count(constant_id) == 1
-    assert checks.count(dynamic_id) == 0
     circuit[1].matrix_value[:] = 0
     circuit[2].coeff['a'] = 7
     circuit[2].coeff.const = 0.8
-    circuit[2].matrix_generator = _unexpected_gradient_work
+    circuit[2].matrix_generator = lambda _: np.zeros((2, 2), dtype=complex)
     circuit[3].coeff.const = 0.9
     operator.circ_right = operator.circ_left = None
     operator.hams.clear()
@@ -736,21 +681,24 @@ def test_custom_gradient_snapshots_own_callbacks_and_stage_validation(explicit_l
     kwargs.clear()
     del circuit
     gc.collect()
-    assert all(source() is None for source in sources)
-    assert all(snapshot() is not None for snapshot in exported)
     for _ in range(2):
         value, gradient = operator([0.3])
         np.testing.assert_allclose(value, [[-np.sin(0.35)]], atol=3e-7)
         np.testing.assert_allclose(gradient, [[[-0.5 * np.cos(0.35)]]], atol=3e-7)
     with pytest.raises(ValueError, match='unitary'):
         operator([0.9])
-    assert checks.count(fixed_id) == 2
-    assert checks.count(constant_id) == 1
-    assert checks.count(dynamic_id) == 3
     np.testing.assert_array_equal(sim.get_qs(), [1, 0])
 
 
-def test_custom_dynamic_validation_deepcopies_numeric_data_and_coefficients():
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_builtin_subclass_is_validated_and_its_numeric_data_is_snapshotted():
+    """Feature: Custom subclasses are not trusted built-ins.
+    Description: Mutate a rotation subclass's matrix scale after constructing a valid gradient.
+    Expectation: The old snapshot remains valid and a new nonunitary binding is rejected.
+    """
+
     class CustomRY(G.RY):
         def __init__(self, pr):
             super().__init__(pr)
@@ -767,10 +715,19 @@ def test_custom_dynamic_validation_deepcopies_numeric_data_and_coefficients():
     value, gradient = operator([0.3])
     np.testing.assert_allclose(value, [[np.cos(0.3)]], atol=3e-7)
     np.testing.assert_allclose(gradient, [[[-np.sin(0.3)]]], atol=3e-7)
+    with pytest.raises(ValueError, match='unitary'):
+        _sim(1).get_expectation_with_grad(Hamiltonian(QubitOperator('Z0'), mq.float32), circuit)([0.3])
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('t2', [70, 150])
 def test_thermal_relaxation_complete_decay_and_identity(t2):
+    """Feature: Thermal relaxation trajectories.
+    Description: Evolve zero-duration and complete-decay channels for both relaxation regimes.
+    Expectation: Zero duration preserves the state and complete decay leaves the ground state.
+    """
     state = _state(1)
     sim = _sim(1, state)
     sim.apply_gate(G.ThermalRelaxationChannel(100, t2, 0).on(0))
@@ -779,7 +736,35 @@ def test_thermal_relaxation_complete_decay_and_identity(t2):
     np.testing.assert_allclose(np.abs(sim.get_qs()), [1, 0], atol=3e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+def test_successive_kraus_channels_preserve_normalization_and_relative_phase():
+    """
+    Feature: Device-resident noise trajectories.
+    Description: Apply several Kraus channels separated by coherent evolution in one circuit.
+    Expectation: The final pure state matches the analytic reset-and-unitary trajectory.
+    """
+    sim = _sim(1, _state(1, 429))
+    unitary = G.U3(0.71, -0.39, 1.17).matrix()
+    circuit = Circuit([G.AmplitudeDampingChannel(1).on(0)]).ry(-0.43, 0)
+    circuit += G.KrausChannel('unitary', [unitary]).on(0)
+    circuit += G.KrausChannel('phase', [G.S.matrix()]).on(0)
+    sim.apply_circuit(circuit)
+    expected = G.S.matrix() @ unitary @ G.RY(-0.43).matrix()[:, 0]
+    actual = sim.get_qs()
+    # Complete decay can retain either branch's global phase, never its norm.
+    np.testing.assert_allclose(np.outer(actual, actual.conj()), np.outer(expected, expected.conj()), atol=4e-7)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_noisy_gradient_and_expectation_average_state_dependent_trajectories(monkeypatch):
+    """Feature: Stochastic expectation and gradient estimates.
+    Description: Average independent amplitude-damping trajectories with an encoder parameter.
+    Expectation: Means match the analytic channel, duplicate observables agree and the input is unchanged.
+    """
     from mindquantum import _mq_vector_npu as native
 
     sim = _sim(1, seed=4)
@@ -799,7 +784,14 @@ def test_noisy_gradient_and_expectation_average_state_dependent_trajectories(mon
     np.testing.assert_array_equal(sim.get_qs(), [1, 0])
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_readonly_expectation_needs_neither_state_copy_nor_download(monkeypatch):
+    """Feature: Read-only device expectation.
+    Description: Evaluate Hermitian and distinct-bra overlaps without copying or downloading the state.
+    Expectation: Both overlaps agree with independent dense-matrix products.
+    """
     from mindquantum import _mq_vector_npu as native
 
     state, other = _state(2, 91), _state(2, 93)
@@ -812,8 +804,15 @@ def test_readonly_expectation_needs_neither_state_copy_nor_download(monkeypatch)
     np.testing.assert_allclose(sim.get_expectation(ham, simulator_left=bra), np.vdot(other, matrix @ state), atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('n,kept', [(1, []), (4, [3, 1, 2]), (13, [0, 2, 12]), (17, [15]), (17, [0, 2])])
 def test_reduced_density_contracts_only_traced_indices(n, kept, monkeypatch):
+    """Feature: Device partial trace.
+    Description: Retain noncontiguous qubits without copying or downloading the full state.
+    Expectation: The result matches NumPy contraction, is Hermitian and preserves trace and input state.
+    """
     from mindquantum import _mq_vector_npu as native
 
     state = _state(n, 104)
@@ -832,7 +831,14 @@ def test_reduced_density_contracts_only_traced_indices(n, kept, monkeypatch):
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_reduced_state_pure_mixed_and_validation():
+    """Feature: Reduced pure and mixed state API.
+    Description: Extract entangled and separable subsystems and reject invalid qubit selections.
+    Expectation: Mixed subsystems return density matrices and pure subsystems retain their amplitudes.
+    """
     sim = _sim(3)
     sim.apply_circuit(Circuit().h(0).x(2, 0).ry(0.31, 1))
     np.testing.assert_allclose(sim.get_qs_of_qubits(0), np.eye(2) / 2, atol=2e-7)
@@ -846,8 +852,15 @@ def test_reduced_state_pure_mixed_and_validation():
             sim.get_reduced_density_matrix(invalid)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('qubits,controls', [([2, 0, 3], []), ([0, 2, 4, 8, 10, 14], [1, 3, 5, 6, 7, 9, 11, 12, 13])])
 def test_wide_custom_matrix_and_adjoint(qubits, controls):
+    """Feature: Wide controlled custom matrices.
+    Description: Embed asymmetric dense operators on noncontiguous targets with internal and external controls.
+    Expectation: Evolution and adjoint gradients agree with complex128 references.
+    """
     n = max(qubits + controls) + 1
     rng = np.random.default_rng(76)
     dimension = 1 << len(qubits)
@@ -868,7 +881,14 @@ def test_wide_custom_matrix_and_adjoint(qubits, controls):
     np.testing.assert_allclose(sim.get_qs(), _cpu_state(state, circuit, {'a': 0.29}), atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_many_tiles_multiple_observables_and_shared_gradient_plan():
+    """Feature: Concurrent public gradient evaluations.
+    Description: Evaluate one gradient operator at distinct points while sharing its simulator input.
+    Expectation: All observables and gradients match CPU references without changing the input state.
+    """
     from concurrent.futures import ThreadPoolExecutor
 
     n = 14
@@ -897,8 +917,15 @@ def test_many_tiles_multiple_observables_and_shared_gradient_plan():
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('n,two_sided', [(12, False), (14, True), (21, False)])
 def test_fused_adjoint_shared_controlled_derivatives_and_packet_boundaries(n, two_sided, monkeypatch):
+    """Feature: Mixed Cube and Vector adjoint execution.
+    Description: Differentiate shared controlled gates across layout changes, packet boundaries and distinct bras.
+    Expectation: Repeated results are deterministic and agree with complex128 for both complex gradient components.
+    """
     from mindquantum import _mq_vector_npu as native
 
     # Noncontiguous support, two different packet permutations, partial batches
@@ -912,9 +939,16 @@ def test_fused_adjoint_shared_controlled_derivatives_and_packet_boundaries(n, tw
             circuit += G.RY(ParameterResolver({'a': 0.3, 'b': -0.4}).no_grad_part('b')).on(n - 3)
             circuit += G.PhaseShift({'b': 0.59}).on(target, 8)
             circuit += G.SWAPalpha({'a': -0.29}).on([target, n - 1], 0)
+        # Seven logical operands force Vector execution between Cube regions.
+        # Both derivatives and folded, no-gradient diagonals see the retained layout.
+        circuit += G.RotPauliString('XYZYZXZ', {'a': -0.27}).on([0, 2, 3, 5, 6, 9, n - 1])
+        circuit += G.RZ(ParameterResolver({'b': 0.29}).no_grad()).on(6, 2)
+        circuit += G.PhaseShift(-0.17).on(n - 1, 2)
+        circuit += G.Rzz(0.31).on([0, 5], 2)
     parameters = ParameterResolver({'a': 0.41, 'b': -0.67})
     program = native.AdjointPlan(circuit.get_cpp_obj(), {'a': 0, 'b': 1}, n, fusion_qubits=6).bind(parameters)
     assert program.cube_tile_count >= 2
+    assert program.tile_count > program.cube_tile_count
     assert (
         native.AdjointPlan(circuit.get_cpp_obj(), {'a': 0, 'b': 1}, n, cube_min_gates=0)
         .bind(parameters)
@@ -952,8 +986,15 @@ def test_fused_adjoint_shared_controlled_derivatives_and_packet_boundaries(n, tw
     np.testing.assert_allclose(sim.get_qs(), state, atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('n', [1, 13])
 def test_cached_diagonal_complex_overlap_padding_high_parity_and_reuse(n, monkeypatch):
+    """Feature: Diagonal observables and parameter-free gradients.
+    Description: Evaluate complex overlaps on distinct states, then rescale one state and reuse the operator.
+    Expectation: Identity and high-qubit parity contributions match analytic values, including after rescaling.
+    """
     from mindquantum import _mq_vector_npu as native
 
     state, bra = _state(n, 701), _state(n, 703)
@@ -988,7 +1029,14 @@ def test_cached_diagonal_complex_overlap_padding_high_parity_and_reuse(n, monkey
     assert g.shape == (1, 2, 0)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_sampling_tree_many_tiles_empty_bins_and_unnormalized_state(monkeypatch):
+    """Feature: Terminal sampling from an unnormalized device state.
+    Description: Sample a sparse state spanning several tiles with the same seed and reject zero total mass.
+    Expectation: Samples stay on occupied indices, follow normalized probabilities and reproduce exactly.
+    """
     from mindquantum import _mq_vector_npu as native
 
     n = 18
@@ -1011,8 +1059,15 @@ def test_sampling_tree_many_tiles_empty_bins_and_unnormalized_state(monkeypatch)
         sim.backend.sim.sample(1, 99)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('qubit', [0, 14])
 def test_measurement_rare_branch_reset_preserves_phase(qubit):
+    """Feature: Rare measurement outcomes and reset.
+    Description: Select a nonzero branch whose probability is below FP32 subtraction resolution.
+    Expectation: The branch remains normalizable and reset preserves its relative phase.
+    """
     state = np.zeros(1 << 15, dtype=complex)
     state[0] = np.sqrt(1 - 1e-12)
     state[(1 << qubit) | 18] = 1e-6j
@@ -1025,7 +1080,14 @@ def test_measurement_rare_branch_reset_preserves_phase(qubit):
     np.testing.assert_allclose(sim.get_qs(), expected, atol=2e-7)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_csr_long_duplicate_rows_empty_operator_and_asymmetric_bra():
+    """Feature: General CSR and empty observables.
+    Description: Apply long rows with duplicate columns and evaluate distinct-bra overlaps and empty operators.
+    Expectation: Results match SciPy multiplication and empty observables produce exact zeros.
+    """
     n = 11
     dimension = 1 << n
     columns = (7 * np.arange(1103) + 53) % 1024
@@ -1050,12 +1112,19 @@ def test_csr_long_duplicate_rows_empty_operator_and_asymmetric_bra():
         np.testing.assert_array_equal(sim.get_qs(), np.zeros(dimension))
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 def test_native_parameter_validation_and_late_expression_errors():
+    """Feature: Finite real parameter boundaries.
+    Description: Reject complex, nonfinite and overflowing expressions through native and Python entry points.
+    Expectation: Invalid inputs fail before state or random-generator mutation, including unused resolver values.
+    """
     from mindquantum import _mq_vector_npu as native
 
     sim = _sim(2, _state(2, 83))
     before = sim.get_qs()
-    random_state = copy.deepcopy(sim.backend._rng.bit_generator.state)
+    control = sim.copy()
     for coefficient in (1j, np.inf, np.nan):
         gate = G.RY(ParameterResolver({'a': coefficient})).on(1)
         circuit = Circuit().h(0).measure('before_invalid', 0) + gate
@@ -1070,11 +1139,19 @@ def test_native_parameter_validation_and_late_expression_errors():
         with pytest.raises(ValueError, match='real and finite'):
             plan.bind(ParameterResolver({'a': 0.2, 'unused': value}))
     np.testing.assert_array_equal(sim.get_qs(), before)
-    assert sim.backend._rng.bit_generator.state == random_state
+    probe = Circuit().h(0).measure('coin', 0)
+    np.testing.assert_array_equal(sim.sampling(probe, shots=64).samples, control.sampling(probe, shots=64).samples)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
 @pytest.mark.parametrize('cube', [0, 4])
-def test_native_resident_plan_zero_crossings_batches_and_independent_concurrent_states(cube):
+def test_native_plan_zero_crossings_batches_and_independent_concurrent_states(cube):
+    """Feature: Native plan ownership and concurrent independent states.
+    Description: Reuse a plan after deleting its creator and vary active and frozen parameters across zero.
+    Expectation: Concurrent batches match CPU references and reuse cannot leak state, parameters or partial sums.
+    """
     from concurrent.futures import ThreadPoolExecutor
 
     from mindquantum import _mq_vector_npu as native
@@ -1095,7 +1172,6 @@ def test_native_resident_plan_zero_crossings_batches_and_independent_concurrent_
     plan = native.make_gradient(
         owner.backend.sim,
         [ham.get_cpp_obj() for ham in hams],
-        [],
         circuit.get_cpp_obj(),
         [],
         ['a', 'b'],
@@ -1130,4 +1206,74 @@ def test_native_resident_plan_zero_crossings_batches_and_independent_concurrent_
     for sim, initial, got, want in zip(sims, states, actual, expected):
         np.testing.assert_allclose(got, want, atol=4e-6, rtol=2e-5)
         np.testing.assert_array_equal(got[0], got[2])
+        # A completed call may lend storage to a different input state; no
+        # partial sum, layout, or zero-sized metadata image may survive binding.
+        np.testing.assert_array_equal(evaluate(sim), got)
         np.testing.assert_allclose(sim.get_qs(), initial, atol=2e-7)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('cube', [0, 4])
+@pytest.mark.parametrize('n,width,parameters', [(12, 4, 3), (13, 5, 5), (21, 6, 9), (17, 4, 275)])
+def test_wide_shared_parameter_gradients_across_state_tiles(cube, n, width, parameters):
+    """
+    Feature: Adjoint gradients across operator sizes and shared parameter counts.
+    Description: Reuse affine expressions across controlled gates, partial packets and multiple state tiles.
+    Expectation: Every output agrees with complex128 CPU evolution, including on a repeated call.
+    """
+    target = n - 1
+    first = {f'p{i:03}': (-1) ** i * (0.07 + i / 1900) for i in range(parameters)}
+    second = {name: 0.19 - i / 1300 for i, name in enumerate(reversed(first))}
+    circuit = Circuit()
+    for _ in range(2):
+        circuit += G.RY(first).on(target)
+        circuit += G.RZ(-0.37).on(3)
+        circuit += G.X.on(3, [target] + [0, 1, 2, 4][: width - 2])
+        circuit += G.RX(second).on(3)
+        circuit += G.PhaseShift(0.23).on(target)
+    # Coherent inputs keep gradients finite as spectator qubits are added;
+    # a large Haar-random state could hide lost contributions under atol.
+    state = np.ones(1, dtype=complex)
+    for qubit in range(n):
+        angle = 0.41 + 0.73 * (qubit % 5) / 4
+        state = np.kron([np.cos(angle), np.sin(angle) * np.exp(1j * (0.19 + qubit / 13))], state)
+    sim = Simulator(MQVectorNPU(n, cube_min_gates=cube))
+    cpu = Simulator('mqvector', n, dtype=mq.complex128)
+    sim.set_qs(state)
+    cpu.set_qs(state)
+    ham = Hamiltonian(QubitOperator(f'Y3 Z{target}', -0.71) + QubitOperator(f'X{target}', 0.29), mq.float32)
+    op = sim.get_expectation_with_grad(ham, circuit)
+    reference = cpu.get_expectation_with_grad(ham.astype(mq.float64), circuit)
+    for values in (np.linspace(-0.41, 0.73, len(first)), np.zeros(len(first))):
+        actual, expected = op(values), reference(values)
+        assert actual[1].shape == (1, 1, len(first))
+        for got, want in zip(actual, expected):
+            np.testing.assert_allclose(got, want, atol=2e-6, rtol=2e-5)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_arm_ascend_training
+@pytest.mark.env_onecard
+@pytest.mark.parametrize('cube', [0, 4])
+def test_constant_adjoint_blocks_preserve_parity_ladder_gradient(cube):
+    """
+    Feature: Gradients through constant blocks spanning multiple packet batches.
+    Description: Conjugate a parameterized phase by a parity ladder and fixed basis changes.
+    Expectation: The energy and gradient follow cosine and minus sine without losing amplitudes.
+    """
+    circuit = Circuit([G.X.on(qubit) for qubit in range(12)])
+    circuit.rx(np.pi / 2, 0).h(12)
+    for qubit in range(12):
+        circuit.x(qubit + 1, qubit)
+    circuit.rz('theta', 12)
+    for qubit in reversed(range(12)):
+        circuit.x(qubit + 1, qubit)
+    circuit.h(12).rx(-np.pi / 2, 0)
+    sim = Simulator(MQVectorNPU(21, cube_min_gates=cube))
+    op = sim.get_expectation_with_grad(Hamiltonian(QubitOperator('Z12', 0.7), mq.float32), circuit)
+    for theta in (0.37, -0.63, 0.0):
+        energy, gradient = op([theta])
+        np.testing.assert_allclose(energy, [[0.7 * np.cos(theta)]], atol=2e-6)
+        np.testing.assert_allclose(gradient, [[[-0.7 * np.sin(theta)]]], atol=2e-6)

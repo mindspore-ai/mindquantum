@@ -21,11 +21,13 @@
 #include "simulator/vector/ascend/program.h"
 #include "simulator/vector/ascend/runtime.h"
 
-PYBIND11_MODULE(_mq_vector_npu, module) {
-    namespace py = pybind11;
-    using namespace pybind11::literals;        // NOLINT
-    using namespace mindquantum::sim::ascend;  // NOLINT
-    module.doc() = "Ascend 910B complex64 tiled statevector executor.";
+namespace {
+namespace py = pybind11;
+using namespace pybind11::literals;        // NOLINT
+using namespace mindquantum::sim::ascend;  // NOLINT
+
+void BindPrograms(py::module_& module) {
+    module.def("validate_configuration", &ValidateConfiguration, "n_qubits"_a, "tile_qubits"_a, "fusion_qubits"_a);
     py::class_<Program>(module, "Program");
     py::class_<AdjointProgram>(module, "AdjointProgram")
         .def_property_readonly("tile_count", [](const AdjointProgram& program) { return program.tiles.size(); })
@@ -41,8 +43,11 @@ PYBIND11_MODULE(_mq_vector_npu, module) {
              py::call_guard<py::gil_scoped_release>())
         .def("bind", &ForwardPlan::Bind, "pr"_a, py::call_guard<py::gil_scoped_release>());
     py::class_<AdjointPlan>(module, "AdjointPlan")
-        .def(py::init<const std::vector<std::shared_ptr<mindquantum::BasicGate>>&, const mindquantum::MST<size_t>&,
-                      mindquantum::qbit_t, unsigned, unsigned, unsigned>(),
+        .def(py::init([](const std::vector<std::shared_ptr<mindquantum::BasicGate>>& circuit,
+                         const mindquantum::MST<size_t>& parameter_map, mindquantum::qbit_t n_qubits,
+                         unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates) {
+                 return AdjointPlan(circuit, n_qubits, tile_qubits, fusion_qubits, cube_min_gates, parameter_map);
+             }),
              "circuit"_a, "parameter_map"_a, "n_qubits"_a, "tile_qubits"_a = 11, "fusion_qubits"_a = 8,
              "cube_min_gates"_a = 4, py::call_guard<py::gil_scoped_release>())
         .def("bind", &AdjointPlan::Bind, "pr"_a, py::call_guard<py::gil_scoped_release>());
@@ -60,6 +65,9 @@ PYBIND11_MODULE(_mq_vector_npu, module) {
         .def_property_readonly("metadata_bytes",
                                py::cpp_function(&Executable::MetadataBytes, py::call_guard<py::gil_scoped_release>()));
     py::class_<Observable, std::shared_ptr<Observable>>(module, "Observable");
+}
+
+void BindState(py::module_& module) {
     py::class_<State>(module, "State")
         .def(py::init<mindquantum::qbit_t, int>(), "n_qubits"_a, "device_id"_a = 0,
              py::call_guard<py::gil_scoped_release>())
@@ -108,20 +116,30 @@ PYBIND11_MODULE(_mq_vector_npu, module) {
         .def_property_readonly("soc_name", py::cpp_function(&State::SocName, py::call_guard<py::gil_scoped_release>()))
         .def_property_readonly("vector_cores",
                                py::cpp_function(&State::VectorCores, py::call_guard<py::gil_scoped_release>()));
+}
+
+void BindGradient(py::module_& module) {
     py::class_<GradientPlan>(module, "GradientPlan")
         .def("evaluate", &GradientPlan::Evaluate, "right_state"_a, "left_state"_a, "parameters"_a,
              py::call_guard<py::gil_scoped_release>());
     module.def(
         "make_gradient",
         [](const State& owner, const std::vector<mindquantum::Hamiltonian<float>>& hams,
-           const std::vector<mindquantum::Hamiltonian<float>>& hams_dagger,
            const std::vector<std::shared_ptr<mindquantum::BasicGate>>& right_gates,
            const std::vector<std::shared_ptr<mindquantum::BasicGate>>& left_gates,
            const std::vector<std::string>& parameter_names, bool hermitian, unsigned tile_qubits,
            unsigned fusion_qubits, unsigned cube_min_gates) {
-            return std::make_unique<GradientPlan>(owner, hams, hams_dagger, right_gates, left_gates, parameter_names,
-                                                  hermitian, tile_qubits, fusion_qubits, cube_min_gates);
+            return std::make_unique<GradientPlan>(owner, hams, right_gates, left_gates, parameter_names, hermitian,
+                                                  tile_qubits, fusion_qubits, cube_min_gates);
         },
-        "owner"_a, "hams"_a, "hams_dagger"_a, "right_gates"_a, "left_gates"_a, "parameter_names"_a, "hermitian"_a,
-        "tile_qubits"_a = 12, "fusion_qubits"_a = 6, "cube_min_gates"_a = 4, py::call_guard<py::gil_scoped_release>());
+        "owner"_a, "hams"_a, "right_gates"_a, "left_gates"_a, "parameter_names"_a, "hermitian"_a, "tile_qubits"_a = 12,
+        "fusion_qubits"_a = 6, "cube_min_gates"_a = 4, py::call_guard<py::gil_scoped_release>());
+}
+}  // namespace
+
+PYBIND11_MODULE(_mq_vector_npu, module) {
+    module.doc() = "Ascend 910B complex64 tiled statevector executor.";
+    BindPrograms(module);
+    BindState(module);
+    BindGradient(module);
 }

@@ -18,12 +18,14 @@
 #include <array>
 #include <complex>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "qubit_layout.h"
@@ -32,14 +34,40 @@
 #include "simulator/circuit_tiling/detail/scalar_runtime.h"
 #include "simulator/circuit_tiling/executor.h"
 #include "simulator/circuit_tiling/planner.h"
+#include "simulator/utils.h"
 
 namespace mindquantum::sim::ascend {
+void ValidateConfiguration(qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits) {
+    if (n_qubits < 0 || n_qubits > 32) {
+        throw std::invalid_argument("mqvector_npu requires 0 <= n_qubits <= 32, subject to available device memory.");
+    }
+    if (tile_qubits < 4 || tile_qubits > 12 || fusion_qubits < 1 || fusion_qubits > tile_qubits - 3) {
+        throw std::invalid_argument("Require 4 <= tile_qubits <= 12 and 1 <= fusion_qubits <= tile_qubits - 3.");
+    }
+}
+
 void ValidateResolver(const parameter::ParameterResolver& resolver) {
     auto scalar = [](const tensor::Tensor& value) {
         if (value.device != tensor::TDevice::CPU || value.dim != 1 || !value.data) {
             throw std::invalid_argument("Ascend parameters must be host scalars.");
         }
-        const auto number = tensor::ops::cpu::to_vector<std::complex<double>>(value).front();
+        std::complex<double> number;
+        switch (value.dtype) {
+            case tensor::TDtype::Float32:
+                number = *static_cast<const float*>(value.data);
+                break;
+            case tensor::TDtype::Float64:
+                number = *static_cast<const double*>(value.data);
+                break;
+            case tensor::TDtype::Complex64:
+                number = *static_cast<const std::complex<float>*>(value.data);
+                break;
+            case tensor::TDtype::Complex128:
+                number = *static_cast<const std::complex<double>*>(value.data);
+                break;
+            default:
+                throw std::invalid_argument("Unsupported Ascend parameter scalar type.");
+        }
         if (!std::isfinite(number.real()) || !std::isfinite(number.imag()) || number.imag() != 0) {
             throw std::invalid_argument("Ascend parameters must be real and finite.");
         }
@@ -67,22 +95,6 @@ float Coefficient(double value) {
     return result;
 }
 
-// Tensor-product embedding: selected bits retain their order; every omitted
-// bit labels an independent copy of the same small operation.
-std::vector<uint64_t> Offsets(uint64_t mask) {
-    std::vector<uint64_t> offsets{0};
-    while (mask) {
-        const auto bit = mask & (~mask + 1);
-        const auto count = offsets.size();
-        offsets.resize(2 * count);
-        for (size_t i = 0; i < count; ++i) {
-            offsets[count + i] = offsets[i] | bit;
-        }
-        mask ^= bit;
-    }
-    return offsets;
-}
-
 TileProgram MakeVectorTile(uint64_t mask, uint64_t plane) {
     TileProgram tile{};
     tile.size = uint32_t{1} << CountOne(mask);
@@ -92,7 +104,7 @@ TileProgram MakeVectorTile(uint64_t mask, uint64_t plane) {
     while (mask & tile.run) {
         tile.run <<= 1;
     }
-    tile.offsets = Offsets(mask & ~(uint64_t{tile.run} - 1));
+    tile.offsets = Offsets(mask & ~(static_cast<uint64_t>(tile.run) - 1));
     return tile;
 }
 
@@ -133,19 +145,19 @@ std::optional<uint64_t> DenseSupport(const ct::CircuitTile& source, const ct::St
     return mask;
 }
 
-using DenseLayouts = std::map<std::pair<bool, qbits_t>, std::shared_ptr<const DenseLayout>>;
+using DenseLayouts = std::map<qbits_t, std::shared_ptr<const DenseLayout>>;
 
 std::shared_ptr<const DenseLayout> DenseRouting(uint64_t mask, const ct::StateSpace& space, QubitLayout& layout,
-                                                DenseLayouts& routes, bool adjoint = false) {
+                                                DenseLayouts& routes) {
     // Intern packet geometry within this plan's fixed state space. Only the
     // ordered physical positions of the operator's bits affect packing; names
     // and permutations of spectator logical bits do not. On reuse still apply
     // the transition to THIS layout, never reuse a previous output layout.
-    std::pair<bool, qbits_t> key{adjoint, {}};
-    for (const auto qubit : ct::QubitsFromMask(mask)) {
-        key.second.push_back(CountOne(layout.Physical(uint64_t{1} << qubit) - 1));
-    }
-    if (const auto found = routes.find(key); found != routes.end()) {
+    auto key = ct::QubitsFromMask(mask);
+    std::transform(key.begin(), key.end(), key.begin(),
+                   [&](auto qubit) { return CountOne(layout.Physical(uint64_t{1} << qubit) - 1); });
+    const auto found = routes.find(key);
+    if (found != routes.end()) {
         layout.AdoptPacked((space.dimension() - 1) & ~found->second->packet.external_mask, mask);
         return found->second;
     }
@@ -161,7 +173,7 @@ std::shared_ptr<const DenseLayout> DenseRouting(uint64_t mask, const ct::StateSp
         run <<= 1;
     }
     result.packet = {space.dimension(), (space.dimension() - 1) & ~tile_mask, kDenseTileSize, run};
-    result.offsets = Offsets(tile_mask & ~(uint64_t{run} - 1));
+    result.offsets = Offsets(tile_mask & ~(static_cast<uint64_t>(run) - 1));
     const auto local_offsets = Offsets(tile_mask);
     const auto columns = kDenseTileSize / result.dimension;
     result.indices.resize(kDenseTileSize);
@@ -172,12 +184,6 @@ std::shared_ptr<const DenseLayout> DenseRouting(uint64_t mask, const ct::StateSp
         result.indices[packed] = local * sizeof(float);
     }
     layout.AdoptPacked(tile_mask, mask);
-    if (adjoint) {
-        result.inverse_indices.resize(kDenseTileSize);
-        for (uint32_t packed = 0; packed < kDenseTileSize; ++packed) {
-            result.inverse_indices[result.indices[packed] / sizeof(float)] = packed * sizeof(float);
-        }
-    }
     return routes.emplace(std::move(key), std::make_shared<const DenseLayout>(std::move(result))).first->second;
 }
 
@@ -202,10 +208,9 @@ DenseProgram BindDense(const ct::CircuitTile& source, const std::shared_ptr<cons
     prepared.layout.qubits = ct::QubitsFromMask(dimension - 1);
     prepared.layout.tile_count = 1;
     std::iota(prepared.layout.state_offsets.begin(), prepared.layout.state_offsets.end(), 0);
-    for (const auto& operation : prepared.operations) {
-        if (operation.external_control_mask != 0) {
-            throw std::logic_error("A fixed dense operator cannot omit an external control.");
-        }
+    if (std::any_of(prepared.operations.begin(), prepared.operations.end(),
+                    [](const auto& operation) { return operation.external_control_mask != 0; })) {
+        throw std::logic_error("A fixed dense operator cannot omit an external control.");
     }
     result.coefficients.resize(4 * dimension * dimension);
     std::vector<complex_t> column(dimension);
@@ -237,11 +242,13 @@ DenseAdjointProgram BindDenseAdjoint(const ct::CircuitTile& source, const DenseA
         for (const auto& derivative : operation.derivatives) {
             images.back().push_back(ct::Builder<complex_t>::DerivativeOnly(prepared.layout, derivative));
             for (const auto& target : derivative.targets) {
-                active.emplace(target.output_index, 0);
+                active.emplace(target.output_index, images.size() - 1);
             }
         }
     }
+    std::vector<size_t> first_gate;
     for (auto& [output, slot] : active) {
+        first_gate.push_back(slot);
         slot = result.outputs.size();
         result.outputs.push_back(static_cast<uint32_t>(output));
     }
@@ -266,8 +273,10 @@ DenseAdjointProgram BindDenseAdjoint(const ct::CircuitTile& source, const DenseA
         }
         for (size_t gate = 0; gate < prepared.operations.size(); ++gate) {
             const auto& operation = prepared.operations[gate];
-            for (auto& tangent : tangents) {
-                apply(operation.evolution.front(), tangent);
+            for (size_t slot = 0; slot < tangents.size(); ++slot) {
+                if (first_gate[slot] < gate) {
+                    apply(operation.evolution.front(), tangents[slot]);
+                }
             }
             for (size_t d = 0; d < operation.derivatives.size(); ++d) {
                 intrinsic = column;
@@ -291,13 +300,12 @@ DenseAdjointProgram BindDenseAdjoint(const ct::CircuitTile& source, const DenseA
     return result;
 }
 
-// Select an instruction form from the access pattern, not the quantum gate ID.
-// Coalesced pairs use hardware strides; irregular pairs use indexed Gather.
-std::vector<PairSpan> StridedPairs(const std::vector<size_t>& indices) {
-    struct Run {
-        size_t lhs, rhs, length;
-    };
-    std::vector<Run> runs;
+struct PairRun {
+    size_t lhs, rhs, length;
+};
+
+std::vector<PairRun> AlignedPairRuns(const std::vector<size_t>& indices) {
+    std::vector<PairRun> runs;
     for (size_t i = 0; i < indices.size();) {
         const auto lhs = indices[i], rhs = indices[i + 1];
         size_t length = 1;
@@ -311,6 +319,13 @@ std::vector<PairSpan> StridedPairs(const std::vector<size_t>& indices) {
         runs.push_back({lhs, rhs, length});
         i += 2 * length;
     }
+    return runs;
+}
+
+// Select an instruction form from the access pattern, not the quantum gate ID.
+// Coalesced pairs use hardware strides; irregular pairs use indexed Gather.
+std::vector<PairSpan> StridedPairs(const std::vector<size_t>& indices) {
+    const auto runs = AlignedPairRuns(indices);
     std::vector<PairSpan> spans;
     auto emit = [&](size_t lhs, size_t rhs, size_t mask, size_t count, size_t stride) {
         while (count) {
@@ -374,7 +389,8 @@ class ConstantPool {
     Instruction Matrix(uint32_t size, uint32_t support, size_t dimension,
                        const std::vector<std::vector<size_t>>& compact) {
         auto key = std::make_tuple(size, support, dimension, compact);
-        if (const auto found = matrices_.find(key); found != matrices_.end()) {
+        const auto found = matrices_.find(key);
+        if (found != matrices_.end()) {
             return found->second;
         }
         const auto local = Offsets(support);
@@ -400,9 +416,8 @@ class ConstantPool {
                 }
             } else {
                 for (auto base : spectators) {
-                    for (auto index : block) {
-                        expanded.push_back(base | local[index]);
-                    }
+                    std::transform(block.begin(), block.end(), std::back_inserter(expanded),
+                                   [&](auto index) { return base | local[index]; });
                 }
             }
         }
@@ -424,27 +439,31 @@ class ConstantPool {
     }
 
     uint32_t Diagonal(uint32_t size, uint32_t support, const std::vector<complex_t>& factors) {
-        std::vector<float> compact(2 * factors.size());
+        std::vector<uint32_t> words(2 * factors.size());
         for (size_t i = 0; i < factors.size(); ++i) {
-            compact[i] = Coefficient(factors[i].real());
-            compact[factors.size() + i] = Coefficient(factors[i].imag());
+            const auto real = Coefficient(factors[i].real());
+            const auto imag = Coefficient(factors[i].imag());
+            std::memcpy(words.data() + i, &real, sizeof(real));
+            std::memcpy(words.data() + factors.size() + i, &imag, sizeof(imag));
         }
-        std::vector<uint32_t> words(compact.size());
-        std::memcpy(words.data(), compact.data(), words.size() * sizeof(uint32_t));
         auto key = std::make_tuple(size, support, std::move(words));
-        if (const auto found = diagonals_.find(key); found != diagonals_.end()) {
+        const auto found = diagonals_.find(key);
+        if (found != diagonals_.end()) {
             return found->second;
         }
-        std::vector<float> expanded(2 * size);
+        const auto& compact = std::get<2>(key);
+        words.resize(2 * size);
         const auto local = Offsets(support);
-        for (auto base : Offsets((size - 1) & ~support)) {
+        // Spectator low bits form contiguous equal-factor runs. Fill those
+        // runs directly instead of scattering one amplitude at a time.
+        const auto run = support ? support & (~support + 1) : size;
+        for (auto base : Offsets((size - 1) & ~support & ~(run - 1))) {
             for (size_t i = 0; i < factors.size(); ++i) {
-                expanded[base | local[i]] = compact[i];
-                expanded[size + (base | local[i])] = compact[factors.size() + i];
+                const auto index = base | local[i];
+                std::fill_n(words.data() + index, run, compact[i]);
+                std::fill_n(words.data() + size + index, run, compact[factors.size() + i]);
             }
         }
-        words.resize(expanded.size());
-        std::memcpy(words.data(), expanded.data(), words.size() * sizeof(uint32_t));
         const auto offset = Append(std::move(words));
         diagonals_.emplace(std::move(key), offset);
         return offset;
@@ -539,9 +558,7 @@ class Encoder {
             // bits are omitted only during compilation, never during execution.
             const auto compact = ct::Builder<complex_t>::Build(Compact(gate, space), parameters, space);
             for (const auto& operation : compact.operations) {
-                predicate_ = {};
-                predicate_.controls = layout.Physical(operation.external_control_mask);
-                std::visit([this](const auto& kernel) { Lower(kernel); }, operation.kernel);
+                Append(operation);
             }
         }
         FlushDiagonal();
@@ -552,23 +569,30 @@ class Encoder {
         const auto support = layout_.Logical(mask_) & (access.object_mask | access.control_mask);
         const auto physical_support = layout_.Physical(support);
         support_ = Project(physical_support, mask_);
-        basis_.clear();
-        for (auto basis : Offsets(support)) {
-            basis_.push_back(Project(layout_.Physical(basis), physical_support));
-        }
+        basis_ = Offsets(support);
+        std::transform(basis_.begin(), basis_.end(), basis_.begin(),
+                       [&](auto basis) { return Project(layout_.Physical(basis), physical_support); });
         return {ct::QubitsFromMask(support), {gate}};
     }
 
-    // Explicit boundaries forbid diagonal folding across adjoint evaluation
-    // points. Derivatives share the exact same semantic-kernel lowering.
+    // Evolution can fold across gates, but never across a derivative boundary.
     template <typename operation_t>
-    std::pair<uint32_t, uint32_t> Encode(const operation_t& operation, bool derivative = false) {
-        FlushDiagonal();
-        const auto begin = Position();
-        derivative_ = derivative;
+    void Append(const operation_t& operation) {
         predicate_ = {};
         predicate_.controls = layout_.Physical(operation.external_control_mask);
         std::visit([this](const auto& kernel) { Lower(kernel); }, operation.kernel);
+    }
+
+    uint32_t Boundary() {
+        FlushDiagonal();
+        return Position();
+    }
+
+    template <typename operation_t>
+    std::pair<uint32_t, uint32_t> Encode(const operation_t& operation, bool derivative = false) {
+        const auto begin = Boundary();
+        derivative_ = derivative;
+        Append(operation);
         FlushDiagonal();
         derivative_ = false;
         return {begin, Position() - begin};
@@ -600,9 +624,7 @@ class Encoder {
         FlushDiagonal();
         auto physical = indices;
         for (auto& block : physical) {
-            for (auto& basis : block) {
-                basis = basis_[basis];
-            }
+            std::transform(block.begin(), block.end(), block.begin(), [&](auto basis) { return basis_[basis]; });
         }
         auto op = constants_.Matrix(program_.size, support_, dimension, physical);
         op.controls = predicate_.controls;
@@ -849,11 +871,16 @@ uint32_t CheckedCount(size_t count) {
     return static_cast<uint32_t>(count);
 }
 
-void ValidateCircuit(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits) {
+struct CircuitParameters {
+    std::set<std::string> required, gradient;
+};
+
+CircuitParameters ValidateCircuit(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits) {
     if (n_qubits < 0 || n_qubits > 32) {
         throw std::invalid_argument("mqvector_npu requires 0 <= n_qubits <= 32, subject to available device memory.");
     }
     const auto logical_space = ct::StateSpace::Vector(n_qubits);
+    CircuitParameters parameters;
     for (const auto& gate : circuit) {
         if (!gate) {
             throw std::invalid_argument("Cannot compile a null gate.");
@@ -865,6 +892,12 @@ void ValidateCircuit(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbi
         if (const auto* parameterized = dynamic_cast<const Parameterizable*>(gate.get())) {
             for (const auto& coefficient : parameterized->GetCoeffs()) {
                 ValidateResolver(coefficient);
+                for (const auto& [name, value] : coefficient.data_) {
+                    parameters.required.insert(name);
+                    if (!coefficient.NoGradContains(name)) {
+                        parameters.gradient.insert(name);
+                    }
+                }
             }
         }
         // Capability validation precedes execution-policy selection: fusion
@@ -874,6 +907,7 @@ void ValidateCircuit(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbi
             throw std::invalid_argument("mqvector_npu supports dense custom matrices on at most six target qubits.");
         }
     }
+    return parameters;
 }
 
 // BasicGate has no virtual Clone. These are only concrete copy constructors,
@@ -970,10 +1004,18 @@ std::shared_ptr<const AdjointTileProgram> BindVectorAdjoint(const ct::CircuitTil
                                                             const parameter::ParameterResolver& parameters,
                                                             const MST<size_t>& parameter_map,
                                                             const ct::StateSpace& space, ConstantPool& constants,
+                                                            const QubitLayout& layout,
                                                             const std::shared_ptr<const std::vector<uint32_t>>& data) {
-    const QubitLayout layout(space.state_qubits());
     Encoder encoder(ct::MaskFromQubits(tile.qubits), space.dimension(), constants, layout);
     AdjointTileProgram encoded;
+    uint32_t pending = 0;
+    auto flush_evolution = [&] {
+        const auto end = encoder.Boundary();
+        if (end != pending) {
+            encoded.steps.push_back({pending, end - pending, 0, 0});
+        }
+        pending = end;
+    };
     for (const auto& gate : tile.gates) {
         const auto prepared = ct::Builder<complex_t>::BuildAdjoint(encoder.Compact(gate, space), parameters,
                                                                    parameter_map, space,
@@ -982,6 +1024,11 @@ std::shared_ptr<const AdjointTileProgram> BindVectorAdjoint(const ct::CircuitTil
             if (operation.evolution.size() != 1 || operation.derivative_position != 0) {
                 throw std::invalid_argument("Ascend adjoint supports only single-image state-vector operations.");
             }
+            if (operation.derivatives.empty()) {
+                encoder.Append(operation.evolution.front());
+                continue;
+            }
+            flush_evolution();
             const auto [begin, count] = encoder.Encode(operation.evolution.front());
             AdjointStep step{begin, count, CheckedCount(encoded.derivatives.size()),
                              CheckedCount(operation.derivatives.size())};
@@ -996,8 +1043,10 @@ std::shared_ptr<const AdjointTileProgram> BindVectorAdjoint(const ct::CircuitTil
                 }
             }
             encoded.steps.push_back(step);
+            pending = encoder.Position();
         }
     }
+    flush_evolution();
     CheckedCount(encoded.steps.size());
     CheckedCount(encoded.derivatives.size());
     CheckedCount(encoded.targets.size());
@@ -1005,192 +1054,209 @@ std::shared_ptr<const AdjointTileProgram> BindVectorAdjoint(const ct::CircuitTil
     encoded.data = data;
     return std::make_shared<const AdjointTileProgram>(std::move(encoded));
 }
+
+// Vector blocks share one interned pool. Dense synthesis has no shared mutable
+// state and runs in parallel; user callbacks retain their serial call order.
+template <typename dense_t, typename bindings_t, typename program_t, typename vector_bind_t, typename dense_bind_t>
+void BindBlocks(const bindings_t& bindings, program_t& program, const vector_bind_t& vector_bind,
+                const dense_bind_t& dense_bind) {
+    std::vector<size_t> independent;
+    uint64_t work = 0;
+    auto bind_dense = [&](size_t index) {
+        const auto& binding = bindings[index];
+        auto& destination = program.tiles[binding.position];
+        const auto& topology = *std::get<std::shared_ptr<const dense_t>>(destination);
+        destination = std::make_shared<const dense_t>(dense_bind(binding.source, topology));
+    };
+    for (size_t index = 0; index < bindings.size(); ++index) {
+        const auto& binding = bindings[index];
+        auto& destination = program.tiles[binding.position];
+        if (!std::holds_alternative<std::shared_ptr<const dense_t>>(destination)) {
+            destination = vector_bind(binding);
+        } else if (std::any_of(binding.source.gates.begin(), binding.source.gates.end(), [](const auto& gate) {
+                       return gate->GetID() == GateID::CUSTOM || gate->GetID() == GateID::CUSTOM_TWO_PARAM;
+                   })) {
+            bind_dense(index);
+        } else {
+            independent.push_back(index);
+            work += (uint64_t{1} << (2 * binding.source.qubits.size())) * binding.source.gates.size();
+        }
+    }
+    if (!independent.empty()) {
+        ParallelBatch(omp::TeamSize(work), independent.size(), [&](size_t index) { bind_dense(independent[index]); });
+    }
+}
 }  // namespace
 
-struct ForwardPlan::Impl {
+template <typename program_t>
+struct CircuitPlan<program_t>::Impl {
+    static constexpr bool adjoint = std::is_same_v<program_t, AdjointProgram>;
+    using dense_t = std::conditional_t<adjoint, DenseAdjointProgram, DenseProgram>;
+    using tile_t = std::conditional_t<adjoint, AdjointTileProgram, TileProgram>;
     struct Binding {
         size_t position;
         ct::CircuitTile source;
         QubitLayout layout;
     };
-    Program prototype;
+    program_t prototype;
     std::vector<Binding> bindings;
+    std::vector<std::shared_ptr<BasicGate>> gates;
+    CircuitParameters parameters;
+
+    auto Vector(const ct::CircuitTile& tile, const parameter::ParameterResolver& resolver, const ct::StateSpace& space,
+                ConstantPool& constants, const QubitLayout& layout,
+                const std::shared_ptr<const std::vector<uint32_t>>& data) const {
+        if constexpr (adjoint) {
+            return BindVectorAdjoint(tile, resolver, prototype.parameter_map, space, constants, layout, data);
+        } else {
+            return BindVector(tile, resolver, space, constants, layout, data);
+        }
+    }
+
+    dense_t Dense(const ct::CircuitTile& tile, const dense_t& topology, const parameter::ParameterResolver& resolver,
+                  const ct::StateSpace& space) const {
+        if constexpr (adjoint) {
+            return BindDenseAdjoint(tile, topology, resolver, prototype.parameter_map, space);
+        } else {
+            return BindDense(tile, topology.layout, resolver, space);
+        }
+    }
+
+    void Schedule(qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates,
+                  const MST<size_t>& parameter_map) {
+        prototype.n_qubits = n_qubits;
+        if constexpr (adjoint) {
+            CheckedCount(parameter_map.size() + 1);
+            prototype.parameter_map = parameter_map;
+            std::vector<bool> used(parameter_map.size(), false);
+            for (const auto& [name, column] : parameter_map) {
+                if (column >= used.size() || used[column]) {
+                    throw std::invalid_argument("Adjoint parameter map must be a bijection onto [0, parameter_count).");
+                }
+                used[column] = true;
+            }
+        }
+        const auto space = ct::StateSpace::Vector(n_qubits);
+        const auto physical_space = ct::StateSpace::Vector(std::max(n_qubits, qbit_t{3}));
+        const auto width = std::min(
+            {tile_qubits, adjoint ? 11U : 12U, static_cast<unsigned>(physical_space.state_qubits())});
+        const auto use_cube = cube_min_gates && space.dimension() >= kDenseTileSize;
+        const auto capacity = use_cube ? ct::Planner::Capacity::FullSupport : ct::Planner::Capacity::Mixing;
+        const auto budget = std::min({fusion_qubits, std::max(1U, width - 3), use_cube ? kMaxDenseQubits : width});
+        const ct::Planner planner(space, budget, capacity);
+        auto ordered = gates;
+        if constexpr (adjoint) {
+            std::reverse(ordered.begin(), ordered.end());
+        }
+        const auto schedule = adjoint ? planner.PlanAdjoint(ordered) : planner.Plan(ordered);
+        auto data = std::make_shared<std::vector<uint32_t>>();
+        ConstantPool constants(*data);
+        DenseLayouts routes;
+        QubitLayout layout(physical_space.state_qubits());
+        const parameter::ParameterResolver no_parameters;
+        for (const auto& entry : schedule) {
+            auto tile = AsTile(entry, space);
+            const auto fixed = IsConstant(tile);
+            const auto position = prototype.tiles.size();
+            const auto input_layout = layout;
+            if (const auto mask = DenseSupport(tile, space, cube_min_gates)) {
+                tile.qubits = ct::QubitsFromMask(*mask);
+                dense_t dense{};
+                if constexpr (adjoint) {
+                    dense.evolution.layout = DenseRouting(*mask, space, layout, routes);
+                } else {
+                    dense.layout = DenseRouting(*mask, space, layout, routes);
+                }
+                if (fixed) {
+                    dense = Dense(tile, dense, no_parameters, space);
+                }
+                prototype.tiles.emplace_back(std::make_shared<const dense_t>(std::move(dense)));
+            } else {
+                tile.qubits = ct::QubitsFromMask(
+                    AlignedTileMask(layout.Physical(ct::MaskFromQubits(tile.qubits)), width));
+                prototype.tiles.emplace_back(fixed
+                                                 ? Vector(tile, no_parameters, physical_space, constants, layout, data)
+                                                 : std::shared_ptr<const tile_t>{});
+            }
+            if (!fixed) {
+                bindings.push_back({position, std::move(tile), input_layout});
+            }
+        }
+        if constexpr (adjoint) {
+            // Even an empty circuit has an overlap; working layouts need no restoration.
+            if (prototype.tiles.empty()) {
+                prototype.tiles.emplace_back(Vector({ct::QubitsFromMask(AlignedTileMask(0, width)), {}}, no_parameters,
+                                                    physical_space, constants, layout, data));
+            }
+        } else {
+            RestoreLayout(prototype, constants, layout, physical_space.dimension(), data);
+        }
+    }
 };
 
-ForwardPlan::ForwardPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits, unsigned tile_qubits,
-                         unsigned fusion_qubits, unsigned cube_min_gates) {
-    ValidateCircuit(circuit, n_qubits);
-    if (tile_qubits < 3 || tile_qubits > 12 || fusion_qubits < 1 || fusion_qubits > tile_qubits - 3) {
-        throw std::invalid_argument("Require 3 <= tile_qubits <= 12 and 1 <= fusion_qubits <= tile_qubits - 3.");
-    }
-    const auto space = ct::StateSpace::Vector(n_qubits);
-    const auto use_cube = cube_min_gates && space.dimension() >= kDenseTileSize;
-    const auto capacity = use_cube ? ct::Planner::Capacity::FullSupport : ct::Planner::Capacity::Mixing;
-    const auto budget = use_cube ? std::min(fusion_qubits, kMaxDenseQubits) : fusion_qubits;
-    auto impl = std::make_shared<Impl>(Impl{{n_qubits, {}}, {}});
-    const auto physical_space = ct::StateSpace::Vector(std::max(n_qubits, qbit_t{3}));
-    const auto width = std::min(tile_qubits, static_cast<unsigned>(physical_space.state_qubits()));
-    auto data = std::make_shared<std::vector<uint32_t>>();
-    ConstantPool constants(*data);
-    DenseLayouts routes;
-    QubitLayout layout(physical_space.state_qubits());
-    const parameter::ParameterResolver no_parameters;
-    for (const auto& entry : ct::Planner(space, budget, capacity).Plan(Snapshot(circuit))) {
-        auto tile = AsTile(entry, space);
-        const auto fixed = IsConstant(tile);
-        const auto position = impl->prototype.tiles.size();
-        const auto input_layout = layout;
-        if (const auto mask = DenseSupport(tile, space, cube_min_gates)) {
-            tile.qubits = ct::QubitsFromMask(*mask);
-            DenseProgram dense{DenseRouting(*mask, space, layout, routes), {}};
-            if (fixed) {
-                dense = BindDense(tile, dense.layout, no_parameters, space);
-            }
-            impl->prototype.tiles.emplace_back(std::make_shared<const DenseProgram>(std::move(dense)));
-        } else {
-            // Only Cube changes the physical layout; Vector instruction shape
-            // may depend on values, but its block placement never does.
-            tile.qubits = ct::QubitsFromMask(AlignedTileMask(layout.Physical(ct::MaskFromQubits(tile.qubits)), width));
-            impl->prototype.tiles.emplace_back(
-                fixed ? BindVector(tile, no_parameters, physical_space, constants, layout, data)
-                      : std::shared_ptr<const TileProgram>{});
-        }
-        if (!fixed) {
-            impl->bindings.push_back({position, std::move(tile), input_layout});
-        }
-    }
-    RestoreLayout(impl->prototype, constants, layout, physical_space.dimension(), data);
+template <typename program_t>
+CircuitPlan<program_t>::CircuitPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, qbit_t n_qubits,
+                                    unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates,
+                                    const MST<size_t>& parameter_map) {
+    ValidateConfiguration(n_qubits, tile_qubits, fusion_qubits);
+    auto impl = std::make_shared<Impl>();
+    impl->parameters = ValidateCircuit(circuit, n_qubits);
+    impl->gates = Snapshot(circuit);
+    impl->Schedule(n_qubits, tile_qubits, fusion_qubits, cube_min_gates, parameter_map);
     impl_ = std::move(impl);
 }
 
-const Program& ForwardPlan::Constants() const {
-    return impl_->prototype;
+template <typename program_t>
+CircuitPlan<program_t>::CircuitPlan(const CircuitPlan<Program>& forward, const MST<size_t>& parameter_map,
+                                    unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates) {
+    ValidateConfiguration(forward.impl_->prototype.n_qubits, tile_qubits, fusion_qubits);
+    auto impl = std::make_shared<Impl>();
+    impl->gates = forward.impl_->gates;
+    impl->parameters = forward.impl_->parameters;
+    impl->Schedule(forward.impl_->prototype.n_qubits, tile_qubits, fusion_qubits, cube_min_gates, parameter_map);
+    impl_ = std::move(impl);
 }
 
-Program ForwardPlan::Bind(const parameter::ParameterResolver& parameters) const {
+template <typename program_t>
+const std::set<std::string>& CircuitPlan<program_t>::Parameters() const {
+    return impl_->parameters.required;
+}
+
+template <typename program_t>
+const std::set<std::string>& CircuitPlan<program_t>::GradientParameters() const {
+    return impl_->parameters.gradient;
+}
+
+template <typename program_t>
+program_t CircuitPlan<program_t>::Bind(const parameter::ParameterResolver& parameters) const {
     ValidateResolver(parameters);
     auto result = impl_->prototype;
     const auto space = ct::StateSpace::Vector(std::max(result.n_qubits, qbit_t{3}));
     auto data = std::make_shared<std::vector<uint32_t>>();
     ConstantPool constants(*data);
-    for (const auto& binding : impl_->bindings) {
-        auto& destination = result.tiles[binding.position];
-        if (const auto* dense = std::get_if<std::shared_ptr<const DenseProgram>>(&destination)) {
-            destination = std::make_shared<const DenseProgram>(
-                BindDense(binding.source, (*dense)->layout, parameters, space));
-        } else {
-            destination = BindVector(binding.source, parameters, space, constants, binding.layout, data);
-        }
-    }
+    BindBlocks<typename Impl::dense_t>(
+        impl_->bindings, result,
+        [&](const auto& binding) {
+            return impl_->Vector(binding.source, parameters, space, constants, binding.layout, data);
+        },
+        [&](const auto& source, const auto& topology) { return impl_->Dense(source, topology, parameters, space); });
     return result;
 }
 
-struct AdjointPlan::Impl {
-    struct Binding {
-        size_t position;
-        ct::CircuitTile source;
-    };
-    AdjointProgram prototype;
-    std::vector<Binding> bindings;
-};
-
-AdjointPlan::AdjointPlan(const std::vector<std::shared_ptr<BasicGate>>& circuit, const MST<size_t>& parameter_map,
-                         qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates) {
-    ValidateCircuit(circuit, n_qubits);
-    if (tile_qubits < 3 || tile_qubits > 12 || fusion_qubits < 1 || fusion_qubits > 9) {
-        throw std::invalid_argument("Require 3 <= adjoint tile_qubits <= 12 and 1 <= fusion_qubits <= 9.");
-    }
-    CheckedCount(parameter_map.size() + 1);
-    std::vector<bool> used(parameter_map.size(), false);
-    for (const auto& [name, column] : parameter_map) {
-        if (column >= used.size() || used[column]) {
-            throw std::invalid_argument("Adjoint parameter map must be a bijection onto [0, parameter_count).");
-        }
-        used[column] = true;
-    }
-    auto impl = std::make_shared<Impl>(Impl{{n_qubits, CheckedCount(parameter_map.size() + 1), parameter_map, {}}, {}});
-    const auto space = ct::StateSpace::Vector(n_qubits);
-    const auto physical_space = ct::StateSpace::Vector(std::max(n_qubits, qbit_t{3}));
-    const auto width = std::min({tile_qubits, static_cast<unsigned>(CountOne(kMaxAdjointTileSize - 1)),
-                                 static_cast<unsigned>(std::max(n_qubits, qbit_t{3}))});
-    const auto use_cube = cube_min_gates && space.dimension() >= kDenseTileSize;
-    const auto capacity = use_cube ? ct::Planner::Capacity::FullSupport : ct::Planner::Capacity::Mixing;
-    const auto budget = std::min({fusion_qubits, std::max(1U, width - 3), use_cube ? kMaxDenseQubits : width});
-    auto reversed = Snapshot(circuit);
-    std::reverse(reversed.begin(), reversed.end());
-    auto data = std::make_shared<std::vector<uint32_t>>();
-    ConstantPool constants(*data);
-    DenseLayouts routes;
-    const parameter::ParameterResolver no_parameters;
-    for (const auto& entry : ct::Planner(space, budget, capacity).PlanAdjoint(reversed)) {
-        auto tile = AsTile(entry, space);
-        const auto fixed = IsConstant(tile);
-        const auto position = impl->prototype.tiles.size();
-        if (const auto mask = DenseSupport(tile, space, cube_min_gates)) {
-            tile.qubits = ct::QubitsFromMask(*mask);
-            QubitLayout layout(space.state_qubits());
-            DenseAdjointProgram dense{{DenseRouting(*mask, space, layout, routes, true), {}}, {}, {}};
-            if (fixed) {
-                dense = BindDenseAdjoint(tile, dense, no_parameters, parameter_map, space);
-            }
-            impl->prototype.tiles.emplace_back(std::make_shared<const DenseAdjointProgram>(std::move(dense)));
-        } else {
-            tile.qubits = ct::QubitsFromMask(AlignedTileMask(ct::MaskFromQubits(tile.qubits), width));
-            impl->prototype.tiles.emplace_back(
-                fixed ? BindVectorAdjoint(tile, no_parameters, parameter_map, physical_space, constants, data)
-                      : std::shared_ptr<const AdjointTileProgram>{});
-        }
-        if (!fixed) {
-            impl->bindings.push_back({position, std::move(tile)});
-        }
-    }
-    // Even the empty circuit has an overlap, including for zero qubits.
-    if (impl->prototype.tiles.empty()) {
-        impl->prototype.tiles.emplace_back(BindVectorAdjoint({ct::QubitsFromMask(AlignedTileMask(0, width)), {}},
-                                                             no_parameters, parameter_map, physical_space, constants,
-                                                             data));
-    }
-    impl_ = std::move(impl);
-}
-
-const AdjointProgram& AdjointPlan::Constants() const {
-    return impl_->prototype;
-}
-
-AdjointProgram AdjointPlan::Bind(const parameter::ParameterResolver& parameters) const {
-    ValidateResolver(parameters);
-    auto result = impl_->prototype;
-    const auto space = ct::StateSpace::Vector(std::max(result.n_qubits, qbit_t{3}));
-    auto data = std::make_shared<std::vector<uint32_t>>();
-    ConstantPool constants(*data);
-    for (const auto& binding : impl_->bindings) {
-        auto& destination = result.tiles[binding.position];
-        if (const auto* dense = std::get_if<std::shared_ptr<const DenseAdjointProgram>>(&destination)) {
-            destination = std::make_shared<const DenseAdjointProgram>(
-                BindDenseAdjoint(binding.source, **dense, parameters, result.parameter_map, space));
-        } else {
-            destination = BindVectorAdjoint(binding.source, parameters, result.parameter_map, space, constants, data);
-        }
-    }
-    return result;
-}
+template class CircuitPlan<Program>;
+template class CircuitPlan<AdjointProgram>;
 
 Program Compile(const std::vector<std::shared_ptr<BasicGate>>& circuit, const parameter::ParameterResolver& parameters,
                 qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits, unsigned cube_min_gates) {
     return ForwardPlan(circuit, n_qubits, tile_qubits, fusion_qubits, cube_min_gates).Bind(parameters);
 }
 
-AdjointProgram CompileAdjoint(const std::vector<std::shared_ptr<BasicGate>>& circuit,
-                              const parameter::ParameterResolver& parameters, const MST<size_t>& parameter_map,
-                              qbit_t n_qubits, unsigned tile_qubits, unsigned fusion_qubits) {
-    return AdjointPlan(circuit, parameter_map, n_qubits, tile_qubits, fusion_qubits).Bind(parameters);
-}
-
 Program CompileDerivative(const std::shared_ptr<BasicGate>& gate, const parameter::ParameterResolver& parameters,
                           qbit_t n_qubits, unsigned tile_qubits) {
     ValidateCircuit({gate}, n_qubits);
     ValidateResolver(parameters);
-    if (tile_qubits < 3 || tile_qubits > 12 || gate->GetID() == GateID::I) {
+    ValidateConfiguration(n_qubits, tile_qubits, 1);
+    if (gate->GetID() == GateID::I) {
         throw std::invalid_argument("Invalid standalone Ascend derivative gate or tile width.");
     }
     // A constant CustomGate may be a fixed matrix, whose derivative wrapper
@@ -1210,39 +1276,24 @@ Program CompileDerivative(const std::shared_ptr<BasicGate>& gate, const paramete
     // rejects any omitted operand that needs a local support projection.
     const auto operands = CountOne(access.object_mask | 7U) <= width ? access.object_mask : access.mixing_mask;
     const auto mask = AlignedTileMask(operands, width);
-    auto local_gate = Snapshot({gate}).front();
-    qbits_t local_controls;
-    for (const auto qubit : gate->GetCtrlQubits()) {
-        if (mask & (uint64_t{1} << qubit)) {
-            local_controls.push_back(qubit);
-        }
-    }
-    // Copy only placement metadata; keep the concrete gate, coefficients and
-    // custom callbacks intact. Builder still owns the intrinsic derivative.
-    static_cast<BasicGate&>(*local_gate) = BasicGate(gate->GetID(), gate->GetObjQubits(), local_controls);
+    const auto external_controls = access.control_mask & ~mask;
     Program result{n_qubits, {}};
     auto data = std::make_shared<std::vector<uint32_t>>();
     ConstantPool constants(*data);
     const QubitLayout layout(space.state_qubits());
     Encoder encoder(mask, space.dimension(), constants, layout);
-    const auto prepared = ct::Builder<complex_t>::BuildDerivative(encoder.Compact(local_gate, space), parameters,
-                                                                  space);
+    const auto prepared = ct::Builder<complex_t>::BuildDerivative(encoder.Compact(gate, space), parameters, space,
+                                                                  external_controls);
     for (const auto& operation : prepared.operations) {
         encoder.Encode(operation);
     }
     auto tile = std::move(encoder).Finish();
-    auto external_controls = access.control_mask & ~mask;
     if (external_controls) {
         Instruction zero{};
-        zero.kind = kDiagonal;
+        zero.kind = kDiagonal | kInvertPredicate;
+        zero.controls = external_controls;
         zero.coefficients = constants.Diagonal(tile.size, 0, {complex_t{}});
-        while (external_controls) {
-            const auto bit = external_controls & (~external_controls + 1);
-            // A one-bit parity predicate selects precisely the inactive sector.
-            zero.parity_mask = bit;
-            tile.instructions.push_back(zero);
-            external_controls ^= bit;
-        }
+        tile.instructions.push_back(zero);
     }
     tile.data = data;
     result.tiles.emplace_back(std::make_shared<const TileProgram>(std::move(tile)));
