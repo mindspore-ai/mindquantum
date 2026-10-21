@@ -58,6 +58,34 @@
  * Align a C++ struct/class to a specific size.
  */
 
+// -------------------------------------
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#    define MQ_ALWAYS_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#    define MQ_ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#    define MQ_ALWAYS_INLINE inline
+#endif  // _MSC_VER
+
+/*!
+ * \def MQ_ALWAYS_INLINE
+ * Inline a function at every call site, independently of the compiler's inlining heuristics.
+ *
+ * GCC's interprocedural inliner works with a single relative growth budget per translation unit
+ * (<tt>--param inline-unit-growth</tt>, 40% by default).  In a large unit that budget runs out, after which every
+ * remaining candidate that does not shrink the code is refused regardless of how hot its call site is; whether a
+ * small helper in a hot loop is inlined then depends on unrelated code elsewhere in the unit.  Functions carrying
+ * this attribute bypass that budget, which turns "this abstraction layer is free" from an expectation into a
+ * contract.
+ *
+ * Use it where being inlined is part of a function's design rather than an optimisation: the leaf primitives of
+ * zero-overhead abstraction layers (the circuit-tiling tile algebras, the SVE intrinsic wrappers), and bodies that
+ * exist only to be expanded into a single dispatch point the project owns (the circuit-tiling kernels).  It is not
+ * a general performance knob: on ordinary functions it only bloats the code and overrides a heuristic that is
+ * usually right.
+ */
+
 // =============================================================================
 
 #ifndef MQ_IS_CLANG_VERSION_LESS

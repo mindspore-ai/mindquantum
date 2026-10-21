@@ -52,6 +52,20 @@
 //       static state_index_t MirrorBase(const context_t&);
 //       static void MirrorBlock(const TileLayout&, const storage_t* block, storage_t* mirror);
 //   };
+//
+// Translation-unit discipline.  The engine is instantiated only in the small
+// dedicated units of the circuit-tiling library (executor.cpp, and the
+// ISA-specific executors next to it), which the pybind modules reach through
+// the extern templates of executor.h.  Keep it that way: GCC's interprocedural
+// inliner has one growth budget per unit, and in a unit the size of a pybind
+// module it is exhausted, after which helpers are inlined or not depending on
+// unrelated code.  The kernel bodies and algebra primitives are forced inline
+// (kernels.h), so this discipline protects what surrounds them: the block
+// traversal, gather/scatter and the per-block dispatch edges.  Do not include
+// this header, kernels.h or the runtimes from the pybind modules or any other
+// large unit, and do not enable link-time optimisation for the circuit-tiling
+// library: the hot loops gain nothing from cross-module inlining and would
+// lose their own budget.
 namespace mindquantum::sim::circuit_tiling::detail {
 template <typename runtime_t, typename value_t>
 void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {

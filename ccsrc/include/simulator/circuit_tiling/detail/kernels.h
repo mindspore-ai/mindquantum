@@ -23,14 +23,27 @@
 #include <complex>
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
+#include "config/config.h"
 #include "simulator/circuit_tiling/circuit_tiling.h"
 
 namespace mindquantum::sim::circuit_tiling::detail {
 // backend_t is a zero-overhead numerical algebra.  Scalar and ISA-specific
 // implementations provide only predicates, cached loads/stores, and complex
 // arithmetic primitives; all quantum-operation semantics live here once.
+//
+// "Zero-overhead" is a contract, not a hope.  Every primitive of a backend is
+// MQ_ALWAYS_INLINE, and so is every kernel body below, into the hand-rolled
+// dispatch of Apply and ExpectDerivative.  The per-amplitude loops therefore
+// compile to straight-line arithmetic, and the per-block cost is at most one
+// direct call (into Apply or ExpectDerivative) per operation, whatever the
+// size of the translation unit the engine is instantiated in.  std::visit is
+// deliberately not used here: its library trampolines sit between the
+// dispatch and the kernel body, and once the body carries its inlined
+// primitives GCC's single-function size limit cuts that chain at whichever
+// link happens to exceed it.
 template <typename backend_t>
 class Kernels {
  public:
@@ -49,9 +62,7 @@ class Kernels {
         if (backend_t::Skip(predicate)) {
             return;
         }
-        std::visit(
-            [&](const auto& kernel) { ApplyKernel(kernel, predicate, state_base, index_context, tile, workspace); },
-            operation.kernel);
+        ApplyAlternative<0>(operation.kernel, predicate, state_base, index_context, tile, workspace);
     }
 
     [[nodiscard]] static auto ExpectDerivative(const Derivative<value_t>& derivative, predicate_t active,
@@ -62,12 +73,8 @@ class Kernels {
         if (backend_t::Skip(predicate)) {
             return 0;
         }
-        return std::visit(
-            [&](const auto& kernel) {
-                return backend_t::Reduce(predicate,
-                                         ExpectKernel(kernel, predicate, state_base, index_context, bra, ket));
-            },
-            derivative.kernel);
+        return backend_t::Reduce(
+            predicate, ExpectAlternative<0>(derivative.kernel, predicate, state_base, index_context, bra, ket));
     }
 
     [[nodiscard]] static auto InnerProduct(predicate_t predicate, const storage_t* bra, const storage_t* ket,
@@ -81,8 +88,37 @@ class Kernels {
     }
 
  private:
-    static void ApplyKernel(const PauliKernel<value_t>& kernel, predicate_t predicate, state_index_t state_base,
-                            const index_context_t& index_context, storage_t* tile, storage_t*) {
+    // Variant dispatch as an if-chain over the alternative index, whose cases
+    // are the always-inline kernel bodies: one function under our control.
+    // Kernel variants are never valueless (their alternatives move without
+    // throwing), so the last alternative needs no test.
+    template <size_t index, typename... args_t>
+    MQ_ALWAYS_INLINE static void ApplyAlternative(const Kernel<value_t>& kernel, args_t&&... args) {
+        if constexpr (index + 1 < std::variant_size_v<Kernel<value_t>>) {
+            if (kernel.index() != index) {
+                ApplyAlternative<index + 1>(kernel, std::forward<args_t>(args)...);
+                return;
+            }
+        }
+        assert(kernel.index() == index);
+        ApplyKernel(*std::get_if<index>(&kernel), std::forward<args_t>(args)...);
+    }
+
+    template <size_t index, typename... args_t>
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExpectAlternative(const DerivativeKernel<value_t>& kernel,
+                                                                 args_t&&... args) -> vector_t {
+        if constexpr (index + 1 < std::variant_size_v<DerivativeKernel<value_t>>) {
+            if (kernel.index() != index) {
+                return ExpectAlternative<index + 1>(kernel, std::forward<args_t>(args)...);
+            }
+        }
+        assert(kernel.index() == index);
+        return ExpectKernel(*std::get_if<index>(&kernel), std::forward<args_t>(args)...);
+    }
+
+    MQ_ALWAYS_INLINE static void ApplyKernel(const PauliKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t state_base, const index_context_t& index_context,
+                                             storage_t* tile, storage_t*) {
         if (kernel.external_z_mask == 0) {
             for (const auto& scale : kernel.scales) {
                 backend_t::Store(
@@ -118,8 +154,9 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const PauliRotationKernel<value_t>& kernel, predicate_t predicate, state_index_t state_base,
-                            const index_context_t& index_context, storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const PauliRotationKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t state_base, const index_context_t& index_context,
+                                             storage_t* tile, storage_t*) {
         if (kernel.coefficients_prepared) {
             for (const auto& scale : kernel.scales) {
                 backend_t::Store(
@@ -162,8 +199,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const DiagonalKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const DiagonalKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& scale : kernel.scales) {
             backend_t::Store(
                 tile, scale.basis, predicate,
@@ -171,8 +208,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const HadamardKernel& kernel, predicate_t predicate, state_index_t, const index_context_t&,
-                            storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const HadamardKernel& kernel, predicate_t predicate, state_index_t,
+                                             const index_context_t&, storage_t* tile, storage_t*) {
         constexpr auto scale = static_cast<calc_type>(M_SQRT1_2);
         for (const auto& pair : kernel.pairs) {
             const auto lhs = backend_t::Load(tile, pair.lhs);
@@ -184,8 +221,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const PairMatrixKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const PairMatrixKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
             const auto lhs = backend_t::Load(tile, pair.lhs);
             const auto rhs = backend_t::Load(tile, pair.rhs);
@@ -200,8 +237,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const SwapKernel& kernel, predicate_t predicate, state_index_t, const index_context_t&,
-                            storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const SwapKernel& kernel, predicate_t predicate, state_index_t,
+                                             const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
             const auto lhs = backend_t::Load(tile, pair.lhs);
             const auto rhs = backend_t::Load(tile, pair.rhs);
@@ -210,8 +247,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const ISwapKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const ISwapKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
             const auto lhs = backend_t::Load(tile, pair.lhs);
             const auto rhs = backend_t::Load(tile, pair.rhs);
@@ -220,8 +257,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const FSimKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const FSimKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& indices : kernel.indices) {
             const auto lhs = backend_t::Load(tile, indices.lhs);
             const auto rhs = backend_t::Load(tile, indices.rhs);
@@ -239,8 +276,9 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const DenseMatrixKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t* workspace) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const DenseMatrixKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t, const index_context_t&, storage_t* tile,
+                                             storage_t* workspace) {
         assert(kernel.matrix_dim != 0 && kernel.indices.size() % kernel.matrix_dim == 0);
         for (size_t group = 0; group < kernel.indices.size(); group += kernel.matrix_dim) {
             for (size_t column = 0; column < kernel.matrix_dim; ++column) {
@@ -258,8 +296,8 @@ class Kernels {
         }
     }
 
-    static void ApplyKernel(const DepolarizingKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                            const index_context_t&, storage_t* tile, storage_t*) {
+    MQ_ALWAYS_INLINE static void ApplyKernel(const DepolarizingKernel<value_t>& kernel, predicate_t predicate,
+                                             state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         const auto block = kernel.local_dim * kernel.local_dim;
         assert(kernel.local_dim != 0 && kernel.indices.size() % block == 0);
         // Entry r * local_dim + c of a block is diagonal exactly when it is a
@@ -283,9 +321,10 @@ class Kernels {
         }
     }
 
-    [[nodiscard]] static auto ExpectKernel(const PauliRotationKernel<value_t>& kernel, predicate_t predicate,
-                                           state_index_t state_base, const index_context_t& index_context,
-                                           const storage_t* bra, const storage_t* ket) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExpectKernel(const PauliRotationKernel<value_t>& kernel,
+                                                            predicate_t predicate, state_index_t state_base,
+                                                            const index_context_t& index_context,
+                                                            const storage_t* bra, const storage_t* ket) -> vector_t {
         auto result = backend_t::Zero();
         if (kernel.coefficients_prepared) {
             for (const auto& scale : kernel.scales) {
@@ -331,9 +370,10 @@ class Kernels {
         return result;
     }
 
-    [[nodiscard]] static auto ExpectKernel(const DiagonalKernel<value_t>& kernel, predicate_t predicate, state_index_t,
-                                           const index_context_t&, const storage_t* bra, const storage_t* ket)
-        -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExpectKernel(const DiagonalKernel<value_t>& kernel,
+                                                            predicate_t predicate, state_index_t,
+                                                            const index_context_t&, const storage_t* bra,
+                                                            const storage_t* ket) -> vector_t {
         auto result = backend_t::Zero();
         for (const auto& scale : kernel.scales) {
             const auto transformed = backend_t::MultiplyCoefficient(predicate, backend_t::Load(ket, scale.basis),
@@ -343,9 +383,10 @@ class Kernels {
         return result;
     }
 
-    [[nodiscard]] static auto ExpectKernel(const PairMatrixKernel<value_t>& kernel, predicate_t predicate,
-                                           state_index_t, const index_context_t&, const storage_t* bra,
-                                           const storage_t* ket) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExpectKernel(const PairMatrixKernel<value_t>& kernel,
+                                                            predicate_t predicate, state_index_t,
+                                                            const index_context_t&, const storage_t* bra,
+                                                            const storage_t* ket) -> vector_t {
         auto result = backend_t::Zero();
         for (const auto& pair : kernel.pairs) {
             const auto ket_lhs = backend_t::Load(ket, pair.lhs);
@@ -362,9 +403,10 @@ class Kernels {
         return result;
     }
 
-    [[nodiscard]] static auto ExpectKernel(const DenseMatrixKernel<value_t>& kernel, predicate_t predicate,
-                                           state_index_t, const index_context_t&, const storage_t* bra,
-                                           const storage_t* ket) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExpectKernel(const DenseMatrixKernel<value_t>& kernel,
+                                                            predicate_t predicate, state_index_t,
+                                                            const index_context_t&, const storage_t* bra,
+                                                            const storage_t* ket) -> vector_t {
         assert(kernel.matrix_dim != 0 && kernel.indices.size() % kernel.matrix_dim == 0);
         auto result = backend_t::Zero();
         for (size_t group = 0; group < kernel.indices.size(); group += kernel.matrix_dim) {

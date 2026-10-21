@@ -1177,6 +1177,17 @@ class Builder {
 
     // Lowering to hot-path kernels
     // ------------------------------------------------------------------------
+    //
+    // The loops in this section run once per local basis (up to
+    // 2^kMaxTileQubits times) for every lowered gate, and the builder is
+    // instantiated inside the pybind modules, whose translation units have
+    // exhausted GCC's per-unit inline budget.  A helper that is not trivially
+    // small is therefore not reliably inlined there: whether it is depends on
+    // unrelated code elsewhere in the module, and a lost inlining shows up as
+    // a per-gate constant that dominates small-state circuits (measured: +15%
+    // on a 4-qubit density matrix when a per-basis phase helper fell out).
+    // Keep these loop bodies self-contained; if a per-basis helper is
+    // unavoidable, mark it MQ_ALWAYS_INLINE.
 
     // The local Pauli string maps |basis> to phase(basis) |basis ^ flips> with
     // phase(basis) = i^(#Y) (-1)^parity(basis & (Y | Z)).  The bases are
