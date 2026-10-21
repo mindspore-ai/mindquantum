@@ -46,7 +46,7 @@ def _numpy_gate(state, matrix, targets, controls=()):
     offsets = [
         sum(((basis >> bit) & 1) << target for bit, target in enumerate(targets)) for basis in range(len(matrix))
     ]
-    groups = bases[:, None] | np.array(offsets, dtype=np.uint64)
+    groups = np.bitwise_or(bases[:, None], np.array(offsets, dtype=np.uint64))
     result = state.copy()
     result[groups] = state[groups] @ matrix.T
     return result
@@ -558,7 +558,7 @@ def test_index_reuse_does_not_alias_coefficients_or_executable_storage():
         reference.apply_circuit(circuit)
         assert np.linalg.norm(sim.get_qs() - reference.get_qs()) < 3e-6
     expected = sim.get_qs()
-    del first, executable
+    del first
     gc.collect()
     sim.set_qs(values)
     sim.apply_compiled(second)
@@ -584,6 +584,7 @@ def test_stochastic_circuit_cannot_be_frozen_as_deterministic_executable(bad_gat
 
 
 def _cube_region(targets):
+    """Build a multi-gate circuit over the given target qubits for Cube replay tests."""
     circuit = Circuit()
     for i in range(41):
         target = targets[i % len(targets)]

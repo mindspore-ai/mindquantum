@@ -66,6 +66,7 @@ unknownMacro:ccsrc/lib/simulator/densitymatrix/detail/cpu_densitymatrix_core_pol
 
 useStlAlgorithm:ccsrc/include/config/tsl_ordered_map.h
 useStlAlgorithm:ccsrc/include/simulator/densitymatrix/densitymatrix_state.tpp
+useStlAlgorithm:tests/simulator/test_circuit_tiling.cpp
 useStlAlgorithm:tests/simulator/test_density_matrix_tiling.cpp
 
 useInitializationList:ccsrc/include/simulator/cintrin.h

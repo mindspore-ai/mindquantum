@@ -66,6 +66,7 @@
 
 "mindquantum/ccsrc/include/config/tsl_ordered_map.h"                                        "useStlAlgorithm"
 "mindquantum/ccsrc/include/simulator/densitymatrix/densitymatrix_state.tpp"                 "useStlAlgorithm"
+"mindquantum/tests/simulator/test_circuit_tiling.cpp"                                       "useStlAlgorithm"
 "mindquantum/tests/simulator/test_density_matrix_tiling.cpp"                                "useStlAlgorithm"
 
 "mindquantum/ccsrc/include/simulator/cintrin.h"                                             "useInitializationList"
