@@ -24,14 +24,7 @@
 #include <string>
 
 #include "simulator/mps/detail/linalg/matrix.h"
-
-#ifndef BLAS_SYMBOL_PREFIX
-#define BLAS_SYMBOL_PREFIX
-#endif
-
-#define MQ_BLAS_CAT_IMPL(x, y) x##y
-#define MQ_BLAS_CAT(x, y) MQ_BLAS_CAT_IMPL(x, y)
-#define MQ_BLAS_SYM(name) MQ_BLAS_CAT(BLAS_SYMBOL_PREFIX, name)
+#include "simulator/mps/detail/linalg/symbol.h"
 
 namespace mindquantum::sim::mps::detail::linalg {
 using blas_int = int;
@@ -48,14 +41,14 @@ inline blas_int ToBlasInt(size_t v, const char* what) {
 }  // namespace blas::detail
 
 extern "C" {
-void MQ_BLAS_SYM(cgemm_)(const char* transa, const char* transb, const blas_int* m, const blas_int* n,
-                         const blas_int* k, const std::complex<float>* alpha, const std::complex<float>* a,
-                         const blas_int* lda, const std::complex<float>* b, const blas_int* ldb,
-                         const std::complex<float>* beta, std::complex<float>* c, const blas_int* ldc);
-void MQ_BLAS_SYM(zgemm_)(const char* transa, const char* transb, const blas_int* m, const blas_int* n,
-                         const blas_int* k, const std::complex<double>* alpha, const std::complex<double>* a,
-                         const blas_int* lda, const std::complex<double>* b, const blas_int* ldb,
-                         const std::complex<double>* beta, std::complex<double>* c, const blas_int* ldc);
+void MQ_LINALG_SYM(cgemm_)(const char* transa, const char* transb, const blas_int* m, const blas_int* n,
+                           const blas_int* k, const std::complex<float>* alpha, const std::complex<float>* a,
+                           const blas_int* lda, const std::complex<float>* b, const blas_int* ldb,
+                           const std::complex<float>* beta, std::complex<float>* c, const blas_int* ldc);
+void MQ_LINALG_SYM(zgemm_)(const char* transa, const char* transb, const blas_int* m, const blas_int* n,
+                           const blas_int* k, const std::complex<double>* alpha, const std::complex<double>* a,
+                           const blas_int* lda, const std::complex<double>* b, const blas_int* ldb,
+                           const std::complex<double>* beta, std::complex<double>* c, const blas_int* ldc);
 }  // extern "C"
 
 template <typename T>
@@ -67,7 +60,7 @@ struct Blas<std::complex<float>> {
                      const std::complex<float>* alpha, const std::complex<float>* a, const blas_int* lda,
                      const std::complex<float>* b, const blas_int* ldb, const std::complex<float>* beta,
                      std::complex<float>* c, const blas_int* ldc) {
-        MQ_BLAS_SYM(cgemm_)(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+        MQ_LINALG_SYM(cgemm_)(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
     }
 };
 
@@ -77,7 +70,7 @@ struct Blas<std::complex<double>> {
                      const std::complex<double>* alpha, const std::complex<double>* a, const blas_int* lda,
                      const std::complex<double>* b, const blas_int* ldb, const std::complex<double>* beta,
                      std::complex<double>* c, const blas_int* ldc) {
-        MQ_BLAS_SYM(zgemm_)(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+        MQ_LINALG_SYM(zgemm_)(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
     }
 };
 
@@ -116,9 +109,5 @@ inline void Gemm(char transa, char transb, T alpha, MatrixView<const T> a, Matri
     Blas<T>::gemm(&t_a, &t_b, &m_i, &n_i, &k_i, &alpha, a.data(), &lda_i, b.data(), &ldb_i, &beta, c.data(), &ldc_i);
 }
 }  // namespace mindquantum::sim::mps::detail::linalg
-
-#undef MQ_BLAS_SYM
-#undef MQ_BLAS_CAT
-#undef MQ_BLAS_CAT_IMPL
 
 #endif  // INCLUDE_SIMULATOR_MPS_DETAIL_LINALG_BLAS_HPP

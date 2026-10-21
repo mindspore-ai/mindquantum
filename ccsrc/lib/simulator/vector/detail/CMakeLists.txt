@@ -20,12 +20,16 @@
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_common)
 
+# One backend directory per architecture. The matching MQ_VECTOR_ARCH_* definition is a usage requirement of the
+# library, so every consumer resolves the policy types through simulator/vector/detail/cpu_vector_arch_policy.h.
 if(X86_64)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_avx_double)
-  target_compile_definitions(mqsim_vector_cpu PUBLIC __x86_64__)
+  target_compile_definitions(mqsim_vector_cpu PUBLIC MQ_VECTOR_ARCH_X86_64)
 elseif(AARCH64)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpu_arm)
-  target_compile_definitions(mqsim_vector_cpu PUBLIC __amd64)
+  target_compile_definitions(mqsim_vector_cpu PUBLIC MQ_VECTOR_ARCH_ARM64)
+else()
+  message(FATAL_ERROR "No CPU state-vector backend for target processor '${CMAKE_SYSTEM_PROCESSOR}'")
 endif()
 
 if(ENABLE_CUDA)

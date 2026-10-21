@@ -36,9 +36,6 @@
 #include "simulator/utils.h"
 
 namespace mindquantum::sim::vector::detail {
-struct CPUVectorPolicyAvxFloat;
-struct CPUVectorPolicyAvxDouble;
-
 template <typename derived_, typename calc_type_>
 struct CPUVectorPolicyBase {
     using derived = derived_;

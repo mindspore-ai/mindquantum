@@ -15,6 +15,7 @@
  */
 #ifndef INCLUDE_VECTOR_DETAIL_CPU_VECTOR_AVX_DOUBLE_POLICY_HPP
 #define INCLUDE_VECTOR_DETAIL_CPU_VECTOR_AVX_DOUBLE_POLICY_HPP
+#include <string_view>
 #include <vector>
 
 #include "simulator/cintrin.h"
@@ -61,6 +62,9 @@ struct CPUVectorPolicyAvxDouble : public CPUVectorPolicyBase<CPUVectorPolicyAvxD
                                        index_t dim);
     static qs_data_t ExpectDiffSingleQubitMatrix(const qs_data_p_t& bra, const qs_data_p_t& ket, const qbits_t& objs,
                                                  const qbits_t& ctrls, const VVT<py_qs_data_t>& m, index_t dim);
+    [[nodiscard]] static constexpr auto GetBackendName() noexcept -> std::string_view {
+        return "x86-avx2";
+    }
 };
 }  // namespace mindquantum::sim::vector::detail
 #endif

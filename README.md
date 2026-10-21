@@ -207,7 +207,7 @@ pip install mindquantum
 
 2. Build MindQuantum
 
-    For **linux system**, please make sure your cmake version >= 3.18.3, and then run code:
+    For **linux system**, please make sure your cmake version >= 3.20, and then run code:
 
     ```bash
     cd ~/mindquantum
@@ -221,14 +221,14 @@ pip install mindquantum
     bash build.sh --gitee --gpu
     ```
 
-    For **windows system**, please make sure you have install MinGW-W64 and CMake >= 3.18.3, and then run:
+    For **windows system**, please make sure you have install MinGW-W64 and CMake >= 3.20, and then run:
 
     ```bash
     cd ~/mindquantum
     ./build.bat /Gitee
     ```
 
-    For **Mac system**, please make sure you have install openmp and CMake >= 3.18.3, and then run:
+    For **Mac system**, please make sure you have install openmp and CMake >= 3.20, and then run:
 
     ```bash
     cd ~/mindquantum

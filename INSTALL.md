@@ -103,6 +103,7 @@ Here is an exhaustive list of all CMake options available for customization
 | ENABLE_CUDA                     | Enable the use of CUDA code                                           | OFF                 |
 | ENABLE_ASCEND                   | Build the Ascend 910B `mqvector_npu` backend (requires CANN)           | OFF                 |
 | ENABLE_GITEE                    | Use Gitee instead of GitHub for (some) third-party dependencies       | OFF                 |
+| ENABLE_MPS                      | Build the matrix product state `mqmps` backend (requires OpenBLAS)    | ON                  |
 | ENABLE_MD                       | Use /MD, /MDd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_MT                       | Use /MT, /MTd flags when compiling (MSVC only)                        | OFF                 |
 | ENABLE_PROFILING                | Enable compilation with profiling flags                               | OFF                 |
@@ -132,6 +133,12 @@ This will delete any pre-existing installations within the local installation di
 
 This currently only has an effect when installing Eigen3.
 
+#### `ENABLE_MPS`
+
+The `mqmps` backend links against OpenBLAS (LP64, with LAPACK). The build scripts provide it from the `scipy-openblas32` wheel; a direct CMake build locates a system installation (Homebrew, `libopenblas-dev`, Conda, ...) through [`FindOpenBLAS`](cmake/Modules/FindOpenBLAS.cmake), which also verifies at configure time that the library exports the required symbols. Pass `-DENABLE_MPS=OFF` to build without OpenBLAS; `mqmps` is then simply absent from the available simulators.
+
+The exported `mindquantum::mqsim_mps_cpu` target is header-only, so a downstream project consuming it through `find_package(mindquantum)` compiles the MPS kernels against *its own* OpenBLAS: the same lookup (and the same `OpenBLAS_*` variables below) applies in that project.
+
 ### CMake variables
 
 In addition to the above CMake options, you may pass certain special CMake variables in order to customize your build. These are described below in more details.
@@ -148,3 +155,7 @@ Any or all packages listed will be compiled locally during the CMake configurati
 #### `MQ_XXX_FORCE_LOCAL`
 
 Setting this to a truthful value for one of MindQuantum's third-party dependencies will result in that/these packages to be compiled locally during the CMake configuration process. Note that the package name `XXX` must be all caps.
+
+#### `OpenBLAS_ROOT`, `OpenBLAS_LIBRARY`, `OpenBLAS_SYMBOL_PREFIX`
+
+Control where `ENABLE_MPS` looks for OpenBLAS: `OpenBLAS_ROOT` is an installation prefix to search, `OpenBLAS_LIBRARY` the library file to link against, and `OpenBLAS_SYMBOL_PREFIX` the prefix of its exported symbols (`scipy_` for `scipy-openblas32`, empty for a stock OpenBLAS). The build scripts set the latter two from the `scipy-openblas32` wheel via the `MQ_OPENBLAS_LIB` and `MQ_OPENBLAS_SYMBOL_PREFIX` environment variables.

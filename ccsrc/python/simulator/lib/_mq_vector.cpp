@@ -19,42 +19,22 @@
 #include <pybind11/pybind11.h>
 
 #include "simulator/utils.h"
-
-#if defined(__x86_64__)
-#    include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
-#    include "simulator/vector/detail/cpu_vector_avx_float_policy.h"
-#    include "simulator/vector/detail/cpu_vector_policy.h"
-#elif defined(__amd64)
-#    include "simulator/vector/detail/cpu_vector_arm_double_policy.h"
-#    include "simulator/vector/detail/cpu_vector_arm_float_policy.h"
-#    include "simulator/vector/detail/cpu_vector_policy.h"
-#endif
+#include "simulator/vector/detail/cpu_vector_arch_policy.h"
 
 #include "python/vector/bind_vec_state.h"
 
 PYBIND11_MODULE(_mq_vector, module) {
     using namespace pybind11::literals;  // NOLINT
     std::string sim_name = "mqvector";
-#if defined(__x86_64__)
-    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxFloat;
-    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyAvxDouble;
-#elif defined(__amd64)
-    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyArmFloat;
-    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyArmDouble;
-#else
-#    error "Unsupported CPU architecture!"
-#endif
+    using float_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyFloat;
+    using double_policy_t = mindquantum::sim::vector::detail::CPUVectorPolicyDouble;
 
     using float_vec_sim = mindquantum::sim::vector::detail::VectorState<float_policy_t>;
     using double_vec_sim = mindquantum::sim::vector::detail::VectorState<double_policy_t>;
 
     module.doc() = "MindQuantum c++ vector state simulator (CPU backend).";
-#if defined(__x86_64__)
-    module.attr("_cpu_backends") = pybind11::dict("complex64"_a = "x86-avx2", "complex128"_a = "x86-avx2");
-#elif defined(__amd64)
     module.attr("_cpu_backends") = pybind11::dict("complex64"_a = std::string(float_policy_t::GetBackendName()),
                                                   "complex128"_a = std::string(double_policy_t::GetBackendName()));
-#endif
     pybind11::module float_sim = module.def_submodule("float", "float simulator");
     pybind11::module double_sim = module.def_submodule("double", "double simulator");
 

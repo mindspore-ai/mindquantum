@@ -25,7 +25,6 @@
 #include "ops/basic_gate.h"
 #include "ops/gate_id.h"
 #include "ops/gates.h"
-#include "simulator/vector/detail/cpu_vector_avx_double_policy.h"
 #include "simulator/vector/runtime/rt_gate.h"
 #include "simulator/vector/runtime/utils.h"
 

@@ -218,6 +218,66 @@ jobs:
           pytest tests/st -rs
 
   # ============================================================================
+  # Direct CMake workflow: system interpreter, no virtualenv, no build scripts, newest CMake. Exercises the paths the
+  # script-driven jobs never see (FindOpenBLAS against a system OpenBLAS, the pybind11 fallback build, the Python
+  # layout derivation) in both the default configuration and the vector-only one.
+
+  cmake-direct:
+    if: ${{ true }}
+    name: "Direct CMake • ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    env:
+      MQLIBS_LOCAL_PREFIX_PATH: ${{ github.workspace }}/.mqlibs
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            deps: sudo apt-get update && sudo apt-get install -y libopenblas-dev
+          - os: macos-latest
+            deps: brew install openblas libomp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get history and tags for SCM versioning to work
+        if: env.ACT != 'true'
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - uses: lukka/get-cmake@latest
+
+      - name: Install system dependencies
+        run: ${{ matrix.deps }}
+
+      - name: Cache compiled third-party libraries
+        if: env.ACT != 'true'
+        uses: actions/cache@v4
+        with:
+          path: .mqlibs
+          key: cmake-direct-${{ matrix.os }}-third-party-libs-${{ hashFiles('third_party/**') }}
+
+      - name: Configure (default, mqmps against the system OpenBLAS)
+        run: >-
+          cmake -S . -B build-direct -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON -DIS_PYTHON_BUILD=OFF -DIN_PLACE_BUILD=OFF
+
+      - name: Build
+        run: cmake --build build-direct
+
+      - name: Test
+        run: ctest --test-dir build-direct --output-on-failure
+
+      - name: Configure (vector-only, must not require OpenBLAS)
+        run: >-
+          cmake -S . -B build-direct-novmps -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON -DIS_PYTHON_BUILD=OFF -DIN_PLACE_BUILD=OFF
+          -DENABLE_MPS=OFF -DCMAKE_DISABLE_FIND_PACKAGE_OpenBLAS=ON
+
+      - name: Build _mq_vector
+        run: cmake --build build-direct-novmps --target _mq_vector
+
+  # ============================================================================
 
   gcc:
     if: ${{ true }}
