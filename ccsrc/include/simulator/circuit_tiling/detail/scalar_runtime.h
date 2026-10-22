@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "config/config.h"
 #include "config/openmp.h"
 #include "core/mq_base_types.h"
 #include "core/utils.h"
@@ -92,6 +93,11 @@ class ScalarBlockTraversal {
 };
 
 // The portable algebra: one complex amplitude per operation.
+//
+// Every primitive is MQ_ALWAYS_INLINE: the kernels call them once per
+// amplitude, and the algebra exists only to be flattened into those loops.
+// Forcing it keeps that independent of the translation unit's inline budget
+// (see MQ_ALWAYS_INLINE).
 template <typename value_t_>
 struct ScalarTileAlgebra {
     using value_t = value_t_;
@@ -102,78 +108,82 @@ struct ScalarTileAlgebra {
     using index_context_t = ScalarBlockContext;
     using storage_t = value_t;
 
-    [[nodiscard]] static auto ExternalControls(predicate_t active, state_index_t state_base, const index_context_t&,
-                                               index_t mask) -> predicate_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExternalControls(predicate_t active, state_index_t state_base,
+                                                                const index_context_t&, index_t mask) -> predicate_t {
         return active && (state_base & mask) == mask;
     }
 
-    [[nodiscard]] static auto ExternalParity(predicate_t, state_index_t state_base, const index_context_t&,
-                                             index_t mask) -> predicate_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExternalParity(predicate_t, state_index_t state_base,
+                                                              const index_context_t&, index_t mask) -> predicate_t {
         return (CountOne(static_cast<std::uint64_t>(state_base & mask)) & 1U) != 0;
     }
 
-    [[nodiscard]] static auto Skip(predicate_t predicate) -> bool {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Skip(predicate_t predicate) -> bool {
         return !predicate;
     }
 
-    [[nodiscard]] static auto SignedCoefficient(value_t coefficient, predicate_t negative) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto SignedCoefficient(value_t coefficient, predicate_t negative)
+        -> vector_t {
         return negative ? -coefficient : coefficient;
     }
 
-    [[nodiscard]] static auto Zero() -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Zero() -> vector_t {
         return 0;
     }
 
-    [[nodiscard]] static auto Broadcast(value_t value) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Broadcast(value_t value) -> vector_t {
         return value;
     }
 
-    [[nodiscard]] static auto Load(const storage_t* cache, size_t basis) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Load(const storage_t* cache, size_t basis) -> vector_t {
         return cache[basis];
     }
 
-    static void Store(storage_t* cache, size_t basis, predicate_t predicate, vector_t value) {
+    MQ_ALWAYS_INLINE static void Store(storage_t* cache, size_t basis, predicate_t predicate, vector_t value) {
         if (predicate) {
             cache[basis] = value;
         }
     }
 
-    [[nodiscard]] static auto Add(predicate_t, vector_t lhs, vector_t rhs) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Add(predicate_t, vector_t lhs, vector_t rhs) -> vector_t {
         return lhs + rhs;
     }
 
-    [[nodiscard]] static auto Subtract(predicate_t, vector_t lhs, vector_t rhs) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Subtract(predicate_t, vector_t lhs, vector_t rhs) -> vector_t {
         return lhs - rhs;
     }
 
-    [[nodiscard]] static auto Multiply(predicate_t, vector_t value, calc_type scalar) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Multiply(predicate_t, vector_t value, calc_type scalar) -> vector_t {
         return value * scalar;
     }
 
-    [[nodiscard]] static auto MultiplyCoefficient(predicate_t, vector_t value, value_t coefficient) -> vector_t {
-        return value * coefficient;
-    }
-
-    [[nodiscard]] static auto MultiplyDynamic(predicate_t, vector_t value, vector_t coefficient) -> vector_t {
-        return value * coefficient;
-    }
-
-    [[nodiscard]] static auto MultiplyAddCoefficient(predicate_t, vector_t accumulator, vector_t value,
-                                                     value_t coefficient) -> vector_t {
-        return accumulator + value * coefficient;
-    }
-
-    [[nodiscard]] static auto MultiplyAddDynamic(predicate_t, vector_t accumulator, vector_t value,
-                                                 vector_t coefficient) -> vector_t {
-        return accumulator + value * coefficient;
-    }
-
-    [[nodiscard]] static auto InnerProductAdd(predicate_t, vector_t accumulator, vector_t bra, vector_t ket)
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyCoefficient(predicate_t, vector_t value, value_t coefficient)
         -> vector_t {
+        return value * coefficient;
+    }
+
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyDynamic(predicate_t, vector_t value, vector_t coefficient)
+        -> vector_t {
+        return value * coefficient;
+    }
+
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyAddCoefficient(predicate_t, vector_t accumulator,
+                                                                      vector_t value, value_t coefficient)
+        -> vector_t {
+        return accumulator + value * coefficient;
+    }
+
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyAddDynamic(predicate_t, vector_t accumulator, vector_t value,
+                                                                  vector_t coefficient) -> vector_t {
+        return accumulator + value * coefficient;
+    }
+
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto InnerProductAdd(predicate_t, vector_t accumulator, vector_t bra,
+                                                               vector_t ket) -> vector_t {
         return accumulator + std::conj(bra) * ket;
     }
 
-    [[nodiscard]] static auto Reduce(predicate_t, vector_t value) -> value_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Reduce(predicate_t, vector_t value) -> value_t {
         return value;
     }
 };
@@ -261,8 +271,10 @@ struct ScalarTileRuntime {
     }
 
  private:
-    // Swaps the column and row image halves of a local basis index.
-    [[nodiscard]] static auto MirrorBasis(const TileLayout& layout, size_t basis) noexcept -> size_t {
+    // Swaps the column and row image halves of a local basis index.  Called
+    // once per basis from the mirroring loops.
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MirrorBasis(const TileLayout& layout, size_t basis) noexcept
+        -> size_t {
         const auto half = layout.qubits.size() / 2;
         const auto low = (size_t{1} << half) - 1;
         return ((basis & low) << half) | (basis >> half);

@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "config/config.h"
 #include "core/mq_base_types.h"
 #include "core/utils.h"
 #include "simulator/arm_sve/sve_utils.h"
@@ -41,6 +42,10 @@ struct SveIndexContext {
 
 // The Arm SVE algebra: one complex amplitude per lane pair, with FCMLA
 // complex multiply-accumulate.
+//
+// Every primitive is MQ_ALWAYS_INLINE, like the sve:: wrappers it is built
+// from: the kernels call them once per vector of amplitudes and the algebra
+// exists only to be flattened into those loops (see MQ_ALWAYS_INLINE).
 template <typename calc_type_>
 struct SveTileAlgebra {
     using calc_type = calc_type_;
@@ -51,8 +56,9 @@ struct SveTileAlgebra {
     using index_context_t = SveIndexContext;
     using storage_t = calc_type;
 
-    [[nodiscard]] static auto ExternalControls(predicate_t active, state_index_t state_base,
-                                               const index_context_t& context, index_t mask) -> predicate_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExternalControls(predicate_t active, state_index_t state_base,
+                                                                const index_context_t& context, index_t mask)
+        -> predicate_t {
         if (mask == 0) {
             return active;
         }
@@ -66,8 +72,9 @@ struct SveTileAlgebra {
                                      active, sve::AndIndex<calc_type>(active, state_base, local_mask), local_mask);
     }
 
-    [[nodiscard]] static auto ExternalParity(predicate_t predicate, state_index_t state_base,
-                                             const index_context_t& context, index_t mask) -> predicate_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto ExternalParity(predicate_t predicate, state_index_t state_base,
+                                                              const index_context_t& context, index_t mask)
+        -> predicate_t {
         const auto fixed_mask = mask & ~context.local_mask;
         const auto fixed_parity = (CountOne(static_cast<std::uint64_t>(context.window_origin & fixed_mask)) & 1U) != 0;
         auto parity = sve::DuplicateIndex<calc_type>(fixed_parity ? 1 : 0);
@@ -86,75 +93,80 @@ struct SveTileAlgebra {
 
     // SVE arithmetic is predicated already.  Testing every operation for an
     // empty predicate costs more than allowing the masked instructions to run.
-    [[nodiscard]] static auto Skip(predicate_t) -> bool {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Skip(predicate_t) -> bool {
         return false;
     }
 
-    [[nodiscard]] static auto SignedCoefficient(value_t coefficient, predicate_t negative) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto SignedCoefficient(value_t coefficient, predicate_t negative)
+        -> vector_t {
         const auto predicate = sve::TruePredicate<calc_type>();
         const auto positive = sve::BroadcastComplex<calc_type>(coefficient);
         return sve::Select<calc_type>(negative, sve::Negate<calc_type>(predicate, positive), positive);
     }
 
-    [[nodiscard]] static auto Zero() -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Zero() -> vector_t {
         return sve::Zero<calc_type>();
     }
 
-    [[nodiscard]] static auto Broadcast(value_t value) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Broadcast(value_t value) -> vector_t {
         return sve::BroadcastComplex<calc_type>(value);
     }
 
-    [[nodiscard]] static auto Load(const storage_t* cache, size_t basis) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Load(const storage_t* cache, size_t basis) -> vector_t {
         return sve::LoadCachedComplex<calc_type>(cache, basis);
     }
 
-    static void Store(storage_t* cache, size_t basis, predicate_t predicate, vector_t value) {
+    MQ_ALWAYS_INLINE static void Store(storage_t* cache, size_t basis, predicate_t predicate, vector_t value) {
         sve::StoreCachedComplex<calc_type>(cache, basis, predicate, value);
     }
 
-    [[nodiscard]] static auto Add(predicate_t predicate, vector_t lhs, vector_t rhs) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Add(predicate_t predicate, vector_t lhs, vector_t rhs) -> vector_t {
         return sve::Add<calc_type>(predicate, lhs, rhs);
     }
 
-    [[nodiscard]] static auto Subtract(predicate_t predicate, vector_t lhs, vector_t rhs) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Subtract(predicate_t predicate, vector_t lhs, vector_t rhs)
+        -> vector_t {
         return sve::Subtract<calc_type>(predicate, lhs, rhs);
     }
 
-    [[nodiscard]] static auto Multiply(predicate_t predicate, vector_t value, calc_type scalar) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Multiply(predicate_t predicate, vector_t value, calc_type scalar)
+        -> vector_t {
         return sve::Multiply<calc_type>(predicate, value, scalar);
     }
 
-    [[nodiscard]] static auto MultiplyCoefficient(predicate_t predicate, vector_t value, value_t coefficient)
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyCoefficient(predicate_t predicate, vector_t value,
+                                                                   value_t coefficient) -> vector_t {
+        return sve::ComplexMultiply<calc_type>(predicate, value, coefficient);
+    }
+
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyDynamic(predicate_t predicate, vector_t value,
+                                                               vector_t coefficient) -> vector_t {
+        return sve::ComplexMultiply<calc_type>(predicate, value, coefficient);
+    }
+
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyAddCoefficient(predicate_t predicate, vector_t accumulator,
+                                                                      vector_t value, value_t coefficient)
         -> vector_t {
-        return sve::ComplexMultiply<calc_type>(predicate, value, coefficient);
-    }
-
-    [[nodiscard]] static auto MultiplyDynamic(predicate_t predicate, vector_t value, vector_t coefficient) -> vector_t {
-        return sve::ComplexMultiply<calc_type>(predicate, value, coefficient);
-    }
-
-    [[nodiscard]] static auto MultiplyAddCoefficient(predicate_t predicate, vector_t accumulator, vector_t value,
-                                                     value_t coefficient) -> vector_t {
         return sve::CoefficientMulAdd<calc_type>(predicate, accumulator, value, coefficient);
     }
 
-    [[nodiscard]] static auto MultiplyAddDynamic(predicate_t predicate, vector_t accumulator, vector_t value,
-                                                 vector_t coefficient) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto MultiplyAddDynamic(predicate_t predicate, vector_t accumulator,
+                                                                  vector_t value, vector_t coefficient) -> vector_t {
         return sve::ComplexMulAdd<calc_type>(predicate, accumulator, value, coefficient);
     }
 
-    [[nodiscard]] static auto Conjugate(predicate_t predicate, vector_t value) -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Conjugate(predicate_t predicate, vector_t value) -> vector_t {
         const auto imaginary_lane = sve::IndexNotEquals<calc_type>(
             predicate, sve::AndIndex<calc_type>(predicate, sve::LaneIndex<calc_type>(), 1), 0);
         return sve::Select<calc_type>(imaginary_lane, sve::Negate<calc_type>(predicate, value), value);
     }
 
-    [[nodiscard]] static auto InnerProductAdd(predicate_t predicate, vector_t accumulator, vector_t bra, vector_t ket)
-        -> vector_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto InnerProductAdd(predicate_t predicate, vector_t accumulator,
+                                                               vector_t bra, vector_t ket) -> vector_t {
         return sve::ComplexMulAdd<calc_type>(predicate, accumulator, Conjugate(predicate, bra), ket);
     }
 
-    [[nodiscard]] static auto Reduce(predicate_t predicate, vector_t value) -> value_t {
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Reduce(predicate_t predicate, vector_t value) -> value_t {
         const auto lane_parity = sve::AndIndex<calc_type>(predicate, sve::LaneIndex<calc_type>(),
                                                           static_cast<index_t>(1));
         const auto real = sve::IndexEquals<calc_type>(predicate, lane_parity, 0);

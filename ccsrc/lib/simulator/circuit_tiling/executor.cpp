@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+// The tile engine is instantiated here and in the ISA-specific executors
+// only.  These are deliberately small translation units with their own
+// inline budget: the kernels are forced flat regardless (see
+// detail/kernels.h), but the traversal, gather/scatter and dispatch edges
+// around them are inlined on their own merits only because nothing else
+// competes for the budget.  See the translation-unit discipline note in
+// detail/tile_engine.h before adding anything else to these units.
+
 #include "simulator/circuit_tiling/executor.h"
 
 #include <complex>
