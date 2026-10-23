@@ -92,7 +92,7 @@ class QAIA:
         if h is not None:
             if not isinstance(h, np.ndarray):
                 raise TypeError(f"h requires numpy.array, but get {type(h)}")
-            if h.shape != (J.shape[0],) and h.shape != (J.shape[0], 1):
+            if h.shape not in ((J.shape[0],), (J.shape[0], 1)):
                 raise ValueError(f"h must have shape ({J.shape[0]},) or ({J.shape[0]}, 1), but got {h.shape}")
             if len(h.shape) == 1:
                 h = h[:, np.newaxis]
@@ -111,7 +111,7 @@ class QAIA:
         _check_value_should_not_less("batch_size", 1, batch_size)
 
         if backend == "gpu-float32" and _INSTALL_TORCH:
-            J = torch.tensor(J.toarray()).float()
+            J = torch.tensor(J.toarray() if sp.issparse(J) else J).float()
             if J.layout != torch.sparse_csr:
                 J = J.to("cuda")
                 J = J.to_sparse_csr()
@@ -119,7 +119,7 @@ class QAIA:
                 h = torch.from_numpy(h).float().to("cuda")
 
         if backend == "npu-float32" and _INSTALL_TORCH_NPU:
-            J = torch.tensor(J.toarray()).float().to("npu")
+            J = torch.tensor(J.toarray() if sp.issparse(J) else J).float().to("npu")
             if h is not None:
                 h = torch.from_numpy(h).float().to("npu")
 
@@ -162,18 +162,10 @@ class QAIA:
                 sign = np.sign(x)
             return 0.25 * np.sum(self.J.dot(sign) * sign, axis=0) - 0.25 * self.J.sum()
 
-        if self.backend == "gpu-float32":
+        if self.backend in ["gpu-float32", "npu-float32"]:
             if x is None:
-                sign = torch.sign(self.x)
-            else:
-                sign = torch.sign(x)
-            return 0.25 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0) - 0.25 * self.J.sum()
-
-        if self.backend == "npu-float32":
-            if x is None:
-                sign = torch.sign(self.x).npu()
-            else:
-                sign = torch.sign(x).npu()
+                x = self.x
+            sign = torch.sign(torch.as_tensor(x, dtype=self.J.dtype, device=self.J.device))
             return 0.25 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0) - 0.25 * self.J.sum()
 
         raise ValueError("invalid backend")
@@ -196,21 +188,10 @@ class QAIA:
                 return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0)
             return -0.5 * np.sum(self.J.dot(sign) * sign, axis=0, keepdims=True) - self.h.T @ sign
 
-        if self.backend == "gpu-float32":
+        if self.backend in ["gpu-float32", "npu-float32"]:
             if x is None:
-                sign = torch.sign(self.x)
-            else:
-                sign = torch.sign(x)
-
-            if self.h is None:
-                return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0)
-            return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0, keepdim=True) - self.h.T @ sign
-
-        if self.backend == "npu-float32":
-            if x is None:
-                sign = torch.sign(self.x).npu()
-            else:
-                sign = torch.sign(x).npu()
+                x = self.x
+            sign = torch.sign(torch.as_tensor(x, dtype=self.J.dtype, device=self.J.device))
 
             if self.h is None:
                 return -0.5 * torch.sum(torch.sparse.mm(self.J, sign) * sign, dim=0)

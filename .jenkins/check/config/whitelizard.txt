@@ -9,6 +9,9 @@ mindquantum/mindquantum/algorithm/nisq/chem/quccsd.py:quccsd_generator
 mindquantum/mindquantum/algorithm/nisq/chem/transform.py:bravyi_kitaev_superfast
 mindquantum/mindquantum/algorithm/nisq/chem/uccsd.py:_para_uccsd_singlet_generator
 mindquantum/mindquantum/algorithm/nisq/chem/uccsd0.py:uccsd0_singlet_generator
+# QAIA initialization validates interdependent inputs before backend conversion.
+# Keep validation order and backend-specific branches explicit rather than splitting for CCN alone.
+mindquantum/mindquantum/algorithm/qaia/QAIA.py:__init__
 mindquantum/mindquantum/core/circuit/qfi.py:_qfi_matrix_base
 mindquantum/mindquantum/core/gates/basicgate.py:gene_univ_parameterized_gate
 mindquantum/mindquantum/io/display/bloch_plt_drawer.py:add_state

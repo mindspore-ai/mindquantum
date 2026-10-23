@@ -163,6 +163,8 @@ markers = [
     'level1: test marker used on MindSpore CI',
     'platform_x86_cpu: test marker used on MindSpore CI for certain CPU runs',
     'platform_x86_gpu_training: test marker used on MindSpore CI for certain GPU runs',
+    'platform_arm_ascend_training: test marker used on MindSpore CI for Ascend NPU runs',
+    'platform_arm_ascend910b_training: test marker used on MindSpore CI for Ascend 910B NPU runs',
 ]
 filterwarnings = [
     'ignore:.*Please use `OptimizeResult`.*is deprecated:DeprecationWarning',
