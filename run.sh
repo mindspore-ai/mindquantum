@@ -1,70 +1,29 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-CURRENT_DIR=$(cd $(dirname $0); pwd)
-SOC_VERSION="Ascend910B1"
-# ASCEND_INSTALL_PATH=/usr/local/Ascend/ascend-toolkit/latest
-ASCEND_INSTALL_PATH=/home/ma-user/anaconda3/envs/npu/Ascend/ascend-toolkit/latest/
+ROOT=$(dirname "$(realpath "$0")")
+: "${ASCEND_HOME_PATH:?Source the CANN 9.1 set_env.sh before building}"
+SOC_VERSION=${SOC_VERSION:-Ascend910B2}
+PYTHON_BIN=${PYTHON_BIN:-python3}
+JOBS=${JOBS:-8}
 
-if [ -d "$HOME/Ascend/ascend-toolkit/latest" ]; then
-    ASCEND_INSTALL_PATH=$HOME/Ascend/ascend-toolkit/latest
+# An old extension named kernel_sb shadows the new Python API. Never silently
+# load it or delete it on the user's behalf.
+if compgen -G "$ROOT/kernel_sb*.so" >/dev/null; then
+    echo "Remove the old kernel_sb*.so build artifact before rebuilding." >&2
+    exit 1
 fi
 
-export ASCEND_HOME_PATH=${ASCEND_INSTALL_PATH}
-export ASCEND_TOOLKIT_HOME=${ASCEND_INSTALL_PATH}
-export LD_LIBRARY_PATH=${ASCEND_INSTALL_PATH}/lib64:${CURRENT_DIR}/out/lib64:${CURRENT_DIR}/out/lib:$LD_LIBRARY_PATH
-export PYTHONPATH=${CURRENT_DIR}:$PYTHONPATH
-PYTHON_BIN=python3
-if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
-    PYTHON_BIN=python
-fi
+cmake -S "$ROOT/kernel" -B "$ROOT/kernel/build" \
+    -DSOC_VERSION="$SOC_VERSION" \
+    -DASCEND_CANN_PACKAGE_PATH="$ASCEND_HOME_PATH" \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$ROOT/out"
+cmake --build "$ROOT/kernel/build" -j "$JOBS"
+cmake --install "$ROOT/kernel/build"
+cmake -S "$ROOT/host" -B "$ROOT/host/build" \
+    -DASCEND_CANN_PACKAGE_PATH="$ASCEND_HOME_PATH" \
+    -DCMAKE_BUILD_TYPE=Release -DPython_EXECUTABLE="$(command -v "$PYTHON_BIN")"
+cmake --build "$ROOT/host/build" -j "$JOBS"
 
-
-LD_WRAPPER_DIR="${CURRENT_DIR}/.toolchain"
-mkdir -p "${LD_WRAPPER_DIR}"
-if [ -x "${ASCEND_INSTALL_PATH}/compiler/ccec_compiler/bin/ld.lld" ]; then
-    ln -sf "${ASCEND_INSTALL_PATH}/compiler/ccec_compiler/bin/ld.lld" "${LD_WRAPPER_DIR}/ld"
-    export PATH="${LD_WRAPPER_DIR}:$PATH"
-fi
-
-echo "Using SOC_VERSION=${SOC_VERSION}"
-echo "Using ASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH}"
-
-cd ${CURRENT_DIR}
-
-# 1. Build Kernel
-echo ">>> Building Kernel..."
-rm -rf kernel/build
-mkdir -p kernel/build
-(cd kernel/build && cmake .. \
-    -DSOC_VERSION=${SOC_VERSION} \
-    -DASCEND_CANN_PACKAGE_PATH=${ASCEND_INSTALL_PATH} \
-    -DCMAKE_INSTALL_PREFIX=${CURRENT_DIR}/out \
-    -DLIBRARY_TYPE=SHARED)
-
-cmake --build kernel/build -j
-cmake --install kernel/build
-if [ -f "${CURRENT_DIR}/out/lib64/libkernels.so" ]; then
-    cp -f "${CURRENT_DIR}/out/lib64/libkernels.so" "${CURRENT_DIR}/out/lib/libkernels.so"
-fi
-
-# 2. Build Host
-echo ">>> Building Host..."
-rm -rf host/build
-mkdir -p host/build
-(cd host/build && env -u CONDA_PREFIX -u Python_EXECUTABLE -u Python_ROOT_DIR cmake .. \
-    -DASCEND_CANN_PACKAGE_PATH=${ASCEND_INSTALL_PATH} \
-    -DPython_EXECUTABLE=$(command -v ${PYTHON_BIN}))
-
-cmake --build host/build -j
-
-# Copy generated .so to root for easy import
-find host/build -name "kernel_sb*.so" -exec cp {} . \;
-
-# 3. Run C++ Main
-echo ">>> Running C++ Main..."
-./host/build/kernel_sb_main
-
-# 4. Run Python Test
-echo ">>> Running Python Test..."
-${PYTHON_BIN} test.py
+# Tests and benchmarks are explicit commands, not side effects of a build.
+echo "Built. Test with: $PYTHON_BIN -m pytest -q tests"

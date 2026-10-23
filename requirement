@@ -1,7 +1,4 @@
-gcc
-cmake
-pybind11
-numpy
-pandas
-sicpy
-mindquantum
+numpy>=1.24
+scipy>=1.10
+pybind11>=2.11
+pytest>=7

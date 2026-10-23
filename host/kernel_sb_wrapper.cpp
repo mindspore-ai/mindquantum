@@ -1,920 +1,251 @@
-#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-#include <iostream>
-#include <mutex>
-#include <vector>
-#include <cmath>
+#include <pybind11/pybind11.h>
+
 #include <algorithm>
-#include <random>
+#include <atomic>
+#include <cmath>
 #include <cstring>
-#include <cstdint>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include "acl/acl.h"
-#include "aclrtlaunch_kernel_sb_custom.h"
-#include "aclrtlaunch_kernel_bsb_custom.h"
+#include "aclnnop/aclnn_matmul.h"
+#include "aclrtlaunch_kernel_sb_step.h"
 
 namespace py = pybind11;
 
-#define CHECK_ACL(x) \
-    do { \
-        aclError __ret = x; \
-        if (__ret != ACL_ERROR_NONE) { \
-            throw std::runtime_error("ACL call failed: " + std::to_string(__ret)); \
-        } \
-    } while (0)
-
 namespace {
+void Check(int status, const char* call)
+{
+    if (status != 0) {
+        const char* detail = aclGetRecentErrMsg();
+        throw std::runtime_error(std::string(call) + " failed (" + std::to_string(status) + ")" +
+                                 (detail ? std::string(": ") + detail : ""));
+    }
+}
+#define ACL_CHECK(call) Check((call), #call)
 
-struct AclContext {
-    std::mutex mu;
-    bool acl_initialized{false};
-    int device_id{-1};
-    aclrtStream stream{nullptr};
+// One owner for all resources referenced by a captured graph, including during
+// partially completed construction. No process-global device buffer cache.
+struct Resources {
+    aclrtContext context = nullptr;
+    aclrtStream stream = nullptr;
+    aclrtEvent start = nullptr, end = nullptr;
+    aclmdlRI graph = nullptr;
+    aclOpExecutor* executor = nullptr;
+    bool capturing = false;
+    std::vector<void*> device;
+    std::vector<void*> pinned;
+    std::vector<aclTensor*> tensors;
 
-    void* d_J{nullptr};
-    void* d_x{nullptr};
-    void* d_y{nullptr};
-    void* d_p{nullptr};
-    void* d_h{nullptr};
-
-    size_t cap_J{0};
-    size_t cap_x{0};
-    size_t cap_y{0};
-    size_t cap_p{0};
-    size_t cap_h{0};
-
-    const void* last_J_host_ptr{nullptr};
-    size_t last_J_bytes{0};
-    const void* last_p_host_ptr{nullptr};
-    size_t last_p_bytes{0};
-    const void* last_h_host_ptr{nullptr};
-    size_t last_h_bytes{0};
-
-    void EnsureInitialized(int requested_device_id) {
-        if (!acl_initialized) {
-            aclError ret = aclInit(nullptr);
-            if (ret != ACL_ERROR_NONE && ret != ACL_ERROR_REPEAT_INITIALIZE) {
-                throw std::runtime_error("aclInit failed: " + std::to_string(ret));
-            }
-            acl_initialized = true;
-        }
-
-        if (device_id != requested_device_id) {
-            CHECK_ACL(aclrtSetDevice(requested_device_id));
-            device_id = requested_device_id;
-        }
-
-        if (stream == nullptr) {
-            CHECK_ACL(aclrtCreateStream(&stream));
-        }
+    void Init(int deviceId)
+    {
+        static const bool initialized = [] {
+            const auto status = aclInit(nullptr);
+            if (status != ACL_ERROR_REPEAT_INITIALIZE) ACL_CHECK(status);
+            return true;
+        }();
+        (void)initialized;
+        ACL_CHECK(aclrtCreateContext(&context, deviceId));
+        ACL_CHECK(aclrtCreateStream(&stream));
+        ACL_CHECK(aclrtCreateEvent(&start));
+        ACL_CHECK(aclrtCreateEvent(&end));
     }
 
-    static void EnsureBuffer(void** buf, size_t* cap, size_t need_bytes) {
-        if (need_bytes == 0) return;
-        if (*buf != nullptr && *cap >= need_bytes) return;
-        if (*buf != nullptr) {
-            CHECK_ACL(aclrtFree(*buf));
-            *buf = nullptr;
-            *cap = 0;
+    void* Allocate(size_t bytes, bool host = false)
+    {
+        if (bytes == 0) return nullptr;
+        void* ptr = nullptr;
+        if (host) {
+            ACL_CHECK(aclrtMallocHost(&ptr, bytes));
+            pinned.push_back(ptr);
+        } else {
+            ACL_CHECK(aclrtMalloc(&ptr, bytes, ACL_MEM_MALLOC_HUGE_FIRST));
+            device.push_back(ptr);
         }
-        CHECK_ACL(aclrtMalloc(buf, need_bytes, ACL_MEM_MALLOC_HUGE_FIRST));
-        *cap = need_bytes;
+        return ptr;
+    }
+
+    aclTensor* Matrix(void* ptr, int64_t rows, int64_t cols, bool transpose = false)
+    {
+        const int64_t shape[] = {rows, cols};
+        const int64_t strides[] = {transpose ? 1 : cols, transpose ? rows : 1};
+        auto* tensor = aclCreateTensor(shape, 2, ACL_FLOAT, strides, 0, ACL_FORMAT_ND, shape, 2, ptr);
+        if (!tensor) throw std::runtime_error("aclCreateTensor failed");
+        tensors.push_back(tensor);
+        return tensor;
+    }
+
+    ~Resources()
+    {
+        if (!context) return;
+        aclrtSetCurrentContext(context);
+        if (capturing) aclmdlRICaptureEnd(stream, &graph);
+        if (stream) aclrtSynchronizeStream(stream);
+        if (graph) aclmdlRIDestroy(graph);
+        if (executor) aclDestroyAclOpExecutor(executor);
+        for (auto* tensor : tensors) aclDestroyTensor(tensor);
+        for (void* ptr : device) aclrtFree(ptr);
+        for (void* ptr : pinned) aclrtFreeHost(ptr);
+        if (start) aclrtDestroyEvent(start);
+        if (end) aclrtDestroyEvent(end);
+        if (stream) aclrtDestroyStream(stream);
+        aclrtDestroyContext(context);
     }
 };
 
-AclContext& GetAclContext() {
-    static AclContext ctx;
-    return ctx;
-}
+using CArray = py::array_t<float, py::array::c_style>;
+using FArray = py::array_t<float, py::array::f_style>;
 
-py::array EnsureDenseFloat32C(py::object obj) {
-    py::module_ np = py::module_::import("numpy");
-    py::object dense = obj;
-    if (!py::isinstance<py::array>(dense) && py::hasattr(dense, "toarray")) {
-        dense = dense.attr("toarray")();
-    }
-    py::object arr = np.attr("ascontiguousarray")(dense, py::arg("dtype") = np.attr("float32"));
-    return arr.cast<py::array>();
-}
-
-py::array EnsureFloat32Fortran2D(py::object obj, int32_t N) {
-    py::module_ np = py::module_::import("numpy");
-    py::object arr = obj;
-    if (!py::isinstance<py::array>(arr) && py::hasattr(arr, "toarray")) {
-        arr = arr.attr("toarray")();
-    }
-    py::array a = np.attr("asarray")(arr, py::arg("dtype") = np.attr("float32")).cast<py::array>();
-    if (a.ndim() == 1) {
-        if (a.shape(0) != N) throw std::runtime_error("x/y shape mismatch");
-        a = a.attr("reshape")(py::make_tuple(N, 1)).cast<py::array>();
-    }
-    if (a.ndim() != 2) throw std::runtime_error("x/y must be 1D or 2D");
-    if (a.shape(0) != N) throw std::runtime_error("x/y shape mismatch (N)");
-    return np.attr("asfortranarray")(a).cast<py::array>();
-}
-
-py::array EnsureFloat32CVector(py::object obj, int32_t N) {
-    py::module_ np = py::module_::import("numpy");
-    py::object arr = obj;
-    if (!py::isinstance<py::array>(arr) && py::hasattr(arr, "toarray")) {
-        arr = arr.attr("toarray")();
-    }
-    py::array a = np.attr("asarray")(arr, py::arg("dtype") = np.attr("float32")).cast<py::array>();
-    if (a.ndim() == 2 && a.shape(1) == 1) {
-        a = a.attr("reshape")(py::make_tuple(a.shape(0))).cast<py::array>();
-    }
-    if (a.ndim() != 1) throw std::runtime_error("h must be 1D (or Nx1)");
-    if (a.shape(0) != N) throw std::runtime_error("h shape mismatch");
-    return np.attr("ascontiguousarray")(a).cast<py::array>();
-}
-
-py::array MakeLinspaceFloat32(int32_t n) {
-    py::module_ np = py::module_::import("numpy");
-    if (n <= 0) {
-        return py::array_t<float, py::array::c_style>(0);
-    }
-    py::object arr = np.attr("linspace")(0.0, 1.0, n);
-    return np.attr("ascontiguousarray")(arr, py::arg("dtype") = np.attr("float32")).cast<py::array>();
-}
-
-py::array MakeRandomCenteredFloat32Fortran(int32_t N, int32_t batch_size) {
-    py::array_t<float> arr(
-        py::array::ShapeContainer{N, batch_size},
-        py::array::StridesContainer{static_cast<py::ssize_t>(sizeof(float)),
-                                    static_cast<py::ssize_t>(sizeof(float)) * N});
-    float* data = static_cast<float*>(arr.mutable_data());
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(-0.01f, 0.01f);
-    for (int32_t b = 0; b < batch_size; ++b) {
-        float* col = data + static_cast<size_t>(b) * static_cast<size_t>(N);
-        for (int32_t i = 0; i < N; ++i) {
-            col[i] = dist(gen);
+class Plan {
+public:
+    Plan(CArray J, CArray h, CArray p, int32_t batch, bool discrete,
+         float delta, float xi, float dt, int deviceId, int cubeMathType)
+        : resources_(std::make_unique<Resources>()), batch_(batch)
+    {
+        if (J.ndim() != 2 || J.shape(0) != J.shape(1) || J.shape(0) <= 0 ||
+            J.shape(0) > std::numeric_limits<int32_t>::max() || J.shape(0) % 64 != 0 ||
+            batch <= 0 || J.shape(0) * batch > std::numeric_limits<int32_t>::max()) {
+            throw std::invalid_argument("native J must be square, nonempty, padded to 64; invalid state size");
         }
-    }
-    return arr;
-}
+        n_ = static_cast<int32_t>(J.shape(0));
+        if (h.ndim() != 1 || h.shape(0) != n_ || p.ndim() != 1 || p.size() <= 0 ||
+            p.size() > std::numeric_limits<int32_t>::max()) {
+            throw std::invalid_argument("native h/p shape mismatch");
+        }
+        if ((cubeMathType != 0 && cubeMathType != 3) || !std::isfinite(delta) ||
+            !std::isfinite(xi) || !std::isfinite(dt)) {
+            throw std::invalid_argument("invalid math mode or integration parameters");
+        }
+        bytes_ = static_cast<size_t>(n_) * batch_ * sizeof(float);
+        py::gil_scoped_release release;
+        auto& r = *resources_;
+        r.Init(deviceId);
+        int64_t vectorCores = 0;
+        ACL_CHECK(aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_VECTOR_CORE_NUM, &vectorCores));
+        const uint32_t blocks = static_cast<uint32_t>(std::min<int64_t>(
+            vectorCores, static_cast<int64_t>(batch_) * n_ / 64));
+        void* j = r.Allocate(J.nbytes());
+        void* field = r.Allocate(bytes_);
+        void* pressure = r.Allocate(p.nbytes());
+        x_ = r.Allocate(bytes_);
+        y_ = r.Allocate(bytes_);
+        void* spin = discrete ? r.Allocate(bytes_) : x_;
+        void* coupling = r.Allocate(bytes_);
+        hostX_ = r.Allocate(bytes_, true);
+        hostY_ = r.Allocate(bytes_, true);
+        ACL_CHECK(aclrtMemcpy(j, J.nbytes(), J.data(), J.nbytes(), ACL_MEMCPY_HOST_TO_DEVICE));
+        // Expand the immutable field once so update tiles can cross replicas.
+        // Reuse staging memory; this adds no host allocation or per-run packing.
+        for (int32_t replica = 0; replica < batch_; ++replica) {
+            std::memcpy(static_cast<float*>(hostX_) + static_cast<int64_t>(replica) * n_,
+                        h.data(), h.nbytes());
+        }
+        ACL_CHECK(aclrtMemcpy(field, bytes_, hostX_, bytes_, ACL_MEMCPY_HOST_TO_DEVICE));
+        ACL_CHECK(aclrtMemcpy(pressure, p.nbytes(), p.data(), p.nbytes(), ACL_MEMCPY_HOST_TO_DEVICE));
 
-bool TryGetLastSbInit(int32_t N, int32_t batch_size, py::array* x_out, py::array* y_out) {
-    try {
-        py::module_ sb = py::module_::import("SB");
-        if (!py::hasattr(sb, "_LAST_SB_INIT")) return false;
-        py::object init_obj = sb.attr("_LAST_SB_INIT");
-        if (init_obj.is_none()) return false;
-        py::tuple init_tup = init_obj.cast<py::tuple>();
-        if (init_tup.size() != 2) return false;
-        py::array x = EnsureFloat32Fortran2D(init_tup[0], N);
-        py::array y = EnsureFloat32Fortran2D(init_tup[1], N);
-        if (x.shape(1) != batch_size || y.shape(1) != batch_size) return false;
-        *x_out = x;
-        *y_out = y;
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
+        // Transposed views: (J @ X).T == X.T @ J.T, including nonsymmetric J.
+        auto* a = r.Matrix(spin, batch_, n_);
+        auto* b = r.Matrix(j, n_, n_, true);
+        auto* c = r.Matrix(coupling, batch_, n_);
+        uint64_t workspaceBytes = 0;
+        ACL_CHECK(aclnnMatmulGetWorkspaceSize(a, b, c, cubeMathType, &workspaceBytes, &r.executor));
+        ACL_CHECK(aclSetAclOpExecutorRepeatable(r.executor));
+        void* workspace = r.Allocate(workspaceBytes);
+        auto step = [&](int32_t iteration) {
+            ACL_CHECK(aclrtlaunch_kernel_sb_step(blocks, r.stream, x_, y_, coupling, spin,
+                field, pressure, n_, batch_, iteration, discrete, delta, xi, dt));
+        };
+        auto matmul = [&] {
+            ACL_CHECK(aclnnMatmul(workspace, workspaceBytes, r.executor, r.stream));
+        };
 
-float ComputeDefaultXiFromDenseJ(const py::buffer_info& J_buf) {
-    if (J_buf.ndim != 2 || J_buf.shape[0] != J_buf.shape[1]) {
-        throw std::runtime_error("J must be square 2D");
-    }
-    int32_t N = static_cast<int32_t>(J_buf.shape[0]);
-    if (N <= 1) return 0.0f;
-    const float* data = static_cast<const float*>(J_buf.ptr);
-    double sumsq = 0.0;
-    size_t nn = static_cast<size_t>(N) * static_cast<size_t>(N);
-    for (size_t i = 0; i < nn; ++i) {
-        double v = static_cast<double>(data[i]);
-        sumsq += v * v;
-    }
-    if (sumsq <= 0.0) {
-        throw std::runtime_error("Cannot compute default xi: sum(J^2) <= 0");
-    }
-    double num = 0.5 * std::sqrt(static_cast<double>(N - 1));
-    return static_cast<float>(num / std::sqrt(sumsq));
-}
+        // Resolve lazy operator/kernel loading before capture. This work is
+        // construction cost, never included in replay's device timing.
+        ACL_CHECK(aclrtMemset(x_, bytes_, 0, bytes_));
+        ACL_CHECK(aclrtMemset(y_, bytes_, 0, bytes_));
+        if (discrete) step(-1);
+        matmul();
+        step(0);
+        ACL_CHECK(aclrtSynchronizeStream(r.stream));
 
+        ACL_CHECK(aclmdlRICaptureBegin(r.stream, ACL_MODEL_RI_CAPTURE_MODE_THREAD_LOCAL));
+        r.capturing = true;
+        if (discrete) step(-1);
+        for (int32_t iteration = 0; iteration < p.size(); ++iteration) {
+            matmul();
+            step(iteration);
+        }
+        ACL_CHECK(aclmdlRICaptureEnd(r.stream, &r.graph));
+        r.capturing = false;
+    }
+
+    py::tuple Run(FArray x, FArray y)
+    {
+        if (x.ndim() != 2 || y.ndim() != 2 || x.shape(0) != n_ || y.shape(0) != n_ ||
+            x.shape(1) != batch_ || y.shape(1) != batch_) {
+            throw std::invalid_argument("state must have the plan's padded (N, batch) shape");
+        }
+        FArray outX({n_, batch_}), outY({n_, batch_});
+        {
+            // Release the GIL BEFORE acquiring the plan lock: another Python
+            // thread can otherwise deadlock while the running call reacquires it.
+            py::gil_scoped_release release;
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!resources_) throw std::runtime_error("Solver is closed");
+            auto& r = *resources_;
+            ACL_CHECK(aclrtSetCurrentContext(r.context));
+            std::memcpy(hostX_, x.data(), bytes_);
+            std::memcpy(hostY_, y.data(), bytes_);
+            ACL_CHECK(aclrtMemcpyAsync(x_, bytes_, hostX_, bytes_, ACL_MEMCPY_HOST_TO_DEVICE, r.stream));
+            ACL_CHECK(aclrtMemcpyAsync(y_, bytes_, hostY_, bytes_, ACL_MEMCPY_HOST_TO_DEVICE, r.stream));
+            ACL_CHECK(aclrtRecordEvent(r.start, r.stream));
+            ACL_CHECK(aclmdlRIExecuteAsync(r.graph, r.stream));
+            ACL_CHECK(aclrtRecordEvent(r.end, r.stream));
+            ACL_CHECK(aclrtMemcpyAsync(hostX_, bytes_, x_, bytes_, ACL_MEMCPY_DEVICE_TO_HOST, r.stream));
+            ACL_CHECK(aclrtMemcpyAsync(hostY_, bytes_, y_, bytes_, ACL_MEMCPY_DEVICE_TO_HOST, r.stream));
+            ACL_CHECK(aclrtSynchronizeStream(r.stream));
+            float ms = 0;
+            ACL_CHECK(aclrtEventElapsedTime(&ms, r.start, r.end));
+            lastDeviceMs_ = ms;
+            std::memcpy(outX.mutable_data(), hostX_, bytes_);
+            std::memcpy(outY.mutable_data(), hostY_, bytes_);
+        }
+        return py::make_tuple(outX, outY);
+    }
+
+    void Close()
+    {
+        py::gil_scoped_release release;
+        std::lock_guard<std::mutex> lock(mutex_);
+        resources_.reset();
+    }
+
+    float LastDeviceMs() const { return lastDeviceMs_.load(); }
+
+private:
+    std::unique_ptr<Resources> resources_;
+    std::mutex mutex_;
+    int32_t n_, batch_;
+    size_t bytes_;
+    void *x_ = nullptr, *y_ = nullptr, *hostX_ = nullptr, *hostY_ = nullptr;
+    std::atomic<float> lastDeviceMs_{0};
+};
 }  // namespace
 
-void solve(
-    py::array_t<float, py::array::c_style> J_np,
-    py::array_t<float, py::array::f_style> x_np,
-    py::array_t<float, py::array::f_style> y_np,
-    float delta, float xi, float dt,
-    py::array_t<float, py::array::c_style> p_np, // Changed from float to array
-    int32_t niter,
-    int device_id = 0,
-    py::object h_obj = py::none()
-) {
-    py::buffer_info J_buf = J_np.request();
-    py::buffer_info x_buf = x_np.request();
-    py::buffer_info y_buf = y_np.request();
-    py::buffer_info p_buf = p_np.request();
-    bool has_h = !h_obj.is_none();
-    py::buffer_info h_buf;
-    py::array_t<float, py::array::c_style | py::array::forcecast> h_np;
-
-    if (J_buf.ndim != 2) throw std::runtime_error("J must be 2D");
-    
-    // x and y can be 1D (N) or 2D (N, batch_size)
-    // But if batch_size is supported, they should be treated accordingly.
-    // The user says x and y change to (N x batch_Size).
-    // This likely means shape is (N, batch_size). Or maybe (batch_size, N)?
-    // "x and y are updated, changing from (N) to (N x batch_Size)"
-    // Usually means x has N rows, B columns.
-    // Let's support both or assume (N, B).
-    
-    int32_t N = J_buf.shape[0];
-    int32_t batch_size = 1;
-    
-    if (x_buf.ndim == 2) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch (N)");
-        batch_size = x_buf.shape[1];
-    } else if (x_buf.ndim == 1) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch");
-        batch_size = 1;
-    } else {
-         throw std::runtime_error("x must be 1D or 2D");
-    }
-
-    // Check y
-    if (y_buf.ndim != x_buf.ndim) throw std::runtime_error("y must have same dims as x");
-    if (y_buf.shape[0] != N) throw std::runtime_error("y shape mismatch");
-    if (x_buf.ndim == 2 && y_buf.shape[1] != batch_size) throw std::runtime_error("y batch size mismatch");
-    
-    // Check p
-    if (p_buf.ndim != 1) throw std::runtime_error("p must be 1D");
-    if (p_buf.shape[0] != niter) throw std::runtime_error("p size must match niter");
-
-    if (has_h) {
-        py::array h_arr = EnsureFloat32CVector(h_obj, N);
-        h_np = py::array_t<float, py::array::c_style | py::array::forcecast>::ensure(h_arr);
-        if (!h_np) throw std::runtime_error("Failed to convert h to float32 contiguous array");
-        h_buf = h_np.request();
-    }
-
-    auto& ctx = GetAclContext();
-    std::lock_guard<std::mutex> lock(ctx.mu);
-    ctx.EnsureInitialized(device_id);
-
-    size_t J_size = static_cast<size_t>(J_buf.size) * static_cast<size_t>(J_buf.itemsize);
-    size_t vec_size = N * batch_size * sizeof(float);
-    size_t p_size = niter * sizeof(float);
-    size_t h_size = N * sizeof(float);
-
-    AclContext::EnsureBuffer(&ctx.d_J, &ctx.cap_J, J_size);
-    AclContext::EnsureBuffer(&ctx.d_x, &ctx.cap_x, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_y, &ctx.cap_y, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_p, &ctx.cap_p, p_size);
-    AclContext::EnsureBuffer(&ctx.d_h, &ctx.cap_h, h_size);
-
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_J, ctx.cap_J, J_buf.ptr, J_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_x, ctx.cap_x, x_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_y, ctx.cap_y, y_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_p, ctx.cap_p, p_buf.ptr, p_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    if (has_h) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_h, ctx.cap_h, h_buf.ptr, h_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-
-    // Launch
-    // Use batch_size as blockDim
-    CHECK_ACL(
-        aclrtlaunch_kernel_sb_custom(
-            batch_size, ctx.stream, ctx.d_J, ctx.d_x, ctx.d_y, ctx.d_p, ctx.d_h, static_cast<int32_t>(has_h),
-            delta, xi, dt, niter, N, batch_size));
-
-    // Copy back
-    CHECK_ACL(aclrtMemcpyAsync(x_buf.ptr, vec_size, ctx.d_x, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(y_buf.ptr, vec_size, ctx.d_y, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtSynchronizeStream(ctx.stream));
-}
-
-void solve_bsb(
-    py::array_t<float, py::array::c_style> J_np,
-    py::array_t<float, py::array::f_style> x_np,
-    py::array_t<float, py::array::f_style> y_np,
-    float delta, float xi, float dt,
-    py::array_t<float, py::array::c_style> p_np, // Changed from float to array
-    int32_t niter,
-    int device_id = 0,
-    py::object h_obj = py::none()
-) {
-    py::buffer_info J_buf = J_np.request();
-    py::buffer_info x_buf = x_np.request();
-    py::buffer_info y_buf = y_np.request();
-    py::buffer_info p_buf = p_np.request();
-    bool has_h = !h_obj.is_none();
-    py::buffer_info h_buf;
-    py::array_t<float, py::array::c_style | py::array::forcecast> h_np;
-
-    if (J_buf.ndim != 2) throw std::runtime_error("J must be 2D");
-
-    int32_t N = J_buf.shape[0];
-    int32_t batch_size = 1;
-
-    if (x_buf.ndim == 2) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch (N)");
-        batch_size = x_buf.shape[1];
-    } else if (x_buf.ndim == 1) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch");
-        batch_size = 1;
-    } else {
-         throw std::runtime_error("x must be 1D or 2D");
-    }
-
-    // Check y
-    if (y_buf.ndim != x_buf.ndim) throw std::runtime_error("y must have same dims as x");
-    if (y_buf.shape[0] != N) throw std::runtime_error("y shape mismatch");
-    if (x_buf.ndim == 2 && y_buf.shape[1] != batch_size) throw std::runtime_error("y batch size mismatch");
-
-    // Check p
-    if (p_buf.ndim != 1) throw std::runtime_error("p must be 1D");
-    if (p_buf.shape[0] != niter) throw std::runtime_error("p size must match niter");
-
-    if (has_h) {
-        py::array h_arr = EnsureFloat32CVector(h_obj, N);
-        h_np = py::array_t<float, py::array::c_style | py::array::forcecast>::ensure(h_arr);
-        if (!h_np) throw std::runtime_error("Failed to convert h to float32 contiguous array");
-        h_buf = h_np.request();
-    }
-
-    auto& ctx = GetAclContext();
-    std::lock_guard<std::mutex> lock(ctx.mu);
-    ctx.EnsureInitialized(device_id);
-
-    size_t J_size = static_cast<size_t>(J_buf.size) * static_cast<size_t>(J_buf.itemsize);
-    size_t vec_size = N * batch_size * sizeof(float);
-    size_t p_size = niter * sizeof(float);
-    size_t h_size = N * sizeof(float);
-
-    AclContext::EnsureBuffer(&ctx.d_J, &ctx.cap_J, J_size);
-    AclContext::EnsureBuffer(&ctx.d_x, &ctx.cap_x, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_y, &ctx.cap_y, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_p, &ctx.cap_p, p_size);
-    AclContext::EnsureBuffer(&ctx.d_h, &ctx.cap_h, h_size);
-
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_J, ctx.cap_J, J_buf.ptr, J_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_x, ctx.cap_x, x_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_y, ctx.cap_y, y_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_p, ctx.cap_p, p_buf.ptr, p_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    if (has_h) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_h, ctx.cap_h, h_buf.ptr, h_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-
-    // Launch
-    // Use batch_size as blockDim
-    CHECK_ACL(
-        aclrtlaunch_kernel_bsb_custom(
-            batch_size, ctx.stream, ctx.d_J, ctx.d_x, ctx.d_y, ctx.d_p, ctx.d_h, static_cast<int32_t>(has_h),
-            delta, xi, dt, niter, N, batch_size));
-
-    // Copy back
-    CHECK_ACL(aclrtMemcpyAsync(x_buf.ptr, vec_size, ctx.d_x, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(y_buf.ptr, vec_size, ctx.d_y, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtSynchronizeStream(ctx.stream));
-}
-
-void solve_cached(
-    py::array_t<float, py::array::c_style> J_np,
-    py::array_t<float, py::array::f_style> x_np,
-    py::array_t<float, py::array::f_style> y_np,
-    float delta, float xi, float dt,
-    py::array_t<float, py::array::c_style> p_np,
-    int32_t niter,
-    bool force_copy = false,
-    int device_id = 0,
-    py::object h_obj = py::none()
-) {
-    py::buffer_info J_buf = J_np.request();
-    py::buffer_info x_buf = x_np.request();
-    py::buffer_info y_buf = y_np.request();
-    py::buffer_info p_buf = p_np.request();
-    bool has_h = !h_obj.is_none();
-    py::buffer_info h_buf;
-    py::array_t<float, py::array::c_style | py::array::forcecast> h_np;
-
-    if (J_buf.ndim != 2) throw std::runtime_error("J must be 2D");
-
-    int32_t N = J_buf.shape[0];
-    int32_t batch_size = 1;
-
-    if (x_buf.ndim == 2) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch (N)");
-        batch_size = x_buf.shape[1];
-    } else if (x_buf.ndim == 1) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch");
-        batch_size = 1;
-    } else {
-        throw std::runtime_error("x must be 1D or 2D");
-    }
-
-    if (y_buf.ndim != x_buf.ndim) throw std::runtime_error("y must have same dims as x");
-    if (y_buf.shape[0] != N) throw std::runtime_error("y shape mismatch");
-    if (x_buf.ndim == 2 && y_buf.shape[1] != batch_size) throw std::runtime_error("y batch size mismatch");
-
-    if (p_buf.ndim != 1) throw std::runtime_error("p must be 1D");
-    if (p_buf.shape[0] != niter) throw std::runtime_error("p size must match niter");
-
-    if (has_h) {
-        py::array h_arr = EnsureFloat32CVector(h_obj, N);
-        h_np = py::array_t<float, py::array::c_style | py::array::forcecast>::ensure(h_arr);
-        if (!h_np) throw std::runtime_error("Failed to convert h to float32 contiguous array");
-        h_buf = h_np.request();
-    }
-
-    auto& ctx = GetAclContext();
-    std::lock_guard<std::mutex> lock(ctx.mu);
-    ctx.EnsureInitialized(device_id);
-
-    size_t J_size = static_cast<size_t>(J_buf.size) * static_cast<size_t>(J_buf.itemsize);
-    size_t vec_size = N * batch_size * sizeof(float);
-    size_t p_size = niter * sizeof(float);
-    size_t h_size = N * sizeof(float);
-
-    AclContext::EnsureBuffer(&ctx.d_J, &ctx.cap_J, J_size);
-    AclContext::EnsureBuffer(&ctx.d_x, &ctx.cap_x, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_y, &ctx.cap_y, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_p, &ctx.cap_p, p_size);
-    AclContext::EnsureBuffer(&ctx.d_h, &ctx.cap_h, h_size);
-
-    bool need_copy_J = true;
-    if (!force_copy && ctx.last_J_host_ptr == J_buf.ptr && ctx.last_J_bytes == J_size) {
-        need_copy_J = false;
-    } else {
-        ctx.last_J_host_ptr = J_buf.ptr;
-        ctx.last_J_bytes = J_size;
-    }
-
-    bool need_copy_p = true;
-    if (!force_copy && ctx.last_p_host_ptr == p_buf.ptr && ctx.last_p_bytes == p_size) {
-        need_copy_p = false;
-    } else {
-        ctx.last_p_host_ptr = p_buf.ptr;
-        ctx.last_p_bytes = p_size;
-    }
-
-    bool need_copy_h = has_h;
-    if (has_h) {
-        if (!force_copy && ctx.last_h_host_ptr == h_buf.ptr && ctx.last_h_bytes == h_size) {
-            need_copy_h = false;
-        } else {
-            ctx.last_h_host_ptr = h_buf.ptr;
-            ctx.last_h_bytes = h_size;
-        }
-    }
-
-    if (need_copy_J) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_J, ctx.cap_J, J_buf.ptr, J_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_x, ctx.cap_x, x_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_y, ctx.cap_y, y_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    if (need_copy_p) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_p, ctx.cap_p, p_buf.ptr, p_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-    if (need_copy_h) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_h, ctx.cap_h, h_buf.ptr, h_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-
-    CHECK_ACL(
-        aclrtlaunch_kernel_sb_custom(
-            batch_size, ctx.stream, ctx.d_J, ctx.d_x, ctx.d_y, ctx.d_p, ctx.d_h, static_cast<int32_t>(has_h),
-            delta, xi, dt, niter, N, batch_size));
-
-    CHECK_ACL(aclrtMemcpyAsync(x_buf.ptr, vec_size, ctx.d_x, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(y_buf.ptr, vec_size, ctx.d_y, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtSynchronizeStream(ctx.stream));
-}
-
-void solve_cached_bsb(
-    py::array_t<float, py::array::c_style> J_np,
-    py::array_t<float, py::array::f_style> x_np,
-    py::array_t<float, py::array::f_style> y_np,
-    float delta, float xi, float dt,
-    py::array_t<float, py::array::c_style> p_np,
-    int32_t niter,
-    bool force_copy = false,
-    int device_id = 0,
-    py::object h_obj = py::none()
-) {
-    py::buffer_info J_buf = J_np.request();
-    py::buffer_info x_buf = x_np.request();
-    py::buffer_info y_buf = y_np.request();
-    py::buffer_info p_buf = p_np.request();
-    bool has_h = !h_obj.is_none();
-    py::buffer_info h_buf;
-    py::array_t<float, py::array::c_style | py::array::forcecast> h_np;
-
-    if (J_buf.ndim != 2) throw std::runtime_error("J must be 2D");
-
-    int32_t N = J_buf.shape[0];
-    int32_t batch_size = 1;
-
-    if (x_buf.ndim == 2) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch (N)");
-        batch_size = x_buf.shape[1];
-    } else if (x_buf.ndim == 1) {
-        if (x_buf.shape[0] != N) throw std::runtime_error("x shape mismatch");
-        batch_size = 1;
-    } else {
-        throw std::runtime_error("x must be 1D or 2D");
-    }
-
-    if (y_buf.ndim != x_buf.ndim) throw std::runtime_error("y must have same dims as x");
-    if (y_buf.shape[0] != N) throw std::runtime_error("y shape mismatch");
-    if (x_buf.ndim == 2 && y_buf.shape[1] != batch_size) throw std::runtime_error("y batch size mismatch");
-
-    if (p_buf.ndim != 1) throw std::runtime_error("p must be 1D");
-    if (p_buf.shape[0] != niter) throw std::runtime_error("p size must match niter");
-
-    if (has_h) {
-        py::array h_arr = EnsureFloat32CVector(h_obj, N);
-        h_np = py::array_t<float, py::array::c_style | py::array::forcecast>::ensure(h_arr);
-        if (!h_np) throw std::runtime_error("Failed to convert h to float32 contiguous array");
-        h_buf = h_np.request();
-    }
-
-    auto& ctx = GetAclContext();
-    std::lock_guard<std::mutex> lock(ctx.mu);
-    ctx.EnsureInitialized(device_id);
-
-    size_t J_size = static_cast<size_t>(J_buf.size) * static_cast<size_t>(J_buf.itemsize);
-    size_t vec_size = N * batch_size * sizeof(float);
-    size_t p_size = niter * sizeof(float);
-    size_t h_size = N * sizeof(float);
-
-    AclContext::EnsureBuffer(&ctx.d_J, &ctx.cap_J, J_size);
-    AclContext::EnsureBuffer(&ctx.d_x, &ctx.cap_x, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_y, &ctx.cap_y, vec_size);
-    AclContext::EnsureBuffer(&ctx.d_p, &ctx.cap_p, p_size);
-    AclContext::EnsureBuffer(&ctx.d_h, &ctx.cap_h, h_size);
-
-    bool need_copy_J = true;
-    if (!force_copy && ctx.last_J_host_ptr == J_buf.ptr && ctx.last_J_bytes == J_size) {
-        need_copy_J = false;
-    } else {
-        ctx.last_J_host_ptr = J_buf.ptr;
-        ctx.last_J_bytes = J_size;
-    }
-
-    bool need_copy_p = true;
-    if (!force_copy && ctx.last_p_host_ptr == p_buf.ptr && ctx.last_p_bytes == p_size) {
-        need_copy_p = false;
-    } else {
-        ctx.last_p_host_ptr = p_buf.ptr;
-        ctx.last_p_bytes = p_size;
-    }
-
-    bool need_copy_h = has_h;
-    if (has_h) {
-        if (!force_copy && ctx.last_h_host_ptr == h_buf.ptr && ctx.last_h_bytes == h_size) {
-            need_copy_h = false;
-        } else {
-            ctx.last_h_host_ptr = h_buf.ptr;
-            ctx.last_h_bytes = h_size;
-        }
-    }
-
-    if (need_copy_J) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_J, ctx.cap_J, J_buf.ptr, J_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_x, ctx.cap_x, x_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(ctx.d_y, ctx.cap_y, y_buf.ptr, vec_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    if (need_copy_p) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_p, ctx.cap_p, p_buf.ptr, p_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-    if (need_copy_h) {
-        CHECK_ACL(aclrtMemcpyAsync(ctx.d_h, ctx.cap_h, h_buf.ptr, h_size, ACL_MEMCPY_HOST_TO_DEVICE, ctx.stream));
-    }
-
-    CHECK_ACL(
-        aclrtlaunch_kernel_bsb_custom(
-            batch_size, ctx.stream, ctx.d_J, ctx.d_x, ctx.d_y, ctx.d_p, ctx.d_h, static_cast<int32_t>(has_h),
-            delta, xi, dt, niter, N, batch_size));
-
-    CHECK_ACL(aclrtMemcpyAsync(x_buf.ptr, vec_size, ctx.d_x, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtMemcpyAsync(y_buf.ptr, vec_size, ctx.d_y, vec_size, ACL_MEMCPY_DEVICE_TO_HOST, ctx.stream));
-    CHECK_ACL(aclrtSynchronizeStream(ctx.stream));
-}
-
-py::tuple kernel_dsb(
-    py::object J_obj,
-    py::object h_obj = py::none(),
-    py::object x_obj = py::none(),
-    py::object y_obj = py::none(),
-    float delta = 1.0f,
-    py::object xi_obj = py::none(),
-    float dt = 1.0f,
-    py::object p_obj = py::none(),
-    int32_t n_iter = 1000,
-    int32_t batch_size = 1,
-    int device_id = 0
-) {
-    py::array J_arr = EnsureDenseFloat32C(J_obj);
-    py::buffer_info J_buf = J_arr.request();
-    if (J_buf.ndim != 2 || J_buf.shape[0] != J_buf.shape[1]) throw std::runtime_error("J must be square 2D");
-    int32_t N = static_cast<int32_t>(J_buf.shape[0]);
-    constexpr int32_t kAlign = 16;
-    int32_t N_aligned = ((N + kAlign - 1) / kAlign) * kAlign;
-
-    int32_t inferred_batch = batch_size;
-    if (!x_obj.is_none()) {
-        py::array x_tmp = EnsureFloat32Fortran2D(x_obj, N);
-        inferred_batch = static_cast<int32_t>(x_tmp.shape(1));
-    } else if (!y_obj.is_none()) {
-        py::array y_tmp = EnsureFloat32Fortran2D(y_obj, N);
-        inferred_batch = static_cast<int32_t>(y_tmp.shape(1));
-    }
-
-    py::array x_arr;
-    py::array y_arr;
-    const bool has_x = !x_obj.is_none();
-    const bool has_y = !y_obj.is_none();
-    if (!has_x && !has_y) {
-        if (!TryGetLastSbInit(N, inferred_batch, &x_arr, &y_arr)) {
-            x_arr = MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-            y_arr = MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-        }
-    } else {
-        x_arr = has_x ? EnsureFloat32Fortran2D(x_obj, N) : MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-        y_arr = has_y ? EnsureFloat32Fortran2D(y_obj, N) : MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-    }
-
-    py::array p_arr;
-    if (p_obj.is_none()) {
-        p_arr = MakeLinspaceFloat32(n_iter);
-    } else {
-        py::module_ np = py::module_::import("numpy");
-        py::array p_tmp = np.attr("asarray")(p_obj, py::arg("dtype") = np.attr("float32")).cast<py::array>();
-        if (p_tmp.ndim() != 1) throw std::runtime_error("p must be 1D");
-        if (p_tmp.shape(0) != n_iter) {
-            throw std::runtime_error("p size must match n_iter");
-        }
-        p_arr = np.attr("ascontiguousarray")(p_tmp).cast<py::array>();
-    }
-
-    float xi = xi_obj.is_none() ? ComputeDefaultXiFromDenseJ(J_buf) : xi_obj.cast<float>();
-
-    py::array J_use = J_arr;
-    py::array x_use = x_arr;
-    py::array y_use = y_arr;
-    py::object h_use = h_obj;
-
-    if (N_aligned != N) {
-        py::array_t<float, py::array::c_style> J_pad({N_aligned, N_aligned});
-        auto* J_pad_data = static_cast<float*>(J_pad.mutable_data());
-        std::fill(J_pad_data, J_pad_data + static_cast<size_t>(N_aligned) * static_cast<size_t>(N_aligned), 0.0f);
-        const float* J_data = static_cast<const float*>(J_buf.ptr);
-        for (int32_t i = 0; i < N; ++i) {
-            std::memcpy(J_pad_data + static_cast<size_t>(i) * static_cast<size_t>(N_aligned),
-                        J_data + static_cast<size_t>(i) * static_cast<size_t>(N),
-                        static_cast<size_t>(N) * sizeof(float));
-        }
-
-        py::array x_pad = MakeRandomCenteredFloat32Fortran(N_aligned, inferred_batch);
-        py::array y_pad = MakeRandomCenteredFloat32Fortran(N_aligned, inferred_batch);
-        std::fill(static_cast<float*>(x_pad.mutable_data()),
-                  static_cast<float*>(x_pad.mutable_data()) + static_cast<size_t>(N_aligned) * static_cast<size_t>(inferred_batch),
-                  0.0f);
-        std::fill(static_cast<float*>(y_pad.mutable_data()),
-                  static_cast<float*>(y_pad.mutable_data()) + static_cast<size_t>(N_aligned) * static_cast<size_t>(inferred_batch),
-                  0.0f);
-
-        const float* x_data = static_cast<const float*>(x_arr.request().ptr);
-        const float* y_data = static_cast<const float*>(y_arr.request().ptr);
-        float* x_pad_data = static_cast<float*>(x_pad.mutable_data());
-        float* y_pad_data = static_cast<float*>(y_pad.mutable_data());
-        for (int32_t b = 0; b < inferred_batch; ++b) {
-            std::memcpy(x_pad_data + static_cast<size_t>(b) * static_cast<size_t>(N_aligned),
-                        x_data + static_cast<size_t>(b) * static_cast<size_t>(N),
-                        static_cast<size_t>(N) * sizeof(float));
-            std::memcpy(y_pad_data + static_cast<size_t>(b) * static_cast<size_t>(N_aligned),
-                        y_data + static_cast<size_t>(b) * static_cast<size_t>(N),
-                        static_cast<size_t>(N) * sizeof(float));
-        }
-
-        if (!h_obj.is_none()) {
-            py::array h_vec = EnsureFloat32CVector(h_obj, N);
-            py::array_t<float, py::array::c_style> h_pad({N_aligned});
-            auto* h_pad_data = static_cast<float*>(h_pad.mutable_data());
-            std::fill(h_pad_data, h_pad_data + static_cast<size_t>(N_aligned), 0.0f);
-            const float* h_data = static_cast<const float*>(h_vec.request().ptr);
-            std::memcpy(h_pad_data, h_data, static_cast<size_t>(N) * sizeof(float));
-            h_use = h_pad;
-        }
-
-        J_use = J_pad;
-        x_use = x_pad;
-        y_use = y_pad;
-    }
-
-    solve(
-        J_use.cast<py::array_t<float, py::array::c_style>>(),
-        x_use.cast<py::array_t<float, py::array::f_style>>(),
-        y_use.cast<py::array_t<float, py::array::f_style>>(),
-        delta,
-        xi,
-        dt,
-        p_arr.cast<py::array_t<float, py::array::c_style>>(),
-        n_iter,
-        device_id,
-        h_use);
-
-    if (N_aligned != N) {
-        py::module_ np = py::module_::import("numpy");
-        py::array x_trim = np.attr("asfortranarray")(x_use.attr("__getitem__")(py::make_tuple(py::slice(0, N, 1), py::slice(0, inferred_batch, 1)))).cast<py::array>();
-        py::array y_trim = np.attr("asfortranarray")(y_use.attr("__getitem__")(py::make_tuple(py::slice(0, N, 1), py::slice(0, inferred_batch, 1)))).cast<py::array>();
-        return py::make_tuple(x_trim, y_trim);
-    }
-
-    return py::make_tuple(x_use, y_use);
-}
-
-py::tuple kernel_bsb(
-    py::object J_obj,
-    py::object h_obj = py::none(),
-    py::object x_obj = py::none(),
-    py::object y_obj = py::none(),
-    float delta = 1.0f,
-    py::object xi_obj = py::none(),
-    float dt = 1.0f,
-    py::object p_obj = py::none(),
-    int32_t n_iter = 1000,
-    int32_t batch_size = 1,
-    int device_id = 0
-) {
-    py::array J_arr = EnsureDenseFloat32C(J_obj);
-    py::buffer_info J_buf = J_arr.request();
-    if (J_buf.ndim != 2 || J_buf.shape[0] != J_buf.shape[1]) throw std::runtime_error("J must be square 2D");
-    int32_t N = static_cast<int32_t>(J_buf.shape[0]);
-    constexpr int32_t kAlign = 16;
-    int32_t N_aligned = ((N + kAlign - 1) / kAlign) * kAlign;
-
-    int32_t inferred_batch = batch_size;
-    if (!x_obj.is_none()) {
-        py::array x_tmp = EnsureFloat32Fortran2D(x_obj, N);
-        inferred_batch = static_cast<int32_t>(x_tmp.shape(1));
-    } else if (!y_obj.is_none()) {
-        py::array y_tmp = EnsureFloat32Fortran2D(y_obj, N);
-        inferred_batch = static_cast<int32_t>(y_tmp.shape(1));
-    }
-
-    py::array x_arr;
-    py::array y_arr;
-    const bool has_x = !x_obj.is_none();
-    const bool has_y = !y_obj.is_none();
-    if (!has_x && !has_y) {
-        if (!TryGetLastSbInit(N, inferred_batch, &x_arr, &y_arr)) {
-            x_arr = MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-            y_arr = MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-        }
-    } else {
-        x_arr = has_x ? EnsureFloat32Fortran2D(x_obj, N) : MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-        y_arr = has_y ? EnsureFloat32Fortran2D(y_obj, N) : MakeRandomCenteredFloat32Fortran(N, inferred_batch);
-    }
-
-    py::array p_arr;
-    if (p_obj.is_none()) {
-        p_arr = MakeLinspaceFloat32(n_iter);
-    } else {
-        py::module_ np = py::module_::import("numpy");
-        py::array p_tmp = np.attr("asarray")(p_obj, py::arg("dtype") = np.attr("float32")).cast<py::array>();
-        if (p_tmp.ndim() != 1) throw std::runtime_error("p must be 1D");
-        if (p_tmp.shape(0) != n_iter) {
-            throw std::runtime_error("p size must match n_iter");
-        }
-        p_arr = np.attr("ascontiguousarray")(p_tmp).cast<py::array>();
-    }
-
-    float xi = xi_obj.is_none() ? ComputeDefaultXiFromDenseJ(J_buf) : xi_obj.cast<float>();
-
-    py::array J_use = J_arr;
-    py::array x_use = x_arr;
-    py::array y_use = y_arr;
-    py::object h_use = h_obj;
-
-    if (N_aligned != N) {
-        py::array_t<float, py::array::c_style> J_pad({N_aligned, N_aligned});
-        auto* J_pad_data = static_cast<float*>(J_pad.mutable_data());
-        std::fill(J_pad_data, J_pad_data + static_cast<size_t>(N_aligned) * static_cast<size_t>(N_aligned), 0.0f);
-        const float* J_data = static_cast<const float*>(J_buf.ptr);
-        for (int32_t i = 0; i < N; ++i) {
-            std::memcpy(J_pad_data + static_cast<size_t>(i) * static_cast<size_t>(N_aligned),
-                        J_data + static_cast<size_t>(i) * static_cast<size_t>(N),
-                        static_cast<size_t>(N) * sizeof(float));
-        }
-
-        py::array x_pad = MakeRandomCenteredFloat32Fortran(N_aligned, inferred_batch);
-        py::array y_pad = MakeRandomCenteredFloat32Fortran(N_aligned, inferred_batch);
-        std::fill(static_cast<float*>(x_pad.mutable_data()),
-                  static_cast<float*>(x_pad.mutable_data()) + static_cast<size_t>(N_aligned) * static_cast<size_t>(inferred_batch),
-                  0.0f);
-        std::fill(static_cast<float*>(y_pad.mutable_data()),
-                  static_cast<float*>(y_pad.mutable_data()) + static_cast<size_t>(N_aligned) * static_cast<size_t>(inferred_batch),
-                  0.0f);
-
-        const float* x_data = static_cast<const float*>(x_arr.request().ptr);
-        const float* y_data = static_cast<const float*>(y_arr.request().ptr);
-        float* x_pad_data = static_cast<float*>(x_pad.mutable_data());
-        float* y_pad_data = static_cast<float*>(y_pad.mutable_data());
-        for (int32_t b = 0; b < inferred_batch; ++b) {
-            std::memcpy(x_pad_data + static_cast<size_t>(b) * static_cast<size_t>(N_aligned),
-                        x_data + static_cast<size_t>(b) * static_cast<size_t>(N),
-                        static_cast<size_t>(N) * sizeof(float));
-            std::memcpy(y_pad_data + static_cast<size_t>(b) * static_cast<size_t>(N_aligned),
-                        y_data + static_cast<size_t>(b) * static_cast<size_t>(N),
-                        static_cast<size_t>(N) * sizeof(float));
-        }
-
-        if (!h_obj.is_none()) {
-            py::array h_vec = EnsureFloat32CVector(h_obj, N);
-            py::array_t<float, py::array::c_style> h_pad({N_aligned});
-            auto* h_pad_data = static_cast<float*>(h_pad.mutable_data());
-            std::fill(h_pad_data, h_pad_data + static_cast<size_t>(N_aligned), 0.0f);
-            const float* h_data = static_cast<const float*>(h_vec.request().ptr);
-            std::memcpy(h_pad_data, h_data, static_cast<size_t>(N) * sizeof(float));
-            h_use = h_pad;
-        }
-
-        J_use = J_pad;
-        x_use = x_pad;
-        y_use = y_pad;
-    }
-
-    solve_bsb(
-        J_use.cast<py::array_t<float, py::array::c_style>>(),
-        x_use.cast<py::array_t<float, py::array::f_style>>(),
-        y_use.cast<py::array_t<float, py::array::f_style>>(),
-        delta,
-        xi,
-        dt,
-        p_arr.cast<py::array_t<float, py::array::c_style>>(),
-        n_iter,
-        device_id,
-        h_use);
-
-    if (N_aligned != N) {
-        py::module_ np = py::module_::import("numpy");
-        py::array x_trim = np.attr("asfortranarray")(x_use.attr("__getitem__")(py::make_tuple(py::slice(0, N, 1), py::slice(0, inferred_batch, 1)))).cast<py::array>();
-        py::array y_trim = np.attr("asfortranarray")(y_use.attr("__getitem__")(py::make_tuple(py::slice(0, N, 1), py::slice(0, inferred_batch, 1)))).cast<py::array>();
-        return py::make_tuple(x_trim, y_trim);
-    }
-
-    return py::make_tuple(x_use, y_use);
-}
-
-PYBIND11_MODULE(kernel_sb, m) {
-    m.doc() = "Kernel SB Ascend Plugin";
-    m.def("solve", &solve, "Run Kernel DSB simulation",
-          py::arg("J"), py::arg("x"), py::arg("y"),
-          py::arg("delta"), py::arg("xi"), py::arg("dt"), 
-          py::arg("p"), // Now array
-          py::arg("niter"),
-          py::arg("device_id") = 0,
-          py::arg("h") = py::none());
-    m.def("solve_cached", &solve_cached, "Run Kernel DSB simulation (reuses cached device buffers for J/p)",
-          py::arg("J"), py::arg("x"), py::arg("y"),
-          py::arg("delta"), py::arg("xi"), py::arg("dt"),
-          py::arg("p"),
-          py::arg("niter"),
-          py::arg("force_copy") = false,
-          py::arg("device_id") = 0,
-          py::arg("h") = py::none());
-    m.def("solve_bsb", &solve_bsb, "Run Kernel BSB simulation",
-          py::arg("J"), py::arg("x"), py::arg("y"),
-          py::arg("delta"), py::arg("xi"), py::arg("dt"),
-          py::arg("p"),
-          py::arg("niter"),
-          py::arg("device_id") = 0,
-          py::arg("h") = py::none());
-    m.def("solve_cached_bsb", &solve_cached_bsb, "Run Kernel BSB simulation (reuses cached device buffers for J/p)",
-          py::arg("J"), py::arg("x"), py::arg("y"),
-          py::arg("delta"), py::arg("xi"), py::arg("dt"),
-          py::arg("p"),
-          py::arg("niter"),
-          py::arg("force_copy") = false,
-          py::arg("device_id") = 0,
-          py::arg("h") = py::none());
-    m.def("kernel_dsb", &kernel_dsb, "Run Kernel DSB with SB/DSB-style defaults; returns (x, y).",
-          py::arg("J"),
-          py::arg("h") = py::none(),
-          py::arg("x") = py::none(),
-          py::arg("y") = py::none(),
-          py::arg("delta") = 1.0f,
-          py::arg("xi") = py::none(),
-          py::arg("dt") = 1.0f,
-          py::arg("p") = py::none(),
-          py::arg("n_iter") = 1000,
-          py::arg("batch_size") = 1,
-          py::arg("device_id") = 0);
-    m.def("kernel_bsb", &kernel_bsb, "Run Kernel BSB with SB-style defaults; returns (x, y).",
-          py::arg("J"),
-          py::arg("h") = py::none(),
-          py::arg("x") = py::none(),
-          py::arg("y") = py::none(),
-          py::arg("delta") = 1.0f,
-          py::arg("xi") = py::none(),
-          py::arg("dt") = 1.0f,
-          py::arg("p") = py::none(),
-          py::arg("n_iter") = 1000,
-          py::arg("batch_size") = 1,
-          py::arg("device_id") = 0);
+PYBIND11_MODULE(_kernel_sb, m)
+{
+    m.doc() = "CANN 9.1 batched simulated bifurcation execution plan";
+    py::class_<Plan>(m, "Plan")
+        .def(py::init<CArray, CArray, CArray, int32_t, bool, float, float, float, int, int>(),
+             py::arg("J").noconvert(), py::arg("h").noconvert(), py::arg("p").noconvert(),
+             py::arg("batch"), py::arg("discrete"), py::arg("delta"), py::arg("xi"),
+             py::arg("dt"), py::arg("device_id"), py::arg("cube_math_type"))
+        .def("run", &Plan::Run, py::arg("x").noconvert(), py::arg("y").noconvert())
+        .def("close", &Plan::Close)
+        .def_property_readonly("last_device_ms", &Plan::LastDeviceMs);
 }
