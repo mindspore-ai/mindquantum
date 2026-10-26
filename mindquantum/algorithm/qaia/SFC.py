@@ -96,7 +96,7 @@ class SFC(QAIA):
         self.p = np.linspace(-1, 1, self.n_iter)
         # coupling strength
         if self.backend == "cpu-float32":
-            self.xi = np.sqrt(2 * self.N / np.sum(self.J**2))
+            self.xi = np.sqrt(2 * self.N / self.J.power(2).sum())
         if self.backend == "gpu-float32":
             self.xi = torch.sqrt(2 * self.N / torch.sum(self.J.to_dense() ** 2))
         if self.backend == "npu-float32":

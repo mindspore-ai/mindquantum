@@ -133,7 +133,8 @@ class SB(QAIA):
                         0.5
                         * np.sqrt(self.N - 1)
                         / np.sqrt(
-                            csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum() + 2 * ((self.h / 2) ** 2).sum()
+                            csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum()
+                            + 2 * ((self.h.cpu().numpy() / 2) ** 2).sum()
                         )
                     )
                 else:
