@@ -2,6 +2,64 @@
 
 [View English](./RELEASE.md)
 
+## MindQuantum 0.13.0 Release Notes
+
+MindQuantum **0.13.0** 新增面向昇腾 910B NPU 的设备常驻态矢量模拟器后端 `mqvector_npu` 与基于 Ascend C 的 QAIA 原生模拟分岔求解器（`qaia-cann` 分支），引入跨模拟器共享的线路分块执行引擎（`circuit_tiling`）与 Linux AArch64 运行时 Arm SVE 动态派发，基于全矩阵存储全面重写 `mqmatrix` 密度矩阵模拟器，将 CPU 端 OpenMP 并行策略改为按工作量自适应调度，并完成向 Python 3.9–3.12 与模块化构建系统的演进。
+
+### 主要特性和增强
+
+#### Simulator
+
+- [BETA] **设备常驻的 Ascend 910B 态矢量模拟器后端 [`mqvector_npu`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html)**（[`!3172`](https://atomgit.com/mindspore/mindquantum/pull/3172)）：新增面向昇腾 910B NPU 的单精度（`mindquantum.complex64`）全振幅态矢量模拟器后端。
+    - **全流程设备端执行**：量子态常驻 NPU HBM，结合 Vector 核局部线路分块与 Cube 核严格 FP32 稠密算子融合（禁用 `HF32`/`FP16`/`BF16` 精度降级），在设备端完成线路演化、Pauli/CSR 期望、无检查点混合伴随梯度、门级精确多频 Parameter-Shift、纯态噪声轨迹、概率树采样与约化密度矩阵收缩，仅将标量或目标结果传回主机（在 Ascend 910B2 上，24 比特 4 层 MaxCut QAOA 单步伴随梯度耗时约 54 ms）。
+    - **精度与源码编译要求**：仅支持 `complex64`，传入的 `Hamiltonian` 需显式指定为单精度（如 `Hamiltonian(op, mq.float32)` 或 `ham.astype(mq.float32)`）。由于 Ascend C 内核与具体 SoC 型号（`Ascend910B[1-4]`）强绑定且依赖本地 CANN 工具链，**官方预编译的 `.whl` 包不包含该后端**，需在加载本地 CANN 环境后指定 `ENABLE_ASCEND=ON` 与匹配的 `MQ_ASCEND_SOC` 从源码自行编译（详见 [`docs/mqvector_npu.md`](./docs/mqvector_npu.md)）。
+- [STABLE] **共享线路分块引擎 `circuit_tiling` 与 Arm SVE 向量化加速**（[`!3146`](https://atomgit.com/mindspore/mindquantum/pull/3146)、[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)、[`!3175`](https://atomgit.com/mindspore/mindquantum/pull/3175)）：
+    - **线路分块（Circuit Tiling）**：相比将多门合成为稠密矩阵的传统门融合（Gate Fusion），新增的 `mqsim_circuit_tiling` 引擎将局部量子态分块（8 比特 / 256 个振幅）一次加载至 L1 缓存，在保留各量子门稀疏结构的同时连续作用多个门并折叠相邻对角门，最后写回一次。**正向线路演化与伴随（Adjoint）梯度复用同一分块路径**，`mqvector` 在 `n_qubits >= 13` 时自动启用。
+    - **Arm SVE 跨分块并行与运行时动态派发**：在 Linux AArch64 平台编译独立的 SVE + FCMA 内核，利用 Gather/Scatter、`FCMLA` 复数乘加与谓词掩码并行处理多个独立状态分块，并在运行时根据宿主 CPU 能力自动派发（兼顾高性能与通用 ARM 机器兼容性）。在 Kunpeng 920F 上，开启 NUMA 亲和（`OMP_PLACES=cores OMP_PROC_BIND=close`）后，20–28 比特随机线路与 MaxCut QAOA 任务较 0.12.0 进一步提速 **3–5×**。
+- [STABLE] **基于全矩阵存储与线路分块重写 [`mqmatrix`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/simulator/mindquantum.simulator.Simulator.html) 密度矩阵模拟器**（[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：将 $n$ 比特行主序密度矩阵视为 $2n$ 索引比特上的态矢量并复用 `circuit_tiling` 引擎，在运行时利用 Hermitian 对称性仅演化下三角分块。
+    - 噪声信道直接下沉为超算子（相位阻尼、去相位等对角信道下沉为可与相邻门折叠的对角内核），含噪与无噪线路统一使用 C++ 伴随微分，末端测量含噪采样改为从单次精确混合态演化直接抽样。10 比特下 `apply_circuit` 提速 **3×**、梯度计算提速 **2×**，1000-shot 含噪采样从 **278 s 降至 0.12 s**。
+- [STABLE] **OpenMP 线程数按工作量自适应调度**（[`!3168`](https://atomgit.com/mindspore/mindquantum/pull/3168)）：所有 CPU 模拟器与算符稀疏化改为按每 8,192 个振幅分配 1 个线程（以 `OMP_NUM_THREADS` 为上限），梯度 batch 按总线程预算 `workers * team <= MaxThreads` 动态分配并发度，消除了多核服务器在小比特线路上的线程同步退化，中等规模 batch 提速 **1.6×–1.8×**。
+
+#### Algorithm, Examples & AI Skills
+
+- [BETA] **基于 CANN / Ascend C 的昇腾原生 DSB / BSB 求解器（[`qaia-cann` 分支](https://atomgit.com/mindspore/mindquantum/tree/qaia-cann)）**（[`!3162`](https://atomgit.com/mindspore/mindquantum/pull/3162)）：在独立分支 `qaia-cann` 中提供面向 Ascend 910B NPU（需 CANN 9.1 环境从源码构建）的离散模拟分岔（DSB）与弹道模拟分岔（BSB）求解器 `kernel_sb.Solver`。
+    - 将多副本（batch）耦合计算合并为 Cube 核批量矩阵乘（`aclnnMatmul`），配合单 Ascend C Vector 内核融合完成动量、位置与边界更新，并在构造 `Solver` 时将完整多步迭代捕获为设备执行图（Graph Replay）以实现步间零主机同步的重复求解。在 Ascend 910B2（FP32，100 副本，1000 步）上，23 个 QPLIB 二元规划实例较单线程 SciPy 稀疏 CPU 基线中位加速达 **DSB 52.1×**、**BSB 37.8×**（7000 变量 Gset G60 单次求解约 195 ms）。
+- [BETA] **QAIA 通用弹道模拟分岔算法 `GBSB`**（[`!3159`](https://atomgit.com/mindspore/mindquantum/pull/3159)）：在 `mindquantum.algorithm.qaia` 下新增 [`GBSB`](https://arxiv.org/abs/2508.17655) 求解器，支持个体分岔参数的非线性控制，提供 `'cpu-float32'`、`'gpu-float32'` 和 `'npu-float32'` 后端。
+- [STABLE] **解码量子干涉（DQI）与量子回声（OTOC）示例**（[`!3128`](https://atomgit.com/mindspore/mindquantum/pull/3128)、[`!3142`](https://atomgit.com/mindspore/mindquantum/pull/3142)）：在 `example/dqi_mindquantum/` 下新增基于 MindQuantum 的 DQI 组合优化完整实现（[arXiv:2509.08328](https://arxiv.org/abs/2509.08328)）；在 `example/otoc_simulation/` 下新增基于 `mqmps` 的多体 OTOC 光锥扩散模拟（[arXiv:2506.10191](https://arxiv.org/abs/2506.10191)）与 $\text{H}_2$ 分子键长反演示例（[arXiv:2510.19550](https://arxiv.org/abs/2510.19550)）。
+- [STABLE] **MindQuantum AI Agent Skills**（[`!3125`](https://atomgit.com/mindspore/mindquantum/pull/3125)、[`!3126`](https://atomgit.com/mindspore/mindquantum/pull/3126)）：在 `skills/` 下新增 6 个面向 AI 编程助手的领域技能包（涵盖核心 API、变分训练、含噪模拟、QAIA 求解、线路编译与量子化学），可通过 `npx skills add https://atomgit.com/mindspore/mindquantum.git` 安装。
+
+### 问题修复
+
+- **QAIA `LSB` 与 `USB` 算法修复**（[`!3124`](https://atomgit.com/mindspore/mindquantum/pull/3124)）：修复 `LSB` 对数缩放因子指数符号反转（误将右移衰减写为放大）及 `x = 0` 除零问题；将 `USB` 默认自动初始化范围从 `[-0.01, 0.01]` 扩大至 `[-0.1, 0.1]` 以避免被均匀量化归零，修复后两者在 MaxCut 基准上恢复论文级性能（TTS 较 `DSB` 提速 2.0×–2.7×）。
+- **QAIA 跨后端转换与耦合强度归一化修复**：支持在 GPU/NPU 后端直接传入稠密 `numpy.ndarray` 耦合矩阵 `J`；修复 `calc_cut`/`calc_energy` 对外部输入 `x` 的设备/类型转换及 `SB` 在 NPU 下的外场 `h` 转换问题；将 `CAC`/`CFC`/`SFC` 在 CPU 后端的稀疏矩阵平方归一化修正为逐元素平方 `self.J.power(2).sum()`。
+- **多线程梯度异常传播修复**（[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：捕获 `ParallelBatch` 工作线程内的异常并在主调线程重新抛出，修复此前工作线程抛异常直接触发 `std::terminate` 导致 Python 进程崩溃的问题。
+- **`mqmatrix` 导数门、Pauli 信道与测量精度修复**（[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：修复 `apply_gate(..., diff=True)` 未将导数算符支撑集之外的子空间置零的问题；Pauli 信道改为直接累加 $\sum_k p_k P_k \rho P_k$ 以消除浮点舍入产生极小负概率开方时的 `NaN`；测量同时读取双分支权重并校验有限正迹。
+- **OpenQASM `barrier` 解析修复**（[`!3156`](https://atomgit.com/mindspore/mindquantum/pull/3156)）：修复 `OpenQASM().from_string()` 解析作用于多比特寄存器的 `barrier` 指令（如 `qreg q[4]; barrier q;`）时仅保留首个比特的问题。
+- **MindSpore 设备上下文更新与文档修复**（[`!3127`](https://atomgit.com/mindspore/mindquantum/pull/3127)、[`!3130`](https://atomgit.com/mindspore/mindquantum/pull/3130)、[`!3166`](https://atomgit.com/mindspore/mindquantum/pull/3166)）：将 `mindquantum.framework` 中的 `ms.set_context(device_target="CPU")` 更新为 `ms.set_device("CPU")`，并修复多处 API 文档错别字与公式渲染问题。
+
+### 构建系统与工程现代化
+
+- **OpenBLAS 配置期验证与 `ENABLE_MPS` 开关**（[`!3174`](https://atomgit.com/mindspore/mindquantum/pull/3174)）：新增 `FindOpenBLAS.cmake` 在配置阶段验证 `mqmps` 所需的全部符号（解决 macOS 误选 Accelerate 导致链接失败的问题），并提供 `-DENABLE_MPS=ON/OFF` 控制 `mqmps` 编译。
+- **pybind11 ABI 隔离与 `mqrt` 全架构构建**（[`!3137`](https://atomgit.com/mindspore/mindquantum/pull/3137)、[`!3174`](https://atomgit.com/mindspore/mindquantum/pull/3174)）：默认开启 `MQ_ISOLATE_PYBIND11_INTERNALS` 隔离扩展模块内部符号表；`mqrt` 工具现支持在 AArch64 与 x86_64 全架构构建。
+- **构建脚本与工具链改进**（[`!3111`](https://atomgit.com/mindspore/mindquantum/pull/3111)、[`!3153`](https://atomgit.com/mindspore/mindquantum/pull/3153)、[`!3154`](https://atomgit.com/mindspore/mindquantum/pull/3154)、[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：修复连续运行 `build.sh` 的缓存失效问题、`--clean-all` 目录清理问题及 GCC 13+ 下 Catch2 缺失 `<cstdint>` 问题；Python 代码检查统一迁移至 Ruff 并对齐 CI 门禁。
+
+### 破坏性变更与行为变化
+
+- **Python 版本要求**（[`!3111`](https://atomgit.com/mindspore/mindquantum/pull/3111)）：支持版本调整为 **Python 3.9–3.12**，不再支持 Python 3.7 与 3.8。
+- **API 移除与异常修正**（[`!3168`](https://atomgit.com/mindspore/mindquantum/pull/3168)）：移除长期抛 `NotImplementedError` 的 `Simulator.set_threads_number()`（请使用环境变量 `OMP_NUM_THREADS`）；访问 `mindquantum.framework` 不存在的属性时由误抛 `ImportError` 修正为 `AttributeError`。
+- **`mqmatrix` 存储、采样与校验变化**（[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：改为全矩阵存储后单态内存翻倍（同等内存下最大可模拟比特数减 1），$\le 6$ 比特极小线路耗时增加 10%–15%；末端测量含噪采样固定 `seed` 下的具体计数序列与 0.12.0 不同（概率分布不变）；传入 `circ_left`/`simulator_left` 或非法噪声信道参数现在会在执行前立即报错。
+- **构建与 CMake 选项变更**（[`!3127`](https://atomgit.com/mindspore/mindquantum/pull/3127)、[`!3148`](https://atomgit.com/mindspore/mindquantum/pull/3148)、[`!3169`](https://atomgit.com/mindspore/mindquantum/pull/3169)、[`!3174`](https://atomgit.com/mindspore/mindquantum/pull/3174)）：
+    - 要求 **CMake $\ge$ 3.20**、**`pybind11 >= 3.1`**；构建 `mqvector_cq` 需显式开启 `-DENABLE_CUQUANTUM=ON`（或 `build.sh --gpu --cuquantum`）；Linux AArch64 默认开启 `MQ_ARM_SVE=ON`（不支持 SVE 的编译器需传 `-DMQ_ARM_SVE=OFF`）；
+    - 移除 `MQ_BLAS_LIBRARIES`、`MQ_LAPACK_LIBRARIES`、`BLAS_SYMBOL_PREFIX` 缓存变量，改用 `OpenBLAS_ROOT`、`OpenBLAS_LIBRARY`、`OpenBLAS_SYMBOL_PREFIX`；构建脚本默认安装运行与测试依赖，移除 `--only-pytest`（可用 `--no-python-deps` 跳过）。
+
+### 贡献者
+
+感谢以下开发者做出的贡献：
+
+dsdsdshe, huangzhe-2026, liqingyu_2026, lllrt, mangrovecoder, Tsingpy.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindQuantum 0.12.0 Release Notes
 
 ### 主要特性和增强
