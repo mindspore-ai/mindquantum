@@ -29,6 +29,7 @@
 
 #include <acl/acl.h>
 
+#include "core/ascend.h"
 #include "simulator/vector/ascend/kernel_launch.h"
 #include "simulator/vector/ascend/observable.h"
 #include "tiling/matrix/matmul_tiling.h"
@@ -36,47 +37,10 @@
 
 namespace mindquantum::sim::ascend {
 namespace {
-void Check(aclError status, const char* operation) {
-    if (status != ACL_SUCCESS) {
-        const auto* detail = aclGetRecentErrMsg();
-        throw std::runtime_error(std::string("mqvector_npu: ") + operation + " failed (" + std::to_string(status) + ")"
-                                 + (detail ? std::string(": ") + detail : ""));
-    }
-}
-
-void Cleanup(aclError status, const char* operation) noexcept {
-    if (status != ACL_SUCCESS) {
-        std::fprintf(stderr, "mqvector_npu: %s failed during cleanup (%d)\n", operation, status);
-    }
-}
-
-// Preserve a caller-owned context, including when allocation/launch throws.
-// CANN 8.5 rejects SetCurrentContext(nullptr): a previously unbound thread
-// remains bound to our context, but an existing owner's context is restored.
-class ContextScope {
- public:
-    explicit ContextScope(aclrtContext target = nullptr, void (*check)(aclError, const char*) = Check)
-        : target_(target) {
-        const auto status = aclrtGetCurrentContext(&previous_);
-        if (status != ACL_ERROR_RT_CONTEXT_NULL) {
-            check(status, "aclrtGetCurrentContext");
-        }
-        if (target_ && target_ != previous_) {
-            check(aclrtSetCurrentContext(target_), "aclrtSetCurrentContext");
-        }
-    }
-    ~ContextScope() {
-        if (previous_ && previous_ != target_) {
-            Cleanup(aclrtSetCurrentContext(previous_), "restore caller context");
-        }
-    }
-    ContextScope(const ContextScope&) = delete;
-    ContextScope& operator=(const ContextScope&) = delete;
-
- private:
-    aclrtContext previous_ = nullptr;
-    aclrtContext target_;
-};
+using mindquantum::ascend::Check;
+using mindquantum::ascend::Cleanup;
+using mindquantum::ascend::ContextScope;
+using mindquantum::ascend::Transaction;
 
 struct Context {
     aclrtContext handle = nullptr;
@@ -85,26 +49,11 @@ struct Context {
     unsigned cube_cores;
 
     explicit Context(int device) {
-        static std::once_flag initialized;
-        std::call_once(initialized, [] {
-            const auto status = aclInit(nullptr);
-            // ACL may already be owned by another library in this process.
-            if (status != ACL_ERROR_REPEAT_INITIALIZE) {
-                Check(status, "aclInit");
-            }
-        });
+        mindquantum::ascend::Initialize();
         const ContextScope caller;
         Check(aclrtCreateContext(&handle, device), "aclrtCreateContext");
         try {
-            const auto* name = aclrtGetSocName();
-            if (!name) {
-                throw std::runtime_error("aclrtGetSocName returned no device model.");
-            }
-            soc = name;
-            if (soc != MQ_ASCEND_SOC) {
-                throw std::runtime_error("Ascend kernel target " + std::string(MQ_ASCEND_SOC)
-                                         + " does not match device " + soc);
-            }
+            soc = mindquantum::ascend::SocName(MQ_ASCEND_SOC);
             int64_t value = 0;
             Check(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_VECTOR_CORE_NUM, &value), "aclrtGetDeviceInfo");
             if (value <= 0) {
@@ -190,28 +139,6 @@ struct Stream {
         Cleanup(aclrtSynchronizeStream(handle), "aclrtSynchronizeStream");
         Cleanup(aclrtDestroyStream(handle), "aclrtDestroyStream");
     }
-};
-
-// Declare AFTER every temporary buffer/metadata owner used by the transaction.
-// On a launch/sync exception drain the stream before those owners unwind. Never
-// turn a device failure into a successful result or free queued kernel inputs.
-class Transaction {
- public:
-    explicit Transaction(aclrtStream stream) : stream_(stream) {
-    }
-    ~Transaction() {
-        if (!finished_) {
-            Cleanup(aclrtSynchronizeStream(stream_), "drain failed transaction");
-        }
-    }
-    void Finish(const char* operation) {
-        Check(aclrtSynchronizeStream(stream_), operation);
-        finished_ = true;
-    }
-
- private:
-    aclrtStream stream_;
-    bool finished_ = false;
 };
 
 class PairLock {

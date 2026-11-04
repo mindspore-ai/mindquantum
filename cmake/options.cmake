@@ -76,7 +76,7 @@ option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (
 # ==============================================================================
 # Optional simulator backends
 
-option(ENABLE_ASCEND "Build the Ascend 910B statevector backend (requires CANN)" OFF)
+option(ENABLE_ASCEND "Build Ascend 910B statevector and QAIA backends (requires CANN)" OFF)
 option(ENABLE_MPS "Build the matrix product state backend `mqmps` (requires OpenBLAS)" ON)
 
 # ==============================================================================

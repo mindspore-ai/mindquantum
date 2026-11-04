@@ -24,3 +24,8 @@ if(ENABLE_CUDA)
   append_to_property(mq_install_targets GLOBAL qaia_sb_gpu)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/qaia/detail)
 endif()
+
+if(ENABLE_ASCEND)
+  # Isolate ASCConfig's compiler flags from all host C++ targets.
+  add_subdirectory(qaia/ascend/kernels)
+endif()

@@ -55,6 +55,8 @@ class TSB(SB):
             Default: ``linear``.
     """
 
+    _VALID_BACKENDS = ('cpu-float32', 'gpu-float32')
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -69,11 +71,6 @@ class TSB(SB):
         strategy="linear",
     ):
         """Construct TSB algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
         super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
 
         self.strategy = strategy
@@ -160,6 +157,8 @@ class USB(SB):
         threshold (int): dynamic threshold. Default: ``10``.
     """
 
+    _VALID_BACKENDS = ('cpu-float32', 'gpu-float32')
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -174,11 +173,6 @@ class USB(SB):
         threshold=10,
     ):
         """Construct USB algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
         super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
         self.threshold = threshold
 
@@ -261,6 +255,8 @@ class LSB(SB):
         threshold (int): dynamic threshold. Default: ``8``.
     """
 
+    _VALID_BACKENDS = ('cpu-float32', 'gpu-float32')
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -275,11 +271,6 @@ class LSB(SB):
         threshold=8,
     ):
         """Construct LSB algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
         super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
         self.threshold = threshold
 
