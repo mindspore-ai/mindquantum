@@ -101,7 +101,7 @@ Here is an exhaustive list of all CMake options available for customization
 | DISABLE_FORTRAN_COMPILER        | Forcefully disable the Fortran compiler for some 3rd party libraries  | ON                  |
 | ENABLE_CMAKE_DEBUG              | Enable verbose output to debug CMake issues                           | OFF                 |
 | ENABLE_CUDA                     | Enable the use of CUDA code                                           | OFF                 |
-| ENABLE_ASCEND                   | Build the Ascend 910B `mqvector_npu` backend (requires CANN)           | OFF                 |
+| ENABLE_ASCEND                   | Build Ascend 910B statevector and QAIA backends (requires CANN)      | OFF                 |
 | ENABLE_GITEE                    | Use Gitee instead of GitHub for (some) third-party dependencies       | OFF                 |
 | ENABLE_MPS                      | Build the matrix product state `mqmps` backend (requires OpenBLAS)    | ON                  |
 | ENABLE_MD                       | Use /MD, /MDd flags when compiling (MSVC only)                        | OFF                 |
@@ -121,7 +121,8 @@ Here is an exhaustive list of all CMake options available for customization
 | USE_VERBOSE_MAKEFILE            | Generate verbose Makefiles (if supported)                             | ON                  |
 
 For Ascend build instructions, supported operations, memory costs and reproducible
-hardware benchmarks, see [the mqvector_npu guide](docs/mqvector_npu.md).
+hardware benchmarks, see [the mqvector_npu guide](docs/mqvector_npu.md) and
+[the QAIA CANN guide](docs/qaia_ascend.md).
 
 Here are some more precisions on some of the above options:
 

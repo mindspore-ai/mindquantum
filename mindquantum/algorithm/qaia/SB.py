@@ -13,12 +13,24 @@
 # limitations under the License.
 # ============================================================================
 """Simulated bifurcation (SB) algorithms and its variants."""
+
 # pylint: disable=invalid-name
+import hashlib
+
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from mindquantum.utils.type_value_check import _check_number_type, _check_value_should_not_less, _check_int_type
-from .QAIA import QAIA
+from mindquantum.utils.type_value_check import _check_int_type, _check_number_type, _check_value_should_not_less
+
+from ._ascend_sb import (
+    _array,
+    _check_device_id,
+    _check_dimensions,
+    _get_plan_type,
+    _matrix,
+    _parameters,
+)
+from .QAIA import QAIA, _check_ising_matrix, _check_ising_matrix_shape
 
 try:
     import torch
@@ -43,7 +55,7 @@ try:
     GPU_AVAILABLE = True
 except ImportError as err:
     GPU_DISABLE_REASON = (
-        "Unable to import SB GPU backend. This backend requires CUDA 11 or higher.\n" f"--> Specific error: {err}"
+        f"Unable to import SB GPU backend. This backend requires CUDA 11 or higher.\n--> Specific error: {err}"
     )
     GPU_AVAILABLE = False
 except RuntimeError as err:
@@ -98,7 +110,7 @@ class SB(QAIA):
             _check_value_should_not_less("xi", 0, xi)
 
         super().__init__(J, h, x, n_iter, batch_size, backend)
-        if self.backend == "cpu-float32":
+        if self.backend not in ("gpu-float32", "npu-float32"):
             self.J = csr_matrix(self.J)
 
         # positive detuning frequency
@@ -109,45 +121,30 @@ class SB(QAIA):
         self.xi = xi
 
         if self.xi is None:
-            if self.backend == "cpu-float32":
-                if h is not None:
-                    self.xi = (
-                        0.5
-                        * np.sqrt(self.N - 1)
-                        / np.sqrt(csr_matrix.power(self.J, 2).sum() + 2 * ((self.h / 2) ** 2).sum())
-                    )
-                else:
-                    self.xi = 0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(self.J, 2).sum())
-            elif self.backend == "gpu-float32":
-                if h is not None:
-                    self.xi = (
-                        0.5
-                        * np.sqrt(self.N - 1)
-                        / torch.sqrt((self.J.to_dense() ** 2).sum() + 2 * ((self.h / 2) ** 2).sum())
-                    )
-                else:
-                    self.xi = 0.5 * np.sqrt(self.N - 1) / torch.sqrt((self.J.to_dense() ** 2).sum())
-            elif self.backend == "npu-float32":
-                if h is not None:
-                    self.xi = (
-                        0.5
-                        * np.sqrt(self.N - 1)
-                        / np.sqrt(
-                            csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum()
-                            + 2 * ((self.h.cpu().numpy() / 2) ** 2).sum()
-                        )
-                    )
-                else:
-                    self.xi = (
-                        0.5 * np.sqrt(self.N - 1) / np.sqrt(csr_matrix.power(csr_matrix(self.J.cpu().numpy()), 2).sum())
-                    )
+            if self.backend == "gpu-float32":
+                norm_squared = (self.J.to_dense() ** 2).sum()
+                if self.h is not None:
+                    norm_squared += 2 * ((self.h / 2) ** 2).sum()
+                norm = torch.sqrt(norm_squared)
+            else:
+                matrix, field = self.J, self.h
+                if self.backend == "npu-float32":
+                    matrix = csr_matrix(matrix.cpu().numpy())
+                    field = None if field is None else field.cpu().numpy()
+                norm_squared = csr_matrix.power(matrix, 2).sum()
+                if field is not None:
+                    norm_squared += 2 * ((field / 2) ** 2).sum()
+                norm = np.sqrt(norm_squared)
+            if norm == 0:
+                raise ValueError("specify xi explicitly when J and h are zero")
+            self.xi = 0.5 * np.sqrt(self.N - 1) / norm
         self.x = x
 
         self.initialize()
 
     def initialize(self):
         """Initialize spin values and momentum."""
-        if self.backend == "cpu-float32":
+        if self.backend not in ("gpu-float32", "npu-float32"):
             if self.x is None:
                 self.x = 0.02 * (np.random.rand(self.N, self.batch_size) - 0.5)
             if self.x.shape[0] != self.N:
@@ -291,7 +288,108 @@ class ASB(SB):  # noqa: N801
                     )
 
 
-class BSB(SB):  # noqa: N801
+class _BoundedSB(SB):
+    """Shared execution-plan ownership for ballistic and discrete SB."""
+
+    _VALID_BACKENDS = SB._VALID_BACKENDS + ('gpu-float16', 'gpu-int8', 'ascend-float32')
+
+    def __init__(
+        self, J, h=None, x=None, n_iter=1000, batch_size=1, dt=1, xi=None, backend='cpu-float32', *, device_id=0
+    ):
+        """Initialize host state; capture an Ascend plan only on the first update."""
+        _check_device_id(device_id)
+        if device_id != 0 and backend != 'ascend-float32':
+            raise ValueError("device_id is only supported by Ascend CANN backends")
+        if backend == 'ascend-float32':
+            # Validate before SB computes its normalization, allocates the
+            # schedule/initial states, or checks optional backend availability.
+            _check_ising_matrix_shape(J)
+            _check_dimensions(J, batch_size, n_iter)
+            _matrix(J)
+            _parameters(1, 0 if xi is None else xi, dt)
+            if h is not None:
+                _array(h, 'h', ((J.shape[0],), (J.shape[0], 1)))
+            if x is not None:
+                _array(x, 'x', ((J.shape[0], batch_size),))
+        super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
+        self.device_id = device_id
+        self._ascend_plan = None
+        self._ascend_key = None
+        if backend in ('gpu-float16', 'gpu-int8'):
+            if not GPU_AVAILABLE:
+                raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
+            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
+
+    def initialize(self):
+        """Validate device layout before allocating random states; retain any cached plan."""
+        if self.backend == 'ascend-float32':
+            _check_dimensions(self.J, self.batch_size, self.n_iter)
+            _parameters(self.delta, self.xi, self.dt)
+            _get_plan_type().validate_layout(self.N, self.batch_size, self.n_iter)
+        super().initialize()
+
+    def _run_ascend(self):
+        """Validate current solver state, refresh the Ascend graph if needed, and execute."""
+        _check_device_id(self.device_id)
+        _check_ising_matrix_shape(self.J)
+        if self.J.shape != (self.N, self.N):
+            raise ValueError("Changing the number of spins requires a new solver")
+        _check_dimensions(self.J, self.batch_size, self.n_iter)
+        # QAIA states stay two-dimensional even for a single replica.
+        shape = ((self.N, self.batch_size),)
+        x, y = _array(self.x, 'x', shape), _array(self.y, 'y', shape)
+        # QAIA exposes mutable coefficients. Hash their CONTENTS, including CSR
+        # structure, so edits in place cannot silently replay a stale problem.
+        matrix = self.J if isinstance(self.J, csr_matrix) else csr_matrix(self.J)
+        arrays = [matrix.data, matrix.indices, matrix.indptr, self.h, self.p]
+        coefficients = tuple(
+            None
+            if value is None
+            else (np.shape(value), np.asarray(value).dtype.str, hashlib.sha256(np.ascontiguousarray(value)).digest())
+            for value in arrays
+        )
+        key = (
+            matrix.shape,
+            isinstance(self.J, np.ndarray),  # Dense symmetry is tolerant; sparse symmetry is exact.
+            coefficients,
+            self.backend,
+            self.device_id,
+            self.batch_size,
+            self.n_iter,
+            self.delta,
+            self.xi,
+            self.dt,
+        )
+        if key != self._ascend_key:
+            # Finish host validation before disposing of a usable graph. Then
+            # release it before capture so two problems never compete for HBM.
+            _check_ising_matrix(self.J)
+            matrix = _matrix(matrix)
+            field = None if self.h is None else _array(self.h, 'h', ((self.N,), (self.N, 1)))
+            pressure = _array(self.p, 'p', ((self.n_iter,),))
+            delta, xi, dt = _parameters(self.delta, self.xi, self.dt)
+            plan_type = _get_plan_type()
+            plan_type.validate_layout(self.N, self.batch_size, self.n_iter)
+            # Drop the old owner BEFORE evaluating the new constructor. Native
+            # RAII releases its graph and HBM; a failed capture leaves no cache.
+            self._ascend_plan = None
+            self._ascend_key = None
+            self._ascend_plan = plan_type(
+                matrix.toarray(),
+                np.zeros(self.N, dtype=np.float32) if field is None else np.ascontiguousarray(field.reshape(-1)),
+                np.ascontiguousarray(pressure),
+                batch=self.batch_size,
+                discrete=self._discrete,
+                delta=delta,
+                xi=xi,
+                dt=dt,
+                device_id=self.device_id,
+            )
+            self._ascend_key = key
+        self.x, self.y = self._ascend_plan.run(x, y)
+
+
+class BSB(_BoundedSB):  # noqa: N801
     r"""
     Ballistic SB algorithm.
 
@@ -307,6 +405,12 @@ class BSB(SB):  # noqa: N801
         or graphs with continuous coefficients. Please try adjusting parameters or consider
         using 'cpu-float32' or 'gpu-float16' in these cases.
 
+        The Ascend CANN backend replaces ``self.x`` and ``self.y`` with FP32 results,
+        without modifying the input arrays. It reuses an execution graph until J/h/p
+        or integration parameters change. Device resources belong to the algorithm
+        object and are released when it is destroyed. This mutable interface is not
+        thread-safe; use separate instances for concurrent runs.
+
     Args:
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
         h (numpy.array): The external field with shape (N, ).
@@ -318,7 +422,10 @@ class BSB(SB):  # noqa: N801
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
         backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
-            'gpu-float16', 'gpu-int8','npu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float16', 'gpu-int8', 'npu-float32' or 'ascend-float32'.
+            The last uses CANN directly in FP32, without PyTorch. Default: ``'cpu-float32'``.
+        device_id (int): Keyword-only ACL logical device ordinal for Ascend CANN.
+            Other backends only accept the default ``0``.
 
     Examples:
         >>> import numpy as np
@@ -332,37 +439,13 @@ class BSB(SB):  # noqa: N801
         [-1. -1. -1. -1. -1.]
     """
 
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        J,
-        h=None,
-        x=None,
-        n_iter=1000,
-        batch_size=1,
-        dt=1,
-        xi=None,
-        backend='cpu-float32',
-    ):
-        """Construct BSB algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32', 'gpu-float16', 'gpu-int8', 'npu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
-
-        if backend in ['cpu-float32', 'gpu-float32', 'npu-float32']:
-            super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
-        elif backend in ['gpu-float16', 'gpu-int8']:
-            super().__init__(J, h, x, n_iter, batch_size, dt, xi)
-            if not GPU_AVAILABLE:
-                raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
-            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
-            self.backend = backend
+    _discrete = False
 
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
-        if self.backend == 'gpu-float16':
+        if self.backend == 'ascend-float32':
+            self._run_ascend()
+        elif self.backend == 'gpu-float16':
             if self.h is not None:
                 h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
                 _qaia_sb.bsb_update_h_half(
@@ -474,12 +557,6 @@ class GBSB(SB):  # noqa: N801
         backend='cpu-float32',
     ):
         """Construct GBSB algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32', 'npu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
-
         _check_number_type("A", A)
         _check_value_should_not_less("A", 0, A)
         super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
@@ -512,9 +589,7 @@ class GBSB(SB):  # noqa: N801
                 if self.h is None:
                     self.y += (-self.p_i * self.x + self.xi * torch.sparse.mm(self.J, self.x)) * self.dt
                 else:
-                    self.y += (
-                        -self.p_i * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
-                    ) * self.dt
+                    self.y += (-self.p_i * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)) * self.dt
 
                 self.x += self.dt * self.y * self.delta
 
@@ -528,9 +603,7 @@ class GBSB(SB):  # noqa: N801
                 if self.h is None:
                     self.y += (-self.p_i * self.x + self.xi * torch.sparse.mm(self.J, self.x)) * self.dt
                 else:
-                    self.y += (
-                        -self.p_i * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)
-                    ) * self.dt
+                    self.y += (-self.p_i * self.x + self.xi * (torch.sparse.mm(self.J, self.x) + self.h)) * self.dt
 
                 self.x += self.dt * self.y * self.delta
 
@@ -539,7 +612,7 @@ class GBSB(SB):  # noqa: N801
                 self.y = torch.where(cond, torch.zeros_like(self.x), self.y)
 
 
-class DSB(SB):  # noqa: N801
+class DSB(_BoundedSB):  # noqa: N801
     r"""
     Discrete SB algorithm.
 
@@ -555,6 +628,12 @@ class DSB(SB):  # noqa: N801
         or graphs with continuous coefficients. Please try adjusting parameters or consider
         using 'cpu-float32' or 'gpu-float16' in these cases.
 
+        The Ascend CANN backend replaces ``self.x`` and ``self.y`` with FP32 results,
+        without modifying the input arrays. It reuses an execution graph until J/h/p
+        or integration parameters change. Device resources belong to the algorithm
+        object and are released when it is destroyed. This mutable interface is not
+        thread-safe; use separate instances for concurrent runs.
+
     Args:
         J (Union[numpy.array, scipy.sparse.spmatrix]): The coupling matrix with shape (N x N).
         h (numpy.array): The external field with shape (N, ).
@@ -566,7 +645,10 @@ class DSB(SB):  # noqa: N801
         dt (float): The step size. Default: ``1``.
         xi (float): positive constant with the dimension of frequency. Default: ``None``.
         backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
-            'gpu-float16', 'gpu-int8','npu-float32'. Default: ``'cpu-float32'``.
+            'gpu-float16', 'gpu-int8', 'npu-float32' or 'ascend-float32'.
+            The last uses CANN directly in FP32, without PyTorch. Default: ``'cpu-float32'``.
+        device_id (int): Keyword-only ACL logical device ordinal for Ascend CANN.
+            Other backends only accept the default ``0``.
 
     Examples:
         >>> import numpy as np
@@ -580,37 +662,13 @@ class DSB(SB):  # noqa: N801
         [ 1. -1. -1. -1. -1.]
     """
 
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        J,
-        h=None,
-        x=None,
-        n_iter=1000,
-        batch_size=1,
-        dt=1,
-        xi=None,
-        backend='cpu-float32',
-    ):
-        """Construct DSB algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32', 'gpu-float16', 'gpu-int8', 'npu-float32'}
-        if not isinstance(backend, str):
-            raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
-
-        if backend in ['cpu-float32', 'gpu-float32', 'npu-float32']:
-            super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
-        elif backend in ['gpu-float16', 'gpu-int8']:
-            super().__init__(J, h, x, n_iter, batch_size, dt, xi)
-            if not GPU_AVAILABLE:
-                raise RuntimeError(f"GPU backend '{backend}' is not available: {GPU_DISABLE_REASON}")
-            _qaia_sb.cuda_init(self.J.shape[0], self.batch_size)
-            self.backend = backend
+    _discrete = True
 
     def update(self):
         """Dynamical evolution based on Modified explicit symplectic Euler method."""
-        if self.backend == 'gpu-float16':
+        if self.backend == 'ascend-float32':
+            self._run_ascend()
+        elif self.backend == 'gpu-float16':
             if self.h is not None:
                 h_broadcast = np.repeat(self.h, self.batch_size).reshape(self.J.shape[0], self.batch_size)
                 _qaia_sb.dsb_update_h_half(

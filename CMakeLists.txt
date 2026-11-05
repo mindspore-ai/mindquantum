@@ -81,6 +81,7 @@ include(os_detection)
 # Options
 
 include(options)
+include(ascend)
 
 # ==============================================================================
 # Package dependencies

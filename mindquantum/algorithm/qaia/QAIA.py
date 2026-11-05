@@ -13,9 +13,11 @@
 # limitations under the License.
 # ============================================================================
 """The base class of QAIA."""
+
 # pylint: disable=invalid-name
 import numpy as np
 from scipy import sparse as sp
+
 from mindquantum.utils.type_value_check import _check_int_type, _check_value_should_not_less
 
 try:
@@ -34,6 +36,29 @@ try:
     _INSTALL_TORCH_NPU = True
 except (ImportError, AssertionError):
     _INSTALL_TORCH_NPU = False
+
+
+def _check_ising_matrix_shape(J):
+    """Check the supported matrix types and square shape without scanning coefficients."""
+    if not isinstance(J, (np.ndarray, sp.spmatrix)):
+        raise TypeError(f"J requires numpy.array or scipy sparse matrix, but get {type(J)}")
+    if len(J.shape) != 2 or J.shape[0] != J.shape[1]:
+        raise ValueError(f"J must be a square matrix, but got shape {J.shape}")
+
+
+def _check_ising_matrix(J):
+    """Validate the high-level Ising contract, also after coefficient edits."""
+    _check_ising_matrix_shape(J)
+    if isinstance(J, np.ndarray):
+        symmetric = np.allclose(J, J.T)
+        diagonal = np.diag(J)
+    else:
+        symmetric = (J != J.T).nnz == 0
+        diagonal = J.diagonal()
+    if not symmetric:
+        raise ValueError("J must be a symmetric matrix.")
+    if not np.all(diagonal == 0):
+        raise ValueError("The diagonal elements of J are not all 0, recommend transferring them to h.")
 
 
 class QAIA:
@@ -55,18 +80,19 @@ class QAIA:
             random values uniformly distributed in [-0.01, 0.01]. Default: ``None``.
         n_iter (int): The number of iterations. Default: ``1000``.
         batch_size (int): The number of sampling. Default: ``1``.
-        backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
-            'gpu-float16', 'gpu-int8','npu-float32'. Default: ``'cpu-float32'``.
+        backend (str): Computation backend and precision to use: 'cpu-float32',
+            'gpu-float32', 'npu-float32'. Default: ``'cpu-float32'``.
     """
+
+    _VALID_BACKENDS = ('cpu-float32', 'gpu-float32', 'npu-float32')
 
     # pylint: disable=too-many-arguments
     def __init__(self, J, h=None, x=None, n_iter=1000, batch_size=1, backend='cpu-float32'):
         """Construct a QAIA algorithm."""
-        valid_backends = {'cpu-float32', 'gpu-float32', 'gpu-float16', 'gpu-int8', 'npu-float32'}
         if not isinstance(backend, str):
             raise TypeError(f"backend requires a string, but get {type(backend)}")
-        if backend not in valid_backends:
-            raise ValueError(f"backend must be one of {valid_backends}")
+        if backend not in self._VALID_BACKENDS:
+            raise ValueError(f"backend must be one of {self._VALID_BACKENDS}")
         if backend == "gpu-float32" and not _INSTALL_TORCH:
             raise ImportError("Please install pytorch before using qaia gpu backend, ensure environment has any GPU.")
         if backend == "npu-float32" and not _INSTALL_TORCH_NPU:
@@ -74,20 +100,7 @@ class QAIA:
                 "Please install torch_npu before using qaia npu backend, ensure environment has any Ascend NPU."
             )
 
-        if not isinstance(J, (np.ndarray, sp.spmatrix)):
-            raise TypeError(f"J requires numpy.array or scipy sparse matrix, but get {type(J)}")
-        if len(J.shape) != 2 or J.shape[0] != J.shape[1]:
-            raise ValueError(f"J must be a square matrix, but got shape {J.shape}")
-        if isinstance(J, np.ndarray):
-            if not np.allclose(J, J.T):
-                raise ValueError("J must be a symmetric matrix.")
-            if not np.all(np.diag(J) == 0):
-                raise ValueError("The diagonal elements of J are not all 0, recommend transferring them to h.")
-        if isinstance(J, sp.spmatrix):
-            if (J != J.T).nnz != 0:
-                raise ValueError("J must be a symmetric matrix.")
-            if not np.all(J.diagonal() == 0):
-                raise ValueError("The diagonal elements of J are not all 0, recommend transferring them to h.")
+        _check_ising_matrix(J)
 
         if h is not None:
             if not isinstance(h, np.ndarray):
@@ -155,7 +168,7 @@ class QAIA:
             x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
-        if self.backend in ["cpu-float32", 'gpu-float16', 'gpu-int8']:
+        if self.backend in ["cpu-float32", 'gpu-float16', 'gpu-int8', 'ascend-float32']:
             if x is None:
                 sign = np.sign(self.x)
             else:
@@ -178,7 +191,7 @@ class QAIA:
             x (numpy.array): The spin value with shape (N x batch_size).
                 If ``None``, the initial spin will be used. Default: ``None``.
         """
-        if self.backend in ["cpu-float32", 'gpu-float16', 'gpu-int8']:
+        if self.backend in ["cpu-float32", 'gpu-float16', 'gpu-int8', 'ascend-float32']:
             if x is None:
                 sign = np.sign(self.x)
             else:

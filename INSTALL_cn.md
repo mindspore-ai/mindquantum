@@ -96,7 +96,7 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 | DISABLE_FORTRAN_COMPILER        | 对于一些第三方库，强制禁止 Fortran 编译器                                    | ON                  |
 | ENABLE_CMAKE_DEBUG              | 启用详细输出来调试CMAKE                                                   | OFF                 |
 | ENABLE_CUDA                     | 启用使用CUDA代码                                                           | OFF                 |
-| ENABLE_ASCEND                   | 构建 Ascend 910B `mqvector_npu` 后端（需要 CANN）                          | OFF                 |
+| ENABLE_ASCEND                   | 构建 Ascend 910B 状态矢量与 QAIA 后端（需要 CANN）                        | OFF                 |
 | ENABLE_GITEE                    | 使用gitee代替github作为（某些）第三方依赖                                   | OFF                 |
 | ENABLE_MPS                      | 构建矩阵乘积态 `mqmps` 后端（需要 OpenBLAS）                                | ON                  |
 | ENABLE_MD                       | 编译时使用 /MD, /MDd 标志 (仅MSVC)                        | OFF                 |
@@ -114,6 +114,9 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 | USE_OPENMP                      | 使用 OpenMP 用于并行计算                            | ON                  |
 | USE_PARALLEL_STL                | 使用 parallel STL 用于并行计算 (使用 TBB 或者别的)          | OFF                 |
 | USE_VERBOSE_MAKEFILE            | 生成详细 Makefiles (如果支持的话)                             | ON                  |
+
+Ascend 的构建、设备选择与性能验证见 [mqvector_npu 指南](docs/mqvector_npu.md) 和
+[QAIA CANN 指南](docs/qaia_ascend.md)。
 
 下面是以上一些选项的更明确的描述：
 

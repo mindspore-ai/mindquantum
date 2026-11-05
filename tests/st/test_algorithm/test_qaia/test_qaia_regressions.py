@@ -108,6 +108,26 @@ def test_sb_coupling_strength(solver_class, backend, coupling, external_field):
     assert float(solver.xi) == pytest.approx(expected, rel=1e-6)
 
 
+@pytest.mark.parametrize('solver_class', [ASB, BSB, GBSB, DSB])
+@pytest.mark.parametrize('n', [1, 3])
+def test_sb_zero_normalization(solver_class, backend, n):
+    """
+    Feature: SB coupling-strength normalization with zero coupling matrix.
+    Description: Initialize SB variants with a zero coupling matrix with and without an external field or explicit xi.
+    Expectation: Raise ValueError when both J and h are zero without xi, and succeed when xi or h is provided.
+    """
+    # The external field belongs in the denominator; zero J alone is not an
+    # error. An explicit xi also makes the zero problem well-defined.
+    matrix = np.zeros((n, n))
+    with np.errstate(divide='raise', invalid='raise'):
+        with pytest.raises(ValueError, match='specify xi explicitly'):
+            solver_class(matrix, n_iter=2, backend=backend)
+        explicit = solver_class(matrix, xi=0.25, n_iter=2, backend=backend)
+        assert float(explicit.xi) == pytest.approx(0.25)
+        with_field = solver_class(matrix, h=np.ones(n), n_iter=2, backend=backend)
+        assert float(with_field.xi) == pytest.approx(0.5 * np.sqrt(n - 1) / np.sqrt(n / 2))
+
+
 @pytest.mark.parametrize('input_kind', ['float_array', 'int_array', 'cpu_tensor', 'device_tensor'])
 def test_qaia_observable_inputs(backend, coupling, external_field, input_kind):
     """
