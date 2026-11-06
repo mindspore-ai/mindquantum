@@ -4,7 +4,7 @@
 
 ## MindQuantum 0.13.0 Release Notes
 
-MindQuantum **0.13.0** 新增面向昇腾 910B NPU 的设备常驻态矢量模拟器后端 `mqvector_npu` 与基于 Ascend C 的 QAIA 原生模拟分岔求解器（`qaia-cann` 分支），引入跨模拟器共享的线路分块执行引擎（`circuit_tiling`）与 Linux AArch64 运行时 Arm SVE 动态派发，基于全矩阵存储全面重写 `mqmatrix` 密度矩阵模拟器，将 CPU 端 OpenMP 并行策略改为按工作量自适应调度，并完成向 Python 3.9–3.12 与模块化构建系统的演进。
+MindQuantum **0.13.0** 新增面向昇腾 910B NPU 的设备常驻态矢量模拟器后端 `mqvector_npu` 以及 QAIA `BSB`/`DSB` 的昇腾 CANN 原生图重放后端 `ascend-float32`，引入跨模拟器共享的线路分块执行引擎（`circuit_tiling`）与 Linux AArch64 运行时 Arm SVE 动态派发，基于全矩阵存储全面重写 `mqmatrix` 密度矩阵模拟器，将 CPU 端 OpenMP 并行策略改为按工作量自适应调度，并完成向 Python 3.9–3.12 与模块化构建系统的演进。
 
 ### 主要特性和增强
 
@@ -22,8 +22,9 @@ MindQuantum **0.13.0** 新增面向昇腾 910B NPU 的设备常驻态矢量模�
 
 #### Algorithm, Examples & AI Skills
 
-- [BETA] **基于 CANN / Ascend C 的昇腾原生 DSB / BSB 求解器（[`qaia-cann` 分支](https://atomgit.com/mindspore/mindquantum/tree/qaia-cann)）**（[`!3162`](https://atomgit.com/mindspore/mindquantum/pull/3162)）：在独立分支 `qaia-cann` 中提供面向 Ascend 910B NPU（需 CANN 9.1 环境从源码构建）的离散模拟分岔（DSB）与弹道模拟分岔（BSB）求解器 `kernel_sb.Solver`。
-    - 将多副本（batch）耦合计算合并为 Cube 核批量矩阵乘（`aclnnMatmul`），配合单 Ascend C Vector 内核融合完成动量、位置与边界更新，并在构造 `Solver` 时将完整多步迭代捕获为设备执行图（Graph Replay）以实现步间零主机同步的重复求解。在 Ascend 910B2（FP32，100 副本，1000 步）上，23 个 QPLIB 二元规划实例较单线程 SciPy 稀疏 CPU 基线中位加速达 **DSB 52.1×**、**BSB 37.8×**（7000 变量 Gset G60 单次求解约 195 ms）。
+- [BETA] **QAIA `BSB` / `DSB` 昇腾 CANN 原生图重放后端 `ascend-float32`**（[`!3162`](https://atomgit.com/mindspore/mindquantum/pull/3162)）：为 [`BSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.BSB.html) 与 [`DSB`](https://www.mindspore.cn/mindquantum/docs/zh-CN/master/algorithm/qaia/mindquantum.algorithm.qaia.DSB.html) 新增不依赖 PyTorch 的原生昇腾 910B 后端 `backend='ascend-float32'`（支持关键字参数 `device_id=0`；原有的 `'npu-float32'` 仍为 PyTorch/`torch_npu` 后端），并在 [`qaia-cann` 分支](https://atomgit.com/mindspore/mindquantum/tree/qaia-cann)提供独立的 QPLIB/Gset 基准评测套件。
+    - **Cube 批量矩阵乘与 `aclmdlRI` 执行图重放**：将多副本（batch）耦合计算合并为严格 FP32 的 Cube 核矩阵乘（`aclnnMatmul`，禁用 `HF32`），配合单 Ascend C Vector 内核（`sb_kernel.asc`）融合完成动量、位置、非弹性边界与下一步 DSB 符号更新；首次 `update()` 将完整多步迭代捕获为 `aclmdlRI` 执行图，后续求解直接重放执行图（通过对 `J`/`h`/`p` 及积分参数的 SHA-256 内容摘要校验自动感知原地修改并重建执行图）。在 Ascend 910B2（100 副本，1000 步）上，23 个 QPLIB 实例较单线程 SciPy 稀疏 CPU 基线中位加速达 **DSB 52.1×**、**BSB 37.8×**。
+    - **需要从源码自行编译**：与 `mqvector_npu` 共用 `-DENABLE_ASCEND=ON -DMQ_ASCEND_SOC=Ascend910B[1-4]` 构建工具链与运行时守卫，**官方预编译的 `.whl` 包不包含该后端**，需加载本地 CANN 环境从源码编译（详见 [`docs/qaia_ascend.md`](./docs/qaia_ascend.md)）。
 - [BETA] **QAIA 通用弹道模拟分岔算法 `GBSB`**（[`!3159`](https://atomgit.com/mindspore/mindquantum/pull/3159)）：在 `mindquantum.algorithm.qaia` 下新增 [`GBSB`](https://arxiv.org/abs/2508.17655) 求解器，支持个体分岔参数的非线性控制，提供 `'cpu-float32'`、`'gpu-float32'` 和 `'npu-float32'` 后端。
 - [STABLE] **解码量子干涉（DQI）与量子回声（OTOC）示例**（[`!3128`](https://atomgit.com/mindspore/mindquantum/pull/3128)、[`!3142`](https://atomgit.com/mindspore/mindquantum/pull/3142)）：在 `example/dqi_mindquantum/` 下新增基于 MindQuantum 的 DQI 组合优化完整实现（[arXiv:2509.08328](https://arxiv.org/abs/2509.08328)）；在 `example/otoc_simulation/` 下新增基于 `mqmps` 的多体 OTOC 光锥扩散模拟（[arXiv:2506.10191](https://arxiv.org/abs/2506.10191)）与 $\text{H}_2$ 分子键长反演示例（[arXiv:2510.19550](https://arxiv.org/abs/2510.19550)）。
 - [STABLE] **MindQuantum AI Agent Skills**（[`!3125`](https://atomgit.com/mindspore/mindquantum/pull/3125)、[`!3126`](https://atomgit.com/mindspore/mindquantum/pull/3126)）：在 `skills/` 下新增 6 个面向 AI 编程助手的领域技能包（涵盖核心 API、变分训练、含噪模拟、QAIA 求解、线路编译与量子化学），可通过 `npx skills add https://atomgit.com/mindspore/mindquantum.git` 安装。
@@ -31,7 +32,7 @@ MindQuantum **0.13.0** 新增面向昇腾 910B NPU 的设备常驻态矢量模�
 ### 问题修复
 
 - **QAIA `LSB` 与 `USB` 算法修复**（[`!3124`](https://atomgit.com/mindspore/mindquantum/pull/3124)）：修复 `LSB` 对数缩放因子指数符号反转（误将右移衰减写为放大）及 `x = 0` 除零问题；将 `USB` 默认自动初始化范围从 `[-0.01, 0.01]` 扩大至 `[-0.1, 0.1]` 以避免被均匀量化归零，修复后两者在 MaxCut 基准上恢复论文级性能（TTS 较 `DSB` 提速 2.0×–2.7×）。
-- **QAIA 跨后端转换与耦合强度归一化修复**：支持在 GPU/NPU 后端直接传入稠密 `numpy.ndarray` 耦合矩阵 `J`；修复 `calc_cut`/`calc_energy` 对外部输入 `x` 的设备/类型转换及 `SB` 在 NPU 下的外场 `h` 转换问题；将 `CAC`/`CFC`/`SFC` 在 CPU 后端的稀疏矩阵平方归一化修正为逐元素平方 `self.J.power(2).sum()`。
+- **QAIA 跨后端转换、参数校验与耦合强度归一化修复**：支持在 GPU/NPU 后端直接传入稠密 `numpy.ndarray` 耦合矩阵 `J`；修复 `calc_cut`/`calc_energy` 对外部输入 `x` 的设备/类型转换及 `SB` 在 NPU 下的外场 `h` 转换问题；将 `CAC`/`CFC`/`SFC` 在 CPU 后端的稀疏矩阵平方归一化修正为逐元素平方 `self.J.power(2).sum()`；在 `SB` 中当 `J` 和 `h` 全为零且未指定 `xi` 时显式抛出 `ValueError`，并按各 `QAIA` 子类严格校验其受支持的 `backend` 集合。
 - **多线程梯度异常传播修复**（[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：捕获 `ParallelBatch` 工作线程内的异常并在主调线程重新抛出，修复此前工作线程抛异常直接触发 `std::terminate` 导致 Python 进程崩溃的问题。
 - **`mqmatrix` 导数门、Pauli 信道与测量精度修复**（[`!3165`](https://atomgit.com/mindspore/mindquantum/pull/3165)）：修复 `apply_gate(..., diff=True)` 未将导数算符支撑集之外的子空间置零的问题；Pauli 信道改为直接累加 $\sum_k p_k P_k \rho P_k$ 以消除浮点舍入产生极小负概率开方时的 `NaN`；测量同时读取双分支权重并校验有限正迹。
 - **OpenQASM `barrier` 解析修复**（[`!3156`](https://atomgit.com/mindspore/mindquantum/pull/3156)）：修复 `OpenQASM().from_string()` 解析作用于多比特寄存器的 `barrier` 指令（如 `qreg q[4]; barrier q;`）时仅保留首个比特的问题。
