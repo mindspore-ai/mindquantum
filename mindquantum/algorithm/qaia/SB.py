@@ -424,8 +424,10 @@ class BSB(_BoundedSB):  # noqa: N801
         backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
             'gpu-float16', 'gpu-int8', 'npu-float32' or 'ascend-float32'.
             The last uses CANN directly in FP32, without PyTorch. Default: ``'cpu-float32'``.
-        device_id (int): Keyword-only ACL logical device ordinal for Ascend CANN.
-            Other backends only accept the default ``0``.
+
+    Keyword Args:
+        device_id (int): ACL logical device ordinal for Ascend CANN.
+            Other backends only accept ``0``. Default: ``0``.
 
     Examples:
         >>> import numpy as np
@@ -647,8 +649,10 @@ class DSB(_BoundedSB):  # noqa: N801
         backend (str): Computation backend and precision to use: 'cpu-float32','gpu-float32',
             'gpu-float16', 'gpu-int8', 'npu-float32' or 'ascend-float32'.
             The last uses CANN directly in FP32, without PyTorch. Default: ``'cpu-float32'``.
-        device_id (int): Keyword-only ACL logical device ordinal for Ascend CANN.
-            Other backends only accept the default ``0``.
+
+    Keyword Args:
+        device_id (int): ACL logical device ordinal for Ascend CANN.
+            Other backends only accept ``0``. Default: ``0``.
 
     Examples:
         >>> import numpy as np
