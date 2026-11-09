@@ -30,7 +30,9 @@ mindquantum.algorithm.qaia.BSB
         - **dt** (float) - 迭代步长。默认值： ``1``。
         - **xi** (float) - 频率维数，正的常数。默认值： ``None``。
         - **backend** (str) - 计算后端和精度：'cpu-float32'、'gpu-float32'、'gpu-float16'、'gpu-int8'、'npu-float32' 或 'ascend-float32'。默认值： ``'cpu-float32'``。'ascend-float32' 直接使用 CANN，以 FP32 执行，无需 PyTorch。
-        - **device_id** (int) - Ascend CANN 的 ACL 逻辑设备号，仅限关键字参数。其他后端只接受默认值 ``0``。
+
+    关键字参数：
+        - **device_id** (int) - Ascend CANN 的 ACL 逻辑设备号。其他后端只接受 ``0``。默认值： ``0``。
 
     .. py:method:: update()
 
