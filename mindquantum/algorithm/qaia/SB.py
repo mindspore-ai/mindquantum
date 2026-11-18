@@ -103,11 +103,22 @@ class SB(QAIA):
     ):
         """Construct SB algorithm."""
         _check_number_type("dt", dt)
+        if not np.isfinite(dt):
+            raise ValueError("dt must be finite values")
         _check_value_should_not_less("dt", 0, dt)
 
         if xi is not None:
             _check_number_type("xi", xi)
+            if not np.isfinite(xi):
+                raise ValueError("xi must be finite values")
             _check_value_should_not_less("xi", 0, xi)
+
+        if backend not in ("gpu-float32", "npu-float32"):
+            _check_ising_matrix_shape(J)
+            matrix = J if isinstance(J, np.ndarray) else J.tocsr().data
+            for name, value in [('J', matrix), ('h', h), ('x', x)]:
+                if isinstance(value, np.ndarray) and not np.isfinite(value).all():
+                    raise ValueError(f"{name} must be finite values")
 
         super().__init__(J, h, x, n_iter, batch_size, backend)
         if self.backend not in ("gpu-float32", "npu-float32"):
