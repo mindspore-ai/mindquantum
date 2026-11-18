@@ -81,6 +81,59 @@ def _as_numpy(value):
     return value.cpu().numpy()
 
 
+@pytest.mark.platform_x86_cpu
+@pytest.mark.parametrize(
+    'solver_class, backend',
+    [
+        (BSB, 'cpu-float32'),
+        (DSB, 'cpu-float32'),
+        (GBSB, 'cpu-float32'),
+        (BSB, 'gpu-float16'),
+        (BSB, 'gpu-int8'),
+        (DSB, 'gpu-float16'),
+        (DSB, 'gpu-int8'),
+    ],
+)
+@pytest.mark.parametrize('invalid', [np.nan, np.inf, -np.inf])
+@pytest.mark.parametrize('input_name', ['J', 'h', 'x'])
+@pytest.mark.parametrize('sparse', [False, True])
+def test_sb_nonfinite_inputs(solver_class, backend, invalid, input_name, sparse):
+    """
+    Feature: SB finite input validation.
+    Description: Initialize NumPy-path SB variants with non-finite coupling, field, or spins.
+    Expectation: Reject the input explicitly before normalization or evolution.
+    """
+    matrix = _COUPLING.copy()
+    field = np.ones(3)
+    spins = np.zeros((3, 2))
+    if input_name == 'J':
+        matrix[0, 1] = matrix[1, 0] = invalid
+    elif input_name == 'h':
+        field[0] = invalid
+    else:
+        spins[0, 0] = invalid
+    if sparse:
+        matrix = csr_matrix(matrix)
+    with np.errstate(all='raise'):
+        with pytest.raises(ValueError, match=f'{input_name} must be finite values'):
+            solver_class(matrix, h=field, x=spins, batch_size=2, n_iter=2, backend=backend)
+
+
+@pytest.mark.platform_x86_cpu
+@pytest.mark.parametrize('solver_class', [BSB, DSB, GBSB])
+@pytest.mark.parametrize('invalid', [np.nan, np.inf, -np.inf])
+@pytest.mark.parametrize('parameter', ['dt', 'xi'])
+def test_sb_nonfinite_parameters(solver_class, invalid, parameter):
+    """
+    Feature: SB finite scalar validation.
+    Description: Initialize CPU SB variants with non-finite time step or coupling strength.
+    Expectation: Reject the parameter explicitly before normalization or evolution.
+    """
+    with np.errstate(all='raise'):
+        with pytest.raises(ValueError, match=f'{parameter} must be finite values'):
+            solver_class(_COUPLING.copy(), n_iter=2, **{parameter: invalid})
+
+
 @pytest.mark.parametrize('solver_class', [CAC, CFC, SFC])
 def test_cim_coupling_strength(solver_class, backend, coupling):
     """
