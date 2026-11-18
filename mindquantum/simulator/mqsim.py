@@ -22,6 +22,7 @@ from scipy.linalg import eigvals
 import mindquantum as mq
 from mindquantum.core.circuit import Circuit
 from mindquantum.core.gates import BarrierGate, BasicGate, Measure, MeasureResult
+from mindquantum.core.gates.basic import ParameterGate
 from mindquantum.core.gates.basicgate import MultiParamsGate
 from mindquantum.core.operators import Hamiltonian
 from mindquantum.core.parameterresolver import ParameterResolver
@@ -45,6 +46,12 @@ from mindquantum.utils.type_value_check import (
 from ..utils.string_utils import ket_string, density_matrix_ket_string
 from .backend_base import BackendBase
 from .utils import GradOpsWrapper, _thread_balance
+
+
+def _check_finite_parameters(pr):
+    """Check that a parameter resolver contains only finite values."""
+    if not np.isfinite(pr.const) or (len(pr) and not np.isfinite(list(pr.values())).all()):
+        raise ValueError("Parameter values must be finite.")
 
 
 # pylint: disable=abstract-method,too-many-arguments
@@ -111,6 +118,7 @@ class MQSim(BackendBase):
             if pr is None:
                 raise ValueError("Applying a parameterized circuit needs a parameter_resolver.")
             pr = _check_and_generate_pr_type(pr, circuit.params_name)
+            _check_finite_parameters(pr)
             if pr.is_complex:
                 warnings.warn(
                     "Simulator does not support complex number, the imaginary part will be ignored",
@@ -119,6 +127,10 @@ class MQSim(BackendBase):
                 )
         else:
             pr = ParameterResolver()
+        for gate in circuit:
+            if isinstance(gate, ParameterGate):
+                for coefficient in gate.get_parameters():
+                    _check_finite_parameters(coefficient)
         res = self.sim.apply_circuit(circuit.get_cpp_obj(), pr)
         if res:
             out = MeasureResult()
@@ -147,6 +159,7 @@ class MQSim(BackendBase):
                     pr = _check_and_generate_pr_type(pr, list(set(sum([p.params_name for p in gate.prs], []))))
                 else:
                     pr = _check_and_generate_pr_type(pr, gate.coeff.params_name)
+                _check_finite_parameters(pr)
                 if pr.is_complex:
                     warnings.warn(
                         "Simulator does not support complex number, the imaginary part will be ignored",
@@ -155,6 +168,9 @@ class MQSim(BackendBase):
                     )
             else:
                 pr = ParameterResolver()
+            if isinstance(gate, ParameterGate):
+                for coefficient in gate.get_parameters():
+                    _check_finite_parameters(coefficient)
             if isinstance(gate, Measure):
                 return self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
             self.sim.apply_gate(gate.get_cpp_obj(), pr, diff)
