@@ -568,9 +568,11 @@ class MQSim(BackendBase):
 
     def _set_matrix_state(self, state: np.ndarray):
         """Set state for matrix simulator."""
+        if not np.isfinite(state).all():
+            raise ValueError('Quantum state amplitudes must be finite.')
         if len(state.shape) == 1:
             norm_factor = np.sqrt(np.sum(np.abs(state) ** 2))
-            if norm_factor == 0.0:
+            if not np.isfinite(norm_factor) or norm_factor == 0.0:
                 raise ValueError("Wrong quantum state.")
             self.sim.set_qs(state / norm_factor)
         elif len(state.shape) == 2:
@@ -580,9 +582,13 @@ class MQSim(BackendBase):
             if (state.diagonal() < 0).any():
                 raise ValueError("the diagonal terms in density matrix cannot be negative.")
             norm_factor = np.real(np.trace(state))
-            if norm_factor == 0.0:
+            if not np.isfinite(norm_factor) or norm_factor == 0.0:
                 raise ValueError("Wrong quantum state.")
-            self.sim.set_dm(state / norm_factor)
+            with np.errstate(over='ignore', invalid='ignore'):
+                normalized = state / norm_factor
+            if not np.isfinite(normalized).all():
+                raise ValueError("Wrong quantum state.")
+            self.sim.set_dm(normalized)
         else:
             raise ValueError("State must be 1D vector or 2D density matrix")
 
@@ -590,8 +596,10 @@ class MQSim(BackendBase):
         """Set state for vector simulator."""
         if len(state.shape) != 1:
             raise ValueError(f"vec requires a 1-dimensional array, but get {state.shape}")
+        if not np.isfinite(state).all():
+            raise ValueError('Quantum state amplitudes must be finite.')
         norm_factor = np.sqrt(np.sum(np.abs(state) ** 2))
-        if norm_factor == 0.0:
+        if not np.isfinite(norm_factor) or norm_factor == 0.0:
             raise ValueError("Wrong quantum state.")
         self.sim.set_qs(state / norm_factor)
 
