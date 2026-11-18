@@ -1595,8 +1595,7 @@ VT<typename MPSState<qs_policy_t_>::py_qs_data_t> MPSState<qs_policy_t_>::GetRed
     {
 #pragma omp single
         {
-#pragma omp taskgroup
-            { dfs_parallel(0, 0, std::move(init_env), 0, 0); }
+            dfs_parallel(0, 0, std::move(init_env), 0, 0);
         }
     }
 

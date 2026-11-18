@@ -621,10 +621,14 @@ class MQSim(BackendBase):
         if isinstance(kept_qubits, int):
             kept_qubits = [kept_qubits]
         _check_input_type("kept_qubits", (int, Iterable), kept_qubits)
+        if len(kept_qubits) == 0:
+            raise ValueError("kept_qubits cannot be empty.")
         if len(set(kept_qubits)) != len(kept_qubits):
             raise ValueError("kept_qubits cannot contain repeated indices.")
         if len(kept_qubits) >= self.n_qubits:
             raise ValueError("Number of kept qubits must be less than total number of qubits.")
+        if min(kept_qubits) < 0:
+            raise ValueError("kept_qubits cannot contain negative indices.")
         if max(kept_qubits) >= self.n_qubits:
             raise ValueError(f"Qubit index {max(kept_qubits)} is out of range for a {self.n_qubits}-qubit system.")
         return np.asarray(self.sim.get_reduced_density_matrix(kept_qubits))

@@ -17,6 +17,7 @@
 #ifndef MINDQUANTUM_DEVICE_TOPOLOGY_HPP_
 #define MINDQUANTUM_DEVICE_TOPOLOGY_HPP_
 #include <algorithm>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>
