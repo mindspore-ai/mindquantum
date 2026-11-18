@@ -87,7 +87,8 @@ cd ~/mindquantum
 bash build.sh --gitee --gpu
 ```
 
-Make **Windows system** sure that MinGW-W64 and CMake > = 3.18.3 are installed, and then run the following command:
+On **Windows**, install MinGW-w64 (see [Windows toolchain requirements](INSTALL.md#windows))
+and CMake >= 3.18.3, then run:
 
 ```bash
 cd ~/mindquantum

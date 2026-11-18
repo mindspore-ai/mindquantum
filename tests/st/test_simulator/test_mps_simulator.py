@@ -14,6 +14,9 @@
 # ============================================================================
 """Tests for mqmps simulator backend."""
 
+import os
+import subprocess
+import sys
 from typing import Dict, Optional
 
 import numpy as np
@@ -92,6 +95,57 @@ def test_mqmps_statevector_matches_mqvector():
     sim_mps.apply_circuit(circ, pr=pr)
 
     _assert_statevector_close_up_to_global_phase(sim_vec.get_qs(), sim_mps.get_qs(), atol=1e-8)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("threads", [1, 4])
+def test_mqmps_small_statevectors_in_subprocess(threads):
+    """
+    Feature: MPS simulator statevector output in fresh processes.
+    Description: Exercise empty, single-qubit, and controlled circuits with one and four OpenMP threads.
+    Expectation: Each process exits normally and returns the expected statevectors up to global phase.
+    """
+    code = """
+import numpy as np
+from mindquantum.core.circuit import Circuit
+from mindquantum.simulator import Simulator
+
+
+def assert_statevector(actual, expected):
+    phase = np.exp(-1j * np.angle(np.vdot(expected, actual)))
+    np.testing.assert_allclose(actual * phase, expected, atol=1e-8)
+
+
+for n_qubits in (1, 2, 4):
+    sim = Simulator("mqmps", n_qubits, seed=7, max_bond_dimension=0)
+    expected = np.zeros(1 << n_qubits, dtype=np.complex128)
+    expected[0] = 1
+    assert_statevector(sim.get_qs(), expected)
+    sim.apply_circuit(Circuit().h(0))
+    expected[0] = expected[1] = np.sqrt(0.5)
+    assert_statevector(sim.get_qs(), expected)
+    if n_qubits > 1:
+        sim.apply_circuit(Circuit().x(n_qubits - 1, 0))
+        expected[1] = 0
+        expected[(1 << (n_qubits - 1)) | 1] = np.sqrt(0.5)
+        assert_statevector(sim.get_qs(), expected)
+"""
+    env = os.environ.copy()
+    env["OMP_NUM_THREADS"] = str(threads)
+    result = subprocess.run(
+        [sys.executable, "-X", "faulthandler", "-c", code],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=60,
+    )
+    assert result.returncode == 0, (
+        f"Subprocess exited with returncode={result.returncode}\n"
+        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
 
 
 def test_mqmps_expectation_matches_mqvector():

@@ -30,6 +30,16 @@ set(CMAKE_CUDA_EXTENSIONS OFF)
 
 # ------------------------------------------------------------------------------
 
+if(MINGW AND X86_64 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  check_compiler_flags(CXX _mingw_unaligned_vector_move "-Wa,-muse-unaligned-vector-move")
+  if(NOT _mingw_unaligned_vector_move)
+    message(FATAL_ERROR "MinGW x86_64 requires GNU binutils 2.38+ with -muse-unaligned-vector-move (GCC PR 54412)")
+  endif()
+  add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-Wa,-muse-unaligned-vector-move>")
+endif()
+
+# ------------------------------------------------------------------------------
+
 # Always generate position independent code
 include(CheckPIESupported)
 check_pie_supported(LANGUAGES C CXX)
