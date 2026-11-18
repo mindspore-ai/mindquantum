@@ -170,6 +170,65 @@ def test_apply_circuit_and_hermitian(config):
 
 
 @pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("backend", ['mqvector', 'mqmatrix'])
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf, complex(0, np.inf), 1e300, 0.0])
+def test_set_qs_invalid_vector(backend, dtype, value):
+    """
+    Feature: CPU simulator set_qs input validation.
+    Description: Set a state vector with NaN, Inf, overflowing or zero amplitudes.
+    Expectation: ValueError is raised and the simulator state is unchanged.
+    """
+    sim = Simulator(backend, 3, dtype=dtype)
+    original = sim.get_qs()
+    with np.errstate(over='ignore', invalid='ignore'):
+        with pytest.raises(ValueError):
+            sim.set_qs(np.full(8, value))
+    np.testing.assert_array_equal(sim.get_qs(), original)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf, complex(0, np.inf), 1e308, 0.0])
+def test_set_qs_invalid_density_matrix(dtype, value):
+    """
+    Feature: CPU density matrix simulator set_qs input validation.
+    Description: Set a density matrix with NaN, Inf, overflowing or zero trace.
+    Expectation: ValueError is raised and the simulator state is unchanged.
+    """
+    sim = Simulator('mqmatrix', 3, dtype=dtype)
+    original = sim.get_qs()
+    state = np.zeros((8, 8), dtype=np.complex128)
+    np.fill_diagonal(state, value)
+    with np.errstate(over='ignore', invalid='ignore'):
+        with pytest.raises(ValueError):
+            sim.set_qs(state)
+    np.testing.assert_array_equal(sim.get_qs(), original)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("dtype", [mq.complex64, mq.complex128])
+def test_set_qs_density_matrix_normalization_overflow(dtype):
+    """
+    Feature: CPU density matrix simulator set_qs input validation.
+    Description: Set a density matrix whose tiny trace makes normalized off-diagonal terms overflow.
+    Expectation: ValueError is raised and the simulator state is unchanged.
+    """
+    sim = Simulator('mqmatrix', 1, dtype=dtype)
+    original = sim.get_qs()
+    state = np.array([[1e-300, 1e10], [1e10, 1e-300]], dtype=np.complex128)
+    with pytest.raises(ValueError):
+        sim.set_qs(state)
+    np.testing.assert_array_equal(sim.get_qs(), original)
+
+
+@pytest.mark.level0
 @pytest.mark.platform_x86_gpu_training
 @pytest.mark.platform_x86_cpu
 @pytest.mark.env_onecard
