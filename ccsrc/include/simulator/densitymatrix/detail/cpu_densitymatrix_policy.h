@@ -30,6 +30,7 @@
 #include "math/tensor/traits.h"
 #include "ops/hamiltonian.h"
 #include "simulator/circuit_tiling/circuit_tiling.h"
+#include "simulator/worker_scratch.h"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // Storage and full-state kernels of the CPU density matrix simulator.
@@ -82,10 +83,11 @@ struct CPUDensityMatrixPolicy {
     // Circuit tiles
     // ========================================================================================================
 
-    static void ApplyCircuitTile(qs_data_p_t qs, const circuit_tiling::PreparedTile<py_qs_data_t>& tile, index_t dim);
+    static void ApplyCircuitTile(qs_data_p_t qs, const circuit_tiling::PreparedTile<py_qs_data_t>& tile, index_t dim,
+                                 WorkerScratch<calc_type>& scratch);
     static void ApplyAdjointTileProgram(qs_data_p_t shared_state, const std::vector<qs_data_p_t>& batch_states,
                                         const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim,
-                                        VVT<py_qs_data_t>* output);
+                                        VVT<py_qs_data_t>* output, WorkerScratch<calc_type>& scratch);
 
     // Measurement
     // ========================================================================================================

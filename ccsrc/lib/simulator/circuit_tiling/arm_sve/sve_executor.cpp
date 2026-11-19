@@ -23,26 +23,36 @@
 #include "simulator/circuit_tiling/detail/tile_engine.h"
 
 namespace mindquantum::sim::circuit_tiling::arm_sve {
+template <typename calc_type>
+void ReserveScratch(WorkerScratch<calc_type>& scratch, size_t logical_size, int threads) {
+    detail::ReserveScratch<detail::SveTileRuntime<calc_type>>(scratch, logical_size, threads);
+}
+
 template <typename value_t>
-void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {
-    detail::ApplyTile<detail::SveTileRuntime<typename value_t::value_type>>(state, tile, threads);
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads,
+               WorkerScratch<typename value_t::value_type>& scratch) {
+    detail::ApplyTile<detail::SveTileRuntime<typename value_t::value_type>>(state, tile, threads, scratch);
 }
 
 template <typename value_t>
 void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
                          const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
-                         int threads) {
+                         int threads, WorkerScratch<typename value_t::value_type>& scratch) {
     detail::ApplyAdjointProgram<detail::SveTileRuntime<typename value_t::value_type>>(
-        shared_state, batch_states, program, output, conjugate_output, threads);
+        shared_state, batch_states, program, output, conjugate_output, threads, scratch);
 }
 
-template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&, int);
-template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&, int);
+template void ReserveScratch(WorkerScratch<float>&, size_t, int);
+template void ReserveScratch(WorkerScratch<double>&, size_t, int);
+template void ApplyTile<std::complex<float>>(std::complex<float>*, const PreparedTile<std::complex<float>>&, int,
+                                             WorkerScratch<float>&);
+template void ApplyTile<std::complex<double>>(std::complex<double>*, const PreparedTile<std::complex<double>>&, int,
+                                              WorkerScratch<double>&);
 template void ApplyAdjointProgram<std::complex<float>>(std::complex<float>*, const std::vector<std::complex<float>*>&,
                                                        const AdjointProgram<std::complex<float>>&,
-                                                       VVT<std::complex<float>>*, bool, int);
+                                                       VVT<std::complex<float>>*, bool, int, WorkerScratch<float>&);
 template void ApplyAdjointProgram<std::complex<double>>(std::complex<double>*,
                                                         const std::vector<std::complex<double>*>&,
                                                         const AdjointProgram<std::complex<double>>&,
-                                                        VVT<std::complex<double>>*, bool, int);
+                                                        VVT<std::complex<double>>*, bool, int, WorkerScratch<double>&);
 }  // namespace mindquantum::sim::circuit_tiling::arm_sve

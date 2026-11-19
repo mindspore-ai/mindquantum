@@ -195,6 +195,10 @@ struct TileLayout {
     // swapped are conjugate transposes of each other, so a runtime may evolve
     // only one of them and write the other as its mirror.
     qbit_t mirror_shift = 0;
+
+    [[nodiscard]] auto ScratchSize(size_t blocks = 1) const noexcept -> size_t {
+        return blocks * dimension + workspace_size;
+    }
 };
 
 template <typename value_t>

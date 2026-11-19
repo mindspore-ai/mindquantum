@@ -81,8 +81,8 @@ class Kernels {
                                            size_t dimension) -> value_t {
         auto result = backend_t::Zero();
         for (size_t basis = 0; basis < dimension; ++basis) {
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, basis),
-                                                backend_t::Load(ket, basis));
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, basis),
+                                                backend_t::Load(predicate, ket, basis));
         }
         return backend_t::Reduce(predicate, result);
     }
@@ -121,13 +121,13 @@ class Kernels {
                                              storage_t* tile, storage_t*) {
         if (kernel.external_z_mask == 0) {
             for (const auto& scale : kernel.scales) {
-                backend_t::Store(
-                    tile, scale.basis, predicate,
-                    backend_t::MultiplyCoefficient(predicate, backend_t::Load(tile, scale.basis), scale.factor));
+                backend_t::Store(tile, scale.basis, predicate,
+                                 backend_t::MultiplyCoefficient(
+                                     predicate, backend_t::Load(predicate, tile, scale.basis), scale.factor));
             }
             for (const auto& pair : kernel.pairs) {
-                const auto lhs = backend_t::Load(tile, pair.lhs);
-                const auto rhs = backend_t::Load(tile, pair.rhs);
+                const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+                const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
                 backend_t::Store(tile, pair.lhs, predicate,
                                  backend_t::MultiplyCoefficient(predicate, rhs, pair.lhs_from_rhs));
                 backend_t::Store(tile, pair.rhs, predicate,
@@ -139,12 +139,12 @@ class Kernels {
         const auto negative = backend_t::ExternalParity(predicate, state_base, index_context, kernel.external_z_mask);
         for (const auto& scale : kernel.scales) {
             backend_t::Store(tile, scale.basis, predicate,
-                             backend_t::MultiplyDynamic(predicate, backend_t::Load(tile, scale.basis),
+                             backend_t::MultiplyDynamic(predicate, backend_t::Load(predicate, tile, scale.basis),
                                                         backend_t::SignedCoefficient(scale.factor, negative)));
         }
         for (const auto& pair : kernel.pairs) {
-            const auto lhs = backend_t::Load(tile, pair.lhs);
-            const auto rhs = backend_t::Load(tile, pair.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
             backend_t::Store(
                 tile, pair.lhs, predicate,
                 backend_t::MultiplyDynamic(predicate, rhs, backend_t::SignedCoefficient(pair.lhs_from_rhs, negative)));
@@ -159,13 +159,13 @@ class Kernels {
                                              storage_t* tile, storage_t*) {
         if (kernel.coefficients_prepared) {
             for (const auto& scale : kernel.scales) {
-                backend_t::Store(
-                    tile, scale.basis, predicate,
-                    backend_t::MultiplyCoefficient(predicate, backend_t::Load(tile, scale.basis), scale.factor));
+                backend_t::Store(tile, scale.basis, predicate,
+                                 backend_t::MultiplyCoefficient(
+                                     predicate, backend_t::Load(predicate, tile, scale.basis), scale.factor));
             }
             for (const auto& pair : kernel.pairs) {
-                const auto lhs = backend_t::Load(tile, pair.lhs);
-                const auto rhs = backend_t::Load(tile, pair.rhs);
+                const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+                const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
                 auto out_lhs = backend_t::Multiply(predicate, lhs, kernel.cosine);
                 auto out_rhs = backend_t::Multiply(predicate, rhs, kernel.cosine);
                 out_lhs = backend_t::MultiplyAddCoefficient(predicate, out_lhs, rhs, pair.lhs_from_rhs);
@@ -182,12 +182,13 @@ class Kernels {
             auto coefficient = backend_t::Broadcast(value_t{kernel.cosine, 0});
             coefficient = backend_t::Add(predicate, coefficient,
                                          backend_t::SignedCoefficient(minus_i_sine * scale.factor, negative));
-            backend_t::Store(tile, scale.basis, predicate,
-                             backend_t::MultiplyDynamic(predicate, backend_t::Load(tile, scale.basis), coefficient));
+            backend_t::Store(
+                tile, scale.basis, predicate,
+                backend_t::MultiplyDynamic(predicate, backend_t::Load(predicate, tile, scale.basis), coefficient));
         }
         for (const auto& pair : kernel.pairs) {
-            const auto lhs = backend_t::Load(tile, pair.lhs);
-            const auto rhs = backend_t::Load(tile, pair.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
             auto out_lhs = backend_t::Multiply(predicate, lhs, kernel.cosine);
             auto out_rhs = backend_t::Multiply(predicate, rhs, kernel.cosine);
             out_lhs = backend_t::MultiplyAddDynamic(
@@ -204,7 +205,7 @@ class Kernels {
         for (const auto& scale : kernel.scales) {
             backend_t::Store(
                 tile, scale.basis, predicate,
-                backend_t::MultiplyCoefficient(predicate, backend_t::Load(tile, scale.basis), scale.factor));
+                backend_t::MultiplyCoefficient(predicate, backend_t::Load(predicate, tile, scale.basis), scale.factor));
         }
     }
 
@@ -212,8 +213,8 @@ class Kernels {
                                              const index_context_t&, storage_t* tile, storage_t*) {
         constexpr auto scale = static_cast<calc_type>(M_SQRT1_2);
         for (const auto& pair : kernel.pairs) {
-            const auto lhs = backend_t::Load(tile, pair.lhs);
-            const auto rhs = backend_t::Load(tile, pair.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
             backend_t::Store(tile, pair.lhs, predicate,
                              backend_t::Multiply(predicate, backend_t::Add(predicate, lhs, rhs), scale));
             backend_t::Store(tile, pair.rhs, predicate,
@@ -224,8 +225,8 @@ class Kernels {
     MQ_ALWAYS_INLINE static void ApplyKernel(const PairMatrixKernel<value_t>& kernel, predicate_t predicate,
                                              state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
-            const auto lhs = backend_t::Load(tile, pair.lhs);
-            const auto rhs = backend_t::Load(tile, pair.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
             auto out_lhs = backend_t::Zero();
             auto out_rhs = backend_t::Zero();
             out_lhs = backend_t::MultiplyAddCoefficient(predicate, out_lhs, lhs, kernel.matrix[0]);
@@ -240,8 +241,8 @@ class Kernels {
     MQ_ALWAYS_INLINE static void ApplyKernel(const SwapKernel& kernel, predicate_t predicate, state_index_t,
                                              const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
-            const auto lhs = backend_t::Load(tile, pair.lhs);
-            const auto rhs = backend_t::Load(tile, pair.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
             backend_t::Store(tile, pair.lhs, predicate, rhs);
             backend_t::Store(tile, pair.rhs, predicate, lhs);
         }
@@ -250,8 +251,8 @@ class Kernels {
     MQ_ALWAYS_INLINE static void ApplyKernel(const ISwapKernel<value_t>& kernel, predicate_t predicate,
                                              state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& pair : kernel.pairs) {
-            const auto lhs = backend_t::Load(tile, pair.lhs);
-            const auto rhs = backend_t::Load(tile, pair.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, pair.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, pair.rhs);
             backend_t::Store(tile, pair.lhs, predicate, backend_t::MultiplyCoefficient(predicate, rhs, kernel.phase));
             backend_t::Store(tile, pair.rhs, predicate, backend_t::MultiplyCoefficient(predicate, lhs, kernel.phase));
         }
@@ -260,8 +261,8 @@ class Kernels {
     MQ_ALWAYS_INLINE static void ApplyKernel(const FSimKernel<value_t>& kernel, predicate_t predicate,
                                              state_index_t, const index_context_t&, storage_t* tile, storage_t*) {
         for (const auto& indices : kernel.indices) {
-            const auto lhs = backend_t::Load(tile, indices.lhs);
-            const auto rhs = backend_t::Load(tile, indices.rhs);
+            const auto lhs = backend_t::Load(predicate, tile, indices.lhs);
+            const auto rhs = backend_t::Load(predicate, tile, indices.rhs);
             auto out_lhs = backend_t::Zero();
             auto out_rhs = backend_t::Zero();
             out_lhs = backend_t::MultiplyAddCoefficient(predicate, out_lhs, lhs, kernel.exchange[0]);
@@ -270,9 +271,9 @@ class Kernels {
             out_rhs = backend_t::MultiplyAddCoefficient(predicate, out_rhs, rhs, kernel.exchange[3]);
             backend_t::Store(tile, indices.lhs, predicate, out_lhs);
             backend_t::Store(tile, indices.rhs, predicate, out_rhs);
-            backend_t::Store(
-                tile, indices.both, predicate,
-                backend_t::MultiplyCoefficient(predicate, backend_t::Load(tile, indices.both), kernel.phase));
+            backend_t::Store(tile, indices.both, predicate,
+                             backend_t::MultiplyCoefficient(predicate, backend_t::Load(predicate, tile, indices.both),
+                                                            kernel.phase));
         }
     }
 
@@ -282,14 +283,15 @@ class Kernels {
         assert(kernel.matrix_dim != 0 && kernel.indices.size() % kernel.matrix_dim == 0);
         for (size_t group = 0; group < kernel.indices.size(); group += kernel.matrix_dim) {
             for (size_t column = 0; column < kernel.matrix_dim; ++column) {
-                backend_t::Store(workspace, column, predicate, backend_t::Load(tile, kernel.indices[group + column]));
+                backend_t::Store(workspace, column, predicate,
+                                 backend_t::Load(predicate, tile, kernel.indices[group + column]));
             }
             for (size_t row = 0; row < kernel.matrix_dim; ++row) {
                 auto output = backend_t::Zero();
                 const auto* matrix_row = kernel.matrix.data() + row * kernel.matrix_dim;
                 for (size_t column = 0; column < kernel.matrix_dim; ++column) {
-                    output = backend_t::MultiplyAddCoefficient(predicate, output, backend_t::Load(workspace, column),
-                                                               matrix_row[column]);
+                    output = backend_t::MultiplyAddCoefficient(
+                        predicate, output, backend_t::Load(predicate, workspace, column), matrix_row[column]);
                 }
                 backend_t::Store(tile, kernel.indices[group + row], predicate, output);
             }
@@ -306,13 +308,14 @@ class Kernels {
         for (size_t group = 0; group < kernel.indices.size(); group += block) {
             auto trace = backend_t::Zero();
             for (size_t basis = 0; basis < kernel.local_dim; ++basis) {
-                trace = backend_t::Add(predicate, trace,
-                                       backend_t::Load(tile, kernel.indices[group + basis * diagonal_stride]));
+                trace = backend_t::Add(
+                    predicate, trace,
+                    backend_t::Load(predicate, tile, kernel.indices[group + basis * diagonal_stride]));
             }
             const auto mixed = backend_t::Multiply(predicate, trace, kernel.mix);
             for (size_t entry = 0; entry < block; ++entry) {
                 const auto index = kernel.indices[group + entry];
-                auto value = backend_t::Multiply(predicate, backend_t::Load(tile, index), kernel.keep);
+                auto value = backend_t::Multiply(predicate, backend_t::Load(predicate, tile, index), kernel.keep);
                 if (entry % diagonal_stride == 0) {
                     value = backend_t::Add(predicate, value, mixed);
                 }
@@ -328,19 +331,22 @@ class Kernels {
         auto result = backend_t::Zero();
         if (kernel.coefficients_prepared) {
             for (const auto& scale : kernel.scales) {
-                const auto transformed = backend_t::MultiplyCoefficient(predicate, backend_t::Load(ket, scale.basis),
-                                                                        scale.factor);
-                result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, scale.basis), transformed);
+                const auto transformed = backend_t::MultiplyCoefficient(
+                    predicate, backend_t::Load(predicate, ket, scale.basis), scale.factor);
+                result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, scale.basis),
+                                                    transformed);
             }
             for (const auto& pair : kernel.pairs) {
-                const auto ket_lhs = backend_t::Load(ket, pair.lhs);
-                const auto ket_rhs = backend_t::Load(ket, pair.rhs);
+                const auto ket_lhs = backend_t::Load(predicate, ket, pair.lhs);
+                const auto ket_rhs = backend_t::Load(predicate, ket, pair.rhs);
                 auto out_lhs = backend_t::Multiply(predicate, ket_lhs, kernel.cosine);
                 auto out_rhs = backend_t::Multiply(predicate, ket_rhs, kernel.cosine);
                 out_lhs = backend_t::MultiplyAddCoefficient(predicate, out_lhs, ket_rhs, pair.lhs_from_rhs);
                 out_rhs = backend_t::MultiplyAddCoefficient(predicate, out_rhs, ket_lhs, pair.rhs_from_lhs);
-                result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, pair.lhs), out_lhs);
-                result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, pair.rhs), out_rhs);
+                result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, pair.lhs),
+                                                    out_lhs);
+                result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, pair.rhs),
+                                                    out_rhs);
             }
             return result;
         }
@@ -351,21 +357,22 @@ class Kernels {
             auto coefficient = backend_t::Broadcast(value_t{kernel.cosine, 0});
             coefficient = backend_t::Add(predicate, coefficient,
                                          backend_t::SignedCoefficient(minus_i_sine * scale.factor, negative));
-            const auto transformed = backend_t::MultiplyDynamic(predicate, backend_t::Load(ket, scale.basis),
+            const auto transformed = backend_t::MultiplyDynamic(predicate, backend_t::Load(predicate, ket, scale.basis),
                                                                 coefficient);
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, scale.basis), transformed);
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, scale.basis),
+                                                transformed);
         }
         for (const auto& pair : kernel.pairs) {
-            const auto ket_lhs = backend_t::Load(ket, pair.lhs);
-            const auto ket_rhs = backend_t::Load(ket, pair.rhs);
+            const auto ket_lhs = backend_t::Load(predicate, ket, pair.lhs);
+            const auto ket_rhs = backend_t::Load(predicate, ket, pair.rhs);
             auto out_lhs = backend_t::Multiply(predicate, ket_lhs, kernel.cosine);
             auto out_rhs = backend_t::Multiply(predicate, ket_rhs, kernel.cosine);
             out_lhs = backend_t::MultiplyAddDynamic(
                 predicate, out_lhs, ket_rhs, backend_t::SignedCoefficient(minus_i_sine * pair.lhs_from_rhs, negative));
             out_rhs = backend_t::MultiplyAddDynamic(
                 predicate, out_rhs, ket_lhs, backend_t::SignedCoefficient(minus_i_sine * pair.rhs_from_lhs, negative));
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, pair.lhs), out_lhs);
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, pair.rhs), out_rhs);
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, pair.lhs), out_lhs);
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, pair.rhs), out_rhs);
         }
         return result;
     }
@@ -376,9 +383,10 @@ class Kernels {
                                                             const storage_t* ket) -> vector_t {
         auto result = backend_t::Zero();
         for (const auto& scale : kernel.scales) {
-            const auto transformed = backend_t::MultiplyCoefficient(predicate, backend_t::Load(ket, scale.basis),
-                                                                    scale.factor);
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, scale.basis), transformed);
+            const auto transformed = backend_t::MultiplyCoefficient(
+                predicate, backend_t::Load(predicate, ket, scale.basis), scale.factor);
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, scale.basis),
+                                                transformed);
         }
         return result;
     }
@@ -389,16 +397,16 @@ class Kernels {
                                                             const storage_t* ket) -> vector_t {
         auto result = backend_t::Zero();
         for (const auto& pair : kernel.pairs) {
-            const auto ket_lhs = backend_t::Load(ket, pair.lhs);
-            const auto ket_rhs = backend_t::Load(ket, pair.rhs);
+            const auto ket_lhs = backend_t::Load(predicate, ket, pair.lhs);
+            const auto ket_rhs = backend_t::Load(predicate, ket, pair.rhs);
             auto out_lhs = backend_t::Zero();
             auto out_rhs = backend_t::Zero();
             out_lhs = backend_t::MultiplyAddCoefficient(predicate, out_lhs, ket_lhs, kernel.matrix[0]);
             out_lhs = backend_t::MultiplyAddCoefficient(predicate, out_lhs, ket_rhs, kernel.matrix[1]);
             out_rhs = backend_t::MultiplyAddCoefficient(predicate, out_rhs, ket_lhs, kernel.matrix[2]);
             out_rhs = backend_t::MultiplyAddCoefficient(predicate, out_rhs, ket_rhs, kernel.matrix[3]);
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, pair.lhs), out_lhs);
-            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(bra, pair.rhs), out_rhs);
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, pair.lhs), out_lhs);
+            result = backend_t::InnerProductAdd(predicate, result, backend_t::Load(predicate, bra, pair.rhs), out_rhs);
         }
         return result;
     }
@@ -415,11 +423,11 @@ class Kernels {
                 const auto* matrix_row = kernel.matrix.data() + row * kernel.matrix_dim;
                 for (size_t column = 0; column < kernel.matrix_dim; ++column) {
                     transformed = backend_t::MultiplyAddCoefficient(
-                        predicate, transformed, backend_t::Load(ket, kernel.indices[group + column]),
+                        predicate, transformed, backend_t::Load(predicate, ket, kernel.indices[group + column]),
                         matrix_row[column]);
                 }
-                result = backend_t::InnerProductAdd(predicate, result,
-                                                    backend_t::Load(bra, kernel.indices[group + row]), transformed);
+                result = backend_t::InnerProductAdd(
+                    predicate, result, backend_t::Load(predicate, bra, kernel.indices[group + row]), transformed);
             }
         }
         return result;

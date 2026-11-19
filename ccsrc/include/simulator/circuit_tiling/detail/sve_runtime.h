@@ -112,8 +112,9 @@ struct SveTileAlgebra {
         return sve::BroadcastComplex<calc_type>(value);
     }
 
-    [[nodiscard]] MQ_ALWAYS_INLINE static auto Load(const storage_t* cache, size_t basis) -> vector_t {
-        return sve::LoadCachedComplex<calc_type>(cache, basis);
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Load(predicate_t predicate, const storage_t* cache,
+                                                    size_t basis) -> vector_t {
+        return sve::LoadCachedComplex<calc_type>(cache, basis, predicate);
     }
 
     MQ_ALWAYS_INLINE static void Store(storage_t* cache, size_t basis, predicate_t predicate, vector_t value) {
@@ -196,8 +197,12 @@ struct SveTileRuntime {
         return {state_index::StateIndexWindow(sve::LocalStateIndexBits<calc_type>(), layout.qubits), layout.tile_count};
     }
 
-    [[nodiscard]] static auto ThreadScratch(size_t logical_size) -> storage_t* {
-        return sve::ThreadScratch<calc_type>(logical_size * sve::Traits<calc_type>::ScalarLanes());
+    [[nodiscard]] static auto ScratchLanes() noexcept -> size_t {
+        return sve::Traits<calc_type>::ScalarLanes();
+    }
+
+    [[nodiscard]] static auto ScratchAlignment() noexcept -> size_t {
+        return ScratchLanes();
     }
 
     [[nodiscard]] static auto Offset(storage_t* storage, size_t logical_offset) -> storage_t* {
@@ -242,7 +247,7 @@ struct SveTileRuntime {
                         const storage_t* tile) {
         for (size_t basis = 0; basis < layout.dimension; ++basis) {
             sve::ScatterComplexAt<calc_type>(state, index_context.window_origin + layout.state_offsets[basis], active,
-                                             state_base, sve::LoadCachedComplex<calc_type>(tile, basis));
+                                             state_base, sve::LoadCachedComplex<calc_type>(tile, basis, active));
         }
     }
 

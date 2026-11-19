@@ -50,20 +50,33 @@
 #include "ops/gates.h"
 #include "ops/hamiltonian.h"
 #include "simulator/circuit_tiling/builder.h"
+#include "simulator/circuit_tiling/executor.h"
 #include "simulator/circuit_tiling/planner.h"
 #include "simulator/vector/gradient.h"
 #include "simulator/vector/vector_state.h"
+#include "simulator/worker_scratch.h"
 
 namespace mindquantum::sim::vector::detail {
+inline auto ScheduleScratchSize(const circuit_tiling::Schedule& plan, size_t state_blocks) -> size_t {
+    size_t size = 0;
+    for (const auto& entry : plan) {
+        if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&entry); tile != nullptr) {
+            // A dense operation's temporary input is at most one tile block.
+            size = std::max(size, (state_blocks + 1) * (size_t{1} << tile->qubits.size()));
+        }
+    }
+    return size;
+}
+
 template <typename policy_t, typename value_t, typename = void>
 struct HasCircuitTileExecutor : std::false_type {};
 
 template <typename policy_t, typename value_t>
 struct HasCircuitTileExecutor<
     policy_t, value_t,
-    std::void_t<decltype(policy_t::ApplyCircuitTile(std::declval<typename policy_t::qs_data_p_t*>(),
-                                                    std::declval<const circuit_tiling::PreparedTile<value_t>&>(),
-                                                    std::declval<index_t>()))>> : std::true_type {};
+    std::void_t<decltype(policy_t::ApplyCircuitTile(
+        std::declval<typename policy_t::qs_data_p_t*>(), std::declval<const circuit_tiling::PreparedTile<value_t>&>(),
+        std::declval<index_t>(), std::declval<WorkerScratch<typename value_t::value_type>&>()))>> : std::true_type {};
 
 template <typename sim_t_>
 template <typename policy_t>
@@ -146,6 +159,9 @@ auto VectorStateAdjoint<sim_t_>::RunAdjointSweep(sim_t* shared_state, const VT<s
     };
 
     circuit_tiling::AdjointProgram<py_qs_data_t> program;
+    WorkerScratch<calc_type> scratch;
+    circuit_tiling::ReserveScratch(scratch, ScheduleScratchSize(plan, 1 + batch_states.size()),
+                                   omp::TeamSize(shared_state->dim));
     program.output_size = output_size;
     const auto flush_program = [&]() {
         if (program.tiles.empty()) {
@@ -153,7 +169,7 @@ auto VectorStateAdjoint<sim_t_>::RunAdjointSweep(sim_t* shared_state, const VT<s
         }
         program.compute_overlap = !overlap_computed;
         policy_t::ApplyAdjointTileProgram(&shared_state->qs, batch_state_pointers, program, shared_state->dim, output,
-                                          conjugate_output);
+                                          conjugate_output, scratch);
         overlap_computed = true;
         program.tiles.clear();
     };
@@ -325,7 +341,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             qs_policy_t::ApplyZ(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
             break;
         case GateID::H:
-            qs_policy_t::ApplyH(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
+            matrix_policy_.ApplyH(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
             break;
         case GateID::S:
             qs_policy_t::ApplySGate(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
@@ -340,10 +356,10 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
             qs_policy_t::ApplyTdag(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
             break;
         case GateID::SX:
-            qs_policy_t::ApplySX(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
+            matrix_policy_.ApplySX(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
             break;
         case GateID::SXdag:
-            qs_policy_t::ApplySXdag(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
+            matrix_policy_.ApplySXdag(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), dim);
             break;
         case GateID::PauliString: {
             auto g = static_cast<PauliString*>(gate.get());
@@ -380,7 +396,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 diff = false;
             }
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            qs_policy_t::ApplyRX(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), val, dim, diff);
+            matrix_policy_.ApplyRX(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), val, dim, diff);
         } break;
         case GateID::RY: {
             auto g = static_cast<RYGate*>(gate.get());
@@ -388,7 +404,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 diff = false;
             }
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            qs_policy_t::ApplyRY(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), val, dim, diff);
+            matrix_policy_.ApplyRY(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), val, dim, diff);
         } break;
         case GateID::RZ: {
             auto g = static_cast<RZGate*>(gate.get());
@@ -396,7 +412,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 diff = false;
             }
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            qs_policy_t::ApplyRZ(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), val, dim, diff);
+            matrix_policy_.ApplyRZ(&qs, gate->GetObjQubits(), gate->GetCtrlQubits(), val, dim, diff);
         } break;
         case GateID::Rxx: {
             auto g = static_cast<RxxGate*>(gate.get());
@@ -468,7 +484,7 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 diff = false;
             }
             auto val = tensor::ops::cpu::to_vector<calc_type>(g->GetCoeffs()[0].Combination(pr).const_value)[0];
-            qs_policy_t::ApplyGP(&qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(), val, dim, diff);
+            matrix_policy_.ApplyGP(&qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(), val, dim, diff);
         } break;
         case GateID::U3: {
             if (diff) {
@@ -484,8 +500,8 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 auto lambda_const = u3->GetLambda().Combination(pr).const_value;
                 m = U3Matrix(theta_const, phi_const, lambda_const);
             }
-            qs_policy_t::ApplySingleQubitMatrix(qs, &qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(),
-                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+            matrix_policy_.ApplySingleQubitMatrix(qs, &qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(),
+                                                  tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
         case GateID::Rn: {
             if (diff) {
@@ -501,8 +517,8 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 auto gamma = rn->GetGamma().Combination(pr).const_value;
                 m = RnMatrix(alpha, beta, gamma);
             }
-            qs_policy_t::ApplySingleQubitMatrix(qs, &qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(),
-                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+            matrix_policy_.ApplySingleQubitMatrix(qs, &qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(),
+                                                  tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
         case GateID::FSim: {
             if (diff) {
@@ -517,8 +533,8 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 auto phi = fsim->GetPhi().Combination(pr).const_value;
                 m = FSimMatrix(theta, phi);
             }
-            qs_policy_t::ApplyTwoQubitsMatrix(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
-                                              tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+            matrix_policy_.ApplyTwoQubitsMatrix(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
+                                                tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
         case GateID::M:
             return this->ApplyMeasure(gate);
@@ -554,8 +570,8 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                     mat = g->GetDiffMatrixWrapper()(val);
                 }
             }
-            qs_policy_t::ApplyMatrixGate(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
-                                         tensor::ops::cpu::to_vector<py_qs_data_t>(mat), dim);
+            matrix_policy_.ApplyMatrixGate(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
+                                           tensor::ops::cpu::to_vector<py_qs_data_t>(mat), dim);
             break;
         }
         case GateID::CUSTOM_TWO_PARAM: {
@@ -573,8 +589,8 @@ index_t VectorState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate>& g
                 m = custom_gate->GetMatrixWrapper()(tensor::ops::cpu::to_vector<double>(param1)[0],
                                                     tensor::ops::cpu::to_vector<double>(param2)[0]);
             }
-            qs_policy_t::ApplyMatrixGate(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
-                                         tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
+            matrix_policy_.ApplyMatrixGate(qs, &qs, gate->GetObjQubits(), gate->GetCtrlQubits(),
+                                           tensor::ops::cpu::to_vector<py_qs_data_t>(m), dim);
         } break;
         default:
             throw std::invalid_argument(fmt::format("Apply of gate {} not implement.", id));
@@ -758,7 +774,7 @@ void VectorState<qs_policy_t_>::ApplyKrausChannel(const std::shared_ptr<BasicGat
             }
         } else {
             auto tmp_qs = qs_policy_t::InitState(dim);
-            qs_policy_t::ApplySingleQubitMatrix(qs, &tmp_qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(), m, dim);
+            matrix_policy_.ApplySingleQubitMatrix(qs, &tmp_qs, gate->GetObjQubits()[0], gate->GetCtrlQubits(), m, dim);
             calc_type prob = qs_policy_t::Vdot(tmp_qs, tmp_qs, dim).real();
             relative_prob = prob / total_prob;
             total_prob = total_prob - prob;
@@ -1110,11 +1126,13 @@ std::map<std::string, int> VectorState<qs_policy_t_>::ApplyCircuit(const circuit
         if (dim >= qs_policy_t::kTilingThreshold && circ.size() > 1) {
             const auto space = circuit_tiling::StateSpace::Vector(n_qubits);
             const auto plan = circuit_tiling::Planner(space).Plan(circ);
+            WorkerScratch<calc_type> scratch;
+            circuit_tiling::ReserveScratch(scratch, ScheduleScratchSize(plan, 1), omp::TeamSize(dim));
             for (const auto& planned : plan) {
                 if (const auto* tile = std::get_if<circuit_tiling::CircuitTile>(&planned); tile != nullptr) {
                     const auto prepared = circuit_tiling::Builder<py_qs_data_t>::Build(*tile, pr, space);
                     if (!prepared.operations.empty()) {
-                        qs_policy_t::ApplyCircuitTile(&qs, prepared, dim);
+                        qs_policy_t::ApplyCircuitTile(&qs, prepared, dim, scratch);
                     }
                 } else {
                     apply_gate(std::get<std::shared_ptr<BasicGate>>(planned));

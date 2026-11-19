@@ -24,19 +24,19 @@ namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyCircuitTile(qs_data_p_t* qs_p,
                                                                  const circuit_tiling::PreparedTile<py_qs_data_t>& tile,
-                                                                 index_t dim) {
+                                                                 index_t dim, WorkerScratch<calc_type>& scratch) {
     auto& qs = *qs_p;
     if (qs == nullptr) {
         qs = derived::InitState(dim);
     }
-    circuit_tiling::ApplyTile(qs, tile, omp::TeamSize(dim));
+    circuit_tiling::ApplyTile(qs, tile, omp::TeamSize(dim), scratch);
 }
 
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyBase<derived_, calc_type_>::ApplyAdjointTileProgram(
     qs_data_p_t* shared_state, const std::vector<qs_data_p_t*>& batch_states,
     const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim, VVT<py_qs_data_t>* output,
-    bool conjugate_output) {
+    bool conjugate_output, WorkerScratch<calc_type>& scratch) {
     if (*shared_state == nullptr) {
         *shared_state = derived::InitState(dim);
     }
@@ -48,7 +48,8 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyAdjointTileProgram(
         }
         states.push_back(*state);
     }
-    circuit_tiling::ApplyAdjointProgram(*shared_state, states, program, output, conjugate_output, omp::TeamSize(dim));
+    circuit_tiling::ApplyAdjointProgram(*shared_state, states, program, output, conjugate_output, omp::TeamSize(dim),
+                                        scratch);
 }
 
 template struct CPUVectorPolicyBase<CPUVectorPolicyFloat, float>;

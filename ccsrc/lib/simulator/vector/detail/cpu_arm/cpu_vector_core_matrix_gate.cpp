@@ -45,7 +45,7 @@ inline void ApplySmallRows(svbool_t pg, const typename policy_t::qs_data_t* matr
     auto out3 = sve::Zero<calc_type>();
 
     for (size_t col = 0; col < gate_dim; ++col) {
-        const auto in = sve::LoadCachedComplex<calc_type>(input, col);
+        const auto in = sve::LoadCachedComplex<calc_type>(input, col, pg);
         out0 = sve::CoefficientMulAdd<calc_type>(pg, out0, in, row0[col]);
         out1 = sve::CoefficientMulAdd<calc_type>(pg, out1, in, row1[col]);
         if (row_count > 2) {
@@ -89,7 +89,7 @@ inline void ApplyLargeRows(svbool_t pg, const typename policy_t::qs_data_t* matr
     auto out7 = sve::Zero<calc_type>();
 
     for (size_t col = 0; col < gate_dim; ++col) {
-        const auto in = sve::LoadCachedComplex<calc_type>(input, col);
+        const auto in = sve::LoadCachedComplex<calc_type>(input, col, pg);
         out0 = sve::CoefficientMulAdd<calc_type>(pg, out0, in, row0[col]);
         out1 = sve::CoefficientMulAdd<calc_type>(pg, out1, in, row1[col]);
         out2 = sve::CoefficientMulAdd<calc_type>(pg, out2, in, row2[col]);
@@ -114,11 +114,15 @@ inline void ApplyLargeRows(svbool_t pg, const typename policy_t::qs_data_t* matr
 
 template <typename policy_t>
 void ApplyMatrixImpl(const typename policy_t::qs_data_p_t& src_out, typename policy_t::qs_data_p_t* des_p,
-                     const qbits_t& objs, const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim) {
+                     const qbits_t& objs, const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim,
+                     WorkerScratch<typename policy_t::calc_type>& scratch) {
     using calc_type = typename policy_t::calc_type;
     using value_t = typename policy_t::qs_data_t;
     matrix_gate::ValidateNQubitsMatrixInputs(objs, ctrls, matrix, dim);
     const auto prepared = matrix_gate::PrepareMatrixGate<0, value_t>(objs, ctrls, matrix, dim);
+    const auto threads = omp::TeamSize(dim);
+    const auto lanes = sve::Traits<calc_type>::ScalarLanes();
+    scratch.Reserve(prepared.gate_dim * lanes, threads, lanes);
 
     auto& des = *des_p;
     if (des == nullptr) {
@@ -132,7 +136,7 @@ void ApplyMatrixImpl(const typename policy_t::qs_data_p_t& src_out, typename pol
 
     const state_index::StateIndexWindow index_window(sve::LocalStateIndexBits<calc_type>(), prepared.occupied_qubits);
     sve::ForEachStateIndexBatchWithScratch<calc_type>(
-        dim, index_window, prepared.block_count, prepared.gate_dim,
+        threads, index_window, prepared.block_count, scratch,
         [&](const state_index::StateIndexBatch& batch, index_t state_window_origin, calc_type* input) {
             const auto loop_index = sve::LoopIndex<calc_type>(batch.local_compressed_start);
             const auto pg = sve::ActiveComplexPredicate<calc_type>(loop_index, batch.local_compressed_count);
@@ -165,17 +169,19 @@ void ApplyMatrixImpl(const typename policy_t::qs_data_p_t& src_out, typename pol
 
 template <typename policy_t>
 void arm_sve::ApplyMatrix(const typename policy_t::qs_data_p_t& src, typename policy_t::qs_data_p_t* des_p,
-                          const qbits_t& objs, const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix,
-                          index_t dim) {
-    ApplyMatrixImpl<policy_t>(src, des_p, objs, ctrls, matrix, dim);
+                          const qbits_t& objs, const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim,
+                          WorkerScratch<typename policy_t::calc_type>& scratch) {
+    ApplyMatrixImpl<policy_t>(src, des_p, objs, ctrls, matrix, dim, scratch);
 }
 
 template void arm_sve::ApplyMatrix<CPUVectorPolicyArmFloat>(const CPUVectorPolicyArmFloat::qs_data_p_t&,
                                                             CPUVectorPolicyArmFloat::qs_data_p_t*, const qbits_t&,
                                                             const qbits_t&,
-                                                            const arm_matrix_t<CPUVectorPolicyArmFloat>&, index_t);
+                                                            const arm_matrix_t<CPUVectorPolicyArmFloat>&, index_t,
+                                                            WorkerScratch<float>&);
 template void arm_sve::ApplyMatrix<CPUVectorPolicyArmDouble>(const CPUVectorPolicyArmDouble::qs_data_p_t&,
                                                              CPUVectorPolicyArmDouble::qs_data_p_t*, const qbits_t&,
                                                              const qbits_t&,
-                                                             const arm_matrix_t<CPUVectorPolicyArmDouble>&, index_t);
+                                                             const arm_matrix_t<CPUVectorPolicyArmDouble>&, index_t,
+                                                             WorkerScratch<double>&);
 }  // namespace mindquantum::sim::vector::detail

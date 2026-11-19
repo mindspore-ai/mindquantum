@@ -26,7 +26,8 @@ using base_policy_t = CPUVectorPolicyBase<policy_t, typename policy_t::calc_type
 
 template <typename policy_t>
 void ApplyMatrix(const typename policy_t::qs_data_p_t& src, typename policy_t::qs_data_p_t* des_p, const qbits_t& objs,
-                 const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim) {
+                 const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim,
+                 WorkerScratch<typename policy_t::calc_type>&) {
     if (objs.size() == 1) {
         base_policy_t<policy_t>::ApplySingleQubitMatrix(src, des_p, objs.front(), ctrls, matrix, dim);
         return;
@@ -57,14 +58,14 @@ template <typename derived_, typename calc_type_>
 void CPUVectorPolicyArm<derived_, calc_type_>::ApplySingleQubitMatrix(
     const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit, const qbits_t& ctrls,
     const std::vector<std::vector<py_qs_data_t>>& matrix, index_t dim) {
-    SelectedBackend<derived_>().apply_matrix(src, des_p, {obj_qubit}, ctrls, matrix, dim);
+    SelectedBackend<derived_>().apply_matrix(src, des_p, {obj_qubit}, ctrls, matrix, dim, matrix_scratch_);
 }
 
 template <typename derived_, typename calc_type_>
 void CPUVectorPolicyArm<derived_, calc_type_>::ApplyTwoQubitsMatrix(
     const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
     const std::vector<std::vector<py_qs_data_t>>& matrix, index_t dim) {
-    SelectedBackend<derived_>().apply_matrix(src, des_p, objs, ctrls, matrix, dim);
+    SelectedBackend<derived_>().apply_matrix(src, des_p, objs, ctrls, matrix, dim, matrix_scratch_);
 }
 
 template <typename derived_, typename calc_type_>
@@ -72,7 +73,7 @@ void CPUVectorPolicyArm<derived_, calc_type_>::ApplyNQubitsMatrix(const qs_data_
                                                                   const qbits_t& objs, const qbits_t& ctrls,
                                                                   const std::vector<std::vector<py_qs_data_t>>& matrix,
                                                                   index_t dim) {
-    SelectedBackend<derived_>().apply_matrix(src, des_p, objs, ctrls, matrix, dim);
+    SelectedBackend<derived_>().apply_matrix(src, des_p, objs, ctrls, matrix, dim, matrix_scratch_);
 }
 
 template <typename derived_, typename calc_type_>

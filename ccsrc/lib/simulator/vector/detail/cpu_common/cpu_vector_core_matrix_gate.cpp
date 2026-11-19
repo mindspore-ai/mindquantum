@@ -190,11 +190,11 @@ void CPUVectorPolicyBase<derived_, calc_type_>::ApplyMatrixGate(const qs_data_p_
                                                                 const std::vector<std::vector<py_qs_data_t>>& m,
                                                                 index_t dim) {
     if (objs.size() == 1) {
-        derived::ApplySingleQubitMatrix(src, des_p, objs[0], ctrls, m, dim);
+        static_cast<derived&>(*this).ApplySingleQubitMatrix(src, des_p, objs[0], ctrls, m, dim);
     } else if (objs.size() == 2) {
-        derived::ApplyTwoQubitsMatrix(src, des_p, objs, ctrls, m, dim);
+        static_cast<derived&>(*this).ApplyTwoQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     } else {
-        derived::ApplyNQubitsMatrix(src, des_p, objs, ctrls, m, dim);
+        static_cast<derived&>(*this).ApplyNQubitsMatrix(src, des_p, objs, ctrls, m, dim);
     }
 }
 

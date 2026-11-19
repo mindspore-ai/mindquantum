@@ -1327,7 +1327,7 @@ class Builder {
     }
 
     [[nodiscard]] static auto PrepareDense(RawOperation raw, size_t tile_dim) -> DenseMatrixKernel<value_t> {
-        assert(raw.matrix_dim != 0 && raw.target_offsets.size() == raw.matrix_dim);
+        assert(raw.matrix_dim != 0 && raw.matrix_dim <= tile_dim && raw.target_offsets.size() == raw.matrix_dim);
         assert(raw.matrix.size() == raw.matrix_dim * raw.matrix_dim);
         DenseMatrixKernel<value_t> kernel;
         kernel.matrix_dim = raw.matrix_dim;
