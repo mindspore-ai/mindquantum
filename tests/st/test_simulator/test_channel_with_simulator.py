@@ -8,223 +8,163 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# wITHOUT wARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+"""Noise-channel contracts: exact process states first, sampling only for trajectory weights."""
 
-"""Test channel with simulator."""
-# pylint: disable=too-many-locals,invalid-name
-from math import exp
+from functools import reduce
+from itertools import product
 
 import numpy as np
 import pytest
-from scipy.stats import entropy
+from scipy.linalg import hadamard
+from scipy.stats import binom
 
 import mindquantum as mq
-from mindquantum.core import gates as G
+from mindquantum.core import gates as G  # noqa: N812
 from mindquantum.core.circuit import Circuit
-from mindquantum.simulator import Simulator
-from mindquantum.simulator.available_simulator import SUPPORTED_SIMULATOR
-from mindquantum.utils import random_circuit
+from mindquantum.simulator import Simulator, get_supported_simulator
 
-flip_and_damping_channel = [
-    G.BitFlipChannel,
-    G.PhaseFlipChannel,
-    G.BitPhaseFlipChannel,
-    G.AmplitudeDampingChannel,
-    G.PhaseDampingChannel,
-]
+pytestmark = [pytest.mark.level0, pytest.mark.platform_x86_cpu, pytest.mark.env_onecard]
 
-shots = 100000
+# The mqvector family implements general noise trajectories; mqmps and stabilizer do not.
+_VECTORS = [c for c in get_supported_simulator() if c != 'stabilizer' and c[0].startswith('mqvector')]
+_SEED = 42
+_SHOTS = 1024
+
+_MIXED_CHANNELS = (
+    G.PauliChannel(0.06, 0.24, 0.52),
+    G.DepolarizingChannel(4 / 3),
+    G.DepolarizingChannel(0.48, 2),
+    G.DepolarizingChannel(64 / 63, 3),  # No identity Pauli string at the upper bound.
+    G.GroupedPauliChannel(np.array([[0.8, 0.0, 0.0], [0.0, 0.35, 0.0], [0.0, 0.0, 0.6]])),
+    G.AmplitudeDampingChannel(0.72),
+    G.PhaseDampingChannel(0.84),
+    G.KrausChannel('rotated_damping', [G.S.matrix() @ k for k in G.AmplitudeDampingChannel(0.64).matrix()]),
+    G.KrausChannel('phased_paulis', [1j * k for k in G.PauliChannel(0.11, 0.19, 0.53).matrix()]),
+    G.ThermalRelaxationChannel(100, 35, 90),
+    G.ThermalRelaxationChannel(100, 125, 90),
+)
+# The flip wrappers use the Pauli sampler above. Rank-one cases also fix the entire
+# trajectory (up to an unobservable global phase), at either backend precision.
+_EXACT_CHANNELS = (
+    *_MIXED_CHANNELS,
+    G.BitFlipChannel(0.3),
+    G.BitPhaseFlipChannel(0.6),
+    G.PhaseFlipChannel(0.7),
+    G.BitFlipChannel(1),
+    G.BitPhaseFlipChannel(1),
+    G.PhaseFlipChannel(1),
+    G.AmplitudeDampingChannel(1),
+    G.PhaseDampingChannel(0),
+    G.ThermalRelaxationChannel(100, 125, 0),
+    G.KrausChannel('complex_unitary', [G.U3(0.8, -0.4, 1.2).matrix()]),
+)
 
 
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-@pytest.mark.parametrize("channel", flip_and_damping_channel)
-def test_flip_and_damping_channel(config, channel):
-    """
-    Description: Test flip and damping channel
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    init_state = np.random.rand(2) + np.random.rand(2) * 1j
-    init_state = init_state / np.linalg.norm(init_state)
-    p = np.random.rand()
-    c = channel(p).on(0)
-    tmp = np.outer(init_state, init_state.T.conj())
-    ref_qs = np.zeros((2, 2), dtype=mq.to_np_type(dtype))
-    for m in c.matrix():
-        ref_qs += m @ tmp @ m.T.conj()
-    sim = Simulator(virtual_qc, 1, dtype=dtype)
-    sim.set_qs(init_state)
-    if virtual_qc.startswith("mqmatrix"):
-        sim.apply_gate(c)
-        assert np.allclose(sim.get_qs(), ref_qs)
+def _process_state(channel, amplitudes):
+    """NumPy output for sum_i a_i |i>_sys |i>_ref; the channel acts on the high bits."""
+    dim = len(amplitudes)
+    if isinstance(channel, G.DepolarizingChannel):
+        state = np.diag(amplitudes).ravel()
+        mixed = np.kron(np.eye(dim) / dim, np.diag(np.abs(amplitudes) ** 2))
+        return (1 - channel.p) * np.outer(state, state.conj()) + channel.p * mixed
+    if isinstance(channel, G.GroupedPauliChannel):
+        # A product of independent one-qubit channels, not a second noisy simulation.
+        local = [G.PauliChannel(*row).matrix() for row in reversed(channel.probs)]
+        kraus = (reduce(np.kron, factors) for factors in product(*local))
     else:
-        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
-        difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
-        assert difference < 1e-4
+        kraus = channel.matrix()
+    # The (system, reference) amplitude after K is K[system, reference] * a[reference].
+    branches = np.stack([(k * amplitudes).ravel() for k in kraus])
+    return branches.T @ branches.conj()
 
 
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-def test_pauli_channel(config):
+@pytest.fixture(name='choi_probe', scope='module', params=_EXACT_CHANNELS, ids=str)
+def _choi_probe(request):
+    """One maximally entangled input characterizes the channel on all inputs."""
+    channel = request.param
+    dim = 1 << channel.n_qubits
+    amplitudes = np.full(dim, 1 / np.sqrt(dim))
+    gate = channel.on(range(channel.n_qubits, 2 * channel.n_qubits))
+    return gate, np.diag(amplitudes).ravel(), _process_state(channel, amplitudes)
+
+
+@pytest.mark.parametrize('dtype', [mq.complex64, mq.complex128])
+def test_density_channel_choi(choi_probe, dtype):
     """
-    Description: Test pauli channel
-    Expectation: success.
+    Feature: Density-matrix noise channel evolution.
+    Description: Apply each supported channel to half of a maximally entangled state on mqmatrix.
+    Expectation: Output density matrix matches the normalized Choi matrix including coherences.
     """
-    virtual_qc, dtype = config
-    init_state = np.random.rand(2) + np.random.rand(2) * 1j
-    init_state = init_state / np.linalg.norm(init_state)
-    px, py, pz = np.random.rand(3) / 3
-    c = G.PauliChannel(px, py, pz).on(0)
-    tmp = np.outer(init_state, init_state.T.conj())
-    ref_qs = np.zeros((2, 2), dtype=mq.to_np_type(dtype))
-    for m in c.matrix():
-        ref_qs += m @ tmp @ m.T.conj()
-    sim = Simulator(virtual_qc, 1, dtype=dtype)
-    sim.set_qs(init_state)
-    if virtual_qc.startswith("mqmatrix"):
-        sim.apply_gate(c)
-        assert np.allclose(sim.get_qs(), ref_qs)
+    gate, state, expected = choi_probe
+    sim = Simulator('mqmatrix', 2 * gate.n_qubits, seed=_SEED, dtype=dtype)
+    sim.set_qs(state)
+    sim.apply_gate(gate)
+    np.testing.assert_allclose(sim.get_qs(), expected, rtol=0, atol=1e-6 if dtype == mq.complex64 else 1e-12)
+
+
+@pytest.mark.parametrize('backend,dtype', _VECTORS)
+def test_channel_trajectory_support(choi_probe, backend, dtype):
+    """
+    Feature: State-vector noise trajectory validity.
+    Description: Evolve a maximally entangled input through one noisy trajectory on each vector backend.
+    Expectation: Output state has unit norm and zero projection onto the kernel of the Choi state.
+    """
+    gate, state, expected = choi_probe
+    sim = Simulator(backend, 2 * gate.n_qubits, seed=_SEED, dtype=dtype)
+    sim.set_qs(state)
+    sim.apply_gate(gate)
+    actual = sim.get_qs()
+    atol = 1e-6 if dtype == mq.complex64 else 1e-12
+    np.testing.assert_allclose(np.linalg.norm(actual), 1, rtol=0, atol=atol)
+    # Support, unlike membership in a particular list of Kraus branches, is
+    # invariant under a change of unraveling (e.g. thermal relaxation on Ascend).
+    weights, basis = np.linalg.eigh(expected)
+    np.testing.assert_allclose(basis[:, weights < 1e-12].conj().T @ actual, 0, rtol=0, atol=atol)
+
+
+def _bell_probabilities(rho, dim):
+    """CNOTs map |s,r> to |s xor r,r>; Hadamards read the phase on the reference register."""
+    system, reference = np.divmod(np.arange(dim**2), dim)
+    permutation = (system ^ reference) * dim + reference
+    readout = np.kron(np.eye(dim), hadamard(dim) / np.sqrt(dim))[:, permutation]
+    return np.clip(np.diag(readout @ rho @ readout.T).real, 0, 1)  # Roundoff at the boundary.
+
+
+@pytest.mark.parametrize('backend', sorted({name for name, _ in _VECTORS}))
+@pytest.mark.parametrize('channel', _MIXED_CHANNELS, ids=str)
+def test_trajectory_weights_in_bell_basis(backend, channel):
+    """
+    Feature: State-vector noise trajectory sampling weights.
+    Description: Sample entangled states in the Bell basis after applying each mixed noise channel.
+    Expectation: Sampled syndrome counts fall within exact binomial prediction intervals.
+    """
+    n = channel.n_qubits
+    dim = 1 << n
+    if isinstance(channel, (G.PauliChannel, G.GroupedPauliChannel, G.DepolarizingChannel)):
+        # Each Pauli string gives a distinct, deterministic Bell syndrome.
+        amplitudes = np.full(dim, 1 / np.sqrt(dim))
     else:
-        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
-        difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
-        assert difference < 1e-4
+        # Unequal populations probe state-dependent jump rates; the phase makes
+        # the readout sensitive to both real and imaginary transfer coefficients.
+        amplitudes = np.sqrt([0.2, 0.8]) * [1, np.exp(0.5j)]
+    probabilities = _bell_probabilities(_process_state(channel, amplitudes), dim)
+    sim = Simulator(backend, 2 * n, seed=_SEED)
+    sim.set_qs(np.diag(amplitudes).ravel())
+    circuit = Circuit(channel.on(range(n, 2 * n)))
+    for q in range(n):
+        circuit.x(n + q, q).h(q)
+    result = sim.sampling(circuit.measure_all(), shots=_SHOTS, seed=_SEED)
 
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-def test_depolarizing_channel(config):
-    """
-    Description: Test depolarizing channel
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    for n in (1, 2, 3):
-        p = np.random.rand() * 4**n / (4**n - 1)
-        c = G.DepolarizingChannel(p, n).on(list(range(n)))
-        dim = 2**n
-        init_state = np.random.rand(dim) + np.random.rand(dim) * 1j
-        init_state = init_state / np.linalg.norm(init_state)
-        tmp = np.outer(init_state, init_state.T.conj())
-        ref_qs = np.zeros((dim, dim), dtype=mq.to_np_type(dtype))
-        for m in c.matrix():
-            ref_qs += m @ tmp @ m.T.conj()
-        sim = Simulator(virtual_qc, n, dtype=dtype)
-        sim.set_qs(init_state)
-        if virtual_qc.startswith("mqmatrix"):
-            sim.apply_gate(c)
-            assert np.allclose(sim.get_qs(), ref_qs)
-        else:
-            res = sim.sampling(Circuit(c).measure_all(), shots=shots)
-            difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
-            assert difference < 1e-3
-
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-def test_kraus_channel(config):
-    """
-    Description: Test kraus channel
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    init_state = np.random.rand(2) + np.random.rand(2) * 1j
-    init_state = init_state / np.linalg.norm(init_state)
-    tmp = np.outer(init_state, init_state.T.conj())
-
-    c0 = G.KrausChannel('ad', G.AmplitudeDampingChannel(np.random.rand()).matrix()).on(0)
-    c1 = G.KrausChannel('dep', G.DepolarizingChannel(np.random.rand() * 4 / 3).matrix()).on(0)
-    c2 = G.KrausChannel('gp', [1j * i for i in G.DepolarizingChannel(np.random.rand() * 4 / 3).matrix()]).on(0)
-
-    for c in (c0, c1, c2):
-        ref_qs = np.zeros((2, 2), dtype=mq.to_np_type(dtype))
-        for m in c.matrix():
-            ref_qs += m @ tmp @ m.T.conj()
-        sim = Simulator(virtual_qc, 1, dtype=dtype)
-        sim.set_qs(init_state)
-        if virtual_qc.startswith("mqmatrix"):
-            sim.apply_gate(c)
-            assert np.allclose(sim.get_qs(), ref_qs)
-        else:
-            res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
-            difference = entropy(np.array(list(res.data.values())) / shots, ref_qs.diagonal().real)
-            assert difference < 1e-4
-
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-def test_grouped_pauli_channel(config):
-    """
-    Description: Test grouped pauli channel
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    n_qubits = 3
-    old = random_circuit(n_qubits, 20)
-    probs = np.random.uniform(0, 1, size=(n_qubits, 3))
-    probs = probs * (0.8 / probs.sum(axis=1))[:, None]
-    paulis = Circuit([G.PauliChannel(*i).on(idx) for idx, i in enumerate(probs)])
-    grouped = Circuit([G.GroupedPauliChannel(probs).on(list(range(n_qubits)))])
-    sim = Simulator(virtual_qc, n_qubits, dtype=dtype)
-    circ1 = (old + paulis).measure_all()
-    circ2 = (old + grouped).measure_all()
-    if virtual_qc.startswith("mqmatrix"):
-        sim.apply_circuit(circ1.remove_measure())
-        qs1 = sim.get_qs()
-        sim.reset()
-        sim.apply_circuit(circ2.remove_measure())
-        qs2 = sim.get_qs()
-        assert np.allclose(qs1, qs2, atol=1e-4)
-    else:
-        res1 = sim.sampling(circ1, shots=shots)
-        res2 = sim.sampling(circ2, shots=shots)
-        difference = entropy(np.array(list(res1.data.values())) / shots, np.array(list(res2.data.values())) / shots)
-        assert difference < 1e-3
-
-
-@pytest.mark.level0
-@pytest.mark.platform_x86_cpu
-@pytest.mark.env_onecard
-@pytest.mark.parametrize('config', list(filter(lambda x: x != 'stabilizer', SUPPORTED_SIMULATOR)))
-def test_thermal_relaxation_channel(config):
-    """
-    Description: Test thermal relaxation channel
-    Expectation: success.
-    """
-    virtual_qc, dtype = config
-    init_state = np.random.rand(2) + np.random.rand(2) * 1j
-    init_state = init_state / np.linalg.norm(init_state)
-    tmp = np.outer(init_state, init_state.T.conj())
-    t1, t2, gate_time = np.random.rand(3) * 10000
-    if t2 >= 2 * t1:
-        with pytest.raises(ValueError):
-            c = G.ThermalRelaxationChannel(t1, t2, gate_time).on(0)
-        return
-    e1 = exp(-gate_time / t1)
-    e2 = exp(-gate_time / t2)
-    c = G.ThermalRelaxationChannel(t1, t2, gate_time).on(0)
-    choi_mat = np.array([[1, 0, 0, e2], [0, 0, 0, 0], [0, 0, 1 - e1, 0], [e2, 0, 0, e1]])
-    mat = choi_mat @ np.kron(tmp.T, np.eye(2, 2))
-    ref_dm = np.array([[mat[0][0] + mat[2][2], mat[0][1] + mat[2][1]], [mat[1][0] + mat[3][2], mat[1][1] + mat[3][3]]])
-    sim = Simulator(virtual_qc, 1, dtype=dtype)
-    sim.set_qs(init_state)
-    if virtual_qc.startswith("mqmatrix"):
-        sim.apply_gate(c)
-        assert np.allclose(sim.get_qs(), ref_dm)
-    else:
-        res = sim.sampling(Circuit([c, G.Measure().on(0)]), shots=shots)
-        difference = entropy(np.array(list(res.data.values())) / shots, ref_dm.diagonal().real)
-        assert difference < 1e-4
+    # Each multinomial bin is marginally binomial. Exact two-sided prediction
+    # limits work for rare and impossible syndromes too. With <200 bins across
+    # the suite the false rejection probability is <2e-6 per backend (union bound).
+    low, high = binom.interval(1 - 1e-8, _SHOTS, probabilities)
+    assert result.shots == _SHOTS
+    for i, (lo, hi) in enumerate(zip(low, high)):
+        key = format(i, f'0{2 * n}b')
+        count = result.data.get(key, 0)
+        assert lo <= count <= hi, f'{key}: {count}/{_SHOTS}, expected p={probabilities[i]:.5f}, counts in [{lo}, {hi}]'

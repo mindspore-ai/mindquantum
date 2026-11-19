@@ -13,12 +13,13 @@
 # limitations under the License.
 # ============================================================================
 """Test channel."""
+
 from math import exp, sqrt
 
 import numpy as np
 import pytest
 
-import mindquantum.core.gates.channel as C
+import mindquantum.core.gates.channel as C  # noqa: N812
 
 I = np.array([[1.0 + 0.0j, 0], [0, 1]])  # noqa: E741
 X = np.array([[0, 1], [1, 0]])
@@ -48,7 +49,7 @@ def test_depolarizing_channel():
     for n in (1, 2, 3):
         p = np.random.rand() * 4**n / (4**n - 1)
         mat_list = [I, X, Y, Z]
-        for i in range(n - 1):
+        for _ in range(n - 1):
             tmp = []
             for j in (I, X, Y, Z):
                 for k in mat_list:
@@ -84,28 +85,31 @@ def test_kraus_channel():
     assert np.allclose(C.KrausChannel('AD', [mat_0, mat_1]).matrix(), [mat_0, mat_1])
 
 
-def test_thermal_relaxation_channel():
+@pytest.mark.parametrize('t2', [35, 100, 125])
+def test_thermal_relaxation_channel(t2):
     """
-    Description: Test thermal relaxation channel
-    Expectation: success.
+    Feature: Thermal relaxation channel Kraus operators.
+    Description: Reconstruct the Choi matrix across T2 < T1, T2 == T1, and T1 < T2 < 2 * T1.
+    Expectation: Reconstructed Choi matrix matches T1 population decay and T2 coherence decay.
     """
-    t1, t2, gate_time = np.random.rand(3) * 10000
-    if t2 >= 2 * t1:
-        with pytest.raises(ValueError):
-            _ = C.ThermalRelaxationChannel(t1, t2, gate_time).on(0)
-        return
+    t1, gate_time = 100, 90
     e1 = exp(-gate_time / t1)
     e2 = exp(-gate_time / t2)
     ref_choi = np.array([[1, 0, 0, e2], [0, 0, 0, 0], [0, 0, 1 - e1, 0], [e2, 0, 0, e1]])
-    choi = np.zeros((4, 4))
-    for i in C.ThermalRelaxationChannel(t1, t2, gate_time).matrix():
-        choi += (
-            np.kron(np.array([[1, 0], [0, 0]]), i @ np.array([[1, 0], [0, 0]]) @ i.conj().T)
-            + np.kron(np.array([[0, 1], [0, 0]]), i @ np.array([[0, 1], [0, 0]]) @ i.conj().T)
-            + np.kron(np.array([[0, 0], [1, 0]]), i @ np.array([[0, 0], [1, 0]]) @ i.conj().T)
-            + np.kron(np.array([[0, 0], [0, 1]]), i @ np.array([[0, 0], [0, 1]]) @ i.conj().T)
-        )
-    assert np.allclose(choi, ref_choi)
+    kraus = C.ThermalRelaxationChannel(t1, t2, gate_time).matrix()
+    choi = sum(np.outer(k.T.ravel(), k.T.conj().ravel()) for k in kraus)
+    np.testing.assert_allclose(choi, ref_choi, rtol=0, atol=1e-12)
+
+
+@pytest.mark.parametrize('t2', [200, 201])
+def test_thermal_relaxation_rejects_invalid_t2(t2):
+    """
+    Feature: Thermal relaxation channel parameter validation.
+    Description: Construct ThermalRelaxationChannel with T2 >= 2 * T1.
+    Expectation: Raise ValueError.
+    """
+    with pytest.raises(ValueError, match=r'T2 >= 2 \* T1'):
+        C.ThermalRelaxationChannel(100, t2, 90)
 
 
 def test_channel_with_ctrl_qubits():
