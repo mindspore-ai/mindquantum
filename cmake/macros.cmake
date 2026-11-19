@@ -179,28 +179,6 @@ endfunction()
 # ==============================================================================
 
 # ~~~
-# Macro used to disable CUDA support in MindQuantum
-#
-# disable_cuda([<msg>])
-# ~~~
-macro(disable_cuda)
-  if(${ARGC} GREATER 0)
-    set(_msg "${ARGV0}")
-  else()
-    set(_msg "inexistent CUDA/NVHPC compiler, NVHPC < 20.11")
-  endif()
-  message(WARNING "Disabling CUDA due to ${_msg} or error during compiler setup")
-  set(ENABLE_CUDA
-      OFF
-      CACHE INTERNAL "Enable building of CUDA/NVHPC libraries")
-  set(ENABLE_CUQUANTUM
-      OFF
-      CACHE INTERNAL "Enable the cuQuantum-backed CUDA simulator backend")
-endmacro()
-
-# ==============================================================================
-
-# ~~~
 # Force at least C++17 for some older compilers:
 #   - GCC 7.0
 #

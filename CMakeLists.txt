@@ -142,6 +142,7 @@ add_custom_target(
   python
   DEPENDS ${_targets}
   COMMENT "Build python C++ modules")
+include(python_build_info)
 
 # ==============================================================================
 

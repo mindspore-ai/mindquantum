@@ -53,7 +53,7 @@ struct Context {
         const ContextScope caller;
         Check(aclrtCreateContext(&handle, device), "aclrtCreateContext");
         try {
-            soc = mindquantum::ascend::SocName(MQ_ASCEND_SOC);
+            soc = mindquantum::ascend::SocName(device);
             int64_t value = 0;
             Check(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_VECTOR_CORE_NUM, &value), "aclrtGetDeviceInfo");
             if (value <= 0) {
@@ -313,8 +313,8 @@ class Metadata {
 };
 
 uint32_t ReductionBlocks(const Context& context, uint64_t plane) {
-    return static_cast<uint32_t>(std::min<uint64_t>(std::min(context.cores, kObservableMaxBlocks),
-                                                    (plane + kObservableTileSize - 1) / kObservableTileSize));
+    return static_cast<uint32_t>(
+        std::min<uint64_t>(context.cores, (plane + kObservableTileSize - 1) / kObservableTileSize));
 }
 
 std::complex<double> SumPartials(const ReductionPartial* partials, size_t count) {
@@ -949,7 +949,7 @@ std::vector<uint64_t> State::Sample(uint64_t shots, uint64_t seed) const {
     std::vector<SamplingResult> host_answers(shots);
     queries.Upload(requests.data());
     Transaction transaction(impl_->stream.handle);
-    Check(LaunchSample(std::min<uint64_t>(impl_->context->cores, std::min<uint64_t>(kObservableMaxBlocks, shots)),
+    Check(LaunchSample(std::min<uint64_t>(impl_->context->cores, shots),
                        impl_->stream.handle, impl_->state.Data(), tree.Data(), queries.Data(), answers.Data(), shots,
                        layout),
           "launch terminal sampling");

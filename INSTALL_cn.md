@@ -58,7 +58,7 @@ cd mindquantum
 MQ_DELOCATE_WHEEL=1 python3 -m build .
 ```
 
-如果您打算将wheel分发给可能与您拥有不同系统的人，我们强烈建议您尝试指定 `MQ_DELOCATE_WHEEL_PLAT` 环境变量。默认情况下，setup脚本在64位计算机上假设 `'Linux_x86_64'`，但您可以指定[auditwheel](https://github.com/pypa/auditwheel)支持的任何平台。为了将wheel分发给更多的受众，我们推荐设置 `MQ_DELOCATE_WHEEL_PLAT=manylinux2010_x86_64`，尽管如果您的编译器版本太新，则在delocate wheel时可能会导致错误。
+在Linux上，[auditwheel](https://github.com/pypa/auditwheel) 6.4及以上版本会根据wheel的CPU架构和ABI需求自动选择manylinux平台，CPU、GPU和NPU构建使用相同规则。如需强制指定发布基线，可设置 `MQ_DELOCATE_WHEEL_PLAT`，或传入 `build.sh --plat-name=<platform>`；若无法满足该ABI，修包直接失败，且不会添加更旧的策略标签（允许等价别名）。修包失败不会退回通用的 `linux_*` wheel。Manylinux标签描述修复后的wheel，不保证外部CUDA/CANN库或驱动的兼容性；这些要求需要单独验收。
 
 ### 本地构建 MindQuantum
 
@@ -115,7 +115,8 @@ MQ_DELOCATE_WHEEL=1 python3 -m build .
 | USE_PARALLEL_STL                | 使用 parallel STL 用于并行计算 (使用 TBB 或者别的)          | OFF                 |
 | USE_VERBOSE_MAKEFILE            | 生成详细 Makefiles (如果支持的话)                             | ON                  |
 
-Ascend 的构建、设备选择与性能验证见 [mqvector_npu 指南](docs/mqvector_npu.md) 和
+Ascend 的构建、设备选择与性能验证见 [Ascend 构建与分发指南](docs/ascend_build.md)、
+[mqvector_npu 指南](docs/mqvector_npu.md) 和
 [QAIA CANN 指南](docs/qaia_ascend.md)。
 
 下面是以上一些选项的更明确的描述：

@@ -179,18 +179,8 @@ endif()
 # CUDA
 
 if(ENABLE_CUDA)
-  find_package(CUDAToolkit ${MQ_CUDA_VERSION})
-  if(CUDAToolkit_FOUND)
-    set(MQ_CUDA_VERSION "${CUDAToolkit_VERSION_MAJOR}.${CUDAToolkit_VERSION_MINOR}")
-  else()
-    message(STATUS "Disabling CUDA since unable to locate CUDAToolkit")
-    set(ENABLE_CUDA
-        OFF
-        CACHE INTERNAL "Enable building of CUDA/NVHPC libraries")
-    set(ENABLE_CUQUANTUM
-        OFF
-        CACHE INTERNAL "Enable the cuQuantum-backed CUDA simulator backend")
-  endif()
+  find_package(CUDAToolkit ${MQ_CUDA_VERSION} REQUIRED)
+  set(MQ_CUDA_VERSION "${CUDAToolkit_VERSION_MAJOR}.${CUDAToolkit_VERSION_MINOR}")
 endif()
 
 # ==============================================================================
@@ -216,7 +206,7 @@ endif()
 
 # Check if we are being used directly or via add_subdirectory()
 if("${CMAKE_PROJECT_NAME}" STREQUAL "MindQuantum")
-  # setup.py passes the name it was given; a direct CMake build uses the project's canonical package name.
+  # Both setup.py and direct CMake builds use the Python import package name, not the checkout directory name.
   set(MQ_PYTHON_PACKAGE_NAME
       "mindquantum"
       CACHE STRING "MindQuantum's Python package name")

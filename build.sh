@@ -110,7 +110,6 @@ if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
     verbose=1
     set_var cmake_debug_mode true
     set_var enable_gitee true
-    set_var enable_gpu true
     mkdir -p ~/.config/pip
     echo "[global]" > ~/.config/pip/pip.conf
     echo "index-url = https://mirrors.huaweicloud.com/repository/pypi/simple/" >> ~/.config/pip/pip.conf
@@ -140,7 +139,7 @@ function extra_help() {
     echo '                         Use this with caution. CI build should not be using this.'
     echo '  --fast-build-dir       Specify build directory when performing a fast-build'
     echo '  -o,--output=[dir]      Output directory for built wheels'
-    echo '  -p,--plat-name=[dir]   Platform name to use for wheel delocation'
+    echo '  -p,--plat-name=[name]  Override the wheel repair platform (Linux default: auto)'
     echo '                         (only effective if --delocate is used)'
     echo -e '\nExample calls:'
     echo "$PROGRAM"
@@ -235,6 +234,7 @@ declare_AA cmake_option_names
 set_AA cmake_option_names cmake_debug_mode ENABLE_CMAKE_DEBUG
 set_AA cmake_option_names do_clean_3rdparty CLEAN_3RDPARTY_INSTALL_DIR
 set_AA cmake_option_names enable_analyzer ENABLE_ANALYZER
+set_AA cmake_option_names enable_npu ENABLE_ASCEND
 set_AA cmake_option_names enable_cuquantum ENABLE_CUQUANTUM
 set_AA cmake_option_names enable_gitee ENABLE_GITEE
 set_AA cmake_option_names enable_gpu ENABLE_CUDA
@@ -273,25 +273,16 @@ if [ -n "$cmake_generator" ]; then
     args+=(-G "${cmake_generator}")
 fi
 
-if [ "$fast_build" -eq 1 ]; then
-    args+=(bdist_wheel --fast-build)
-
-    if [ -n "$fast_build_dir" ]; then
-        args+=(bdist_wheel --fast-build-dir="$fast_build_dir")
-    fi
-fi
-
 if [ "$n_jobs" -ne -1 ]; then
     args+=(--var JOBS "$n_jobs")
-    args+=(build_ext --jobs="$n_jobs")
 fi
 
-if [[ "$build_type" == 'Debug' ]]; then
-    args+=(build --debug)
-fi
-
-if [ "${_build_dir_was_set:-0}" -eq 1 ]; then
-    args+=(build_ext --build-dir "$build_dir")
+if [ "$enable_npu" -eq 1 ]; then
+    if [ -n "$npu_arch" ]; then
+        args+=(--var CMAKE_ASC_ARCHITECTURES "$npu_arch")
+    elif [ -n "$npu_soc" ]; then
+        args+=(--var MQ_ASCEND_SOC "$npu_soc")
+    fi
 fi
 
 local_pkgs_str=$(join_by , "${local_pkgs[@]}")
@@ -396,7 +387,23 @@ fi
 # ------------------------------------------------------------------------------
 # Build the wheels
 
-env_vars=()
+if [ "$fast_build" -eq 1 ]; then
+    build_dir_for_env="${fast_build_dir:-$build_dir}"
+elif [ "${_build_dir_was_set:-0}" -eq 1 ]; then
+    build_dir_for_env="$build_dir"
+else
+    build_dir_for_env=$("$PYTHON" -m mindquantum_config --tempdir)
+fi
+
+# Command names in --global-option make setuptools execute the build twice.
+# Keep command options in the environment and CMake definitions in config_settings.
+env_vars=(MQ_BUILD_TYPE="$build_type" MQ_BUILD_DIR="$build_dir_for_env")
+if [ "$n_jobs" -ne -1 ]; then
+    env_vars+=(CMAKE_BUILD_PARALLEL_LEVEL="$n_jobs")
+fi
+if [ "$fast_build" -eq 1 ]; then
+    env_vars+=(MQ_FAST_BDIST_WHEEL=1 MQ_FAST_BDIST_DIR="$build_dir_for_env")
+fi
 if [[ "$cmake_generator" == "Ninja" || "$cmake_generator" == "Ninja Multi-Config" ]]; then
     env_vars+=(MQ_USE_NINJA=1)
 fi
@@ -405,21 +412,11 @@ if [ "$delocate_wheel" -eq 1 ]; then
     env_vars+=(MQ_DELOCATE_WHEEL=1
                "${LD_PATH_VAR}=${!LD_PATH_VAR}")
 
-    if [[ "${_build_dir_was_set:-0}" -eq 1 || "${fast_build:-0}" -eq 1 ]]; then
-        build_dir_for_env="$build_dir"
-    elif [ "${_fast_build_dir_was_set:-0}" -eq 1 ]; then
-        build_dir_for_env="$fast_build_dir"
-    else
-        build_dir_for_env=$("$PYTHON" -m mindquantum_config --tempdir)
-    fi
-
     if [ "$_IS_MINDSPORE_CI" -eq 1 ]; then
         env_vars+=(MQ_LIB_PATHS="$ROOTDIR/ld_library_paths.txt")
     else
         env_vars+=(MQ_LIB_PATHS="$build_dir_for_env/ld_library_paths.txt")
     fi
-
-    env_vars+=(MQ_BUILD_DIR="$build_dir_for_env")
 
     if [ -n "$platform_name" ]; then
         env_vars+=(MQ_DELOCATE_WHEEL_PLAT="$platform_name")

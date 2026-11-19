@@ -20,7 +20,7 @@ while read -r line; do
         echo ''
     elif [[ "$line" =~ ^#.* ]]; then
         echo "$line"
-    elif [[ "$line" =~ ^(mindquantum|ccsrc|tests)/(.*) ]]; then
+    elif [[ "$line" =~ ^(_build|mindquantum|ccsrc|tests)/(.*) ]]; then
         printf "mindquantum/%s/%s\n" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
     else
         echo "$line"

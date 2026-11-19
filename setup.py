@@ -16,7 +16,7 @@
 """Setup.py file."""
 
 import argparse
-import itertools
+import json
 import logging
 import multiprocessing
 import os
@@ -26,7 +26,6 @@ import shutil
 import subprocess
 import sys
 import sysconfig
-import warnings
 from pathlib import Path
 
 import setuptools
@@ -50,6 +49,7 @@ from _build.utils import (  # pylint: disable=wrong-import-position  # noqa: E40
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 cur_dir = Path(__file__).resolve().parent
+python_package_name = 'mindquantum'
 ext_errors = (subprocess.CalledProcessError, FileNotFoundError)
 cmake_extra_options = []
 
@@ -96,13 +96,10 @@ class CMakeExtension(setuptools.Extension):  # pylint: disable=too-few-public-me
         Initialize a CMakeExtension object.
 
         Args:
-            src_dir (string): Path to source directory
             target (string): Name of target
             pymod (string): Name of compiled Python module
             optional (bool): (optional) If true, not building this extension is not considered an error
         """
-        # NB: the main source directory is the one containing the setup.py file
-        self.src_dir = Path().resolve()
         self.pymod = pymod
         self.target = target if target is not None else pymod.split('.')[-1]
 
@@ -139,12 +136,13 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         """Finalize all options."""
         super().finalize_options()
         # pylint: disable=attribute-defined-outside-init
-        self.build_dir = self.build_dir or None
+        self.build_dir = self.build_dir or os.getenv('MQ_BUILD_DIR')
+        self.debug = self.debug or os.getenv('MQ_BUILD_TYPE') == 'Debug'
         self.clean_build = self.clean_build or False
         self.fast_bdist_wheel = bool(int(os.getenv('MQ_FAST_BDIST_WHEEL', '0')))
         self.fast_bdist_wheel_dir = os.getenv('MQ_FAST_BDIST_DIR', None)
         self.install_light = self.install_light or False
-        self.jobs = self.jobs or multiprocessing.cpu_count()
+        self.jobs = self.jobs or os.getenv('CMAKE_BUILD_PARALLEL_LEVEL') or multiprocessing.cpu_count()
         self.no_arch_native = self.no_arch_native or False
 
         if self.fast_bdist_wheel and Path(self.fast_bdist_wheel_dir).exists():
@@ -176,28 +174,42 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         else:
             self.build_args = []
 
-        build_ext.build_extensions(self)
+        self.select_extensions()
+        self.cmake_build()
+        self.copy_built_extensions()
 
         if self.fast_bdist_wheel:
             self.cmake_install_fast_build()
         elif not self.install_light:
             self.cmake_install()
 
-    def configure_extensions(self):
-        """Run a CMake configuration and generation step for one extension."""
-        # pylint: disable=attribute-defined-outside-init
+    def select_extensions(self):
+        """Package configured targets; every selected extension is required to build."""
+        build_info_path = Path(self._get_temp_dir(), 'python-build-info.json')
+        with fdopen(build_info_path, 'r') as build_info_file:
+            build_info = json.load(build_info_file)
+        targets = set(build_info['python_targets'])
+        selected = []
+        for ext in self.extensions:
+            if ext.target in targets:
+                ext.optional = False
+                selected.append(ext)
+            elif not ext.optional:
+                raise RuntimeError(f'Required extension {ext.name} is missing from the CMake configuration')
+            else:
+                Path(self.get_ext_fullpath(ext.name)).unlink(missing_ok=True)
+        self.extensions[:] = selected
+        dest = Path(self.build_lib, python_package_name, '_build_info.json')
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(build_info_path, dest)
 
-        def _src_dir_pred(ext):
-            return ext.src_dir
+    def configure_extensions(self):
+        """Configure the project's single CMake graph for all extensions."""
+        # pylint: disable=attribute-defined-outside-init
 
         python_exec = get_python_executable()
         if not python_exec:
             raise RuntimeError('Unable to locate Python executable!')
-
-        pkg_name = self.distribution.get_name()
-        if pkg_name == 'UNKNOWN':
-            warnings.warn('Unable to determine package name automatically... defaulting to `mindquantum`')
-            pkg_name = 'mindquantum'
 
         cmake_args = [
             '-DPython_EXECUTABLE:FILEPATH=' + python_exec,
@@ -205,9 +217,9 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
             '-DIN_PLACE_BUILD:BOOL=OFF',
             '-DIS_PYTHON_BUILD:BOOL=ON',
             f'-DVERSION_INFO="{self.distribution.get_version()}"',
-            f'-DMQ_PYTHON_PACKAGE_NAME:STRING={pkg_name}',
-            # NB: make sure that the install path is absolute!
-            f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, Path().resolve().name).resolve()}',
+            f'-DMQ_PYTHON_PACKAGE_NAME:STRING={python_package_name}',
+            # Output directories need not exist yet; use lexical absolute paths.
+            f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, python_package_name).absolute()}',
         ]
 
         if self.no_arch_native:
@@ -224,20 +236,15 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
 
         cmake_args.extend(cmake_extra_options)
 
-        env = os.environ.copy()
+        for ext in self.extensions:
+            dest_path = self._get_extension_output_path(ext).parent
+            cmake_args.append(f'-D{ext.target.upper()}_OUTPUT_DIR={dest_path}')
+        self.cmake_configure_build(cmake_args, os.environ.copy())
 
-        # This can in principle handle the compilation of extensions outside the main CMake directory (ie. outside the
-        # one containing this setup.py file)
-        for src_dir, extensions in itertools.groupby(sorted(self.extensions, key=_src_dir_pred), key=_src_dir_pred):
-            args = cmake_args.copy()
-            for ext in extensions:
-                dest_path = Path(self.get_ext_fullpath(ext.lib_filepath)).resolve().parent
-                args.append(f'-D{ext.target.upper()}_OUTPUT_DIR={dest_path}')
-            self.cmake_configure_build(str(src_dir), args, env)
-
-    def cmake_configure_build(self, src_dir, cmake_args, env):
-        """Run a CMake build command for a list of extensions."""
-        build_temp = self._get_temp_dir(src_dir)
+    def cmake_configure_build(self, cmake_args, env):
+        """Configure the project's CMake build directory."""
+        src_dir = str(cur_dir)
+        build_temp = self._get_temp_dir()
         if self.clean_build:
             remove_tree(build_temp)
         if not Path(build_temp).exists():
@@ -255,54 +262,42 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         finally:
             logging.info(' End configuring from %s '.center(80, '-'), src_dir)
 
-    def build_extension(self, ext):
-        """Build a single C/C++ extension using CMake."""
-        cwd = self._get_temp_dir(Path(ext.src_dir).resolve().name)
-        logging.info(f' Building {ext.pymod} '.center(80, '-'))
-        logging.info(
-            'CMake command: %s', ' '.join(self.cmake_cmd + ['--build', '.', '--target', ext.target] + self.build_args)
-        )
+    def cmake_build(self):
+        """Build the configured graph once, including the development libraries."""
+        cwd = self._get_temp_dir()
+        command = self.cmake_cmd + ['--build', '.'] + self.build_args
+        logging.info(' Building CMake targets '.center(80, '-'))
+        logging.info('CMake command: %s', ' '.join(command))
         logging.info('   cwd: %s', cwd)
         try:
-            subprocess.check_call(
-                self.cmake_cmd + ['--build', '.', '--target', ext.target] + self.build_args,
-                cwd=cwd,
-            )
-            if self.fast_bdist_wheel:
-                dest_path = Path(self.get_ext_fullpath(ext.lib_filepath)).resolve()
-
-                for library_path in (
-                    cur_dir / Path(ext.lib_filepath).parent / dest_path.name,
-                    cur_dir / dest_path.name,
-                ):
-                    logging.info('[FASTBUILD] trying to locate lib in %s', str(library_path))
-                    if library_path.exists():
-                        shutil.copyfile(library_path, dest_path)
-                        break
-                else:
-                    raise RuntimeError(f'Unable to locate output file for {ext.name}')
+            subprocess.check_call(command, cwd=cwd)
         except ext_errors as err:
-            if not ext.optional:
-                raise BuildFailedError() from err
-            logging.info('Failed to compile optional extension %s (not an error)', ext.pymod)
+            raise BuildFailedError() from err
         finally:
-            logging.info(' End building %s '.center(80, '-'), ext.pymod)
+            logging.info(' End building CMake targets '.center(80, '-'))
+
+    def copy_built_extensions(self):
+        """Stage native outputs; the CMake build tree owns the compiled files."""
+        for ext in self.extensions:
+            dest_path = Path(self.get_ext_fullpath(ext.name)).absolute()
+            source = self._get_extension_output_path(ext)
+            if self.fast_bdist_wheel:
+                source = cur_dir / Path(ext.lib_filepath).parent / dest_path.name
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, dest_path)
 
     def cmake_install(self):
-        """Run the CMake installation step."""
-        cwd = self._get_temp_dir(Path().resolve().name)
-        logging.info(' Building CMake install target '.center(80, '-'))
-        logging.info(
-            'CMake command: %s', ' '.join(self.cmake_cmd + ['--build', '.', '--target', 'install'] + self.build_args)
-        )
+        """Install the built graph without invoking compilation again."""
+        cwd = self._get_temp_dir()
+        cfg = 'Debug' if self.debug else 'Release'
+        command = self.cmake_cmd + ['--install', '.', '--config', cfg]
+        logging.info(' Installing CMake targets '.center(80, '-'))
+        logging.info('CMake command: %s', ' '.join(command))
         logging.info('   cwd: %s', cwd)
         try:
-            subprocess.check_call(
-                self.cmake_cmd + ['--build', '.', '--target', 'install'] + self.build_args,
-                cwd=cwd,
-            )
+            subprocess.check_call(command, cwd=cwd)
         finally:
-            logging.info(' End building target install '.center(80, '-'))
+            logging.info(' End installing CMake targets '.center(80, '-'))
 
     def cmake_install_fast_build(self):
         """Run the CMake installation step for a fast-build."""
@@ -323,27 +318,17 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
 
         env = os.environ.copy()
 
-        def _src_dir_pred(ext):
-            return ext.src_dir
-
         # Change the original installation prefix path
-        for src_dir, _ in itertools.groupby(sorted(self.extensions, key=_src_dir_pred), key=_src_dir_pred):
-            self.cmake_configure_build(
-                str(src_dir),
-                [f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, Path().resolve().name).resolve()}'],
-                env,
-            )
+        self.cmake_configure_build(
+            [f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, python_package_name).absolute()}'],
+            env,
+        )
 
         # Perform a normal CMake installation
         self.cmake_install()
 
         # Restore the original installation prefix path
-        for src_dir, _ in itertools.groupby(sorted(self.extensions, key=_src_dir_pred), key=_src_dir_pred):
-            self.cmake_configure_build(
-                str(src_dir),
-                [f'-DCMAKE_INSTALL_PREFIX:FILEPATH={install_prefix}'],
-                env,
-            )
+        self.cmake_configure_build([f'-DCMAKE_INSTALL_PREFIX:FILEPATH={install_prefix}'], env)
 
     def copy_extensions_to_source(self):
         """Copy the extensions."""
@@ -382,10 +367,13 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
                 outputs.append(self.get_ext_fullpath(ext.name))
         return outputs
 
-    def _get_temp_dir(self, src_dir):
+    def _get_temp_dir(self):
         if self.build_dir:
             return self.build_dir
-        return str(Path(self.build_temp, Path(src_dir).name))
+        return str(Path(self.build_temp, cur_dir.name))
+
+    def _get_extension_output_path(self, ext):
+        return Path(self._get_temp_dir(), 'python', self.get_ext_filename(ext.name)).absolute()
 
 
 # ==============================================================================
@@ -578,24 +566,22 @@ class ArgsCMakeVariable(argparse.Action):
 # ==============================================================================
 
 if __name__ == '__main__':
-    remove_tree(Path(cur_dir, 'output'))
-
-    arg_parser = argparse.ArgumentParser()
+    arg_parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     arg_parser.add_argument('--set', action=ArgsCMakeDefinition, cmake_value=True)
     arg_parser.add_argument('--unset', action=ArgsCMakeDefinition, cmake_value=False)
     arg_parser.add_argument('--var', nargs=2, action=ArgsCMakeVariable)
     arg_parser.add_argument('-A', action=ArgsCMakeFlag)
     arg_parser.add_argument('-G', dest='cmake_generator', action=ArgsCMakeFlag)
 
-    if 'bdist_wheel' in sys.argv:
-        sys.argv.extend(arg.strip() for arg in os.environ.get('MQ_CIBW_BUILD_ARGS', '').split(',') if arg)
-        parsed_args, unparsed_args = arg_parser.parse_known_args()
+    # PEP 517 metadata/dependency hooks receive the same options as wheel construction.
+    sys.argv.extend(arg.strip() for arg in os.environ.get('MQ_CIBW_BUILD_ARGS', '').split(',') if arg)
+    parsed_args, unparsed_args = arg_parser.parse_known_args()
 
-        sys.argv = sys.argv[:1] + unparsed_args
+    sys.argv = sys.argv[:1] + unparsed_args
 
-        # If no explicit CMake Generator specification, prefer MinGW Makefiles on Windows
-        if (not parsed_args.cmake_generator) and (platform.system() == 'Windows'):
-            cmake_extra_options += ['-G', 'MinGW Makefiles']
+    # If no explicit CMake Generator specification, prefer MinGW Makefiles on Windows
+    if (not parsed_args.cmake_generator) and (platform.system() == 'Windows'):
+        cmake_extra_options += ['-G', 'MinGW Makefiles']
 
     setuptools.setup(
         cmdclass={

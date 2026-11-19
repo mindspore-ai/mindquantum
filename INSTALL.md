@@ -58,7 +58,7 @@ cd mindquantum
 MQ_DELOCATE_WHEEL=1 python3 -m build .
 ```
 
-If you plan on distributing the wheel to other people that might not have the same system as yours, we highly recommend that you try to specify the `MQ_DELOCATE_WHEEL_PLAT` environment variable. By default, the setup scripts assumes 'linux_x86_64' on 64 bits machines but you may specify any platforms supported by [auditwheel](https://github.com/pypa/auditwheel). In order to distribute your wheels to a larger audience, we would recomment setting `MQ_DELOCATE_WHEEL_PLAT=manylinux2010_x86_64`, although this might result in an error when delocating the wheel if the version of your compiler is too recent.
+On Linux, [auditwheel](https://github.com/pypa/auditwheel) 6.4 or newer automatically selects a manylinux platform from the wheel's CPU architecture and ABI requirements. This applies to CPU, GPU and NPU builds. To enforce a release baseline, optionally set `MQ_DELOCATE_WHEEL_PLAT` or pass `build.sh --plat-name=<platform>`; repair fails if that ABI cannot be satisfied and does not add older policy tags (equivalent aliases are allowed). Repair failures do not fall back to a generic `linux_*` wheel. Manylinux tags cover the repaired wheel, not external CUDA/CANN libraries or driver compatibility; those requirements must be qualified separately.
 
 ### Build MindQuantum locally
 
@@ -121,7 +121,8 @@ Here is an exhaustive list of all CMake options available for customization
 | USE_VERBOSE_MAKEFILE            | Generate verbose Makefiles (if supported)                             | ON                  |
 
 For Ascend build instructions, supported operations, memory costs and reproducible
-hardware benchmarks, see [the mqvector_npu guide](docs/mqvector_npu.md) and
+hardware benchmarks, see [building and distributing for Ascend](docs/ascend_build.md),
+[the mqvector_npu guide](docs/mqvector_npu.md) and
 [the QAIA CANN guide](docs/qaia_ascend.md).
 
 Here are some more precisions on some of the above options:

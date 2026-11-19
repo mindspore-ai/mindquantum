@@ -15,7 +15,7 @@ from scipy.sparse import issparse
 ASCEND_AVAILABLE = importlib.util.find_spec('mindquantum._qaia_sb_ascend') is not None
 ASCEND_UNAVAILABLE_REASON = (
     "Ascend QAIA backend is not available. Build MindQuantum with "
-    "-DENABLE_ASCEND=ON and -DMQ_ASCEND_SOC=Ascend910B[1-4], and source CANN set_env.sh."
+    "-DENABLE_ASCEND=ON and a CANN-supported CMAKE_ASC_ARCHITECTURES target, and source CANN set_env.sh."
 )
 
 
