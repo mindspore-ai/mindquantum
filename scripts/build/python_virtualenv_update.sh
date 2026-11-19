@@ -110,7 +110,7 @@ if [[ "${created_venv:-0}" -eq 1 || "${do_update_venv:-0}" -eq 1 ]]; then
     pkgs=(pybind11 "$openblas_python_pkg")
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        pkgs+=(auditwheel)
+        pkgs+=("auditwheel>=6.4")
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         pkgs+=("delocate==0.10.7")
     fi

@@ -17,5 +17,9 @@ rem ============================================================================
 rem call_cmd <arg1> ... <argN>
 
 :call_cmd
-  if NOT !dry_run! == 1 ( %* ) else (echo %*)
+  if NOT !dry_run! == 1 (
+    %*
+    exit /B !ERRORLEVEL!
+  )
+  echo %*
   exit /B 0

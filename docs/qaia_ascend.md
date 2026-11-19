@@ -1,35 +1,31 @@
 # Ascend 上的批量模拟分叉求解器
 
-MindQuantum 的 CANN 后端在 Ascend 910B 上执行 BSB（弹道模拟分叉）和 DSB（离散模拟分叉）。
+MindQuantum 的 CANN 后端在 Ascend NPU 上执行 BSB（弹道模拟分叉）和 DSB（离散模拟分叉）。
 同一个问题的多个初态合并为一次批量矩阵乘，完整迭代序列捕获为执行图，后续求解复用设备资源与执行图。
 它不依赖 PyTorch，不自动降精度、不回退到 CPU、不重试设备错误。
 
 ## 构建与设备选择
 
-与 [mqvector_npu](mqvector_npu.md) 共用 `ENABLE_ASCEND`、CANN 安装和精确的 SoC 目标。
+与 [mqvector_npu](mqvector_npu.md) 共用 `ENABLE_ASCEND`、CANN 安装和编译目标。
 默认 CPU 构建不查找或链接 CANN。启用时，配置阶段检查图捕获与可重复执行的 Matmul API，
-运行时检查设备型号与编译目标是否一致。源码分支的原始测试环境是 CANN 9.1；
+运行时检查设备架构，或使用 CANN API 检查 SoC 兼容性，不再要求型号字符串完全相同。
+源码分支的原始测试环境是 CANN 9.1、Ascend910B2；
 集成使用现有 Ascend C 工具链，不保留独立的两阶段构建或 `libkernels.so`。
 
-安装项目开发依赖并加载 CANN 的 `set_env.sh` 后，在仓库根目录执行：
+安装 CANN Toolkit 和匹配的设备 Ops 包（提供 ACLNN Matmul），加载同一安装的 `set_env.sh` 后，
+在仓库根目录执行：
 
 ```bash
-cmake -S . -B build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release -DIN_PLACE_BUILD=ON \
-  -DPython_EXECUTABLE="$(command -v python3)" \
-  -DENABLE_ASCEND=ON -DMQ_ASCEND_SOC=Ascend910B2 \
-  -DASCEND_CANN_PACKAGE_PATH="$ASCEND_HOME_PATH"
-cmake --build build --target python -j8
+bash build_locally.sh --npu --npu-arch=dav-2201 -B build-npu -j8
 ```
 
-无 SVE 的 ARM 主机需要附加 `-DMQ_ARM_SVE=OFF`。`ASCEND_CANN_PACKAGE_PATH` 必须指向
+无 SVE 的 ARM 主机需要附加 `-- -DMQ_ARM_SVE=OFF`。`ASCEND_CANN_PACKAGE_PATH` 必须指向
 `ASCEND_HOME_PATH` 对应的同一安装，避免头文件、库与编译器来自不同 CANN 版本。
 切换 CANN 安装必须使用新的构建目录；只更新库路径不足以清除 CMake 缓存的 ASC 编译器与编译规则。
-wheel 构建沿用项目入口，例如：
-
-```bash
-MQ_CIBW_BUILD_ARGS='--set,ENABLE_ASCEND,--var,MQ_ASCEND_SOC,Ascend910B2' python3 -m build .
-```
+wheel 使用 `build.sh --npu --npu-arch=... --plat-name=...`；完整构建和发布边界见
+[Ascend 构建与分发指南](ascend_build.md)。在 CANN 9.1 下，950PR/950DT 使用 `dav-3510`。
+项目不维护型号白名单，编译目标由 CANN 编译器校验；950 内核编译已通过，
+但 950DT 上的数值、图重放与性能验收仍须在对应实机和算子包上进行。
 
 CANN 与驱动是运行时依赖，不打入 wheel。`device_id` 是 ACL **逻辑设备号**，不是 `npu-smi` 的物理卡号。
 容器中的设备映射不应通过试错修改可见设备环境变量解决。

@@ -1,17 +1,18 @@
 # Ascend state-vector simulator
 
-`mqvector_npu` keeps a full complex64 state vector on a single Ascend 910B NPU.
+`mqvector_npu` keeps a full complex64 state vector on a single Ascend NPU.
 It uses Vector cores for structured operators and reductions and Cube cores for
 sufficiently large fused dense operators. It never substitutes CPU simulation,
 complex128 emulation, FP16, BF16 or HF32 arithmetic.
 
 ## Build and select the device
 
-The implemented toolchain is Linux, CANN 8.5 and the Ascend C compiler. The exact
-SoC must be specified at build time and must match the device at runtime.
-Hardware verification uses Ascend910B2; other 910B variants require their own
-build and hardware qualification. CPU-only builds remain the default and do not
-discover or link CANN.
+The toolchain is Linux, CANN Toolkit with the matching Ops package, and the Ascend C compiler.
+Select a CANN compiler architecture, or alternatively a compiler-supported SoC.
+Runtime checks use the device architecture or CANN's SoC compatibility API,
+not exact product-model equality. Hardware verification uses Ascend910B2;
+compiling for another architecture does not replace qualification on that device.
+CPU-only builds remain the default and do not discover or link CANN.
 
 After installing MindQuantum's normal development dependencies and sourcing
 your CANN installation's `set_env.sh`:
@@ -21,22 +22,22 @@ cmake -S . -B build-npu -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DIN_PLACE_BUILD=ON \
   -DPython_EXECUTABLE="$(command -v python3)" \
   -DMQ_PYTHON_PACKAGE_NAME=mindquantum \
-  -DENABLE_ASCEND=ON -DMQ_ASCEND_SOC=Ascend910B2 \
+  -DENABLE_ASCEND=ON -DCMAKE_ASC_ARCHITECTURES=dav-2201 \
   -DASCEND_CANN_PACKAGE_PATH="$ASCEND_HOME_PATH"
 cmake --build build-npu --target python -j8
 ```
 
-For a Python wheel, use the repository's normal build frontend with the same
-explicit target selection:
+For wheel construction, runtime dependencies and release qualification, follow
+the shared [Ascend build and distribution guide](ascend_build.md). Both Bash
+entry points support the same explicit target selection:
 
 ```bash
-MQ_CIBW_BUILD_ARGS='--set,ENABLE_ASCEND,--var,MQ_ASCEND_SOC,Ascend910B2' \
-  python3 -m build .
+bash build_locally.sh --npu --npu-arch=dav-2201 -B build-npu -j8
 ```
 
 On AArch64 hosts without SVE, also set `-DMQ_ARM_SVE=OFF`. CANN and the driver
 must remain available at runtime; they are not vendored into MindQuantum. For
-the wheel command, append `,--unset,MQ_ARM_SVE` to `MQ_CIBW_BUILD_ARGS` on such hosts.
+wheel builds, include `--unset,MQ_ARM_SVE` in `MQ_CIBW_BUILD_ARGS` on such hosts.
 `device_id` is the **logical ACL ordinal** after container/device visibility
 mapping, not a physical host card identifier. Do not change visibility merely
 because a container lacks a working `npu-smi` command.

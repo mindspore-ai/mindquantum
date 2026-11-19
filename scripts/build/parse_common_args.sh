@@ -106,6 +106,7 @@ help_message() {
     echo '  --gitee                Use Gitee (where possible) instead of Github/Gitlab'
     echo '  --no-gitee             Do not favor Gitee over Github/Gitlab'
     echo '  --gpu                  Enable GPU support'
+    echo '  --npu                  Enable Ascend statevector and QAIA backends (source CANN set_env.sh first)'
     echo '  -j,--jobs [N]          Number of parallel jobs for building'
     echo "                         Defaults to: $n_jobs_default"
     echo '  --local-pkgs           Compile third-party dependencies locally'
@@ -136,6 +137,11 @@ help_message() {
     echo '                         Only useful if --gpu is passed. See CMAKE_CUDA_ARCHITECTURES for more information.'
     echo '  --cuquantum            Enable the cuQuantum-backed CUDA simulator backend.'
     echo '                         Only useful if --gpu is passed.'
+    echo ''
+    echo 'Ascend related options:'
+    echo '  --npu-arch=[arch]      CANN compiler architecture, e.g. dav-2201 or dav-3510 (CMAKE_ASC_ARCHITECTURES).'
+    echo '  --npu-soc=[soc]        Alternative CANN SoC selector (MQ_ASCEND_SOC); accepted names depend on the SDK.'
+    echo '                         Select one target for --npu; never inferred from the build machine.'
     echo ''
     echo 'Python related options:'
     echo '  --python-deps          Install MindQuantum runtime dependencies ([project].dependencies) and the Python test'
@@ -245,6 +251,15 @@ while getopts "${getopts_args}" OPT; do
         gpu )               no_arg;
                             set_var enable_gpu $flag_value
                             ;;
+        npu )               no_arg;
+                            set_var enable_npu $flag_value
+                            ;;
+        npu-arch )          needs_arg;
+                            set_var npu_arch "$OPTARG"
+                            ;;
+        npu-soc )           needs_arg;
+                            set_var npu_soc "$OPTARG"
+                            ;;
         j | jobs )          needs_arg;
                             set_var n_jobs "$OPTARG"
                             ;;
@@ -332,6 +347,14 @@ fi
 
 if [[ $n_jobs -eq -1 && ! $cmake_generator == "Ninja"  ]]; then
     n_jobs=$n_jobs_default
+fi
+
+if [ "$enable_npu" -eq 1 ]; then
+    if [[ -n "$npu_arch" && -n "$npu_soc" ]]; then
+        die 'Select --npu-arch or --npu-soc, not both'
+    fi
+elif [[ "${_npu_arch_was_set:-0}" -eq 1 || "${_npu_soc_was_set:-0}" -eq 1 ]]; then
+    die '--npu-arch and --npu-soc require --npu'
 fi
 
 # ==============================================================================

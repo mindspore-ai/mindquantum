@@ -20,3 +20,7 @@ add_test_executable(test_circuit_tiling LIBS include_lib cmake_config mq_base mi
 add_test_executable(test_state_index LIBS include_lib cmake_config)
 add_test_executable(test_density_matrix_tiling LIBS include_lib cmake_config mq_base mindquantum::fmt
                     mindquantum::json)
+
+if(ENABLE_ASCEND)
+  add_test_executable(test_ascend_observable LIBS mqsim_vector_npu)
+endif()

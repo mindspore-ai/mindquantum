@@ -16,6 +16,7 @@
 """Custom build backend."""
 
 import hashlib
+import json
 import logging
 import os
 import platform
@@ -23,7 +24,9 @@ import re
 import shutil
 import subprocess
 import sysconfig
+from glob import escape
 from pathlib import Path
+from zipfile import ZipFile
 
 import setuptools.build_meta
 from utils import fdopen, get_executable_in_path
@@ -67,18 +70,13 @@ def get_macos_deployment_target():
 # ==============================================================================
 
 
-def call_auditwheel(*args, **kwargs):
+def call_auditwheel(*args):
     """Call auditwheel."""
     args = ['auditwheel', *(str(s) for s in args)]
     logging.info('auditwheel command: %s', ' '.join(args))
     logging.info('  location of executable: %s', shutil.which('auditwheel'))
 
-    try:
-        subprocess.check_call(args)
-    except subprocess.CalledProcessError:
-        if not kwargs.get('allow_failure', False):
-            raise
-        return False
+    subprocess.check_call(args)
     return True
 
 
@@ -269,7 +267,9 @@ def get_requires_for_build_wheel(config_settings=None):
     delocate_wheel = int(os.environ.get('MQ_DELOCATE_WHEEL', False))
     if delocate_wheel:
         if platform.system() == 'Linux':
-            executable_list.extend(('auditwheel', 'patchelf'))
+            # 6.4 added automatic ABI policy selection; resolved-path exclusions require 6.3.
+            requirements.append('auditwheel>=6.4')
+            executable_list.append('patchelf')
         elif platform.system() == 'Darwin':
             requirements.append('delocate')
         elif platform.system() == 'Windows':
@@ -348,6 +348,15 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     delocated_wheel = None
 
     if delocate_wheel:
+        with ZipFile(name_full) as wheel:
+            ascend = json.loads(wheel.read('mindquantum/_build_info.json'))['ascend']
+        if ascend:
+            cann_home = os.environ.get('ASCEND_HOME_PATH')
+            if not cann_home:
+                raise ValueError('Ascend wheel repair requires a nonempty ASCEND_HOME_PATH; source CANN set_env.sh.')
+            # Use the same activated SDK as CMake. Bare SONAME exclusions can also suppress unrelated CPU dependencies.
+            cann_root = Path(cann_home).resolve(strict=True)
+            exclude_args.extend(['--exclude', f'{escape(str(cann_root))}/*'])
         logging.info('Attempting to delocate the generated Python wheel')
         delocated_wheel_directory.mkdir(parents=True, exist_ok=True)
         ld_lib_var = 'LD_LIBRARY_PATH'
@@ -359,47 +368,10 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
         if platform.system() == 'Linux':
             done_delocate = True
-            plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT', '')
-
-            call_auditwheel('show', name_full)
-            if plat:
-                call_auditwheel('repair', '--plat', plat, '-w', delocated_wheel_directory, *exclude_args, name_full)
-            else:
-                logging.info('No platform specified, trying a few from older specifications to more recent')
-                for plat in (
-                    'manylinux2010_x86_64',  # NB: equivalent to manylinux_2_5_x86_64
-                    'manylinux2014_x86_64',  # NB: equivalent to manylinux_2_17_x86_64
-                    'manylinux_2_24_x86_64',
-                    'manylinux_2_26_x86_64',
-                    'manylinux_2_27_x86_64',
-                    'manylinux_2_28_x86_64',
-                    'manylinux_2_31_x86_64',
-                    'manylinux_2_34_x86_64',
-                    'manylinux_2_35_x86_64',
-                    'linux_x86_64',
-                    'manylinux2014_aarch64',  # NB: equivalent to manylinux_2_17_aarch64
-                    'manylinux_2_24_aarch64',
-                    'manylinux_2_26_aarch64',
-                    'manylinux_2_27_aarch64',
-                    'manylinux_2_28_aarch64',
-                    'manylinux_2_31_aarch64',
-                    'manylinux_2_34_aarch64',
-                    'manylinux_2_35_aarch64',
-                    'linux_aarch64',
-                ):
-                    logging.info('----------------------------------------')
-                    logging.info('Trying to delocate to platform: %s', plat)
-                    if call_auditwheel(
-                        'repair',
-                        '--plat',
-                        plat,
-                        '-w',
-                        delocated_wheel_directory,
-                        *exclude_args,
-                        name_full,
-                        allow_failure=True,
-                    ):
-                        break
+            plat = os.environ.get('MQ_DELOCATE_WHEEL_PLAT') or 'auto'
+            call_auditwheel(
+                'repair', '--plat', plat, '--only-plat', '-w', delocated_wheel_directory, *exclude_args, name_full
+            )
         elif platform.system() == 'Darwin':
             done_delocate = True
             call_delocate_wheel(
@@ -439,4 +411,4 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
     generate_digest_file(dest_wheel)
 
-    return name
+    return dest_wheel.name

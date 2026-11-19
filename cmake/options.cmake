@@ -76,7 +76,7 @@ option(CUDA_STATIC "Use static version of Nvidia CUDA libraries during linking (
 # ==============================================================================
 # Optional simulator backends
 
-option(ENABLE_ASCEND "Build Ascend 910B statevector and QAIA backends (requires CANN)" OFF)
+option(ENABLE_ASCEND "Build Ascend statevector and QAIA backends (requires CANN)" OFF)
 option(ENABLE_MPS "Build the matrix product state backend `mqmps` (requires OpenBLAS)" ON)
 
 # ==============================================================================
@@ -228,14 +228,14 @@ if(ENABLE_CUDA)
     enable_language(CUDA)
     setup_language(CUDA)
   else()
-    disable_cuda("missing/unable to locate CUDA compiler")
+    message(FATAL_ERROR "ENABLE_CUDA requires a CUDA compiler. Set CUDACXX or CMAKE_CUDA_COMPILER, or disable CUDA.")
   endif()
 
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
     list(APPEND CMAKE_CUDA_ARCHITECTURES 80)
     list(SORT CMAKE_CUDA_ARCHITECTURES ORDER DESCENDING)
-  elseif(ENABLE_CUDA)
-    disable_cuda("CUDA compiler version is too old (${CMAKE_CUDA_COMPILER_VERSION} < 11.0)")
+  else()
+    message(FATAL_ERROR "ENABLE_CUDA requires CUDA >= 11.0; found ${CMAKE_CUDA_COMPILER_VERSION}.")
   endif()
 
   # Now look if we find NVHPC

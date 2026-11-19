@@ -29,7 +29,6 @@ struct Hamiltonian;
 
 namespace mindquantum::sim::ascend {
 constexpr uint32_t kObservableTileSize = 1024;
-constexpr uint32_t kObservableMaxBlocks = 48;
 constexpr uint32_t kObservablePauli = 0;
 constexpr uint32_t kObservableCsr = 1;
 constexpr uint32_t kObservableDiagonal = 2;  // execution-only, real FP32 diagonal cache
@@ -79,7 +78,7 @@ struct alignas(32) ReductionPartial {
 struct alignas(32) SamplingLayout {
     uint64_t dimension;
     uint64_t plane;
-    uint32_t bins;           // 1..48, also the number of AIVs building the tree
+    uint32_t bins;           // positive, also the number of AIVs building the tree
     uint32_t tiles_per_bin;  // power of two, >=8; returned by MakeSamplingLayout
     uint64_t reserved;
 };
@@ -171,7 +170,7 @@ class ObservableProgram {
     const std::vector<ObservableValue> values_;
 };
 
-SamplingLayout MakeSamplingLayout(int64_t n_qubits, uint32_t bins = kObservableMaxBlocks);
+SamplingLayout MakeSamplingLayout(int64_t n_qubits, uint32_t bins);
 
 struct DensityProgram {
     DensityLayout layout;
@@ -185,8 +184,9 @@ DensityProgram CompileDensity(int64_t n_qubits, uint64_t kept_mask, uint32_t cor
 // contain 2*max(8,dimension) floats, real plane followed by imaginary plane.
 // Input padding is ignored; state-writing kernels always zero padding. No
 // implicit |0> null state, allocations, synchronizations, copies to host, or RNG
-// are hidden in these launchers. blocks is in [1,48]. Callers must keep inputs
-// alive and synchronize/check stream errors before consuming results.
+// are hidden in these launchers. Callers select a positive blocks count from
+// the device's Vector core count and workload, keep inputs alive, and
+// synchronize/check stream errors before consuming results.
 // Invalid scalar arguments return ACL_ERROR_INVALID_PARAM without a launch;
 // successful launches return aclrtGetLastError(ACL_RT_THREAD_LEVEL). Device
 // metadata must come from the validated compiler; allocation lengths/partial
@@ -265,7 +265,7 @@ aclError LaunchDensity(uint32_t blocks, aclrtStream stream, void* state, void* o
 aclError LaunchSamplingTree(uint32_t blocks, aclrtStream stream, void* state, void* tree, void* totals,
                             SamplingLayout layout);
 
-// Stage 2: host double-sums the <=48 totals, rejects zero/nonfinite norm,
+// Stage 2: host double-sums the per-bin totals, rejects zero/nonfinite norm,
 // selects bins proportionally with seeded RNG, and uploads conditional uniform
 // fractions (clamp a float conversion of a draw below 1, never to 1).
 // requests: shots*sizeof(SamplingRequest); results: shots*sizeof(SamplingResult).

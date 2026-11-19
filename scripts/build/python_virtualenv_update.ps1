@@ -139,7 +139,7 @@ if ($created_venv -or $do_update_venv) {
     $pkgs = @('pybind11', "$openblas_python_pkg")
 
     if ($IsLinuxEnv) {
-        $pkgs += 'auditwheel'
+        $pkgs += 'auditwheel>=6.4'
     }
     elseif ($IsMacOSEnv) {
         $pkgs += 'delocate'

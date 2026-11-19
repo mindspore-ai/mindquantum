@@ -43,7 +43,7 @@ struct Resources {
 
     void Init(int deviceId) {
         ACL_CHECK(aclrtCreateContext(&context, deviceId));
-        mindquantum::ascend::SocName(MQ_ASCEND_SOC);
+        mindquantum::ascend::SocName(deviceId);
         ACL_CHECK(aclrtCreateStream(&stream));
     }
 

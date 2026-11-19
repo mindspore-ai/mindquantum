@@ -166,6 +166,7 @@ cmake_args=(-DIN_PLACE_BUILD:BOOL=ON
             -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
             -DCMAKE_BUILD_TYPE:STRING="$build_type"
             -DENABLE_ANALYZER:BOOL="${CMAKE_BOOL[$enable_analyzer]}"
+            -DENABLE_ASCEND:BOOL="${CMAKE_BOOL[$enable_npu]}"
             -DENABLE_CMAKE_DEBUG:BOOL="${CMAKE_BOOL[$cmake_debug_mode]}"
             -DENABLE_CUQUANTUM:BOOL="${CMAKE_BOOL[$enable_cuquantum]}"
             -DENABLE_CUDA:BOOL="${CMAKE_BOOL[$enable_gpu]}"
@@ -208,6 +209,14 @@ fi
 
 if [[ "$enable_gpu" -eq 1 && -n "$cuda_arch" ]]; then
     cmake_args+=(-DCMAKE_CUDA_ARCHITECTURES:STRING="$cuda_arch")
+fi
+
+if [ "$enable_npu" -eq 1 ]; then
+    if [ -n "$npu_arch" ]; then
+        cmake_args+=(-DCMAKE_ASC_ARCHITECTURES:STRING="$npu_arch")
+    elif [ -n "$npu_soc" ]; then
+        cmake_args+=(-DMQ_ASCEND_SOC:STRING="$npu_soc")
+    fi
 fi
 
 local_pkgs_str=$(join_by , "${local_pkgs[@]}")

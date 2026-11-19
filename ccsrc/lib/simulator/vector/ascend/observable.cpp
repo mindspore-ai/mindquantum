@@ -232,8 +232,8 @@ ObservableProgram ObservableProgram::Dagger() const {
 
 SamplingLayout MakeSamplingLayout(int64_t n_qubits, uint32_t bins) {
     const auto dimension = Dimension(n_qubits);
-    if (!bins || bins > kObservableMaxBlocks) {
-        throw std::invalid_argument("Ascend sampling requires 1..48 bins.");
+    if (!bins) {
+        throw std::invalid_argument("Ascend sampling requires at least one bin.");
     }
     const auto plane = std::max(uint64_t{8}, dimension);
     const auto tiles = (plane + kObservableTileSize - 1) / kObservableTileSize;
@@ -247,7 +247,7 @@ SamplingLayout MakeSamplingLayout(int64_t n_qubits, uint32_t bins) {
 
 DensityProgram CompileDensity(int64_t n_qubits, uint64_t kept_mask, uint32_t cores) {
     const auto dimension = Dimension(n_qubits);
-    if ((kept_mask & ~(dimension - 1)) || !cores || cores > kObservableMaxBlocks) {
+    if ((kept_mask & ~(dimension - 1)) || !cores) {
         throw std::invalid_argument("Invalid Ascend reduced-density qubits or core count.");
     }
     const auto environment = (dimension - 1) & ~kept_mask;

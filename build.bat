@@ -68,7 +68,6 @@ set python_extra_pkgs=wheel-filename>1.2 build==0.9.0
 if !_IS_MINDSPORE_CI! == 1 (
    set cmake_debug_mode=1
    set enable_gitee=1
-   set enable_gpu=1
 )
 
 call %SCRIPTDIR%\default_values.bat
@@ -547,6 +546,7 @@ if !delocate_wheel! == 1 (
 )
 
 call %SCRIPTDIR%\dos\call_cmd.bat !PYTHON! -m build !args! !unparsed_args!
+if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
 
 if DEFINED args set args=
 if DEFINED unparsed_args set unparsed_args=
@@ -560,10 +560,12 @@ rem ----------------------------------------------------------------------------
 rem Move the wheels to the output directory
 
 IF NOT EXIST "!output_path!" (
-    md "!output_path!"
+    call %SCRIPTDIR%\dos\call_cmd.bat md "!output_path!"
+    if !ERRORLEVEL! NEQ 0 exit /B !ERRORLEVEL!
 )
 
-call %SCRIPTDIR%\dos\call_cmd.bat move /Y %ROOTDIR%\dist\* %output_path%
+call %SCRIPTDIR%\dos\call_cmd.bat move /Y "%ROOTDIR%\dist\*" "%output_path%"
+if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
 
 echo ------Successfully created mindquantum package------
 

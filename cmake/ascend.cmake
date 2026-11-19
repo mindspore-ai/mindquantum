@@ -8,18 +8,36 @@ if(NOT ENABLE_ASCEND)
   return()
 endif()
 
+set(CMAKE_ASC_ARCHITECTURES
+    ""
+    CACHE STRING "Ascend compiler architecture, e.g. dav-2201 or dav-3510")
 set(MQ_ASCEND_SOC
     ""
-    CACHE STRING "Exact Ascend C target, e.g. Ascend910B2")
+    CACHE STRING "Optional CANN SoC selector, used instead of CMAKE_ASC_ARCHITECTURES")
 set(ASCEND_CANN_PACKAGE_PATH
     "$ENV{ASCEND_HOME_PATH}"
     CACHE PATH "CANN installation root")
-if(NOT MQ_ASCEND_SOC MATCHES "^Ascend910B[1-4]$")
-  message(FATAL_ERROR "ENABLE_ASCEND requires an explicit MQ_ASCEND_SOC=Ascend910B[1-4]")
+foreach(_selector CMAKE_ASC_ARCHITECTURES MQ_ASCEND_SOC)
+  if(NOT "${${_selector}}" STREQUAL "" AND NOT "${${_selector}}" MATCHES "^[A-Za-z0-9_.-]+$")
+    message(FATAL_ERROR "${_selector} must be a single compiler target identifier (letters, digits, '.', '_' or '-')")
+  endif()
+endforeach()
+if(CMAKE_ASC_ARCHITECTURES AND MQ_ASCEND_SOC)
+  message(FATAL_ERROR "Select CMAKE_ASC_ARCHITECTURES or MQ_ASCEND_SOC, not both")
+elseif(NOT CMAKE_ASC_ARCHITECTURES AND NOT MQ_ASCEND_SOC)
+  message(FATAL_ERROR "ENABLE_ASCEND requires a compiler target: set CMAKE_ASC_ARCHITECTURES, e.g. dav-3510 for 950")
 endif()
-# ASCConfig itself reads ASCEND_HOME_PATH. Do not combine headers/libraries from one installation with the compiler from
-# another.
-if(NOT DEFINED ENV{ASCEND_HOME_PATH} OR "$ENV{ASCEND_HOME_PATH}" STREQUAL "" OR NOT ASCEND_CANN_PACKAGE_PATH)
+# The API probe and both host backends use the same compile-time target selection.
+if(CMAKE_ASC_ARCHITECTURES)
+  set(MQ_ASCEND_TARGET_DEFINITION "MQ_ASCEND_ARCHITECTURE=\"${CMAKE_ASC_ARCHITECTURES}\"")
+else()
+  set(MQ_ASCEND_TARGET_DEFINITION "MQ_ASCEND_SOC=\"${MQ_ASCEND_SOC}\"")
+endif()
+# The installed CANN compiler owns the supported-target list, not MindQuantum. ASCConfig itself reads ASCEND_HOME_PATH.
+# Do not combine headers/libraries from one installation with the compiler from another.
+if(NOT DEFINED ENV{ASCEND_HOME_PATH}
+   OR "$ENV{ASCEND_HOME_PATH}" STREQUAL ""
+   OR NOT ASCEND_CANN_PACKAGE_PATH)
   message(FATAL_ERROR "Source CANN set_env.sh; ASCEND_HOME_PATH and ASCEND_CANN_PACKAGE_PATH must be nonempty")
 endif()
 get_filename_component(_cann_root "${ASCEND_CANN_PACKAGE_PATH}" REALPATH)
@@ -44,7 +62,8 @@ find_path(
   MQ_ASCEND_ACLNN_INCLUDE aclnnop/aclnn_matmul.h
   HINTS "${_cann_root}/include"
   NO_DEFAULT_PATH REQUIRED)
-foreach(_library ascendcl opapi nnopbase tiling_api platform)
+# Use the component APIs; the legacy ascendcl/opapi umbrella libraries are deprecated by CANN.
+foreach(_library acl_rt opapi_nn nnopbase tiling_api platform)
   string(TOUPPER "${_library}" _name)
   find_library(
     MQ_ASCEND_${_name} ${_library}
@@ -57,12 +76,20 @@ include(CheckCXXSourceCompiles)
 include(CMakePushCheckState)
 cmake_push_check_state(RESET)
 set(CMAKE_REQUIRED_INCLUDES "${MQ_ASCEND_INCLUDE}" "${MQ_ASCEND_ACLNN_INCLUDE}")
-set(CMAKE_REQUIRED_LIBRARIES "${MQ_ASCEND_ASCENDCL}" "${MQ_ASCEND_OPAPI}" "${MQ_ASCEND_NNOPBASE}")
+set(CMAKE_REQUIRED_LIBRARIES "${MQ_ASCEND_ACL_RT}" "${MQ_ASCEND_OPAPI_NN}" "${MQ_ASCEND_NNOPBASE}")
+set(CMAKE_REQUIRED_DEFINITIONS "-D${MQ_ASCEND_TARGET_DEFINITION}")
 check_cxx_source_compiles(
   "
   #include <acl/acl.h>
   #include <aclnnop/aclnn_matmul.h>
   int main() {
+  #ifdef MQ_ASCEND_ARCHITECTURE
+    int64_t architecture = 0;
+    aclrtGetDeviceInfo(0, ACL_DEV_ATTR_NPU_ARCH, &architecture);
+  #else
+    int32_t compatible = 0;
+    aclrtCheckArchCompatibility(nullptr, &compatible);
+  #endif
     aclmdlRI graph = nullptr;
     aclmdlRICaptureBegin(nullptr, ACL_MODEL_RI_CAPTURE_MODE_THREAD_LOCAL);
     aclmdlRICaptureEnd(nullptr, &graph);
@@ -74,8 +101,11 @@ check_cxx_source_compiles(
     return aclnnMatmul(nullptr, 0, nullptr, nullptr);
   }
   "
-  MQ_ASCEND_HAS_GRAPH_MATMUL)
+  MQ_ASCEND_HAS_REQUIRED_APIS)
 cmake_pop_check_state()
-if(NOT MQ_ASCEND_HAS_GRAPH_MATMUL)
-  message(FATAL_ERROR "CANN must provide aclmdlRI graph capture and repeatable aclnnMatmul executors")
+if(NOT MQ_ASCEND_HAS_REQUIRED_APIS)
+  message(
+    FATAL_ERROR
+      "CANN must provide the selected target's compatibility API, graph capture "
+      "and repeatable aclnnMatmul executors. Architecture targets require ACL_DEV_ATTR_NPU_ARCH (CANN 9.1+).")
 endif()

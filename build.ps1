@@ -95,7 +95,6 @@ if ($_IS_MINDSPORE_CI ) {
     $DebugPreference = 'Continue'
     Set-Value 'cmake_debug_mode' $true
     Set-Value 'enable_gitee' $true
-    Set-Value 'enable_gpu' $true
 }
 
 # ------------------------------------------------------------------------------

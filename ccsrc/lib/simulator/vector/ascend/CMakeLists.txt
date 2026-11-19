@@ -14,7 +14,7 @@ target_include_directories(mqsim_vector_npu PUBLIC "${MQ_ASCEND_INCLUDE}")
 target_link_libraries(
   mqsim_vector_npu
   PUBLIC mq_math
-  PRIVATE mqsim_circuit_tiling mq_ascend_kernels "${MQ_ASCEND_ASCENDCL}" "${MQ_ASCEND_TILING_API}"
+  PRIVATE mqsim_circuit_tiling mq_ascend_kernels "${MQ_ASCEND_ACL_RT}" "${MQ_ASCEND_TILING_API}"
           "${MQ_ASCEND_PLATFORM}")
-target_compile_definitions(mqsim_vector_npu PRIVATE MQ_ASCEND_SOC="${MQ_ASCEND_SOC}")
+target_compile_definitions(mqsim_vector_npu PRIVATE "${MQ_ASCEND_TARGET_DEFINITION}")
 force_at_least_cxx17_workaround(mqsim_vector_npu)
