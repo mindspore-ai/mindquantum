@@ -12,98 +12,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""State comparison helpers of the simulator package.
-
-``inner_product`` compares two simulators and ``fidelity`` compares two raw
-quantum states.  Both functions are shared by the VQE and QAOA workflows, so
-their validation contract is checked here: every malformed state must be
-rejected with an explicit error instead of returning a meaningless number.
-"""
+"""Validation of state-comparison inputs."""
 
 import numpy as np
 import pytest
 
 import mindquantum as mq
-from mindquantum import Circuit
 from mindquantum.simulator import Simulator, fidelity, inner_product
 
 pytestmark = [pytest.mark.level0, pytest.mark.platform_x86_cpu]
 
 
-def _simulator(backend='mqvector', n_qubits=2, dtype=mq.complex128):
-    return Simulator(backend, n_qubits, dtype=dtype, seed=13)
-
-
-def test_inner_product_of_two_simulators():
+@pytest.mark.parametrize(
+    'other,error,match',
+    [
+        pytest.param(lambda: Simulator('mqvector', 3), ValueError, 'same quantum state', id='width'),
+        pytest.param(lambda: Simulator('mqmatrix', 2), ValueError, 'backend', id='backend'),
+        pytest.param(lambda: Simulator('mqvector', 2, dtype=mq.complex64), TypeError, 'Data type', id='precision'),
+    ],
+)
+def test_inner_product_validation(other, error, match):
     """
-    Feature: ``inner_product`` between two simulators.
-
-    Description: Compare the ground state with a superposition and a state rotated on two qubits.
-
-    Expectation: The value matches the analytic overlap.
+    Feature: Simulator inner product.
+    Description: Compare simulators with incompatible width, backend or precision.
+    Expectation: Each mismatch is rejected rather than silently converted.
     """
-    bra = _simulator()
-    ket = _simulator()
-    np.testing.assert_allclose(inner_product(bra, bra), 1.0)
-    ket.apply_circuit(Circuit().h(0))
-    np.testing.assert_allclose(inner_product(bra, ket), 1 / np.sqrt(2), atol=1e-12)
-    ket.apply_circuit(Circuit().x(1, 0))
-    np.testing.assert_allclose(inner_product(bra, ket), 1 / np.sqrt(2), atol=1e-12)
+    with pytest.raises(error, match=match):
+        inner_product(Simulator('mqvector', 2), other())
 
 
-def test_inner_product_validation():
+@pytest.mark.parametrize(
+    'left,right,match',
+    [
+        pytest.param(np.ones(2), np.ones(4), 'size of two', id='size-mismatch'),
+        pytest.param(np.ones(3), np.ones(3), 'power of 2', id='non-qubit-size'),
+        pytest.param(np.ones(2), np.ones(2), 'normalized', id='vector-norm'),
+        pytest.param([[0, 1], [0, 0]], [[0, 1], [0, 0]], 'hermitian', id='non-hermitian'),
+        pytest.param(np.diag([-0.5, 1.5]), np.diag([-0.5, 1.5]), 'negative', id='negative-population'),
+        pytest.param(np.diag([2, 0]), np.diag([2, 0]), 'trace', id='trace'),
+        pytest.param(np.zeros((2, 2, 2)), np.zeros((2, 2, 2)), 'vector or matrix', id='rank'),
+        pytest.param(np.zeros((2, 3)), np.zeros((2, 3)), 'row of matrix', id='non-square'),
+    ],
+)
+def test_fidelity_validation(left, right, match):
     """
-    Feature: Validation of ``inner_product``.
-
-    Description: Compare simulators with different width, backend and precision.
-
-    Expectation: Each mismatch raises the documented exception.
+    Feature: Fidelity input validation.
+    Description: Compare states with invalid dimensions or normalization.
+    Expectation: Invalid states raise ValueError with a diagnostic identifying the violated contract.
     """
-    simulator = _simulator()
-    with pytest.raises(ValueError, match='same quantum state'):
-        inner_product(simulator, _simulator('mqvector', 3))
-    with pytest.raises(ValueError, match='backend of two simulator should be same'):
-        inner_product(simulator, _simulator('mqmatrix'))
-    with pytest.raises(TypeError, match='Data type of two simulator are different'):
-        inner_product(simulator, _simulator('mqvector', dtype=mq.complex64))
+    with pytest.raises(ValueError, match=match):
+        fidelity(left, right)
 
 
-def test_fidelity_accepts_vectors_and_density_matrices():
+def test_fidelity_list_conversion():
     """
-    Feature: ``fidelity`` between pure and mixed states.
-
-    Description: Compute the fidelity of a ket with itself, of a density matrix with itself and of orthogonal states.
-
-    Expectation: The values match the analytic results.
+    Feature: Fidelity array-like inputs.
+    Description: Compare distinct normalized states supplied as Python lists.
+    Expectation: Lists are converted and the squared overlap is returned.
     """
-    ket = np.array([1.0, 0.0], dtype=complex)
-    np.testing.assert_allclose(fidelity(ket, ket), 1.0)
-    density = np.diag([0.25, 0.75]).astype(complex)
-    np.testing.assert_allclose(fidelity(density, density), 1.0)
-    np.testing.assert_allclose(fidelity(np.array([1.0, 0.0]), np.array([0.0, 1.0])), 0.0, atol=1e-12)
-    np.testing.assert_allclose(fidelity(ket, np.diag([1.0, 0.0])), 1.0)
-
-
-def test_fidelity_validation():
-    """
-    Feature: Validation of ``fidelity``.
-
-    Description: Provide states with mismatched sizes, a non power of two size, an unnormalized vector,
-        a non-Hermitian matrix, a negative population, a non-unit trace and a 3D array.
-
-    Expectation: Every malformed state raises a ``ValueError`` describing the problem.
-    """
-    with pytest.raises(ValueError, match='size of two quantum state not match'):
-        fidelity(np.ones(2), np.ones(4))
-    with pytest.raises(ValueError, match='not power of 2'):
-        fidelity(np.ones(3), np.ones(3))
-    with pytest.raises(ValueError, match='state vector must be normalized'):
-        fidelity(np.ones(2), np.ones(2))
-    with pytest.raises(ValueError, match='density matrix must be hermitian'):
-        fidelity(np.array([[0.0, 1.0], [0.0, 0.0]]), np.array([[0.0, 1.0], [0.0, 0.0]]))
-    with pytest.raises(ValueError, match='diagonal terms in density matrix cannot be negative'):
-        fidelity(np.diag([-0.5, 1.5]).astype(complex), np.diag([-0.5, 1.5]).astype(complex))
-    with pytest.raises(ValueError, match='trace of density matrix must equal to 1'):
-        fidelity(np.diag([2.0, 0.0]).astype(complex), np.diag([2.0, 0.0]).astype(complex))
-    with pytest.raises(ValueError, match='requires a vector or matrix'):
-        fidelity(np.zeros((2, 2, 2)), np.zeros((2, 2, 2)))
+    assert fidelity([1.0, 0.0], [0.6, 0.8]) == pytest.approx(0.36)

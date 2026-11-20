@@ -571,6 +571,8 @@ class GBSB(SB):  # noqa: N801
     ):
         """Construct GBSB algorithm."""
         _check_number_type("A", A)
+        if not np.isfinite(A):
+            raise ValueError("A must be finite values")
         _check_value_should_not_less("A", 0, A)
         super().__init__(J, h, x, n_iter, batch_size, dt, xi, backend)
         self.A = A
