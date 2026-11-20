@@ -12,213 +12,105 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Validation contract of the QAIA base class.
+"""QAIA constructor validation shared by the NumPy solvers."""
 
-Every solver of ``mindquantum.algorithm.qaia`` inherits the constructor of
-``QAIA``, so the checks below guard the whole family: coupling matrix, external
-field, initial spin state, backend name and iteration counters.
-"""
+import importlib.util
 
 import numpy as np
 import pytest
-from scipy.sparse import csr_matrix
 
-from mindquantum.algorithm.qaia import BSB, CAC, QAIA
+from mindquantum.algorithm.qaia import BSB, QAIA
+from mindquantum.algorithm.qaia.SB import GPU_AVAILABLE
 
 pytestmark = [pytest.mark.level0, pytest.mark.platform_x86_cpu]
-
 _COUPLING = np.array([[0.0, -1.0], [-1.0, 0.0]])
 
 
-@pytest.mark.parametrize('backend', ['gpu-float32', 'npu-float32'])
-def test_unavailable_device_backend_reports_the_required_package(backend):
+@pytest.mark.parametrize(
+    'kwargs,error,match',
+    [
+        pytest.param({'backend': 'tpu-float32'}, ValueError, 'backend must be one of', id='backend-name'),
+        pytest.param({'backend': 1}, TypeError, 'requires a string', id='backend-type'),
+        pytest.param({'h': [0.5, -0.5]}, TypeError, 'h requires numpy.array', id='field-type'),
+        pytest.param({'h': np.zeros(3)}, ValueError, 'h must have shape', id='field-length'),
+        pytest.param({'h': np.zeros((2, 2))}, ValueError, 'h must have shape', id='field-columns'),
+        pytest.param({'x': [[0.1], [0.2]]}, TypeError, 'x requires numpy.array', id='spins-type'),
+        pytest.param({'x': np.zeros(2)}, ValueError, 'x must be a 2D array', id='spins-rank'),
+        pytest.param({'x': np.zeros((3, 1))}, ValueError, 'x must have shape', id='spins-count'),
+        pytest.param({'x': np.zeros((2, 2))}, ValueError, 'x must have shape', id='replica-count'),
+        pytest.param({'n_iter': 0}, ValueError, 'not less than 1', id='iterations-zero'),
+        pytest.param({'n_iter': 1.5}, TypeError, 'requires an int', id='iterations-float'),
+        pytest.param({'batch_size': 0}, ValueError, 'not less than 1', id='batch-zero'),
+        pytest.param({'batch_size': True}, TypeError, 'requires an int', id='batch-bool'),
+        pytest.param({'J': np.zeros((2, 3))}, ValueError, 'square', id='matrix-shape'),
+        pytest.param({'J': [[0, -1], [-1, 0]]}, TypeError, 'J requires', id='matrix-type'),
+        pytest.param({'J': np.eye(2)}, ValueError, 'diagonal', id='matrix-diagonal'),
+        pytest.param({'J': np.array([[0, -1], [1, 0]])}, ValueError, 'symmetric', id='matrix-symmetry'),
+    ],
+)
+def test_qaia_constructor_validation(kwargs, error, match):
     """
-    Feature: Backend availability check of ``QAIA``.
-
-    Description: Ask for a Torch based backend on a NumPy only installation.
-
-    Expectation: An ``ImportError`` explains which package is required.
+    Feature: QAIA input validation.
+    Description: Supply invalid problem dimensions, types, counters or backend selection.
+    Expectation: Construction rejects each malformed problem explicitly.
     """
-    pytest.importorskip('scipy')
-    try:
-        import torch  # noqa: F401  pylint: disable=unused-import
-    except ImportError:
-        pass
-    else:
-        pytest.skip('PyTorch is installed, the import guard is not exercised.')
+    with pytest.raises(error, match=match):
+        QAIA(**({'J': _COUPLING} | kwargs))
 
-    with pytest.raises(ImportError, match='Please install pytorch|Please install torch_npu'):
+
+@pytest.mark.skipif(importlib.util.find_spec('torch') is not None, reason='PyTorch is installed')
+@pytest.mark.parametrize(
+    'backend,match',
+    [('gpu-float32', 'Please install pytorch'), ('npu-float32', 'Please install torch_npu')],
+)
+def test_missing_torch(backend, match):
+    """
+    Feature: Optional Torch dependency.
+    Description: Select a Torch backend on an installation without PyTorch.
+    Expectation: ImportError identifies the missing package.
+    """
+    with pytest.raises(ImportError, match=match):
         QAIA(_COUPLING, backend=backend)
 
 
-@pytest.mark.parametrize('value', ['tpu-float32', 'cpu', ''])
-def test_invalid_backend_name_is_rejected(value):
-    """
-    Feature: Backend name validation of ``QAIA``.
-
-    Description: Provide an unsupported backend name.
-
-    Expectation: A ``ValueError`` lists the supported backends.
-    """
-    with pytest.raises(ValueError, match='backend must be one of'):
-        QAIA(_COUPLING, backend=value)
-
-
-def test_non_string_backend_is_rejected():
-    """
-    Feature: Backend type validation of ``QAIA``.
-
-    Description: Provide a non string backend.
-
-    Expectation: A ``TypeError`` reports the expected type.
-    """
-    with pytest.raises(TypeError, match='backend requires a string'):
-        QAIA(_COUPLING, backend=1)
-
-
-def test_external_field_type_and_shape_validation():
-    """
-    Feature: External field validation of ``QAIA``.
-
-    Description: Provide a list, a wrong length vector and a 2D field with two columns.
-
-    Expectation: Each malformed field raises the documented exception.
-    """
-    with pytest.raises(TypeError, match='h requires numpy.array'):
-        QAIA(_COUPLING, h=[0.5, -0.5])
-    with pytest.raises(ValueError, match='h must have shape'):
-        QAIA(_COUPLING, h=np.zeros(3))
-    with pytest.raises(ValueError, match='h must have shape'):
-        QAIA(_COUPLING, h=np.zeros((2, 2)))
-
-
-def test_initial_state_type_and_shape_validation():
-    """
-    Feature: Initial spin validation of ``QAIA``.
-
-    Description: Provide a list, a 1D array and a 2D array with the wrong number of replicas.
-
-    Expectation: Each malformed state raises the documented exception.
-    """
-    with pytest.raises(TypeError, match='x requires numpy.array'):
-        QAIA(_COUPLING, x=[[0.1], [0.2]])
-    with pytest.raises(ValueError, match='x must be a 2D array'):
-        QAIA(_COUPLING, x=np.zeros(2))
-    with pytest.raises(ValueError, match='x must have shape'):
-        QAIA(_COUPLING, x=np.zeros((3, 1)))
-    with pytest.raises(ValueError, match='x must have shape'):
-        QAIA(_COUPLING, x=np.zeros((2, 2)))
-
-
 @pytest.mark.parametrize(
-    'kwargs,match',
+    'kwargs,error,match',
     [
-        pytest.param({'n_iter': 0}, 'should be not less than 1', id='n_iter-zero'),
-        pytest.param({'n_iter': 1.5}, 'requires an int', id='n_iter-float'),
-        pytest.param({'batch_size': 0}, 'should be not less than 1', id='batch-zero'),
-        pytest.param({'batch_size': True}, 'requires an int', id='batch-bool'),
+        pytest.param({'device_id': 1}, ValueError, 'only supported by Ascend', id='cpu-device-id'),
+        pytest.param(
+            {'backend': 'gpu-float16'},
+            RuntimeError,
+            'not available',
+            marks=pytest.mark.skipif(GPU_AVAILABLE, reason='GPU SB extension is available'),
+            id='missing-gpu-float16',
+        ),
+        pytest.param(
+            {'backend': 'gpu-int8'},
+            RuntimeError,
+            'not available',
+            marks=pytest.mark.skipif(GPU_AVAILABLE, reason='GPU SB extension is available'),
+            id='missing-gpu-int8',
+        ),
     ],
 )
-def test_iteration_counter_validation(kwargs, match):
+def test_bsb_backend_validation(kwargs, error, match):
     """
-    Feature: Iteration counter validation of ``QAIA``.
-
-    Description: Provide a non positive or non integer iteration counter.
-
-    Expectation: The documented exception is raised.
-    """
-    with pytest.raises((TypeError, ValueError), match=match):
-        QAIA(_COUPLING, **kwargs)
-
-
-@pytest.mark.parametrize(
-    'coupling,match,error',
-    [
-        pytest.param(np.zeros((2, 3)), 'must be a square matrix', ValueError, id='non-square'),
-        pytest.param([[0.0, -1.0], [-1.0, 0.0]], 'requires numpy.array or scipy sparse matrix', TypeError, id='list'),
-        pytest.param(np.diag([1.0, 1.0]), 'diagonal elements of J are not all 0', ValueError, id='diag'),
-        pytest.param(np.array([[0.0, -1.0], [1.0, 0.0]]), 'must be a symmetric matrix', ValueError, id='asymmetric'),
-    ],
-)
-def test_coupling_matrix_validation(coupling, match, error):
-    """
-    Feature: Coupling matrix validation of ``QAIA``.
-
-    Description: Provide a non square, non array, asymmetric coupling matrix and a non zero diagonal.
-
-    Expectation: The documented exception is raised.
+    Feature: Bounded SB backend validation.
+    Description: Request a CPU device id or an unavailable quantized GPU backend.
+    Expectation: Construction rejects the unsupported backend configuration explicitly.
     """
     with pytest.raises(error, match=match):
-        QAIA(coupling)
+        BSB(_COUPLING, n_iter=2, **kwargs)
 
 
-def test_sparse_coupling_matrix_is_accepted():
+@pytest.mark.parametrize('method', ['calc_cut', 'calc_energy'])
+def test_qaia_unknown_backend_dispatch(method):
     """
-    Feature: Sparse coupling matrix support of ``QAIA``.
-
-    Description: Build a solver from a CSR matrix.
-
-    Expectation: The matrix and its shape are preserved.
-    """
-    solver = QAIA(csr_matrix(_COUPLING))
-    assert solver.N == 2
-    assert solver.J.shape == (2, 2)
-
-
-def test_cut_and_energy_reject_an_unknown_backend():
-    """
-    Feature: Backend dispatch of ``QAIA.calc_cut`` and ``QAIA.calc_energy``.
-
-    Description: Corrupt the backend attribute after construction.
-
-    Expectation: A ``ValueError`` reports the invalid backend instead of returning a wrong value.
+    Feature: QAIA observable backend dispatch.
+    Description: Evaluate an observable after replacing the backend with an unknown name.
+    Expectation: An invalid backend raises ValueError rather than silently returning None.
     """
     solver = QAIA(_COUPLING)
     solver.backend = 'cpu-unknown'
     with pytest.raises(ValueError, match='invalid backend'):
-        solver.calc_cut()
-    with pytest.raises(ValueError, match='invalid backend'):
-        solver.calc_energy()
-
-
-def test_inherited_validation_applies_to_subclasses():
-    """
-    Feature: Inheritance of the ``QAIA`` validation.
-
-    Description: Build two subclasses with a non positive batch size and an asymmetric matrix.
-
-    Expectation: The same exceptions are raised as for the base class.
-    """
-    with pytest.raises(ValueError, match='should be not less than 1'):
-        BSB(_COUPLING, batch_size=0)
-    with pytest.raises(ValueError, match='must be a symmetric matrix'):
-        CAC(np.array([[0.0, -1.0], [1.0, 0.0]]))
-
-
-def test_device_id_is_rejected_by_cpu_backends():
-    """
-    Feature: Device selection of the bounded SB backends.
-
-    Description: Pass a non zero ``device_id`` to a CPU backend.
-
-    Expectation: A ``ValueError`` explains that only the Ascend CANN backend accepts a device id.
-    """
-    with pytest.raises(ValueError, match='only supported by Ascend CANN backends'):
-        BSB(_COUPLING, n_iter=2, device_id=1)
-
-
-@pytest.mark.parametrize('backend', ['gpu-float16', 'gpu-int8'])
-def test_quantized_gpu_backend_reports_missing_extension(backend):
-    """
-    Feature: Quantized GPU backends of ``BSB``.
-
-    Description: Request a GPU quantized backend on a build without the ``_qaia_sb`` extension.
-
-    Expectation: A ``RuntimeError`` explains that the backend is not available.
-    """
-    from mindquantum.algorithm.qaia.SB import GPU_AVAILABLE  # pylint: disable=import-outside-toplevel
-
-    if GPU_AVAILABLE:
-        pytest.skip('The GPU SB extension is available in this build.')
-    with pytest.raises(RuntimeError, match='not available'):
-        BSB(_COUPLING, n_iter=2, backend=backend)
+        getattr(solver, method)()

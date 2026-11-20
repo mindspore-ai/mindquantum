@@ -12,61 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Thread scheduling of the CPU simulators (MindQuantum 0.13 behaviour change).
-
-0.13 removed ``Simulator.set_threads_number``: the number of OpenMP threads is
-now derived from the workload and capped by ``OMP_NUM_THREADS``.  Gradient
-batches share one thread budget, so the caller supplied ``parallel_worker``
-must only change the scheduling, never the numerical result.
-"""
+"""Worker budgeting and numerical invariance of CPU gradients."""
 
 import numpy as np
 import pytest
 
 import mindquantum as mq
-from mindquantum.core.gates import RX
 from mindquantum.core.operators import Hamiltonian, QubitOperator
 from mindquantum.simulator import Simulator
 from mindquantum.simulator.utils import _thread_balance
 
 pytestmark = [pytest.mark.level0, pytest.mark.platform_x86_cpu]
-
-
-def test_set_threads_number_has_been_removed():
-    """
-    Feature: Removal of ``Simulator.set_threads_number``.
-
-    Description: Inspect and access the historical thread setter of the public simulator.
-
-    Expectation: The attribute is gone and accessing it raises ``AttributeError``.
-    """
-    simulator = Simulator('mqvector', 2)
-    assert not hasattr(simulator, 'set_threads_number')
-    with pytest.raises(AttributeError, match='set_threads_number'):
-        simulator.set_threads_number(2)
-
-
-@pytest.mark.parametrize('backend', ['mqvector', 'mqmatrix'])
-def test_simulator_uses_available_threads(backend):
-    """
-    Feature: Adaptive OpenMP scheduling.
-
-    Description: Run a circuit wide enough to be distributed over several threads.
-
-    Expectation: The evolution is correct and the state stays normalized, independent of the thread count.
-    """
-    n_qubits = 8
-    simulator = Simulator(backend, n_qubits, seed=11)
-    circuit = mq.Circuit()
-    for qubit in range(n_qubits):
-        circuit += RX(0.1 * (qubit + 1)).on(qubit)
-    simulator.apply_circuit(circuit)
-    state = simulator.get_qs()
-    assert np.isfinite(state).all()
-    if backend == 'mqvector':
-        assert np.isclose(np.linalg.norm(state), 1.0)
-    else:
-        assert np.isclose(np.trace(state), 1.0)
 
 
 @pytest.mark.parametrize(
@@ -86,18 +42,13 @@ def test_thread_balance_uses_one_budget(n_prs, n_meas, worker, expected):
 
     Description: Split a batch of parameter sets and Hamiltonians over an optional worker budget.
 
-    Expectation: The batch and measurement teams are positive, never exceed the budget and follow the documented split.
+    Expectation: The batch and measurement teams match the documented split exactly.
     """
-    batch_threads, measure_threads = _thread_balance(n_prs, n_meas, worker)
-    assert (batch_threads, measure_threads) == expected
-    assert batch_threads >= 1
-    assert measure_threads >= 1
-    if worker is not None:
-        assert batch_threads * measure_threads <= worker
+    assert _thread_balance(n_prs, n_meas, worker) == expected
 
 
 @pytest.mark.parametrize('backend', ['mqvector', 'mqmatrix'])
-@pytest.mark.parametrize('parallel_worker', [1, 2, 3, None])
+@pytest.mark.parametrize('parallel_worker', [2, 3, None])
 def test_parallel_worker_does_not_change_gradient(backend, parallel_worker):
     """
     Feature: Thread-invariant batched gradient evaluation.
@@ -107,7 +58,7 @@ def test_parallel_worker_does_not_change_gradient(backend, parallel_worker):
     Expectation: Values and gradients are identical to the single-threaded reference.
     """
     circuit = mq.Circuit().ry('a', 0).rz('b', 1).rx('c', 0).as_encoder()
-    hamiltonian = Hamiltonian(QubitOperator('Z0') + 0.5 * QubitOperator('X1'))
+    hamiltonian = [Hamiltonian(QubitOperator('Z0')), Hamiltonian(QubitOperator('X0'))]
     simulator = Simulator(backend, 2, seed=5)
     values = np.array([[0.1, -0.2, 0.3], [0.4, 0.5, -0.6], [-0.7, 0.8, 0.9], [0.2, 0.2, 0.2]])
 

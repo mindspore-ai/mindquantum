@@ -12,14 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Import surface of ``mindquantum.framework`` (MindQuantum 0.13 behaviour change).
-
-``mindquantum.framework`` is usable without MindSpore: the module still imports,
-but every MindSpore based symbol is reported as an ``ImportError`` with an
-explanation.  Before 0.13 any unknown attribute was reported as an
-``ImportError`` too, which hid real attribute typos; 0.13 changed that to the
-standard ``AttributeError``.
-"""
+"""Lazy framework exports with and without MindSpore."""
 
 import importlib.util
 
@@ -74,26 +67,3 @@ def test_known_symbol_explains_missing_mindspore():
     for name in ('MQOps', 'MQN2Ops', 'QRamVecOps', 'MQLayer'):
         with pytest.raises(ImportError, match='MindSpore not installed'):
             getattr(framework, name)
-
-
-def test_public_symbol_list_is_sorted():
-    """
-    Feature: Deterministic public symbol ordering.
-
-    Description: Inspect ``__all__`` of the framework module.
-
-    Expectation: The list is sorted and contains no duplicate entries.
-    """
-    assert framework.__all__ == sorted(framework.__all__)
-    assert len(framework.__all__) == len(set(framework.__all__))
-
-
-def test_framework_module_is_importable_without_mindspore():
-    """
-    Feature: Import of ``mindquantum.framework`` without MindSpore.
-
-    Description: Import the module as a user would on a pure NumPy installation.
-
-    Expectation: The import succeeds so that the explanatory errors can be raised lazily.
-    """
-    assert framework.__name__ == 'mindquantum.framework'

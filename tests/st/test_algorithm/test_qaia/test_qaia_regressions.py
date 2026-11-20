@@ -120,13 +120,15 @@ def test_sb_nonfinite_inputs(solver_class, backend, invalid, input_name, sparse)
 
 
 @pytest.mark.platform_x86_cpu
-@pytest.mark.parametrize('solver_class', [BSB, DSB, GBSB])
+@pytest.mark.parametrize(
+    'solver_class, parameter',
+    [(solver, parameter) for solver in [BSB, DSB, GBSB] for parameter in ['dt', 'xi']] + [(GBSB, 'A')],
+)
 @pytest.mark.parametrize('invalid', [np.nan, np.inf, -np.inf])
-@pytest.mark.parametrize('parameter', ['dt', 'xi'])
 def test_sb_nonfinite_parameters(solver_class, invalid, parameter):
     """
     Feature: SB finite scalar validation.
-    Description: Initialize CPU SB variants with non-finite time step or coupling strength.
+    Description: Initialize CPU SB variants with non-finite time step, coupling strength or GBSB bifurcation.
     Expectation: Reject the parameter explicitly before normalization or evolution.
     """
     with np.errstate(all='raise'):
