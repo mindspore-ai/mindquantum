@@ -434,7 +434,7 @@ def test_explicit_cuda_requires_compiler(tmp_path, enabled):
     """
     (tmp_path / 'CMakeLists.txt').write_text(
         'cmake_minimum_required(VERSION 3.20)\nproject(CudaContract NONE)\n'
-        f'list(APPEND CMAKE_MODULE_PATH "{ROOT / "cmake"}" "{ROOT / "cmake/commands"}")\n'
+        f'list(APPEND CMAKE_MODULE_PATH "{(ROOT / "cmake").as_posix()}" "{(ROOT / "cmake/commands").as_posix()}")\n'
         'include(macros)\ninclude(options)\n',
         encoding='utf-8',
     )
@@ -468,7 +468,7 @@ def test_explicit_cuda_requires_toolkit(tmp_path, enabled):
     """
     (tmp_path / 'CMakeLists.txt').write_text(
         'cmake_minimum_required(VERSION 3.20)\nproject(CudaToolkitContract CXX)\n'
-        f'list(APPEND CMAKE_MODULE_PATH "{ROOT / "cmake"}" "{ROOT / "cmake/commands"}")\n'
+        f'list(APPEND CMAKE_MODULE_PATH "{(ROOT / "cmake").as_posix()}" "{(ROOT / "cmake/commands").as_posix()}")\n'
         'include(packages)\n',
         encoding='utf-8',
     )

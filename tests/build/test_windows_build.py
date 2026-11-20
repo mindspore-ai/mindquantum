@@ -62,7 +62,7 @@ def windows_release_fixture(tmp_path, request):
     environment = {
         key: value
         for key, value in os.environ.items()
-        if key.upper() in ('PATH', 'SYSTEMROOT', 'COMSPEC', 'TEMP', 'TMP', 'HOME', 'USERPROFILE')
+        if key.upper() in ('PATH', 'PATHEXT', 'SYSTEMROOT', 'COMSPEC', 'TEMP', 'TMP', 'HOME', 'USERPROFILE')
     }
     environment.update(
         PATH=str(python.parent) + os.pathsep + os.environ['PATH'],
