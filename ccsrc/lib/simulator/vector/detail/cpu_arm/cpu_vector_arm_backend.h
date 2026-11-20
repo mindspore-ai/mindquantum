@@ -30,7 +30,8 @@ using arm_matrix_t = std::vector<std::vector<typename policy_t::py_qs_data_t>>;
 template <typename policy_t>
 struct ArmBackend {
     using apply_matrix_t = void (*)(const typename policy_t::qs_data_p_t&, typename policy_t::qs_data_p_t*,
-                                    const qbits_t&, const qbits_t&, const arm_matrix_t<policy_t>&, index_t);
+                                    const qbits_t&, const qbits_t&, const arm_matrix_t<policy_t>&, index_t,
+                                    WorkerScratch<typename policy_t::calc_type>&);
 
     const char* name;
     apply_matrix_t apply_matrix;
@@ -39,7 +40,8 @@ struct ArmBackend {
 namespace arm_sve {
 template <typename policy_t>
 void ApplyMatrix(const typename policy_t::qs_data_p_t& src, typename policy_t::qs_data_p_t* des_p, const qbits_t& objs,
-                 const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim);
+                 const qbits_t& ctrls, const arm_matrix_t<policy_t>& matrix, index_t dim,
+                 WorkerScratch<typename policy_t::calc_type>& scratch);
 }  // namespace arm_sve
 }  // namespace mindquantum::sim::vector::detail
 

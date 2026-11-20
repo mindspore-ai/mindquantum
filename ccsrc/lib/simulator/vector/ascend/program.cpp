@@ -214,12 +214,14 @@ DenseProgram BindDense(const ct::CircuitTile& source, const std::shared_ptr<cons
     }
     result.coefficients.resize(4 * dimension * dimension);
     std::vector<complex_t> column(dimension);
+    WorkerScratch<complex_t::value_type> scratch;
+    ct::ReserveScratch(scratch, prepared.layout.ScratchSize(), 1);
     // Synthesize a <=64x64 operator in double precision. This is compilation,
     // never CPU execution of the user's device-resident quantum state.
     for (uint32_t basis = 0; basis < dimension; ++basis) {
         std::fill(column.begin(), column.end(), complex_t{});
         column[basis] = 1;
-        ct::ApplyTile(column.data(), prepared, 1);
+        ct::ApplyTile(column.data(), prepared, 1, scratch);
         RealifyColumn(result.coefficients.data(), column, basis);
     }
     return result;
@@ -260,7 +262,9 @@ DenseAdjointProgram BindDenseAdjoint(const ct::CircuitTile& source, const DenseA
     std::vector<std::vector<complex_t>> tangents(active.size(), std::vector<complex_t>(dimension));
     using Arithmetic = ct::detail::Kernels<ct::detail::ScalarTileAlgebra<complex_t>>;
     auto apply = [&](const auto& operation, auto& vector) {
-        Arithmetic::Apply(operation, true, 0, ct::detail::ScalarBlockContext{}, vector.data(), workspace.data());
+        using scalar_t = complex_t::value_type;
+        Arithmetic::Apply(operation, true, 0, ct::detail::ScalarBlockContext{},
+                          reinterpret_cast<scalar_t*>(vector.data()), reinterpret_cast<scalar_t*>(workspace.data()));
     };
     // Forward differentiation of the SMALL operator product, in complex128.
     // t' = A*t + dA*v; v' = A*v. Shared symbols combine before the device

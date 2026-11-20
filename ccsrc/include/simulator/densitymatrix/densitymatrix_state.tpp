@@ -41,6 +41,7 @@
 #include "ops/gates.h"
 #include "ops/hamiltonian.h"
 #include "simulator/circuit_tiling/builder.h"
+#include "simulator/circuit_tiling/executor.h"
 #include "simulator/circuit_tiling/planner.h"
 #include "simulator/circuit_tiling/state_space.h"
 #include "simulator/densitymatrix/densitymatrix_state.h"
@@ -330,14 +331,16 @@ auto DensityMatrixState<qs_policy_t_>::Compile(const circuit_t& circ, const para
 // ============================================================================
 
 template <typename qs_policy_t_>
-void DensityMatrixState<qs_policy_t_>::ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, index_t dim) {
+void DensityMatrixState<qs_policy_t_>::ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile,
+                                                   WorkerScratch<calc_type>& scratch) const {
     if (!tile.operations.empty()) {
-        qs_policy_t::ApplyCircuitTile(qs, tile, dim);
+        qs_policy_t::ApplyCircuitTile(qs, tile, dim_, scratch);
     }
 }
 
 template <typename qs_policy_t_>
-auto DensityMatrixState<qs_policy_t_>::ExecuteMeasurement(const PreparedMeasurement& measurement) -> index_t {
+auto DensityMatrixState<qs_policy_t_>::ExecuteMeasurement(const PreparedMeasurement& measurement,
+                                                          WorkerScratch<calc_type>& scratch) -> index_t {
     const auto weights = qs_policy_t::OutcomeWeights(qs_.get(), measurement.qubit, dim_);
     const auto trace = static_cast<double>(weights[0] + weights[1]);
     if (!IsFinite(trace) || trace <= 0) {
@@ -350,20 +353,28 @@ auto DensityMatrixState<qs_policy_t_>::ExecuteMeasurement(const PreparedMeasurem
     const bool outcome = Random() < static_cast<double>(weights[1]) / trace;
     qs_policy_t::Collapse(qs_.get(), measurement.qubit, outcome, weights[outcome ? 1 : 0], dim_);
     if (measurement.reset_to.has_value() && static_cast<index_t>(outcome) != *measurement.reset_to) {
-        ApplyTileTo(qs_.get(), measurement.flip, dim_);
+        ApplyTileTo(qs_.get(), measurement.flip, scratch);
     }
     return static_cast<index_t>(outcome);
 }
 
 template <typename qs_policy_t_>
-void DensityMatrixState<qs_policy_t_>::Execute(const Program& program, std::map<std::string, int>* outcomes) {
+void DensityMatrixState<qs_policy_t_>::Execute(const Program& program, std::map<std::string, int>* outcomes,
+                                               WorkerScratch<calc_type>& scratch) {
+    size_t scratch_size = 0;
+    for (const auto& entry : program) {
+        const auto* tile = std::get_if<prepared_tile_t>(&entry);
+        const auto& layout = tile == nullptr ? std::get<PreparedMeasurement>(entry).flip.layout : tile->layout;
+        scratch_size = std::max(scratch_size, layout.ScratchSize());
+    }
+    circuit_tiling::ReserveScratch(scratch, scratch_size, omp::TeamSize(qs_policy_t::Size(dim_)));
     for (const auto& entry : program) {
         if (const auto* tile = std::get_if<prepared_tile_t>(&entry); tile != nullptr) {
-            ApplyTileTo(qs_.get(), *tile, dim_);
+            ApplyTileTo(qs_.get(), *tile, scratch);
             continue;
         }
         const auto& measurement = std::get<PreparedMeasurement>(entry);
-        const auto outcome = ExecuteMeasurement(measurement);
+        const auto outcome = ExecuteMeasurement(measurement, scratch);
         if (outcomes != nullptr) {
             (*outcomes)[measurement.name] = static_cast<int>(outcome);
         }
@@ -379,7 +390,7 @@ auto DensityMatrixState<qs_policy_t_>::ApplyGate(const std::shared_ptr<BasicGate
     if (gate->GetID() == GateID::M) {
         return ApplyMeasure(gate);
     }
-    Execute(CompileGate(gate, pr, diff), nullptr);
+    Execute(CompileGate(gate, pr, diff), nullptr, scratch_);
     return 2;
 }
 
@@ -388,14 +399,17 @@ auto DensityMatrixState<qs_policy_t_>::ApplyMeasure(const std::shared_ptr<BasicG
     if (gate == nullptr) {
         throw std::invalid_argument("Cannot apply a null gate.");
     }
-    return ExecuteMeasurement(CompileMeasurement(*gate));
+    const auto measurement = CompileMeasurement(*gate);
+    circuit_tiling::ReserveScratch(scratch_, measurement.flip.layout.ScratchSize(),
+                                   omp::TeamSize(qs_policy_t::Size(dim_)));
+    return ExecuteMeasurement(measurement, scratch_);
 }
 
 template <typename qs_policy_t_>
 auto DensityMatrixState<qs_policy_t_>::ApplyCircuit(const circuit_t& circ, const parameter::ParameterResolver& pr)
     -> std::map<std::string, int> {
     std::map<std::string, int> outcomes;
-    Execute(Compile(circ, pr), &outcomes);
+    Execute(Compile(circ, pr), &outcomes, scratch_);
     return outcomes;
 }
 
@@ -492,23 +506,21 @@ auto DensityMatrixState<qs_policy_t_>::PrepareSegments(const GradientPlan& plan,
 
 template <typename qs_policy_t_>
 void DensityMatrixState<qs_policy_t_>::ApplyForward(qs_data_p_t qs, const std::vector<PreparedSegment>& segments,
-                                                    size_t through_segment) const {
+                                                    size_t through_segment, WorkerScratch<calc_type>& scratch) const {
     for (size_t index = 0; index <= through_segment; ++index) {
         for (const auto& tile : segments[index].forward) {
-            ApplyTileTo(qs, tile, dim_);
+            ApplyTileTo(qs, tile, scratch);
         }
         if (index < through_segment) {
-            ApplyTileTo(qs, *segments[index].channel, dim_);
+            ApplyTileTo(qs, *segments[index].channel, scratch);
         }
     }
 }
 
 template <typename qs_policy_t_>
-void DensityMatrixState<qs_policy_t_>::AdjointSweep(const GradientPlan& plan,
-                                                    const std::vector<PreparedSegment>& segments,
-                                                    const qs_data_p_t& final_state,
-                                                    const std::vector<qs_data_p_t>& observables,
-                                                    VVT<py_qs_data_t>* output) const {
+void DensityMatrixState<qs_policy_t_>::AdjointSweep(
+    const GradientPlan& plan, const std::vector<PreparedSegment>& segments, const qs_data_p_t& final_state,
+    const std::vector<qs_data_p_t>& observables, VVT<py_qs_data_t>* output, WorkerScratch<calc_type>& scratch) const {
     const auto last = plan.segments.size() - 1;
     auto shared = CloneState(final_state, dim_);
     // Whether `shared` holds the state at the end of the segment being entered.
@@ -520,14 +532,14 @@ void DensityMatrixState<qs_policy_t_>::AdjointSweep(const GradientPlan& plan,
             // that follows this segment.  The state cannot follow: channels
             // are not invertible.
             for (auto* observable : observables) {
-                ApplyTileTo(observable, *segment.adjoint_channel, dim_);
+                ApplyTileTo(observable, *segment.adjoint_channel, scratch);
             }
             shared_current = false;
         }
         if (!plan.segments[index].has_gradient) {
             for (const auto& tile : segment.observable_evolution) {
                 for (auto* observable : observables) {
-                    ApplyTileTo(observable, tile, dim_);
+                    ApplyTileTo(observable, tile, scratch);
                 }
             }
             shared_current = false;
@@ -535,10 +547,10 @@ void DensityMatrixState<qs_policy_t_>::AdjointSweep(const GradientPlan& plan,
         }
         if (!shared_current) {
             shared = CloneState();
-            ApplyForward(shared.get(), segments, index);
+            ApplyForward(shared.get(), segments, index, scratch);
             shared_current = true;
         }
-        qs_policy_t::ApplyAdjointTileProgram(shared.get(), observables, segment.program, dim_, output);
+        qs_policy_t::ApplyAdjointTileProgram(shared.get(), observables, segment.program, dim_, output, scratch);
     }
 }
 
@@ -550,7 +562,32 @@ auto DensityMatrixState<qs_policy_t_>::ExpectationWithGradient(
     const auto output_size = 1 + parameter_map.size();
     const auto segments = PrepareSegments(plan, pr, parameter_map);
     auto final_state = CloneState();
-    ApplyForward(final_state.get(), segments, plan.segments.size() - 1);
+    WorkerScratch<calc_type> scratch;
+    size_t scratch_size = 0;
+    const auto include = [&](const circuit_tiling::TileLayout& layout) {
+        scratch_size = std::max(scratch_size, layout.ScratchSize());
+    };
+    const auto max_observables = std::min(batch_size, hams.size());
+    for (const auto& segment : segments) {
+        for (const auto& tile : segment.forward) {
+            include(tile.layout);
+        }
+        if (segment.channel) {
+            include(segment.channel->layout);
+        }
+        if (segment.adjoint_channel) {
+            include(segment.adjoint_channel->layout);
+        }
+        for (const auto& tile : segment.observable_evolution) {
+            include(tile.layout);
+        }
+        for (const auto& tile : segment.program.tiles) {
+            const auto blocks = 1 + max_observables + (tile.layout.mirror_shift != 0 ? 2 : 0);
+            scratch_size = std::max(scratch_size, tile.layout.ScratchSize(blocks));
+        }
+    }
+    circuit_tiling::ReserveScratch(scratch, scratch_size, omp::TeamSize(qs_policy_t::Size(dim_)));
+    ApplyForward(final_state.get(), segments, plan.segments.size() - 1, scratch);
 
     VVT<py_qs_data_t> result(hams.size(), VT<py_qs_data_t>(output_size, 0));
     for (size_t first = 0; first < hams.size(); first += batch_size) {
@@ -569,7 +606,7 @@ auto DensityMatrixState<qs_policy_t_>::ExpectationWithGradient(
             group[offset][0] = qs_policy_t::InnerProduct(final_state.get(), observables[offset], dim_);
         }
         if (plan.first_gradient_segment < plan.segments.size()) {
-            AdjointSweep(plan, segments, final_state.get(), observables, &group);
+            AdjointSweep(plan, segments, final_state.get(), observables, &group, scratch);
         }
         for (size_t offset = 0; offset < count; ++offset) {
             auto& row = result[first + offset];
@@ -649,7 +686,8 @@ auto DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const par
     Program suffix(std::make_move_iterator(suffix_begin), std::make_move_iterator(program.end()));
     program.erase(suffix_begin, program.end());
     derived_t prefix(*this);
-    prefix.Execute(program, nullptr);
+    WorkerScratch<calc_type> scratch;
+    prefix.Execute(program, nullptr, scratch);
 
     const auto key_size = key_map.size();
     VT<unsigned> result(shots * key_size);
@@ -660,7 +698,7 @@ auto DensityMatrixState<qs_policy_t_>::Sampling(const circuit_t& circ, const par
         derived_t trajectory(prefix);
         trajectory.SetSeed(static_cast<unsigned>(sub_seed(engine)));
         outcomes.clear();
-        trajectory.Execute(suffix, &outcomes);
+        trajectory.Execute(suffix, &outcomes, scratch);
         for (const auto& [name, outcome] : outcomes) {
             result[shot * key_size + OutputColumn(key_map, name)] = static_cast<unsigned>(outcome);
         }
@@ -695,7 +733,8 @@ auto DensityMatrixState<qs_policy_t_>::SamplingMeasurementEnding(const circuit_t
     // Every gate commutes with the later measurements of other qubits, so
     // the outcomes are read from the diagonal of the fully evolved state.
     derived_t evolved(*this);
-    evolved.Execute(Compile(evolution, pr), nullptr);
+    WorkerScratch<calc_type> scratch;
+    evolved.Execute(Compile(evolution, pr), nullptr, scratch);
     const auto cumulative = qs_policy_t::DiagonalCumulativeProbabilities(evolved.qs_.get(), dim_);
 
     const auto key_size = key_map.size();

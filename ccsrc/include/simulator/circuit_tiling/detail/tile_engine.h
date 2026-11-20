@@ -21,7 +21,8 @@
 #include <cassert>
 #include <complex>
 #include <cstddef>
-#include <mutex>
+#include <limits>
+#include <new>
 #include <utility>
 #include <vector>
 
@@ -29,9 +30,10 @@
 #include "core/utils.h"
 #include "simulator/circuit_tiling/circuit_tiling.h"
 #include "simulator/circuit_tiling/detail/kernels.h"
+#include "simulator/worker_scratch.h"
 
 // The tile engine drives a runtime over a prepared tile program.  A runtime
-// supplies the numerical algebra, the thread scratch storage, the traversal
+// supplies the numerical algebra, scratch layout, the traversal
 // of tile blocks (serial and OpenMP-parallel), and the gather/scatter between
 // the flat state and a cache-resident local block:
 //
@@ -41,10 +43,11 @@
 //       using traversal_t;
 //       static constexpr bool kMirrorsHermitianTiles;  // evolves only one block of each mirrored pair
 //       static traversal_t MakeTraversal(const TileLayout&);
-//       static storage_t* ThreadScratch(size_t logical_size);
+//       static size_t ScratchLanes();
+//       static size_t ScratchAlignment();
 //       static storage_t* Offset(storage_t*, size_t logical_offset);
 //       static void ForEach(const traversal_t&, const F&);            // serial
-//       static void ForEachInParallel(const traversal_t&, const F&);  // inside omp parallel
+//       static void ForEachInParallel(const traversal_t&, const F&);  // inside omp parallel, no barrier
 //       static void Gather(const value_t* state, const TileLayout&, active, state_base, context, storage_t* block);
 //       static void Scatter(value_t* state, const TileLayout&, active, state_base, context, const storage_t* block);
 //       // Only with kMirrorsHermitianTiles:
@@ -67,18 +70,26 @@
 // library: the hot loops gain nothing from cross-module inlining and would
 // lose their own budget.
 namespace mindquantum::sim::circuit_tiling::detail {
+template <typename runtime_t>
+void ReserveScratch(WorkerScratch<typename runtime_t::storage_t>& scratch, size_t size, int threads) {
+    const auto lanes = runtime_t::ScratchLanes();
+    if (size > std::numeric_limits<size_t>::max() / lanes) {
+        throw std::bad_array_new_length();
+    }
+    scratch.Reserve(size * lanes, threads, runtime_t::ScratchAlignment());
+}
+
 template <typename runtime_t, typename value_t>
-void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {
+void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads,
+               WorkerScratch<typename runtime_t::storage_t>& scratch) {
     using kernels_t = Kernels<typename runtime_t::algebra_t>;
     assert(state != nullptr);
     assert(tile.layout.dimension != 0 && tile.layout.state_offsets.size() == tile.layout.dimension);
     assert(!tile.operations.empty());
 
     const auto traversal = runtime_t::MakeTraversal(tile.layout);
-    const auto scratch_size = tile.layout.dimension + tile.layout.workspace_size;
-    const auto run = [&](auto* scratch, const auto& for_each) {
-        auto* local_state = scratch;
-        auto* workspace = runtime_t::Offset(scratch, tile.layout.dimension);
+    const auto run = [&](auto* local_state, const auto& for_each) {
+        auto* workspace = runtime_t::Offset(local_state, tile.layout.dimension);
         for_each(traversal, [&](auto active, auto state_base, const auto& index_context) {
             runtime_t::Gather(state, tile.layout, active, state_base, index_context, local_state);
             for (const auto& operation : tile.operations) {
@@ -88,12 +99,11 @@ void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {
         });
     };
     if (threads == 1) {
-        run(runtime_t::ThreadScratch(scratch_size),
-            [](const auto& traversal, const auto& body) { runtime_t::ForEach(traversal, body); });
+        run(scratch.ForWorker(0), [](const auto& traversal, const auto& body) { runtime_t::ForEach(traversal, body); });
         return;
     }
     MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
-        run(runtime_t::ThreadScratch(scratch_size),
+        run(scratch.ForWorker(scratch.CurrentWorker()),
             [](const auto& traversal, const auto& body) { runtime_t::ForEachInParallel(traversal, body); });
     }
 }
@@ -101,7 +111,7 @@ void ApplyTile(value_t* state, const PreparedTile<value_t>& tile, int threads) {
 template <typename runtime_t, typename value_t>
 void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& batch_states,
                          const AdjointProgram<value_t>& program, VVT<value_t>* output, bool conjugate_output,
-                         int threads) {
+                         int threads, WorkerScratch<typename runtime_t::storage_t>& scratch) {
     using kernels_t = Kernels<typename runtime_t::algebra_t>;
     assert(shared_state != nullptr && output != nullptr);
     assert(!batch_states.empty() && !program.tiles.empty() && program.output_size != 0);
@@ -110,6 +120,9 @@ void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& bat
 
     std::vector<typename runtime_t::traversal_t> traversals;
     traversals.reserve(program.tiles.size());
+    const auto blocks = [&](const TileLayout& layout) {
+        return 1 + batch_states.size() + (runtime_t::kMirrorsHermitianTiles && layout.mirror_shift != 0 ? 2 : 0);
+    };
     for (const auto& tile : program.tiles) {
         assert(tile.layout.dimension != 0 && tile.layout.state_offsets.size() == tile.layout.dimension);
         assert(!tile.operations.empty());
@@ -117,23 +130,25 @@ void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& bat
     }
 
     const auto local_output_size = batch_states.size() * program.output_size;
-    std::mutex output_mutex;
-    const auto sweep = [&](const auto& for_each) {
-        std::vector<value_t> local_output(local_output_size, 0);
+    VVT<value_t> worker_outputs(threads, VT<value_t>(local_output_size, 0));
+    const auto sweep = [&](size_t worker, const auto& for_each, const auto& synchronize) {
+        auto* storage = scratch.ForWorker(worker);
+        auto& local_output = worker_outputs[worker];
         for (size_t tile_index = 0; tile_index < program.tiles.size(); ++tile_index) {
+            if (tile_index != 0) {
+                synchronize();
+            }
             const auto& tile = program.tiles[tile_index];
             const auto dimension = tile.layout.dimension;
             // A mirrored block evaluates its derivatives on the conjugate
             // transposes of the bra and of the partially evolved ket, which
             // need two more local blocks of scratch.
             const bool mirrors = runtime_t::kMirrorsHermitianTiles && tile.layout.mirror_shift != 0;
-            const auto block_count = 1 + batch_states.size() + (mirrors ? 2 : 0);
-            auto* scratch = runtime_t::ThreadScratch(block_count * dimension + tile.layout.workspace_size);
-            auto* shared_tile = scratch;
-            auto* mirror_bra = runtime_t::Offset(scratch, (1 + batch_states.size()) * dimension);
-            auto* mirror_ket = runtime_t::Offset(scratch, (2 + batch_states.size()) * dimension);
-            auto* workspace = runtime_t::Offset(scratch, block_count * dimension);
-            const auto batch_tile = [&](size_t batch) { return runtime_t::Offset(scratch, (1 + batch) * dimension); };
+            auto* shared_tile = storage;
+            auto* mirror_bra = mirrors ? runtime_t::Offset(storage, (1 + batch_states.size()) * dimension) : nullptr;
+            auto* mirror_ket = mirrors ? runtime_t::Offset(storage, (2 + batch_states.size()) * dimension) : nullptr;
+            auto* workspace = runtime_t::Offset(storage, blocks(tile.layout) * dimension);
+            const auto batch_tile = [&](size_t batch) { return runtime_t::Offset(storage, (1 + batch) * dimension); };
 
             for_each(traversals[tile_index], [&](auto active, auto state_base, const auto& index_context) {
                 bool mirrored = false;
@@ -220,22 +235,24 @@ void ApplyAdjointProgram(value_t* shared_state, const std::vector<value_t*>& bat
                 }
             });
         }
-
-        const std::lock_guard<std::mutex> lock(output_mutex);
+    };
+    if (threads == 1) {
+        sweep(0, [](const auto& traversal, const auto& body) { runtime_t::ForEach(traversal, body); }, [] {});
+    } else {
+        // Order consecutive tiles; the parallel region's barrier completes the last tile.
+        MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
+            sweep(
+                scratch.CurrentWorker(),
+                [](const auto& traversal, const auto& body) { runtime_t::ForEachInParallel(traversal, body); },
+                [] { MQ_DO_PRAGMA(omp barrier) });
+        }
+    }
+    for (const auto& local_output : worker_outputs) {
         for (size_t batch = 0; batch < batch_states.size(); ++batch) {
             for (size_t column = 0; column < program.output_size; ++column) {
                 (*output)[batch][column] += local_output[batch * program.output_size + column];
             }
         }
-    };
-    if (threads == 1) {
-        sweep([](const auto& traversal, const auto& body) { runtime_t::ForEach(traversal, body); });
-        return;
-    }
-    // A single OpenMP region spans the whole adjoint program.  Each omp-for's
-    // implicit barrier orders consecutive tiles without rebuilding the team.
-    MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
-        sweep([](const auto& traversal, const auto& body) { runtime_t::ForEachInParallel(traversal, body); });
     }
 }
 }  // namespace mindquantum::sim::circuit_tiling::detail

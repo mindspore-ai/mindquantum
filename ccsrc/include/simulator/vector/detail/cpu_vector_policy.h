@@ -34,6 +34,7 @@
 #include "math/tensor/traits.h"
 #include "simulator/circuit_tiling/circuit_tiling.h"
 #include "simulator/utils.h"
+#include "simulator/worker_scratch.h"
 
 namespace mindquantum::sim::vector::detail {
 template <typename derived_, typename calc_type_>
@@ -106,11 +107,12 @@ struct CPUVectorPolicyBase {
     static VT<calc_type> GetCumulativeProbs(const qs_data_p_t& qs_p, index_t dim);
     static VT<unsigned> LowerBound(const VT<calc_type>& cum_prob, const VT<calc_type>& sampled_probs);
 
-    static void ApplyCircuitTile(qs_data_p_t* qs_p, const circuit_tiling::PreparedTile<py_qs_data_t>& tile,
-                                 index_t dim);
+    static void ApplyCircuitTile(qs_data_p_t* qs_p, const circuit_tiling::PreparedTile<py_qs_data_t>& tile, index_t dim,
+                                 WorkerScratch<calc_type>& scratch);
     static void ApplyAdjointTileProgram(qs_data_p_t* shared_state, const std::vector<qs_data_p_t*>& batch_states,
                                         const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim,
-                                        VVT<py_qs_data_t>* output, bool conjugate_output);
+                                        VVT<py_qs_data_t>* output, bool conjugate_output,
+                                        WorkerScratch<calc_type>& scratch);
     // X like operator
     // ========================================================================================================
 
@@ -145,19 +147,19 @@ struct CPUVectorPolicyBase {
                                      index_t dim);
     static void ApplyNQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
                                    const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
-    static void ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
-                                const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
-    static void ApplyH(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplySX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplySXdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
-    static void ApplyGP(qs_data_p_t* qs_p, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
-    static void ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
-    static void ApplyRY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
-    static void ApplyRZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
-                        bool diff = false);
+    void ApplyMatrixGate(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
+                         const std::vector<std::vector<py_qs_data_t>>& m, index_t dim);
+    void ApplyH(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    void ApplySX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    void ApplySXdag(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, index_t dim);
+    void ApplyGP(qs_data_p_t* qs_p, qbit_t obj_qubit, const qbits_t& ctrls, calc_type val, index_t dim,
+                 bool diff = false);
+    void ApplyRX(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                 bool diff = false);
+    void ApplyRY(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                 bool diff = false);
+    void ApplyRZ(qs_data_p_t* qs_p, const qbits_t& objs, const qbits_t& ctrls, calc_type val, index_t dim,
+                 bool diff = false);
     static void ApplyRPS(qs_data_p_t* qs_p, const PauliMask& pauli_mask, Index ctrl_mask, calc_type val, index_t dim,
                          bool diff = false);
 

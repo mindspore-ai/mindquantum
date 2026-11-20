@@ -22,7 +22,6 @@
 #include <complex>
 #include <cstdint>
 #include <limits>
-#include <new>
 #include <type_traits>
 #include <vector>
 
@@ -30,6 +29,7 @@
 #include "config/openmp.h"
 #include "core/mq_base_types.h"
 #include "simulator/state_index.h"
+#include "simulator/worker_scratch.h"
 
 // Thin wrappers over the SVE ACLE intrinsics.  The single-instruction
 // wrappers are MQ_ALWAYS_INLINE: they are called once per vector of
@@ -327,8 +327,8 @@ inline auto ExpandBaseIndex(svbool_t pg, index_vector_t<calc_type> compressed, c
 }
 
 template <typename calc_type>
-MQ_ALWAYS_INLINE auto LoadCachedComplex(const calc_type* cache, size_t basis) -> vector_t<calc_type> {
-    return svld1(TruePredicate<calc_type>(), cache + basis * Traits<calc_type>::ScalarLanes());
+MQ_ALWAYS_INLINE auto LoadCachedComplex(const calc_type* cache, size_t basis, svbool_t pg) -> vector_t<calc_type> {
+    return svld1(pg, cache + basis * Traits<calc_type>::ScalarLanes());
 }
 
 template <typename calc_type>
@@ -336,35 +336,12 @@ MQ_ALWAYS_INLINE void StoreCachedComplex(calc_type* cache, size_t basis, svbool_
     svst1(pg, cache + basis * Traits<calc_type>::ScalarLanes(), value);
 }
 
-template <typename calc_type>
-inline auto AlignScratch(std::vector<calc_type>* storage, size_t scratch_size) -> calc_type* {
-    const auto alignment = static_cast<uintptr_t>(svcntb());
-    const auto address = reinterpret_cast<uintptr_t>(storage->data());
-    const auto remainder = address % alignment;
-    const auto aligned_address = remainder == 0 ? address : address + alignment - remainder;
-    auto* scratch = reinterpret_cast<calc_type*>(aligned_address);
-    if (static_cast<size_t>(scratch - storage->data()) + scratch_size > storage->size()) {
-        throw std::bad_alloc();
-    }
-    return scratch;
-}
-
-template <typename calc_type>
-inline auto ThreadScratch(size_t scratch_size) -> calc_type* {
-    thread_local std::vector<calc_type> storage;
-    const auto required_size = scratch_size + Traits<calc_type>::ScalarLanes();
-    if (storage.size() < required_size) {
-        storage.resize(required_size);
-    }
-    return AlignScratch(&storage, scratch_size);
-}
-
 template <typename calc_type, typename kernel_t>
 void ForEachStateIndexBatchInParallel(const state_index::StateIndexWindow& index_window, index_t compressed_count,
                                       const kernel_t& kernel) {
     const auto step = ComplexStep<calc_type>();
     if (compressed_count <= index_window.WindowCapacity()) {
-        MQ_DO_PRAGMA(omp for schedule(static))
+        MQ_DO_PRAGMA(omp for schedule(static) nowait)
         for (omp::idx_t compressed_start = 0; compressed_start < static_cast<omp::idx_t>(compressed_count);
              compressed_start += step) {
             kernel(state_index::StateIndexBatch{0, static_cast<index_t>(compressed_start), compressed_count}, 0);
@@ -374,7 +351,7 @@ void ForEachStateIndexBatchInParallel(const state_index::StateIndexWindow& index
 
     const state_index::StateIndexBatchTraversal traversal(index_window, compressed_count, static_cast<index_t>(step));
     state_index::StateIndexWindowCursor cursor(index_window);
-    MQ_DO_PRAGMA(omp for schedule(static))
+    MQ_DO_PRAGMA(omp for schedule(static) nowait)
     for (omp::idx_t ordinal = 0; ordinal < static_cast<omp::idx_t>(traversal.BatchCount()); ++ordinal) {
         const auto batch = traversal.Batch(static_cast<index_t>(ordinal));
         kernel(batch, cursor.StateOrigin(batch.compressed_window_origin));
@@ -402,33 +379,24 @@ void ForEachStateIndexBatchSerial(const state_index::StateIndexWindow& index_win
 }
 
 template <typename calc_type, typename kernel_t>
-void ParallelForEachStateIndexBatchWithScratch(int threads, const state_index::StateIndexWindow& index_window,
-                                               index_t compressed_count, size_t scratch_vectors,
-                                               const kernel_t& kernel) {
-    const auto scratch_size = scratch_vectors * Traits<calc_type>::ScalarLanes();
-    MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
-        auto* scratch = ThreadScratch<calc_type>(scratch_size);
-        ForEachStateIndexBatchInParallel<calc_type>(
-            index_window, compressed_count, [&](const state_index::StateIndexBatch& batch, index_t state_origin) {
-                kernel(batch, state_origin, scratch);
-            });
-    }
-}
-
-template <typename calc_type, typename kernel_t>
-void ForEachStateIndexBatchWithScratch(index_t dim, const state_index::StateIndexWindow& index_window,
-                                       index_t compressed_count, size_t scratch_vectors, const kernel_t& kernel) {
-    if (const int threads = omp::TeamSize(dim); threads != 1) {
-        ParallelForEachStateIndexBatchWithScratch<calc_type>(threads, index_window, compressed_count, scratch_vectors,
-                                                             kernel);
+void ForEachStateIndexBatchWithScratch(int threads, const state_index::StateIndexWindow& index_window,
+                                       index_t compressed_count, const WorkerScratch<calc_type>& scratch,
+                                       const kernel_t& kernel) {
+    if (threads == 1) {
+        auto* local = scratch.ForWorker(0);
+        ForEachStateIndexBatchSerial<calc_type>(index_window, compressed_count,
+                                                [&](const state_index::StateIndexBatch& batch, index_t state_origin) {
+                                                    kernel(batch, state_origin, local);
+                                                });
         return;
     }
-
-    const auto scratch_size = scratch_vectors * Traits<calc_type>::ScalarLanes();
-    auto* scratch = ThreadScratch<calc_type>(scratch_size);
-    ForEachStateIndexBatchSerial<calc_type>(
-        index_window, compressed_count,
-        [&](const state_index::StateIndexBatch& batch, index_t state_origin) { kernel(batch, state_origin, scratch); });
+    MQ_DO_PRAGMA(omp parallel num_threads(threads)) {
+        auto* local = scratch.ForWorker(scratch.CurrentWorker());
+        ForEachStateIndexBatchInParallel<calc_type>(
+            index_window, compressed_count, [&](const state_index::StateIndexBatch& batch, index_t state_origin) {
+                kernel(batch, state_origin, local);
+            });
+    }
 }
 }  // namespace mindquantum::sim::sve
 

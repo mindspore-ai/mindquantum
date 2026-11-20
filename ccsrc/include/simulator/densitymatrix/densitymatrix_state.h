@@ -33,6 +33,7 @@
 #include "ops/hamiltonian.h"
 #include "simulator/circuit_tiling/circuit_tiling.h"
 #include "simulator/circuit_tiling/state_space.h"
+#include "simulator/worker_scratch.h"
 
 namespace mindquantum::sim::densitymatrix::detail {
 // A mixed quantum state stored as a dense density matrix.
@@ -212,9 +213,9 @@ class DensityMatrixState {
     [[nodiscard]] auto Compile(const circuit_t& circ, const parameter::ParameterResolver& pr) const -> Program;
 
     // Execution of compiled programs.
-    static void ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, index_t dim);
-    auto ExecuteMeasurement(const PreparedMeasurement& measurement) -> index_t;
-    void Execute(const Program& program, std::map<std::string, int>* outcomes);
+    void ApplyTileTo(qs_data_p_t qs, const prepared_tile_t& tile, WorkerScratch<calc_type>& scratch) const;
+    auto ExecuteMeasurement(const PreparedMeasurement& measurement, WorkerScratch<calc_type>& scratch) -> index_t;
+    void Execute(const Program& program, std::map<std::string, int>* outcomes, WorkerScratch<calc_type>& scratch);
     // The output column of a measurement name, which must be a sampling key.
     static auto OutputColumn(const MST<size_t>& key_map, const std::string& name) -> size_t;
 
@@ -222,20 +223,22 @@ class DensityMatrixState {
     [[nodiscard]] auto PlanGradient(const circuit_t& circ) const -> GradientPlan;
     [[nodiscard]] auto PrepareSegments(const GradientPlan& plan, const parameter::ParameterResolver& pr,
                                        const MST<size_t>& parameter_map) const -> std::vector<PreparedSegment>;
-    void ApplyForward(qs_data_p_t qs, const std::vector<PreparedSegment>& segments, size_t through_segment) const;
+    void ApplyForward(qs_data_p_t qs, const std::vector<PreparedSegment>& segments, size_t through_segment,
+                      WorkerScratch<calc_type>& scratch) const;
     [[nodiscard]] auto ExpectationWithGradient(const GradientPlan& plan,
                                                const std::vector<std::shared_ptr<Hamiltonian<calc_type>>>& hams,
                                                const parameter::ParameterResolver& pr, const MST<size_t>& parameter_map,
                                                size_t batch_size) const -> VVT<py_qs_data_t>;
     void AdjointSweep(const GradientPlan& plan, const std::vector<PreparedSegment>& segments,
                       const qs_data_p_t& final_state, const std::vector<qs_data_p_t>& observables,
-                      VVT<py_qs_data_t>* output) const;
+                      VVT<py_qs_data_t>* output, WorkerScratch<calc_type>& scratch) const;
 
     state_ptr_t qs_;
     qbit_t n_qubits_ = 0;
     index_t dim_ = 0;
     unsigned seed_ = 0;
     mutable RndEngine rnd_eng_;
+    WorkerScratch<calc_type> scratch_;
 };
 }  // namespace mindquantum::sim::densitymatrix::detail
 

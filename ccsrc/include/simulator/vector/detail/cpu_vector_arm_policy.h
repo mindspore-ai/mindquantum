@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "simulator/vector/detail/cpu_vector_policy.h"
+#include "simulator/worker_scratch.h"
 
 namespace mindquantum::sim::vector::detail {
 // The Arm policies share one ISA-dispatched dense matrix implementation.
@@ -33,16 +34,16 @@ struct CPUVectorPolicyArm : public CPUVectorPolicyBase<derived_, calc_type_> {
     using typename base_t::py_qs_data_t;
     using typename base_t::qs_data_p_t;
 
-    static void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit,
-                                       const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& matrix,
-                                       index_t dim);
-    static void ApplyTwoQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
-                                     const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& matrix,
-                                     index_t dim);
-    static void ApplyNQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs,
-                                   const qbits_t& ctrls, const std::vector<std::vector<py_qs_data_t>>& matrix,
-                                   index_t dim);
+    void ApplySingleQubitMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, qbit_t obj_qubit, const qbits_t& ctrls,
+                                const std::vector<std::vector<py_qs_data_t>>& matrix, index_t dim);
+    void ApplyTwoQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
+                              const std::vector<std::vector<py_qs_data_t>>& matrix, index_t dim);
+    void ApplyNQubitsMatrix(const qs_data_p_t& src, qs_data_p_t* des_p, const qbits_t& objs, const qbits_t& ctrls,
+                            const std::vector<std::vector<py_qs_data_t>>& matrix, index_t dim);
     [[nodiscard]] static auto GetBackendName() noexcept -> std::string_view;
+
+ private:
+    WorkerScratch<calc_type_> matrix_scratch_;
 };
 }  // namespace mindquantum::sim::vector::detail
 

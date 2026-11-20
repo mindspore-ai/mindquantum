@@ -14,6 +14,10 @@
 # ==============================================================================
 """Correctness tests for the circuit-tiled density matrix simulator."""
 
+import os
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 
@@ -293,6 +297,30 @@ def test_noiseless_gradient_matches_state_vector(dtype):
     assert np.allclose(gradient, expected_gradient, atol=atol)
 
 
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.skipif(sys.platform != 'win32', reason='Covers Windows OpenMP worker teardown')
+def test_parallel_tile_scratch_survives_worker_teardown():
+    """
+    Feature: Parallel density-matrix tile scratch lifetime.
+    Description: Run a nine-qubit tile followed by a seven-qubit gradient, which shrinks the OpenMP team.
+    Expectation: Both calculations pass and retiring workers do not corrupt the heap.
+    """
+    script = """
+import runpy
+import sys
+
+tests = runpy.run_path(sys.argv[1])
+gate = tests['G'].GroupedPauli('XYXZXYXYX').on(list(range(9)))
+for _ in range(8):
+    tests['test_oversized_gate_runs_in_its_own_tile'](9, gate)
+    tests['test_noiseless_gradient_matches_state_vector'](tests['mq'].complex64)
+"""
+    env = dict(os.environ, OMP_NUM_THREADS='8', OMP_DYNAMIC='FALSE', OMP_THREAD_LIMIT='8')
+    result = subprocess.run([sys.executable, '-X', 'faulthandler', '-c', script, __file__], env=env, check=False)
+    assert result.returncode == 0, f'Tile worker subprocess exited with 0x{result.returncode & 0xFFFFFFFF:08X}'
+
+
 def _noisy_gradient_circuit():
     """Build a circuit interleaving parameterized gates and noise channels."""
     circuit = Circuit()
@@ -534,6 +562,31 @@ def test_invalid_circuits_are_rejected_before_execution():
                 1,
             )
         assert np.allclose(simulator.get_qs(), expected)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+def test_gate_circuit_and_measurement_reuse_scratch():
+    """
+    Feature: Scratch reuse for density-matrix execution.
+    Description: Alternate standalone gates, a resetting measurement, and a circuit on one simulator.
+    Expectation: Every measurement returns one and the reset sequence restores the initial state.
+    """
+    simulator = Simulator('mqmatrix', _PARALLEL_QUBITS)
+    initial = simulator.get_qs()
+    x0, cx, x1 = G.X.on(0), G.X.on(1, 0), G.X.on(1)
+    measurement = G.Measure('m', reset_to=0).on(0)
+    circuit = Circuit([x0, cx])
+    for _ in range(3):
+        simulator.apply_gate(x0)
+        simulator.apply_gate(cx)
+        assert simulator.apply_gate(measurement) == 1
+        simulator.apply_gate(x1)
+        np.testing.assert_allclose(simulator.get_qs(), initial)
+        simulator.apply_circuit(circuit)
+        assert simulator.apply_gate(measurement) == 1
+        simulator.apply_gate(x1)
+        np.testing.assert_allclose(simulator.get_qs(), initial)
 
 
 @pytest.mark.level0

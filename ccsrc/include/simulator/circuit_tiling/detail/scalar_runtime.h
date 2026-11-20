@@ -106,7 +106,7 @@ struct ScalarTileAlgebra {
     using predicate_t = bool;
     using state_index_t = index_t;
     using index_context_t = ScalarBlockContext;
-    using storage_t = value_t;
+    using storage_t = calc_type;
 
     [[nodiscard]] MQ_ALWAYS_INLINE static auto ExternalControls(predicate_t active, state_index_t state_base,
                                                                 const index_context_t&, index_t mask) -> predicate_t {
@@ -135,13 +135,14 @@ struct ScalarTileAlgebra {
         return value;
     }
 
-    [[nodiscard]] MQ_ALWAYS_INLINE static auto Load(const storage_t* cache, size_t basis) -> vector_t {
-        return cache[basis];
+    [[nodiscard]] MQ_ALWAYS_INLINE static auto Load(predicate_t, const storage_t* cache, size_t basis) -> vector_t {
+        return {cache[2 * basis], cache[2 * basis + 1]};
     }
 
     MQ_ALWAYS_INLINE static void Store(storage_t* cache, size_t basis, predicate_t predicate, vector_t value) {
         if (predicate) {
-            cache[basis] = value;
+            cache[2 * basis] = value.real();
+            cache[2 * basis + 1] = value.imag();
         }
     }
 
@@ -201,20 +202,20 @@ struct ScalarTileRuntime {
         return traversal_t(layout);
     }
 
-    [[nodiscard]] static auto ThreadScratch(size_t size) -> storage_t* {
-        thread_local std::vector<storage_t> scratch;
-        if (scratch.size() < size) {
-            scratch.resize(size);
-        }
-        return scratch.data();
+    [[nodiscard]] static constexpr auto ScratchLanes() noexcept -> size_t {
+        return 2;
+    }
+
+    [[nodiscard]] static constexpr auto ScratchAlignment() noexcept -> size_t {
+        return 64 / sizeof(storage_t);
     }
 
     [[nodiscard]] static auto Offset(storage_t* storage, size_t logical_offset) -> storage_t* {
-        return storage + logical_offset;
+        return storage + logical_offset * ScratchLanes();
     }
 
     [[nodiscard]] static auto Offset(const storage_t* storage, size_t logical_offset) -> const storage_t* {
-        return storage + logical_offset;
+        return storage + logical_offset * ScratchLanes();
     }
 
     template <typename function_t>
@@ -228,7 +229,7 @@ struct ScalarTileRuntime {
 
     template <typename function_t>
     static void ForEachInParallel(const traversal_t& traversal, const function_t& function) {
-        MQ_DO_PRAGMA(omp for schedule(static))
+        MQ_DO_PRAGMA(omp for schedule(static) nowait)
         for (omp::idx_t block = 0; block < static_cast<omp::idx_t>(traversal.Count()); ++block) {
             ScalarBlockContext context;
             const auto state_base = traversal.Block(static_cast<index_t>(block), &context);
@@ -239,18 +240,19 @@ struct ScalarTileRuntime {
     static void Gather(const value_t* state, const TileLayout& layout, bool, index_t state_base,
                        const ScalarBlockContext&, storage_t* tile) {
         for (size_t basis = 0; basis < layout.dimension; ++basis) {
-            tile[basis] = state[state_base | layout.state_offsets[basis]];
+            algebra_t::Store(tile, basis, true, state[state_base | layout.state_offsets[basis]]);
         }
     }
 
     static void Scatter(value_t* state, const TileLayout& layout, bool, index_t state_base,
                         const ScalarBlockContext& context, const storage_t* tile) {
         for (size_t basis = 0; basis < layout.dimension; ++basis) {
-            state[state_base | layout.state_offsets[basis]] = tile[basis];
+            state[state_base | layout.state_offsets[basis]] = algebra_t::Load(true, tile, basis);
         }
         if (context.mirrored) {
             for (size_t basis = 0; basis < layout.dimension; ++basis) {
-                state[context.mirror_base | layout.state_offsets[MirrorBasis(layout, basis)]] = std::conj(tile[basis]);
+                state[context.mirror_base | layout.state_offsets[MirrorBasis(layout, basis)]] = std::conj(
+                    algebra_t::Load(true, tile, basis));
             }
         }
     }
@@ -266,7 +268,7 @@ struct ScalarTileRuntime {
     // The conjugate transpose of a local block: the mirror block's content.
     static void MirrorBlock(const TileLayout& layout, const storage_t* block, storage_t* mirror) {
         for (size_t basis = 0; basis < layout.dimension; ++basis) {
-            mirror[MirrorBasis(layout, basis)] = std::conj(block[basis]);
+            algebra_t::Store(mirror, MirrorBasis(layout, basis), true, std::conj(algebra_t::Load(true, block, basis)));
         }
     }
 

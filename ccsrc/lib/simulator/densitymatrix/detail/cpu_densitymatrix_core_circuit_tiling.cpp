@@ -25,15 +25,17 @@ namespace mindquantum::sim::densitymatrix::detail {
 template <typename calc_type_>
 void CPUDensityMatrixPolicy<calc_type_>::ApplyCircuitTile(qs_data_p_t qs,
                                                           const circuit_tiling::PreparedTile<py_qs_data_t>& tile,
-                                                          index_t dim) {
-    circuit_tiling::ApplyTile(qs, tile, omp::TeamSize(Size(dim)));
+                                                          index_t dim, WorkerScratch<calc_type>& scratch) {
+    circuit_tiling::ApplyTile(qs, tile, omp::TeamSize(Size(dim)), scratch);
 }
 
 template <typename calc_type_>
 void CPUDensityMatrixPolicy<calc_type_>::ApplyAdjointTileProgram(
     qs_data_p_t shared_state, const std::vector<qs_data_p_t>& batch_states,
-    const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim, VVT<py_qs_data_t>* output) {
-    circuit_tiling::ApplyAdjointProgram(shared_state, batch_states, program, output, false, omp::TeamSize(Size(dim)));
+    const circuit_tiling::AdjointProgram<py_qs_data_t>& program, index_t dim, VVT<py_qs_data_t>* output,
+    WorkerScratch<calc_type>& scratch) {
+    circuit_tiling::ApplyAdjointProgram(shared_state, batch_states, program, output, false, omp::TeamSize(Size(dim)),
+                                        scratch);
 }
 
 template struct CPUDensityMatrixPolicy<float>;

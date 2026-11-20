@@ -223,6 +223,9 @@ class VectorState {
     unsigned seed = 0;
     RndEngine rnd_eng_;
     std::function<double()> rng_;
+
+ private:
+    qs_policy_t matrix_policy_;
 };
 
 template <typename sim_t_>
