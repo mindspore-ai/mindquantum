@@ -349,7 +349,11 @@ def test_mqmps_reduced_density_matrix_rejects_too_large_output():
         sim_mps.get_reduced_density_matrix(list(range(20)))
 
 
-def test_mqmps_reduced_density_matrix_matches_mqvector():
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize("kept", [[4], [4, 0], [4, 0, 2, 1], np.array([4, 0])])
+def test_mqmps_reduced_density_matrix_matches_mqvector(kept):
     """
     Feature: MPS simulator reduced density matrix calculation.
     Description: Compute reduced density matrix for a subset of qubits after circuit application.
@@ -368,10 +372,33 @@ def test_mqmps_reduced_density_matrix_matches_mqvector():
     sim_vec.apply_circuit(circ)
     sim_mps.apply_circuit(circ)
 
-    kept = [4, 0]  # intentionally unsorted; contract should be in logical order
     rho_vec = sim_vec.get_reduced_density_matrix(kept)
     rho_mps = sim_mps.get_reduced_density_matrix(kept)
     assert np.allclose(rho_vec, rho_mps, atol=1e-8)
+
+
+@pytest.mark.level0
+@pytest.mark.platform_x86_cpu
+@pytest.mark.env_onecard
+@pytest.mark.parametrize(
+    "kept, message",
+    [
+        ([], "cannot be empty"),
+        ([0, 0], "repeated indices"),
+        ([-1], "negative indices"),
+        ([5], "out of range"),
+        (list(range(5)), "less than total number of qubits"),
+    ],
+)
+def test_mqmps_reduced_density_matrix_rejects_invalid_qubits(kept, message):
+    """
+    Feature: MPS simulator reduced density matrix input validation.
+    Description: Request an empty, duplicate, out-of-range, or full set of qubits.
+    Expectation: Invalid requests raise ValueError for the relevant validation rule.
+    """
+    sim_mps = Simulator("mqmps", 5, seed=17, max_bond_dimension=0)
+    with pytest.raises(ValueError, match=message):
+        sim_mps.get_reduced_density_matrix(kept)
 
 
 def test_mqmps_bra_ket_expectation_matches_mqvector():

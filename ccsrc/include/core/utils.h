@@ -107,7 +107,13 @@ inline uint32_t CountOne(uint32_t n) {
 }
 
 inline uint64_t CountOne(uint64_t n) {
-    return __builtin_popcount(n) + __builtin_popcount(n >> 32);
+    return __builtin_popcountll(n);
+}
+inline uint32_t CountOne(int32_t n) {
+    return CountOne(uint32_t(n));
+}
+inline uint64_t CountOne(int64_t n) {
+    return CountOne(uint64_t(n));
 }
 inline uint32_t CountLeadingZero(uint32_t n) {
     return __builtin_clzll(n);

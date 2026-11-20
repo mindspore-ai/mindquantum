@@ -155,7 +155,7 @@ struct SlaterDeterminant {
     // Count set bits using a compiler intrinsic for performance.
     // For C++20, this could be replaced with std::popcount.
     static int count_set_bits(uint64_t n) {
-        return static_cast<int>(__builtin_popcountll(n));
+        return static_cast<int>(mindquantum::CountOne(n));
     }
 
     bool operator<(const SlaterDeterminant& other) const {
