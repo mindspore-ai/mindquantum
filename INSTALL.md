@@ -47,6 +47,9 @@ On MacOS, cibuildwheel will install the official Python distribution on your sys
 
 ###### Windows
 
+For x86-64 MinGW-w64 builds with GCC, use GNU binutils 2.38 or newer.
+The assembler must support `-muse-unaligned-vector-move` to avoid AVX stack alignment faults.
+
 On Windows, cibuildwheel will install the official Python distribution using NuGet on your system before building the binary wheel. This makes running the script on your development machine not appropriate unless you understand what you are doing.
 
 ##### On your local machine

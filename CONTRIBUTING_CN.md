@@ -85,7 +85,7 @@ pip install mindquantum
     bash build.sh --gitee --gpu
     ```
 
-    **Windows系统**下请确保安装好MinGW-W64和CMake >= 3.18.3，然后运行如下命令：
+    **Windows系统**下请安装MinGW-w64（参见[Windows工具链要求](INSTALL.md#windows)）和CMake >= 3.18.3，然后运行如下命令：
 
     ```bash
     cd ~/mindquantum
