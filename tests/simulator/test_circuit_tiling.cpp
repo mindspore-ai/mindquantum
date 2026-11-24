@@ -18,14 +18,18 @@
 #include <array>
 #include <complex>
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <new>
 #include <variant>
 #include <vector>
 
 #include "math/pr/parameter_resolver.h"
 #include "ops/basic_gate.h"
 #include "simulator/circuit_tiling/builder.h"
+#include "simulator/circuit_tiling/executor.h"
 #include "simulator/circuit_tiling/planner.h"
+#include "simulator/worker_scratch.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -71,6 +75,31 @@ void CheckSamePlan(const mqt::Schedule& lhs, const mqt::Schedule& rhs) {
     }
 }
 }  // namespace
+
+TEST_CASE("Circuit tile scratch rejects overflowing sizes without damaging worker storage") {
+    const auto check = [](auto value) {
+        using calc_type = decltype(value);
+        mq::sim::WorkerScratch<calc_type> scratch;
+        CHECK_NOTHROW(mqt::ReserveScratch(scratch, 0, 3));
+        mqt::ReserveScratch(scratch, 7, 3);
+        for (size_t worker = 0; worker < 3; ++worker) {
+            std::fill_n(scratch.ForWorker(worker), 14, static_cast<calc_type>(worker + 1));
+        }
+
+        constexpr auto maximum = std::numeric_limits<size_t>::max();
+        for (auto size : {maximum / sizeof(calc_type) / 2 + 1, maximum / 2 + 1, maximum}) {
+            CAPTURE(sizeof(calc_type), size);
+            CHECK_THROWS_AS(mqt::ReserveScratch(scratch, size, 3), std::bad_array_new_length);
+        }
+        for (size_t worker = 0; worker < 3; ++worker) {
+            for (size_t element = 0; element < 14; ++element) {
+                CHECK(scratch.ForWorker(worker)[element] == static_cast<calc_type>(worker + 1));
+            }
+        }
+    };
+    check(float{});
+    check(double{});
+}
 
 TEST_CASE("Circuit tiles use the minimum passes for independent repeated gates") {
     circuit_t circuit{std::make_shared<mq::HGate>(mq::qbits_t{0}), std::make_shared<mq::HGate>(mq::qbits_t{1}),

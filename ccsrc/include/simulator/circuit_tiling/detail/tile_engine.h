@@ -72,8 +72,14 @@
 namespace mindquantum::sim::circuit_tiling::detail {
 template <typename runtime_t>
 void ReserveScratch(WorkerScratch<typename runtime_t::storage_t>& scratch, size_t size, int threads) {
+    using storage_t = typename runtime_t::storage_t;
+    // sizeof(storage_t) > 1 keeps max_elements below SIZE_MAX so GCC 10-15 does
+    // not fold (size > SIZE_MAX / lanes) into MUL_OVERFLOW on polynomial SVE
+    // lane counts and crash in expmed's make_tree (GCC PR middle-end/125621).
+    static_assert(sizeof(storage_t) > 1);
     const auto lanes = runtime_t::ScratchLanes();
-    if (size > std::numeric_limits<size_t>::max() / lanes) {
+    constexpr auto max_elements = std::numeric_limits<size_t>::max() / sizeof(storage_t);
+    if (size > max_elements / lanes) {
         throw std::bad_array_new_length();
     }
     scratch.Reserve(size * lanes, threads, runtime_t::ScratchAlignment());
