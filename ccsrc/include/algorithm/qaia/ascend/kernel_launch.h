@@ -13,5 +13,8 @@ namespace mindquantum::algorithm::qaia::ascend {
 aclError LaunchSbStep(uint32_t blocks, aclrtStream stream, void* x, void* y, void* coupling, void* spin, void* h,
                       void* p, int32_t n, int32_t batch, int32_t iteration, int32_t discrete, float delta, float xi,
                       float dt);
+struct KernelApi {
+    decltype(&LaunchSbStep) step;
+};
 }  // namespace mindquantum::algorithm::qaia::ascend
 #endif  // INCLUDE_ALGORITHM_QAIA_ASCEND_KERNEL_LAUNCH_H_

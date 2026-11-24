@@ -138,7 +138,7 @@ void BindGradient(py::module_& module) {
 }  // namespace
 
 PYBIND11_MODULE(_mq_vector_npu, module) {
-    module.doc() = "Ascend 910B complex64 tiled statevector executor.";
+    module.doc() = "Ascend complex64 tiled statevector executor.";
     BindPrograms(module);
     BindState(module);
     BindGradient(module);

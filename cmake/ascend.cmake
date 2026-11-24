@@ -10,27 +10,32 @@ endif()
 
 set(CMAKE_ASC_ARCHITECTURES
     ""
-    CACHE STRING "Ascend compiler architecture, e.g. dav-2201 or dav-3510")
+    CACHE STRING "Ascend compiler architectures, e.g. dav-2201;dav-3510")
 set(MQ_ASCEND_SOC
     ""
     CACHE STRING "Optional CANN SoC selector, used instead of CMAKE_ASC_ARCHITECTURES")
 set(ASCEND_CANN_PACKAGE_PATH
     "$ENV{ASCEND_HOME_PATH}"
     CACHE PATH "CANN installation root")
-foreach(_selector CMAKE_ASC_ARCHITECTURES MQ_ASCEND_SOC)
-  if(NOT "${${_selector}}" STREQUAL "" AND NOT "${${_selector}}" MATCHES "^[A-Za-z0-9_.-]+$")
-    message(FATAL_ERROR "${_selector} must be a single compiler target identifier (letters, digits, '.', '_' or '-')")
-  endif()
-endforeach()
+if(CMAKE_ASC_ARCHITECTURES AND NOT CMAKE_ASC_ARCHITECTURES MATCHES "^[A-Za-z0-9_.-]+(;[A-Za-z0-9_.-]+)*$")
+  message(FATAL_ERROR "CMAKE_ASC_ARCHITECTURES must contain semicolon-separated compiler target identifiers")
+endif()
+if(MQ_ASCEND_SOC AND NOT MQ_ASCEND_SOC MATCHES "^[A-Za-z0-9_.-]+$")
+  message(FATAL_ERROR "MQ_ASCEND_SOC must be a single compiler target identifier")
+endif()
 if(CMAKE_ASC_ARCHITECTURES AND MQ_ASCEND_SOC)
   message(FATAL_ERROR "Select CMAKE_ASC_ARCHITECTURES or MQ_ASCEND_SOC, not both")
 elseif(NOT CMAKE_ASC_ARCHITECTURES AND NOT MQ_ASCEND_SOC)
   message(FATAL_ERROR "ENABLE_ASCEND requires a compiler target: set CMAKE_ASC_ARCHITECTURES, e.g. dav-3510 for 950")
 endif()
-# The API probe and both host backends use the same compile-time target selection.
+# One selection drives kernel variants, runtime dispatch and package metadata.
 if(CMAKE_ASC_ARCHITECTURES)
-  set(MQ_ASCEND_TARGET_DEFINITION "MQ_ASCEND_ARCHITECTURE=\"${CMAKE_ASC_ARCHITECTURES}\"")
+  list(REMOVE_DUPLICATES CMAKE_ASC_ARCHITECTURES)
+  set(MQ_ASCEND_TARGETS "${CMAKE_ASC_ARCHITECTURES}")
+  list(JOIN MQ_ASCEND_TARGETS "\",\"" _targets)
+  set(MQ_ASCEND_TARGET_DEFINITION "MQ_ASCEND_ARCHITECTURES=\"${_targets}\"")
 else()
+  set(MQ_ASCEND_TARGETS "${MQ_ASCEND_SOC}")
   set(MQ_ASCEND_TARGET_DEFINITION "MQ_ASCEND_SOC=\"${MQ_ASCEND_SOC}\"")
 endif()
 # The installed CANN compiler owns the supported-target list, not MindQuantum. ASCConfig itself reads ASCEND_HOME_PATH.
@@ -63,7 +68,7 @@ find_path(
   HINTS "${_cann_root}/include"
   NO_DEFAULT_PATH REQUIRED)
 # Use the component APIs; the legacy ascendcl/opapi umbrella libraries are deprecated by CANN.
-foreach(_library acl_rt opapi_nn nnopbase tiling_api platform)
+foreach(_library acl_rt opapi_nn nnopbase tiling_api platform register)
   string(TOUPPER "${_library}" _name)
   find_library(
     MQ_ASCEND_${_name} ${_library}
@@ -83,7 +88,7 @@ check_cxx_source_compiles(
   #include <acl/acl.h>
   #include <aclnnop/aclnn_matmul.h>
   int main() {
-  #ifdef MQ_ASCEND_ARCHITECTURE
+  #ifdef MQ_ASCEND_ARCHITECTURES
     int64_t architecture = 0;
     aclrtGetDeviceInfo(0, ACL_DEV_ATTR_NPU_ARCH, &architecture);
   #else
@@ -105,7 +110,6 @@ check_cxx_source_compiles(
 cmake_pop_check_state()
 if(NOT MQ_ASCEND_HAS_REQUIRED_APIS)
   message(
-    FATAL_ERROR
-      "CANN must provide the selected target's compatibility API, graph capture "
-      "and repeatable aclnnMatmul executors. Architecture targets require ACL_DEV_ATTR_NPU_ARCH (CANN 9.1+).")
+    FATAL_ERROR "CANN must provide the selected target's compatibility API, graph capture "
+                "and repeatable aclnnMatmul executors. Architecture targets require ACL_DEV_ATTR_NPU_ARCH (CANN 9.1+).")
 endif()

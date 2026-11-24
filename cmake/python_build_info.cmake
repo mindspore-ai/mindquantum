@@ -8,10 +8,16 @@ list(JOIN _python_targets "\", \"" _python_targets_json)
 if(_python_targets)
   set(_python_targets_json "\"${_python_targets_json}\"")
 endif()
+get_property(_runtime_files GLOBAL PROPERTY _python_runtime_files)
+list(JOIN _runtime_files "\", \"" _runtime_files_json)
+if(_runtime_files)
+  set(_runtime_files_json "\"${_runtime_files_json}\"")
+endif()
 set(_ascend_info "null")
 if(ENABLE_ASCEND)
   if(CMAKE_ASC_ARCHITECTURES)
-    set(_ascend_info "{\"architecture\": \"${CMAKE_ASC_ARCHITECTURES}\"}")
+    list(JOIN CMAKE_ASC_ARCHITECTURES "\", \"" _architectures)
+    set(_ascend_info "{\"architectures\": [\"${_architectures}\"]}")
   else()
     set(_ascend_info "{\"soc\": \"${MQ_ASCEND_SOC}\"}")
   endif()
@@ -23,6 +29,7 @@ file(
     [[
 {
   "python_targets": [@_python_targets_json@],
+  "runtime_files": [@_runtime_files_json@],
   "ascend": @_ascend_info@
 }
 ]]

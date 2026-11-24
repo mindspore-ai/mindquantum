@@ -38,4 +38,8 @@ add_subdirectory(include)
 add_subdirectory(lib)
 add_subdirectory(python)
 
+if(ENABLE_ASCEND)
+  add_subdirectory(lib/ascend)
+endif()
+
 # ==============================================================================
