@@ -76,7 +76,8 @@ if(NOT IS_PYTHON_BUILD)
   install(
     EXPORT mindquantumPythonTargets
     NAMESPACE ${_namespace}
-    DESTINATION ${MQ_INSTALL_CMAKEDIR})
+    DESTINATION ${MQ_INSTALL_CMAKEDIR}
+    COMPONENT Python)
 
   export(
     EXPORT mindquantumPythonTargets

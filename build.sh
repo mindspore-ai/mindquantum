@@ -279,7 +279,7 @@ fi
 
 if [ "$enable_npu" -eq 1 ]; then
     if [ -n "$npu_arch" ]; then
-        args+=(--var CMAKE_ASC_ARCHITECTURES "$npu_arch")
+        args+=(--var CMAKE_ASC_ARCHITECTURES "${npu_arch//,/;}")
     elif [ -n "$npu_soc" ]; then
         args+=(--var MQ_ASCEND_SOC "$npu_soc")
     fi

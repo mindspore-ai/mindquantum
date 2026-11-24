@@ -213,7 +213,7 @@ fi
 
 if [ "$enable_npu" -eq 1 ]; then
     if [ -n "$npu_arch" ]; then
-        cmake_args+=(-DCMAKE_ASC_ARCHITECTURES:STRING="$npu_arch")
+        cmake_args+=(-DCMAKE_ASC_ARCHITECTURES:STRING="${npu_arch//,/;}")
     elif [ -n "$npu_soc" ]; then
         cmake_args+=(-DMQ_ASCEND_SOC:STRING="$npu_soc")
     fi

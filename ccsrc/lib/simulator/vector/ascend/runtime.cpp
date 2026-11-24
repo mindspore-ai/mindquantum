@@ -30,7 +30,8 @@
 #include <acl/acl.h>
 
 #include "core/ascend.h"
-#include "simulator/vector/ascend/kernel_launch.h"
+#include "core/ascend_kernel_library.h"
+#include "simulator/vector/ascend/kernel_api.h"
 #include "simulator/vector/ascend/observable.h"
 #include "tiling/matrix/matmul_tiling.h"
 #include "tiling/platform/platform_ascendc.h"
@@ -42,7 +43,10 @@ using mindquantum::ascend::Cleanup;
 using mindquantum::ascend::ContextScope;
 using mindquantum::ascend::Transaction;
 
+const char kernel_library_anchor = 0;
+
 struct Context {
+    const KernelApi* kernels = nullptr;
     aclrtContext handle = nullptr;
     std::string soc;
     unsigned cores;
@@ -53,7 +57,8 @@ struct Context {
         const ContextScope caller;
         Check(aclrtCreateContext(&handle, device), "aclrtCreateContext");
         try {
-            soc = mindquantum::ascend::SocName(device);
+            kernels = mindquantum::ascend::LoadKernels<KernelApi>(device, "mq_ascend_kernels", &kernel_library_anchor);
+            soc = mindquantum::ascend::SocName();
             int64_t value = 0;
             Check(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_VECTOR_CORE_NUM, &value), "aclrtGetDeviceInfo");
             if (value <= 0) {
@@ -354,8 +359,8 @@ struct CubeTile {
         constexpr uint32_t packets_per_block = 2 * kDenseBatchPackets;
         const auto blocks = static_cast<uint32_t>(
             std::min<uint64_t>(context.cube_cores, (plane / packet.size + packets_per_block - 1) / packets_per_block));
-        return LaunchDense(blocks, stream, state, metadata.At(matrix), metadata.At(offsets), metadata.At(indices),
-                           metadata.At(config), workspace, packet);
+        return context.kernels->dense(blocks, stream, state, metadata.At(matrix), metadata.At(offsets),
+                                      metadata.At(indices), metadata.At(config), workspace, packet);
     }
 };
 
@@ -382,8 +387,8 @@ struct VectorTile {
             return ACL_SUCCESS;
         }
         const auto blocks = static_cast<uint32_t>(std::min<uint64_t>(context.cores, tile_count));
-        return LaunchTile(blocks, stream, state, metadata.At(instructions), metadata.At(pool), metadata.At(offsets),
-                          plane, external_mask, tile_count, size, run, count);
+        return context.kernels->tile(blocks, stream, state, metadata.At(instructions), metadata.At(pool),
+                                     metadata.At(offsets), plane, external_mask, tile_count, size, run, count);
     }
 };
 
@@ -477,8 +482,9 @@ struct Observable::Impl {
         auto cache = std::make_unique<Buffer>(context, layout.plane * sizeof(float));
         Stream stream(context);
         Transaction transaction(stream.handle);
-        Check(LaunchCompileDiagonal(ReductionBlocks(*context, layout.plane), stream.handle, metadata->At(terms),
-                                    metadata->At(signs), cache->Data(), diagonal_terms, layout),
+        Check(context->kernels->compile_diagonal(ReductionBlocks(*context, layout.plane), stream.handle,
+                                                 metadata->At(terms), metadata->At(signs), cache->Data(),
+                                                 diagonal_terms, layout),
               "compile diagonal observable");
         transaction.Finish("cache diagonal observable");
         diagonal = std::move(cache);
@@ -492,10 +498,10 @@ struct Observable::Impl {
     }
 
     void Launch(aclrtStream stream, void* ket, void* bra, void* output, void* partials) const {
-        Check(LaunchObservable(ReductionBlocks(*context, layout.plane), stream, ket, bra, output, metadata->At(groups),
-                               metadata->At(terms), metadata->At(indices), metadata->At(signs), metadata->At(rows),
-                               metadata->At(columns), diagonal ? diagonal->Data() : metadata->At(values), partials,
-                               layout),
+        Check(context->kernels->observable(ReductionBlocks(*context, layout.plane), stream, ket, bra, output,
+                                           metadata->At(groups), metadata->At(terms), metadata->At(indices),
+                                           metadata->At(signs), metadata->At(rows), metadata->At(columns),
+                                           diagonal ? diagonal->Data() : metadata->At(values), partials, layout),
               "launch observable");
     }
 };
@@ -524,6 +530,7 @@ struct AdjointExecutable {
             , count(source.outputs.size()) {
         }
     };
+    std::shared_ptr<Context> context;
     std::unique_ptr<DeviceImage> metadata;
     std::vector<std::variant<Tile, Dense>> tiles;
     uint32_t blocks, cube_blocks, output_size;
@@ -532,7 +539,8 @@ struct AdjointExecutable {
 
     AdjointExecutable(const std::shared_ptr<Context>& context, const AdjointProgram& program,
                       std::unique_ptr<DeviceImage> storage = nullptr)
-        : blocks(context->cores)
+        : context(context)
+        , blocks(context->cores)
         , cube_blocks(context->cube_cores)
         , output_size(program.parameter_map.size() + 1)
         , plane(std::max(Dimension(program.n_qubits), uint64_t{8})) {
@@ -549,19 +557,19 @@ struct AdjointExecutable {
             std::visit(
                 [&](const auto& tile) {
                     if constexpr (std::is_same_v<std::decay_t<decltype(tile)>, Tile>) {
-                        Check(LaunchAdjointTile(blocks, stream, shared, costate, metadata->At(tile.instructions),
-                                                metadata->At(tile.pool), metadata->At(tile.offsets),
-                                                metadata->At(tile.steps), metadata->At(tile.derivatives),
-                                                metadata->At(tile.targets), partials.Data(), plane, tile.external_mask,
-                                                tile.tile_count, tile.size, tile.run, tile.step_count, output_size,
-                                                overlap),
+                        Check(context->kernels->adjoint_tile(
+                                  blocks, stream, shared, costate, metadata->At(tile.instructions),
+                                  metadata->At(tile.pool), metadata->At(tile.offsets), metadata->At(tile.steps),
+                                  metadata->At(tile.derivatives), metadata->At(tile.targets), partials.Data(), plane,
+                                  tile.external_mask, tile.tile_count, tile.size, tile.run, tile.step_count,
+                                  output_size, overlap),
                               "launch adjoint tile");
                     } else {
-                        Check(LaunchDenseAdjoint(cube_blocks, stream, shared, costate, metadata->At(tile.matrix),
-                                                 metadata->At(tile.derivatives), metadata->At(tile.outputs),
-                                                 metadata->At(tile.offsets), metadata->At(tile.indices),
-                                                 metadata->At(tile.config), workspace, partials.Data(), tile.packet,
-                                                 tile.count, output_size, overlap),
+                        Check(context->kernels->dense_adjoint(
+                                  cube_blocks, stream, shared, costate, metadata->At(tile.matrix),
+                                  metadata->At(tile.derivatives), metadata->At(tile.outputs),
+                                  metadata->At(tile.offsets), metadata->At(tile.indices), metadata->At(tile.config),
+                                  workspace, partials.Data(), tile.packet, tile.count, output_size, overlap),
                               "launch dense adjoint");
                     }
                 },
@@ -620,7 +628,8 @@ struct State::Impl {
         Buffer partials(context, blocks * sizeof(ReductionPartial));
         std::vector<ReductionPartial> host(blocks);
         Transaction transaction(stream.handle);
-        Check(LaunchInnerProduct(blocks, stream.handle, bra, state.Data(), partials.Data(), dimension, mask, value),
+        Check(context->kernels->inner_product(blocks, stream.handle, bra, state.Data(), partials.Data(), dimension,
+                                              mask, value),
               "launch inner product");
         transaction.Finish("reduce state");
         partials.Download(host.data());
@@ -697,7 +706,8 @@ void State::Reset() {
     const auto blocks = static_cast<uint32_t>(
         std::min<uint64_t>(impl_->context->cores, (2 * impl_->plane + kMaxTileSize - 1) / kMaxTileSize));
     Transaction transaction(impl_->stream.handle);
-    Check(LaunchReset(blocks, impl_->stream.handle, impl_->state.Data(), impl_->plane), "launch reset");
+    Check(impl_->context->kernels->reset(blocks, impl_->stream.handle, impl_->state.Data(), impl_->plane),
+          "launch reset");
     transaction.Finish("reset state");
 }
 
@@ -827,8 +837,9 @@ std::vector<std::vector<std::complex<double>>> State::ReducedDensity(const qbits
     std::vector<ReductionPartial> host(records);
     Transaction transaction(impl_->stream.handle);
     metadata->Upload(impl_->stream.handle);
-    Check(LaunchDensity(static_cast<uint32_t>(std::min<uint64_t>(records, impl_->context->cores)), impl_->stream.handle,
-                        impl_->state.Data(), metadata->At(offsets), metadata->At(indices), partials.Data(), layout),
+    Check(impl_->context->kernels->density(static_cast<uint32_t>(std::min<uint64_t>(records, impl_->context->cores)),
+                                           impl_->stream.handle, impl_->state.Data(), metadata->At(offsets),
+                                           metadata->At(indices), partials.Data(), layout),
           "launch reduced density matrix");
     transaction.Finish("reduce density matrix");
     partials.Download(host.data());
@@ -851,8 +862,8 @@ void State::Scale(double factor) {
     const std::lock_guard<std::mutex> lock(impl_->mutex);
     const ContextScope scope(impl_->context->handle);
     Transaction transaction(impl_->stream.handle);
-    Check(LaunchScale(ReductionBlocks(*impl_->context, impl_->plane), impl_->stream.handle, impl_->state.Data(),
-                      impl_->dimension, scalar),
+    Check(impl_->context->kernels->scale(ReductionBlocks(*impl_->context, impl_->plane), impl_->stream.handle,
+                                         impl_->state.Data(), impl_->dimension, scalar),
           "launch scale");
     transaction.Finish("scale state");
 }
@@ -874,8 +885,8 @@ int State::Measure(qbit_t qubit, double draw, int reset_to) {
         // masses would lose the normalization of a rare outcome.
         for (unsigned outcome = 0; outcome < 2; ++outcome) {
             auto* output = static_cast<uint8_t*>(partials.Data()) + outcome * blocks * sizeof(ReductionPartial);
-            Check(LaunchInnerProduct(blocks, impl_->stream.handle, nullptr, impl_->state.Data(), output,
-                                     impl_->dimension, bit, outcome ? bit : 0),
+            Check(impl_->context->kernels->inner_product(blocks, impl_->stream.handle, nullptr, impl_->state.Data(),
+                                                         output, impl_->dimension, bit, outcome ? bit : 0),
                   "launch measurement probability");
         }
         transaction.Finish("measurement probabilities");
@@ -894,8 +905,8 @@ int State::Measure(qbit_t qubit, double draw, int reset_to) {
         throw std::invalid_argument("Ascend measurement normalization is not representable in float32.");
     }
     Transaction transaction(impl_->stream.handle);
-    Check(LaunchCollapse(blocks, impl_->stream.handle, impl_->state.Data(), impl_->dimension, qubit, outcome, reset_to,
-                         inverse_norm),
+    Check(impl_->context->kernels->collapse(blocks, impl_->stream.handle, impl_->state.Data(), impl_->dimension, qubit,
+                                            outcome, reset_to, inverse_norm),
           "launch collapse");
     transaction.Finish("collapse state");
     return outcome;
@@ -916,8 +927,8 @@ std::vector<uint64_t> State::Sample(uint64_t shots, uint64_t seed) const {
     std::vector<ReductionPartial> host_totals(layout.bins);
     {
         Transaction transaction(impl_->stream.handle);
-        Check(LaunchSamplingTree(layout.bins, impl_->stream.handle, impl_->state.Data(), tree.Data(), totals.Data(),
-                                 layout),
+        Check(impl_->context->kernels->sampling_tree(layout.bins, impl_->stream.handle, impl_->state.Data(),
+                                                     tree.Data(), totals.Data(), layout),
               "launch sampling tree");
         transaction.Finish("build sampling tree");
     }
@@ -949,9 +960,9 @@ std::vector<uint64_t> State::Sample(uint64_t shots, uint64_t seed) const {
     std::vector<SamplingResult> host_answers(shots);
     queries.Upload(requests.data());
     Transaction transaction(impl_->stream.handle);
-    Check(LaunchSample(std::min<uint64_t>(impl_->context->cores, shots),
-                       impl_->stream.handle, impl_->state.Data(), tree.Data(), queries.Data(), answers.Data(), shots,
-                       layout),
+    Check(impl_->context->kernels->sample(std::min<uint64_t>(impl_->context->cores, shots), impl_->stream.handle,
+                                          impl_->state.Data(), tree.Data(), queries.Data(), answers.Data(), shots,
+                                          layout),
           "launch terminal sampling");
     transaction.Finish("terminal sampling");
     answers.Download(host_answers.data());

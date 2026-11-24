@@ -5,6 +5,7 @@
 import ctypes
 import hashlib
 import importlib.util
+import json
 import os
 import platform
 import shutil
@@ -32,7 +33,11 @@ def load_module(path):
 @pytest.mark.parametrize('enabled', [False, True])
 @pytest.mark.parametrize(
     'selector,target,variable',
-    [('arch', 'dav-3510', 'CMAKE_ASC_ARCHITECTURES'), ('soc', 'Ascend910B2', 'MQ_ASCEND_SOC')],
+    [
+        ('arch', 'dav-3510', 'CMAKE_ASC_ARCHITECTURES'),
+        ('arch', 'dav-3510,dav-2201', 'CMAKE_ASC_ARCHITECTURES'),
+        ('soc', 'Ascend910B2', 'MQ_ASCEND_SOC'),
+    ],
 )
 def test_ascend_target_argument(tmp_path, script, enabled, selector, target, variable):
     """
@@ -66,6 +71,7 @@ def test_ascend_target_argument(tmp_path, script, enabled, selector, target, var
         assert '--npu-arch and --npu-soc require --npu' in result.stdout + result.stderr
         return
     assert result.returncode == 0, result.stdout + result.stderr
+    target = target.replace(',', ';')
     expected = (
         f'-C--global-option={variable} -C--global-option={target}'
         if script == 'build.sh'
@@ -123,11 +129,18 @@ def test_ascend_config_is_backend_default(tmp_path, script, selection):
     assert 'MQ_ASCEND_SOC' not in result.stdout
 
 
-@pytest.mark.parametrize('selector', ['CMAKE_ASC_ARCHITECTURES', 'MQ_ASCEND_SOC'])
-@pytest.mark.parametrize('target', ['first;second', 'two targets', 'a"quote', 'a\\backslash'])
-def test_ascend_target_is_one_identifier(tmp_path, selector, target):
+@pytest.mark.parametrize(
+    'selector,target',
+    [
+        (selector, target)
+        for selector in ('CMAKE_ASC_ARCHITECTURES', 'MQ_ASCEND_SOC')
+        for target in ('first;;second', 'two targets', 'a"quote', 'a\\backslash')
+    ]
+    + [('MQ_ASCEND_SOC', 'first;second')],
+)
+def test_ascend_target_identifiers(tmp_path, selector, target):
     """
-    Feature: Each Ascend build has one scalar compiler target, not a CMake list or quoted fragment.
+    Feature: Ascend target lists contain nonempty compiler identifiers, not quoted fragments.
     Description: Configure invalid target values without a CANN installation.
     Expectation: Target validation fails before SDK discovery, compiler definitions or JSON generation.
     """
@@ -141,11 +154,15 @@ def test_ascend_target_is_one_identifier(tmp_path, selector, target):
         check=False,
     )
     assert result.returncode != 0, result.stdout + result.stderr
-    assert f'{selector} must be a single compiler target identifier' in result.stderr
+    diagnostic = ' '.join(result.stderr.split())
+    assert f'{selector} must ' in diagnostic
+    assert 'compiler target identifier' in diagnostic
 
 
 @pytest.mark.parametrize('enabled', [False, True])
-def test_selected_extension_is_required(tmp_path, monkeypatch, enabled):
+@pytest.mark.parametrize('light', [False, True])
+@pytest.mark.parametrize('fast', [False, True])
+def test_selected_extension_is_required(tmp_path, monkeypatch, enabled, light, fast):
     """
     Feature: Selected CMake extension enforcement and wheel staging contract.
     Description: Build nested CMake targets into initially absent directories, with an optional failing extension.
@@ -166,10 +183,28 @@ def test_selected_extension_is_required(tmp_path, monkeypatch, enabled):
         encoding='utf-8',
     )
     (tmp_path / 'extra.c').write_text('#error selected extension must not disappear\n', encoding='utf-8')
+    (tmp_path / 'runtime.c').write_text('int answer(void) { return VALUE; }\n', encoding='utf-8')
     (tmp_path / 'CMakeLists.txt').write_text(
         'cmake_minimum_required(VERSION 3.20)\nproject(WheelContract C)\n'
+        'set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Development)\n'
+        'if(IN_PLACE_BUILD)\n'
+        '  set(CPU_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/mindquantum")\n'
+        'endif()\n'
         'add_subdirectory(native)\n'
+        'install(TARGETS cpu LIBRARY DESTINATION lib/python/site-packages/mindquantum COMPONENT Python)\n'
         'set_property(GLOBAL PROPERTY _python_targets cpu)\n'
+        'foreach(value 23 41)\n'
+        '  add_library(kernel${value} SHARED runtime.c)\n'
+        '  target_compile_definitions(kernel${value} PRIVATE VALUE=${value})\n'
+        '  set_target_properties(kernel${value} PROPERTIES PREFIX "" '
+        f'SUFFIX "{suffix}" WINDOWS_EXPORT_ALL_SYMBOLS ON '
+        'LIBRARY_OUTPUT_DIRECTORY "${CPU_OUTPUT_DIR}/lib/ascend" '
+        'RUNTIME_OUTPUT_DIRECTORY "${CPU_OUTPUT_DIR}/lib/ascend")\n'
+        f'  set_property(GLOBAL APPEND PROPERTY _python_runtime_files "lib/ascend/kernel${{value}}{suffix}")\n'
+        '  install(TARGETS kernel${value}\n'
+        '    LIBRARY DESTINATION lib/python/site-packages/mindquantum/lib/ascend COMPONENT asc-devkit\n'
+        '    RUNTIME DESTINATION lib/python/site-packages/mindquantum/lib/ascend COMPONENT asc-devkit)\n'
+        'endforeach()\n'
         'if(ENABLE_EXTRA)\n'
         '  add_library(extra MODULE extra.c)\n'
         '  set_property(GLOBAL APPEND PROPERTY _python_targets extra)\n'
@@ -190,8 +225,17 @@ def test_selected_extension_is_required(tmp_path, monkeypatch, enabled):
         }
     )
     distribution.script_name = 'setup.py'
+    distribution.get_command_obj('build_ext').install_light = light
+    if fast:
+        native_build = tmp_path / 'native-build'
+        subprocess.run(
+            ['cmake', '-S', str(tmp_path), '-B', str(native_build), '-DIN_PLACE_BUILD=ON', *setup.cmake_extra_options],
+            check=True,
+        )
+        wheel_command = distribution.get_command_obj('bdist_wheel')
+        wheel_command.fast_build = True
+        wheel_command.fast_build_dir = str(native_build)
     if enabled:
-        distribution.get_command_obj('build_ext').install_light = True
         with pytest.raises(setup.BuildFailedError):
             distribution.run_command('bdist_wheel')
         assert not list((tmp_path / 'dist').glob('*.whl'))
@@ -200,9 +244,23 @@ def test_selected_extension_is_required(tmp_path, monkeypatch, enabled):
         with ZipFile(next((tmp_path / 'dist').glob('*.whl'))) as wheel:
             binary = tmp_path / f'cpu{suffix}'
             binary.write_bytes(wheel.read(f'mindquantum/{binary.name}'))
-            assert not any('/extra.' in name for name in wheel.namelist())
-            assert 'mindquantum/share/cpu.c' in wheel.namelist()
+            assert not any('/extra.' in name or 'site-packages/' in name for name in wheel.namelist())
+            assert ('mindquantum/share/cpu.c' in wheel.namelist()) is not light
+            for value in (23, 41):
+                runtime = tmp_path / f'kernel{value}{suffix}'
+                runtime.write_bytes(wheel.read(f'mindquantum/lib/ascend/{runtime.name}'))
+                assert ctypes.CDLL(str(runtime)).answer() == value
         assert ctypes.CDLL(str(binary)).answer() == 17
+        if fast:
+            monkeypatch.setenv('MQ_FAST_BDIST_WHEEL', '1')
+            monkeypatch.setenv('MQ_FAST_BDIST_DIR', str(native_build))
+            source_command = distribution.reinitialize_command('build_ext')
+            source_command.inplace = True
+            source_command.install_light = light
+            distribution.run_command('build_ext')
+            for value in (23, 41):
+                runtime = tmp_path / 'mindquantum' / 'lib' / 'ascend' / f'kernel{value}{suffix}'
+                assert runtime.read_bytes() == (tmp_path / f'kernel{value}{suffix}').read_bytes()
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason='auditwheel repairs ELF wheels')
@@ -232,6 +290,8 @@ def test_wheel_repair_keeps_vendor_runtime_external(tmp_path, monkeypatch, capfd
         ('helper', tmp_path, 'int helper(void) { return 11; }', []),
         ('cpu', tmp_path, 'extern int helper(void); int answer(void) { return helper(); }', ['-lhelper']),
         ('npu', tmp_path, 'extern int vendor(void); int answer(void) { return vendor(); }', ['-lvendor']),
+        ('kernels_2201', tmp_path, 'extern int vendor(void); int launch(void) { return vendor(); }', ['-lvendor']),
+        ('kernels_3510', tmp_path, 'extern int vendor(void); int launch(void) { return vendor(); }', ['-lvendor']),
     ):
         path = directory / f'{name}.c'
         path.write_text(source, encoding='utf-8')
@@ -256,7 +316,7 @@ def test_wheel_repair_keeps_vendor_runtime_external(tmp_path, monkeypatch, capfd
     metadata_script.write_text(
         f'set(PROJECT_BINARY_DIR "{tmp_path}")\n'
         'set_property(GLOBAL PROPERTY _python_targets cpu _mq_vector_npu)\n'
-        'set(ENABLE_ASCEND ON)\nset(MQ_ASCEND_SOC Ascend910B2)\n'
+        'set(ENABLE_ASCEND ON)\nset(CMAKE_ASC_ARCHITECTURES "dav-2201;dav-3510")\n'
         f'set(ASCEND_CANN_PACKAGE_PATH "{sdk_alias}")\n'
         f'include("{ROOT / "cmake/python_build_info.cmake"}")\n',
         encoding='utf-8',
@@ -270,6 +330,10 @@ def test_wheel_repair_keeps_vendor_runtime_external(tmp_path, monkeypatch, capfd
     with ZipFile(fixture, 'w') as wheel:
         wheel.write(tmp_path / 'libcpu.so', 'mindquantum/cpu.so')
         wheel.write(tmp_path / 'libnpu.so', 'mindquantum/_mq_vector_npu.so')
+        for architecture in (2201, 3510):
+            wheel.write(
+                tmp_path / f'libkernels_{architecture}.so', f'mindquantum/lib/ascend/libkernels_{architecture}.so'
+            )
         wheel.write(tmp_path / 'python-build-info.json', 'mindquantum/_build_info.json')
         wheel.writestr(f'{dist_info}/METADATA', 'Metadata-Version: 2.1\nName: mindquantum\nVersion: 1.0\n')
         wheel.writestr(
@@ -308,6 +372,10 @@ def test_wheel_repair_keeps_vendor_runtime_external(tmp_path, monkeypatch, capfd
     assert repaired.exists()
     with ZipFile(repaired) as wheel:
         names = wheel.namelist()
+        assert json.loads(wheel.read('mindquantum/_build_info.json'))['ascend'] == {
+            'architectures': ['dav-2201', 'dav-3510']
+        }
+        assert all(f'mindquantum/lib/ascend/libkernels_{arch}.so' in names for arch in (2201, 3510))
         assert any('libhelper' in name for name in names)
         assert not any('libvendor' in name or 'libdriver' in name for name in names)
         tags = [line for line in wheel.read(f'{dist_info}/WHEEL').decode().splitlines() if line.startswith('Tag:')]

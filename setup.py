@@ -131,6 +131,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         self.build_dir = None
         self.install_light = None
         self.jobs = None
+        self.runtime_files = []
 
     def finalize_options(self):
         """Finalize all options."""
@@ -178,9 +179,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         self.cmake_build()
         self.copy_built_extensions()
 
-        if self.fast_bdist_wheel:
-            self.cmake_install_fast_build()
-        elif not self.install_light:
+        if not self.install_light:
             self.cmake_install()
 
     def select_extensions(self):
@@ -188,6 +187,7 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         build_info_path = Path(self._get_temp_dir(), 'python-build-info.json')
         with fdopen(build_info_path, 'r') as build_info_file:
             build_info = json.load(build_info_file)
+        self.runtime_files = build_info['runtime_files']
         targets = set(build_info['python_targets'])
         selected = []
         for ext in self.extensions:
@@ -286,11 +286,30 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, dest_path)
 
+        source_root = cur_dir if self.fast_bdist_wheel else Path(self._get_temp_dir(), 'python')
+        self.copy_runtime_files(source_root / python_package_name, Path(self.build_lib, python_package_name))
+
+    def copy_runtime_files(self, source, destination):
+        """Copy required runtime libraries along the same staging path as extensions."""
+        for filename in self.runtime_files:
+            dest = destination / filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source / filename, dest)
+
     def cmake_install(self):
-        """Install the built graph without invoking compilation again."""
+        """Install development artifacts; build_ext owns all Python/runtime files."""
         cwd = self._get_temp_dir()
         cfg = 'Debug' if self.debug else 'Release'
-        command = self.cmake_cmd + ['--install', '.', '--config', cfg]
+        command = self.cmake_cmd + [
+            '--install',
+            '.',
+            '--config',
+            cfg,
+            '--prefix',
+            str(Path(self.build_lib, python_package_name).absolute()),
+            '--component',
+            'Development',
+        ]
         logging.info(' Installing CMake targets '.center(80, '-'))
         logging.info('CMake command: %s', ' '.join(command))
         logging.info('   cwd: %s', cwd)
@@ -298,37 +317,6 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
             subprocess.check_call(command, cwd=cwd)
         finally:
             logging.info(' End installing CMake targets '.center(80, '-'))
-
-    def cmake_install_fast_build(self):
-        """Run the CMake installation step for a fast-build."""
-        # First save the original installation directory
-        install_prefix = None
-        with fdopen(str(Path(self.build_dir) / 'CMakeCache.txt'), 'r') as cache_file:
-            data = cache_file.readlines()
-            cmake_install_prefix = [line.strip() for line in data if line.startswith('CMAKE_INSTALL_PREFIX')]
-            if len(cmake_install_prefix) == 1:
-                install_prefix = cmake_install_prefix[0].split('=')[1]
-
-        if not install_prefix:
-            logging.info('Unable to locate the original installation prefix in %s', self.build_dir)
-            logging.info('-> Skipping installation step')
-            return
-
-        # ------------------------------
-
-        env = os.environ.copy()
-
-        # Change the original installation prefix path
-        self.cmake_configure_build(
-            [f'-DCMAKE_INSTALL_PREFIX:FILEPATH={Path(self.build_lib, python_package_name).absolute()}'],
-            env,
-        )
-
-        # Perform a normal CMake installation
-        self.cmake_install()
-
-        # Restore the original installation prefix path
-        self.cmake_configure_build([f'-DCMAKE_INSTALL_PREFIX:FILEPATH={install_prefix}'], env)
 
     def copy_extensions_to_source(self):
         """Copy the extensions."""
@@ -355,6 +343,10 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
                     if ext._needs_stub:
                         self.write_stub(str(package_dir) or os.curdir, ext, True)
 
+        self.copy_runtime_files(
+            Path(self.build_lib, python_package_name), Path(build_py.get_package_dir(python_package_name))
+        )
+
     def get_outputs(self):
         """
         Get the list of files generated during a build.
@@ -365,6 +357,12 @@ class CMakeBuildExt(build_ext):  # pylint: disable=too-many-instance-attributes
         for ext in self.extensions:
             if Path(self.get_ext_fullpath(ext.name)).exists() or not ext.optional:
                 outputs.append(self.get_ext_fullpath(ext.name))
+        package_dir = (
+            self.get_finalized_command('build_py').get_package_dir(python_package_name)
+            if self.inplace
+            else Path(self.build_lib, python_package_name)
+        )
+        outputs.extend(str(Path(package_dir, filename)) for filename in self.runtime_files)
         return outputs
 
     def _get_temp_dir(self):

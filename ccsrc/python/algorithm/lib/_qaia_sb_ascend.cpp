@@ -18,11 +18,13 @@
 #include "aclnnop/aclnn_matmul.h"
 #include "algorithm/qaia/ascend/kernel_launch.h"
 #include "core/ascend.h"
+#include "core/ascend_kernel_library.h"
 
 namespace py = pybind11;
 
 namespace {
-using mindquantum::algorithm::qaia::ascend::LaunchSbStep;
+using mindquantum::algorithm::qaia::ascend::KernelApi;
+const char kernel_library_anchor = 0;
 using mindquantum::ascend::Check;
 using mindquantum::ascend::Cleanup;
 using mindquantum::ascend::ContextScope;
@@ -32,6 +34,7 @@ using mindquantum::ascend::ContextScope;
 // One owner for all resources referenced by a captured graph, including during
 // partially completed construction. No process-global device buffer cache.
 struct Resources {
+    const KernelApi* kernels = nullptr;
     aclrtContext context = nullptr;
     aclrtStream stream = nullptr;
     aclmdlRI graph = nullptr;
@@ -43,7 +46,7 @@ struct Resources {
 
     void Init(int deviceId) {
         ACL_CHECK(aclrtCreateContext(&context, deviceId));
-        mindquantum::ascend::SocName(deviceId);
+        kernels = mindquantum::ascend::LoadKernels<KernelApi>(deviceId, "qaia_sb_npu_kernels", &kernel_library_anchor);
         ACL_CHECK(aclrtCreateStream(&stream));
     }
 
@@ -187,8 +190,8 @@ class Plan {
         ACL_CHECK(aclSetAclOpExecutorRepeatable(r.executor));
         void* workspace = r.Allocate(workspaceBytes);
         auto step = [&](int32_t iteration) {
-            ACL_CHECK(LaunchSbStep(blocks, r.stream, x_, y_, coupling, spin, field, pressure, paddedN_, batch_,
-                                   iteration, discrete, delta, xi, dt));
+            ACL_CHECK(r.kernels->step(blocks, r.stream, x_, y_, coupling, spin, field, pressure, paddedN_, batch_,
+                                      iteration, discrete, delta, xi, dt));
         };
         auto matmul = [&] { ACL_CHECK(aclnnMatmul(workspace, workspaceBytes, r.executor, r.stream)); };
 

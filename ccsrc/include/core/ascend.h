@@ -69,35 +69,12 @@ class ContextScope {
     aclrtContext target_;
 };
 
-// Check before launching any kernel: CANN 9.1's ASC launch path can submit an
-// incompatible binary and report an illegal instruction only at synchronization.
-// Its SoC compatibility API also compares NPU architectures, but does not accept
-// dav-* inputs; architecture builds query the device architecture directly.
-inline std::string SocName([[maybe_unused]] int device) {
+inline std::string SocName() {
     const auto* name = aclrtGetSocName();
     if (!name) {
         throw std::runtime_error("aclrtGetSocName returned no device model.");
     }
-    std::string device_name(name);
-#ifdef MQ_ASCEND_ARCHITECTURE
-    const auto* target = MQ_ASCEND_ARCHITECTURE;
-    int64_t actual = 0;
-    Check(aclrtGetDeviceInfo(device, ACL_DEV_ATTR_NPU_ARCH, &actual), "aclrtGetDeviceInfo NPU architecture");
-    const auto device_architecture = "dav-" + std::to_string(actual);
-    const auto compatible = device_architecture == target;
-    if (!compatible) {
-        device_name += " (" + device_architecture + ")";
-    }
-#else
-    const auto* target = MQ_ASCEND_SOC;
-    int32_t compatible = 0;
-    Check(aclrtCheckArchCompatibility(target, &compatible), "aclrtCheckArchCompatibility");
-#endif
-    if (!compatible) {
-        throw std::runtime_error("Ascend kernel target " + std::string(target) + " does not match device "
-                                 + device_name);
-    }
-    return device_name;
+    return name;
 }
 
 // Declare after the stream's input owners, inside their context/lock scope.

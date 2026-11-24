@@ -26,7 +26,7 @@ For example, with an activated CANN environment and a Python supported by
 MindQuantum:
 
 ```bash
-bash build.sh --no-config --npu --npu-arch=dav-3510 -B build-npu -o output-npu -j8
+bash build.sh --no-config --npu --npu-arch=dav-2201,dav-3510 -B build-npu -o output-npu -j8
 ```
 
 Wheel repair selects a manylinux platform automatically, just as for CPU/GPU
@@ -37,19 +37,27 @@ minimum. See [Package boundary](#package-boundary) for what the tag guarantees.
 `--npu` maps to `ENABLE_ASCEND=ON`. Select a compiler target, not the build
 machine's device:
 
-- `--npu-arch=<arch>` sets native `CMAKE_ASC_ARCHITECTURES`. With CANN 9.1,
-  `dav-2201` targets 910B and `dav-3510` targets 950PR/950DT.
+- `--npu-arch=<arch,...>` sets native `CMAKE_ASC_ARCHITECTURES`. With CANN 9.1,
+  `dav-2201` targets 910B and `dav-3510` targets 950PR/950DT. A comma-separated
+  list builds both sets of kernels into **one wheel**, using one toolchain.
+  Native CMake callers use a quoted list: `-DCMAKE_ASC_ARCHITECTURES='dav-2201;dav-3510'`.
 - Alternatively, `--npu-soc=<soc>` sets `MQ_ASCEND_SOC`, passed directly to
   the compiler's `--npu-soc`. Accepted names depend on the installed SDK:
   CANN 9.1 accepts `Ascend910B2` but requires architecture selection for 950.
 
-Select exactly one. MindQuantum has no product-model or architecture whitelist
-and does not translate marketing names into compiler targets. The installed
-CANN compiler validates the target. Use its architecture selector for later
-hardware; do not assume a binary compiled for one architecture runs on another.
-CANN 9.1 accepts a single architecture, not a multi-architecture list. Targets
-must be single identifiers containing letters, digits, `.`, `_` or `-`;
-CMake rejects lists and quoting characters before SDK discovery.
+Select architectures or a SoC, not both. MindQuantum has no product-model or
+architecture whitelist and does not translate marketing names into compiler
+targets. The installed CANN compiler validates the target. Use its architecture
+selector for later hardware; do not assume a binary compiled for one architecture
+runs on another.
+Each compiler invocation still targets one architecture. ASC is enabled once
+in the common kernel directory, isolated from Host compiler flags; each kernel
+target passes its architecture to both compilation and linking. All variants
+belong to one build graph. CPU and Ascend Host code compile only once; there
+are no external sub-builds or wheel-merging steps. Target identifiers contain
+letters, digits, `.`, `_` or `-`; empty list entries and quoting characters fail
+before SDK discovery. Repeated targets are compiled only once. SoC selection
+remains a single target.
 
 The SDK has no default target. For repeated builds, add a target default to
 the `[common]` section of the existing `build.conf`:
@@ -70,9 +78,17 @@ already configured in the build directory. Missing or conflicting targets fail
 configuration; there is no device autodetection or implicit 910B default, so
 release builds also work without a visible NPU.
 
-Before launching any kernel, architecture builds compare the target with
-`ACL_DEV_ATTR_NPU_ARCH`; SoC builds use CANN's `aclrtCheckArchCompatibility`,
-not exact model-name equality. The [CANN 9.1 implementation](https://gitcode.com/cann/runtime/blob/v9.1.0/src/runtime/core/src/api_impl/api_impl.cc)
+Before loading any kernel library, architecture builds select the exact target
+reported by `ACL_DEV_ATTR_NPU_ARCH`. Only that backend's matching library is
+loaded, using its path relative to the Host extension, not an environment search
+path. Missing targets or broken libraries fail immediately; there is no attempt
+to launch another architecture's kernels. Selected libraries remain mapped
+until process exit (`RTLD_NODELETE`), because CANN registers process-wide
+profiling callbacks into their code. This retains code and static tables, not
+MindQuantum's contexts, streams or device buffers: those keep their existing
+explicit owners and cleanup. Dispatch adds a function-pointer call, not a device
+query, to a launch; captured graph replay is unchanged. SoC builds use CANN's
+`aclrtCheckArchCompatibility`, not exact model-name equality. The [CANN 9.1 implementation](https://gitcode.com/cann/runtime/blob/v9.1.0/src/runtime/core/src/api_impl/api_impl.cc)
 of that API resolves both SoC names to NPU architectures and compares them for
 equality; it does not accept `dav-*` inputs. MindQuantum does not maintain a
 SoC-to-architecture mapping.
@@ -103,9 +119,13 @@ when native CPU tuning is inappropriate.
 The underlying PEP 517 entry point remains available:
 
 ```bash
-MQ_CIBW_BUILD_ARGS='--set,ENABLE_ASCEND,--var,CMAKE_ASC_ARCHITECTURES,dav-3510' \
+MQ_CIBW_BUILD_ARGS='--set,ENABLE_ASCEND,--var,CMAKE_ASC_ARCHITECTURES,dav-2201;dav-3510' \
 MQ_DELOCATE_WHEEL=1 python3 -m build --wheel .
 ```
+
+`MQ_CIBW_BUILD_ARGS` separates arguments with commas, so its architecture value
+must use CMake's **semicolon** separator. Only the `--npu-arch` shell option
+translates comma-separated architectures to a CMake list.
 
 Use a clean workspace for release jobs. Use a new build directory when changing
 CANN, the compiler or the target. Ordinary incremental builds of the same
@@ -122,6 +142,14 @@ CMake determines which native extensions exist. Packaging builds that graph
 once, then stages its outputs. A disabled backend is absent; a compilation
 failure in an enabled backend fails the build, including light wheels. Native
 outputs belong to the CMake build directory, not the wheel staging directory.
+For full wheels, including `--fast-build`, CMake installs only its `Development`
+component (headers, development libraries and CMake files). Python extensions
+and runtime libraries follow the same build-to-staging-to-source copy path;
+CMake's native Python/SDK install components are not installed into a wheel.
+This avoids nested `site-packages` copies without reconfiguring the development
+build. A native `cmake --install` without a component still installs everything.
+`--fast-build` reuses the in-place graph's linker settings, including development
+RPATHs in Host extensions; use a normal clean build for release wheels.
 
 The wheel contains MindQuantum's own kernel code. CANN libraries and their
 driver dependencies stay external; ordinary dependencies are still repaired
@@ -146,12 +174,17 @@ libraries or driver requirements, or describe the NPU target. Qualify and
 document those separately in the release environment; an explicit tag is an
 ABI constraint on the wheel, not a substitute for SDK/runtime validation.
 
-Keep incompatible targets in separate wheelhouses/download channels. Standard
-wheel tags do not select an Ascend architecture: do not put different target builds with
-the same package version and Python/platform tags in the same index. The
-private `mindquantum/_build_info.json` records configured targets and the selected
-Ascend architecture or SoC, without build-machine paths or an SDK library inventory;
-it is build information, not a runtime compatibility test.
+Standard wheel tags do not select an Ascend architecture. Publish one wheel
+containing the required architectures rather than competing single-target wheels
+with identical version/Python/platform tags. Each backend has one Host extension
+and one small kernel library per target under `mindquantum/lib/ascend/`; the
+architecture is also part of each library's filename/SONAME. Runtime libraries
+are required package contents, including in light wheels and in-place builds.
+The private `mindquantum/_build_info.json` records the architecture list (or
+single SoC), Python targets and runtime files. It contains no build-machine
+paths or SDK inventory and does not replace hardware qualification. All variants
+in a wheel share the build's Host ABI and CANN API baseline; this is not a way
+to combine arbitrary CANN versions or independently built wheels.
 
 Release validation must install the repaired wheel outside the source tree,
 run both backends on the target hardware, and check CPU operation without an

@@ -46,6 +46,8 @@ include(cmake_configuration)
 # ------------------------------------------------------------------------------
 
 include(GNUInstallDirs)
+# Wheels stage Python/runtime files themselves and install only development artifacts.
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Development)
 set(CMAKE_INSTALL_LIBDIR "lib")
 set(MQ_INSTALL_BINDIR "${CMAKE_INSTALL_BINDIR}")
 set(MQ_INSTALL_SBINDIR "${CMAKE_INSTALL_SBINDIR}")
@@ -147,7 +149,8 @@ include(python_build_info)
 # ==============================================================================
 
 if(binscope_exec)
-  gen_binscope_target(${_targets})
+  get_property(_runtime_targets GLOBAL PROPERTY _python_runtime_targets)
+  gen_binscope_target(${_targets} ${_runtime_targets})
 endif()
 
 # ==============================================================================

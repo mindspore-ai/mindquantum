@@ -82,9 +82,9 @@ function(pybind11_add_module target)
     install(
       TARGETS ${target}
       EXPORT mindquantumPythonTargets
-      ARCHIVE DESTINATION ${_install_lib_dir}
-      LIBRARY DESTINATION ${_install_lib_dir}
-      RUNTIME DESTINATION ${MQ_INSTALL_BINDIR})
+      ARCHIVE DESTINATION ${_install_lib_dir} COMPONENT Python
+      LIBRARY DESTINATION ${_install_lib_dir} COMPONENT Python
+      RUNTIME DESTINATION ${MQ_INSTALL_BINDIR} COMPONENT Python)
   endif()
 endfunction()
 
