@@ -19,8 +19,10 @@
 #include <complex>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <memory>
 #include <new>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -29,7 +31,11 @@
 #include "simulator/circuit_tiling/builder.h"
 #include "simulator/circuit_tiling/executor.h"
 #include "simulator/circuit_tiling/planner.h"
+#include "simulator/cpu_features.h"
 #include "simulator/worker_scratch.h"
+#if MQ_HAS_ARM_SVE_BACKEND
+#    include "simulator/test_circuit_tiling_sve.h"
+#endif
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -94,6 +100,203 @@ TEST_CASE("Circuit tile scratch rejects overflowing sizes without damaging worke
         for (size_t worker = 0; worker < 3; ++worker) {
             for (size_t element = 0; element < 14; ++element) {
                 CHECK(scratch.ForWorker(worker)[element] == static_cast<calc_type>(worker + 1));
+            }
+        }
+    };
+    check(float{});
+    check(double{});
+}
+
+TEST_CASE("Circuit tile execution preserves external controls") {
+    const auto check = [](auto value) {
+        using calc_type = decltype(value);
+        using value_t = std::complex<calc_type>;
+
+        // Cover uncontrolled, intra-vector per-lane ({1}), block-wide ({8}, {11}),
+        // and combined multi-qubit external control masks.
+        for (const auto& controls : {mq::qbits_t{}, mq::qbits_t{1}, mq::qbits_t{8}, mq::qbits_t{11}, mq::qbits_t{1, 8},
+                                     mq::qbits_t{2, 8, 11}}) {
+            mqt::CircuitTile tile;
+            tile.qubits = {0};
+            tile.gates = {std::make_shared<mq::SGate>(mq::qbits_t{0}, controls)};
+            const auto prepared = mqt::Builder<value_t>::Build(tile, parameter::ParameterResolver{}, VectorSpace(12));
+            mq::index_t required = 1;  // S acts on target |1>, with every control set.
+            for (const auto control : controls) {
+                required |= mq::index_t{1} << control;
+            }
+            for (const int threads : {1, 2}) {
+                CAPTURE(sizeof(calc_type), controls, threads);
+                std::vector<value_t> state(1U << 12), expected(state.size());
+                for (size_t index = 0; index < state.size(); ++index) {
+                    const auto real = static_cast<calc_type>(index % 17 + 2);
+                    const auto imaginary = static_cast<calc_type>(index % 13) - 4;
+                    state[index] = {real, imaginary};
+                    expected[index] = (index & required) == required ? value_t{-imaginary, real} : state[index];
+                }
+                mq::sim::WorkerScratch<calc_type> scratch;
+                mqt::ReserveScratch(scratch, prepared.layout.ScratchSize(), threads);
+                mqt::ApplyTile(state.data(), prepared, threads, scratch);
+                // Multiplication by i is exact: check active and inactive amplitudes
+                // against gate semantics, independently of the execution backend.
+                CHECK(std::equal(state.begin(), state.end(), expected.begin()));
+            }
+        }
+
+        // Small spaces exercise partial vector predicates where trailing lanes are
+        // inactive; trailing canaries verify inactive lanes never scatter past state.
+        constexpr size_t kCanaryCount = 64;
+        const value_t canary{calc_type{-97}, calc_type{89}};
+        for (const mq::qbit_t n_qubits : {1, 2, 3}) {
+            const std::vector<mq::qbits_t> control_sets = n_qubits == 1
+                                                              ? std::vector<mq::qbits_t>{{}}
+                                                              : (n_qubits == 2
+                                                                     ? std::vector<mq::qbits_t>{{}, {1}}
+                                                                     : std::vector<mq::qbits_t>{{1}, {2}, {1, 2}});
+            for (const auto& controls : control_sets) {
+                mqt::CircuitTile tile;
+                tile.qubits = {0};
+                tile.gates = {std::make_shared<mq::SGate>(mq::qbits_t{0}, controls)};
+                const auto prepared = mqt::Builder<value_t>::Build(tile, parameter::ParameterResolver{},
+                                                                   VectorSpace(n_qubits));
+                mq::index_t required = 1;
+                for (const auto control : controls) {
+                    required |= mq::index_t{1} << control;
+                }
+                const size_t dim = size_t{1} << n_qubits;
+                std::vector<value_t> buffer(dim + kCanaryCount, canary), expected(dim + kCanaryCount, canary);
+                for (size_t index = 0; index < dim; ++index) {
+                    const auto real = static_cast<calc_type>(index + 3);
+                    const auto imaginary = static_cast<calc_type>(index) - calc_type{2};
+                    buffer[index] = {real, imaginary};
+                    expected[index] = (index & required) == required ? value_t{-imaginary, real} : buffer[index];
+                }
+                CAPTURE(sizeof(calc_type), n_qubits, controls);
+                mq::sim::WorkerScratch<calc_type> scratch;
+                mqt::ReserveScratch(scratch, prepared.layout.ScratchSize(), 1);
+                mqt::ApplyTile(buffer.data(), prepared, 1, scratch);
+                CHECK(std::equal(buffer.begin(), buffer.end(), expected.begin()));
+            }
+        }
+
+        // Sequential operations in a single tile must each evaluate their own
+        // external controls without clobbering the shared active predicate.
+        mqt::CircuitTile multi_op_tile;
+        multi_op_tile.qubits = {0};
+        multi_op_tile.gates = {std::make_shared<mq::XGate>(mq::qbits_t{0}, mq::qbits_t{1}),
+                               std::make_shared<mq::SGate>(mq::qbits_t{0}, mq::qbits_t{8}),
+                               std::make_shared<mq::ZGate>(mq::qbits_t{0}, mq::qbits_t{1, 11}),
+                               std::make_shared<mq::SGate>(mq::qbits_t{0})};
+        const auto prepared_multi = mqt::Builder<value_t>::Build(multi_op_tile, parameter::ParameterResolver{},
+                                                                 VectorSpace(12));
+        for (const int threads : {1, 2}) {
+            CAPTURE(sizeof(calc_type), threads);
+            std::vector<value_t> state(1U << 12), expected(state.size());
+            for (size_t index = 0; index < state.size(); ++index) {
+                state[index] = {static_cast<calc_type>(index % 19 + 1), static_cast<calc_type>(index % 11) - 5};
+            }
+            expected = state;
+            for (size_t base = 0; base < expected.size(); base += 2) {
+                if ((base & (size_t{1} << 1)) != 0) {
+                    std::swap(expected[base], expected[base + 1]);
+                }
+                if ((base & (size_t{1} << 8)) != 0) {
+                    expected[base + 1] = {-expected[base + 1].imag(), expected[base + 1].real()};
+                }
+                if ((base & ((size_t{1} << 1) | (size_t{1} << 11))) == ((size_t{1} << 1) | (size_t{1} << 11))) {
+                    expected[base + 1] = -expected[base + 1];
+                }
+                expected[base + 1] = {-expected[base + 1].imag(), expected[base + 1].real()};
+            }
+            mq::sim::WorkerScratch<calc_type> scratch;
+            mqt::ReserveScratch(scratch, prepared_multi.layout.ScratchSize(), threads);
+            mqt::ApplyTile(state.data(), prepared_multi, threads, scratch);
+            CHECK(std::equal(state.begin(), state.end(), expected.begin()));
+        }
+    };
+    check(float{});
+    check(double{});
+
+#if MQ_HAS_ARM_SVE_BACKEND
+    if (mq::sim::cpu::HostHasArmSveFcma()) {
+        const auto report = mqt::test::VerifySveExternalControlWindows();
+        INFO(report.failure);
+        CHECK(report.ok);
+    }
+#endif
+}
+
+TEST_CASE("Adjoint tile execution preserves external controls") {
+    const auto check = [](auto value) {
+        using calc_type = decltype(value);
+        using value_t = std::complex<calc_type>;
+        using builder_t = mqt::Builder<value_t>;
+
+        const parameter::ParameterResolver theta(std::string("theta"));
+        const parameter::ParameterResolver values(0.0, std::map<std::string, double>{{"theta", 0.0}});
+        const mq::MST<size_t> parameter_map{{"theta", 0}};
+        const auto space = VectorSpace(8);
+        constexpr size_t kDim = 1U << 8;
+
+        for (const auto& controls : {mq::qbits_t{}, mq::qbits_t{1}, mq::qbits_t{5}, mq::qbits_t{1, 7}}) {
+            mqt::CircuitTile tile;
+            tile.qubits = {0};
+            tile.gates = {std::make_shared<mq::SGate>(mq::qbits_t{0}, controls),
+                          std::make_shared<mq::PSGate>(theta, mq::qbits_t{0}, controls)};
+
+            mqt::AdjointProgram<value_t> program;
+            program.output_size = 2;
+            program.compute_overlap = true;
+            program.tiles.push_back(
+                builder_t::BuildAdjoint(tile, values, parameter_map, space, builder_t::AdjointGates::Daggered));
+
+            mq::index_t required = 1;
+            for (const auto control : controls) {
+                required |= mq::index_t{1} << control;
+            }
+
+            // Small integer amplitudes keep every overlap and derivative sum
+            // well within IEEE-754 float's 24-bit exact integer range, making
+            // reductions exact regardless of vector width or thread count.
+            std::vector<value_t> initial_bra(kDim), initial_ket(kDim);
+            std::vector<value_t> expected_bra(kDim), expected_ket(kDim);
+            value_t raw_overlap{0, 0};
+            value_t raw_derivative{0, 0};
+            for (size_t index = 0; index < kDim; ++index) {
+                const value_t bra_amp{static_cast<calc_type>(index % 5) - calc_type{2},
+                                      static_cast<calc_type>((index / 3) % 5) - calc_type{2}};
+                const value_t ket_amp{static_cast<calc_type>((index + 1) % 7) - calc_type{3},
+                                      static_cast<calc_type>((index / 2) % 5) - calc_type{2}};
+                initial_bra[index] = bra_amp;
+                initial_ket[index] = ket_amp;
+                raw_overlap += std::conj(bra_amp) * ket_amp;
+                if ((index & required) == required) {
+                    expected_bra[index] = {-bra_amp.imag(), bra_amp.real()};
+                    expected_ket[index] = {-ket_amp.imag(), ket_amp.real()};
+                    raw_derivative += std::conj(expected_bra[index])
+                                      * value_t{-expected_ket[index].imag(), expected_ket[index].real()};
+                } else {
+                    expected_bra[index] = bra_amp;
+                    expected_ket[index] = ket_amp;
+                }
+            }
+
+            for (const bool conjugate_output : {false, true}) {
+                for (const int threads : {1, 2}) {
+                    CAPTURE(sizeof(calc_type), controls, conjugate_output, threads);
+                    auto bra = initial_bra;
+                    auto ket = initial_ket;
+                    mq::VVT<value_t> output(1, mq::VT<value_t>(2, 0));
+                    mq::sim::WorkerScratch<calc_type> scratch;
+                    mqt::ReserveScratch(scratch, program.tiles.front().layout.ScratchSize(2), threads);
+                    mqt::ApplyAdjointProgram(bra.data(), {ket.data()}, program, &output, conjugate_output, threads,
+                                             scratch);
+                    const auto expected_overlap = conjugate_output ? std::conj(raw_overlap) : raw_overlap;
+                    const auto expected_deriv = conjugate_output ? std::conj(raw_derivative) : raw_derivative;
+                    CHECK(output[0][0] == expected_overlap);
+                    CHECK(output[0][1] == expected_deriv);
+                    CHECK(std::equal(bra.begin(), bra.end(), expected_bra.begin()));
+                    CHECK(std::equal(ket.begin(), ket.end(), expected_ket.begin()));
+                }
             }
         }
     };
