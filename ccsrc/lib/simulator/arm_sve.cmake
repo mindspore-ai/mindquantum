@@ -24,8 +24,12 @@
 
 include(CheckCXXSourceCompiles)
 
-set(MQ_ARM_SVE_COMPILE_OPTION "-march=armv8-a+sve")
-set(MQ_ARM_SVE_AVAILABLE OFF)
+set(MQ_ARM_SVE_COMPILE_OPTION
+    "-march=armv8-a+sve"
+    CACHE INTERNAL "Compiler flag for Arm SVE/FCMA simulator translation units" FORCE)
+set(MQ_ARM_SVE_AVAILABLE
+    OFF
+    CACHE INTERNAL "Whether Arm SVE/FCMA simulator translation units can be built" FORCE)
 
 if(MQ_ARM_SVE AND AARCH64 AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(_mq_saved_required_flags "${CMAKE_REQUIRED_FLAGS}")
@@ -39,7 +43,9 @@ if(MQ_ARM_SVE AND AARCH64 AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
   if(NOT MQ_COMPILER_HAS_ARM_SVE_FCMA)
     message(FATAL_ERROR "MQ_ARM_SVE=ON, but the C++ compiler cannot build the required SVE/FCMA intrinsics.")
   endif()
-  set(MQ_ARM_SVE_AVAILABLE ON)
+  set(MQ_ARM_SVE_AVAILABLE
+      ON
+      CACHE INTERNAL "Whether Arm SVE/FCMA simulator translation units can be built" FORCE)
   message(STATUS "Arm simulator kernels: baseline, SVE/FCMA (runtime dispatched; ${MQ_ARM_SVE_COMPILE_OPTION})")
 elseif(AARCH64)
   message(STATUS "Arm simulator kernels: baseline")

@@ -17,6 +17,7 @@
 # ==============================================================================
 
 add_test_executable(test_circuit_tiling LIBS mqsim_circuit_tiling)
+mq_add_arm_sve_sources(test_circuit_tiling ${CMAKE_CURRENT_LIST_DIR}/test_circuit_tiling_sve.cpp)
 add_test_executable(test_state_index LIBS include_lib cmake_config)
 add_test_executable(test_ci_basis LIBS include_lib cmake_config mq_base mindquantum::fmt mindquantum::json)
 add_test_executable(test_density_matrix_tiling LIBS include_lib cmake_config mq_base mindquantum::fmt

@@ -63,13 +63,14 @@ struct SveTileAlgebra {
             return active;
         }
         const auto fixed_mask = mask & ~context.local_mask;
-        if ((context.window_origin & fixed_mask) != fixed_mask) {
-            return sve::FalsePredicate();
-        }
+        const auto fixed = svdup_n_b8((context.window_origin & fixed_mask) == fixed_mask);
         const auto local_mask = mask & context.local_mask;
-        return local_mask == 0 ? active
-                               : sve::IndexEquals<calc_type>(
-                                     active, sve::AndIndex<calc_type>(active, state_base, local_mask), local_mask);
+        const auto local = sve::IndexEquals<calc_type>(active, sve::AndIndex<calc_type>(active, state_base, local_mask),
+                                                       local_mask);
+        // Combine the window-wide and per-lane controls as predicates. GCC
+        // 10/12 if-conversion can hoist a conditional pfalse over the live
+        // input predicate; avoid that scalar branch without disabling SVE.
+        return svand_z(active, fixed, local);
     }
 
     [[nodiscard]] MQ_ALWAYS_INLINE static auto ExternalParity(predicate_t predicate, state_index_t state_base,

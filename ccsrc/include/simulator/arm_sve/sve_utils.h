@@ -98,10 +98,6 @@ MQ_ALWAYS_INLINE auto TruePredicate() -> svbool_t {
     return Traits<calc_type>::TruePredicate();
 }
 
-MQ_ALWAYS_INLINE auto FalsePredicate() -> svbool_t {
-    return svpfalse_b();
-}
-
 template <typename calc_type>
 inline constexpr auto LocalStateIndexBits() noexcept -> unsigned {
     using index_scalar_t = typename Traits<calc_type>::index_scalar_t;
